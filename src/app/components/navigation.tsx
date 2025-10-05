@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -26,6 +27,14 @@ export function Navigation() {
             <Link href="/upload">
               <Upload />
               <span>Upload</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Settings">
+            <Link href="/settings">
+              <Settings />
+              <span>Settings</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

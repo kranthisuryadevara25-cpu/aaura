@@ -9,26 +9,24 @@ import {
 } from '@/components/ui/sidebar';
 import { Home, LibraryBig, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Users, Film, ShoppingBag, Upload, Settings } from 'lucide-react';
 import Link from 'next/link';
-import { useTranslation } from 'react-i18next';
 
 export function Navigation() {
-  const { t } = useTranslation();
-
+  // Hardcoded English labels as i18next is removed to fix stability issues.
   const navItems = [
-    { href: "/", icon: Home, label: t('sidebar.home') },
-    { href: "/deities", icon: LibraryBig, label: t('sidebar.deities') },
-    { href: "/stories", icon: ScrollText, label: t('sidebar.stories') },
-    { href: "/characters", icon: UserSquare, label: t('sidebar.characters') },
-    { href: "/temples", icon: Palmtree, label: t('sidebar.temples') },
-    { href: "/rituals", icon: BookHeart, label: t('sidebar.rituals') },
-    { href: "/panchang", icon: CalendarDays, label: t('sidebar.panchang') },
-    { href: "/festivals", icon: PartyPopper, label: t('sidebar.festivals') },
-    { href: "/forum", icon: MessageCircle, label: t('sidebar.forum') },
-    { href: "/channels", icon: Users, label: t('sidebar.channels') },
-    { href: "/media", icon: Film, label: t('sidebar.media') },
-    { href: "/shop", icon: ShoppingBag, label: t('sidebar.shop') },
-    { href: "/upload", icon: Upload, label: t('sidebar.upload') },
-    { href: "/settings", icon: Settings, label: t('sidebar.settings') },
+    { href: "/", icon: Home, label: "Home" },
+    { href: "/deities", icon: LibraryBig, label: "Deities" },
+    { href: "/stories", icon: ScrollText, label: "Stories" },
+    { href: "/characters", icon: UserSquare, label: "Characters" },
+    { href: "/temples", icon: Palmtree, label: "Temples & Pilgrimages" },
+    { href: "/rituals", icon: BookHeart, label: "Rituals" },
+    { href: "/panchang", icon: CalendarDays, label: "Daily Panchang" },
+    { href: "/festivals", icon: PartyPopper, label: "Festivals & Events" },
+    { href: "/forum", icon: MessageCircle, label: "Forum & Q&A" },
+    { href: "/channels", icon: Users, label: "Channels" },
+    { href: "/media", icon: Film, label: "Media" },
+    { href: "/shop", icon: ShoppingBag, label: "Shop" },
+    { href: "/upload", icon: Upload, label: "Upload" },
+    { href: "/settings", icon: Settings, label: "Settings" },
   ];
 
   return (

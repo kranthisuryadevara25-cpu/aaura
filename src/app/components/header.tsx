@@ -17,13 +17,11 @@ import {
 import { LogOut, Languages, Search, Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
-import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/hooks/use-language.tsx";
+import { useLanguage, LanguageCode } from "@/hooks/use-language";
 
 export function Header() {
   const { user } = useUser();
   const auth = useAuth();
-  const { t } = useTranslation();
   const { setLanguage } = useLanguage();
 
   const handleSignOut = () => {
@@ -48,25 +46,25 @@ export function Header() {
         <div className="flex-1 flex justify-center px-4 lg:px-16">
             <div className="relative w-full max-w-lg">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder={t('topnav.search_placeholder')} className="pl-10" />
+                <Input placeholder="Search temples, deities, stories, rituals..." className="pl-10" />
             </div>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-           <Button variant="ghost" size="icon" title={t('topnav.notifications')}>
+           <Button variant="ghost" size="icon" title="Notifications">
               <Bell className="h-5 w-5" />
-              <span className="sr-only">{t('topnav.notifications')}</span>
+              <span className="sr-only">Notifications</span>
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Languages className="h-5 w-5" />
-                <span className="sr-only">{t('topnav.profile')}</span>
+                <span className="sr-only">Select Language</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{t('header.select_language')}</DropdownMenuLabel>
+              <DropdownMenuLabel>Select Language</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setLanguage('en')}>English</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setLanguage('hi')}>हिन्दी (Hindi)</DropdownMenuItem>
@@ -102,7 +100,7 @@ export function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  <span>{t('header.logout')}</span>
+                  <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

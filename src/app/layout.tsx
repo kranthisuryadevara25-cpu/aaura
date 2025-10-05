@@ -1,12 +1,9 @@
 "use client";
 
-import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { FirebaseClientProvider } from "@/firebase/client-provider";
 import { LanguageProvider } from "@/hooks/use-language";
-import { I18nextProvider } from "react-i18next";
-import i18n from "@/lib/i18n";
 
 
 export default function RootLayout({
@@ -27,15 +24,11 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased bg-background">
-        <I18nextProvider i18n={i18n}>
-            {/* Firebase wrapper for Firestore, Auth, Storage */}
-            <FirebaseClientProvider>
-            {/* Language wrapper for multi-language UI & input */}
-            <LanguageProvider>
-                {children}
-            </LanguageProvider>
-            </FirebaseClientProvider>
-        </I18nextProvider>
+        <FirebaseClientProvider>
+          <LanguageProvider>
+            {children}
+          </LanguageProvider>
+        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>

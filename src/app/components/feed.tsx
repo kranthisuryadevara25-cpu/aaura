@@ -1,21 +1,16 @@
 // src/app/components/feed.tsx
 "use client";
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo } from "react";
 import { useFeed } from "@/hooks/use-feed";
 import { FeedCard } from "@/components/FeedCard";
 import ReelsFeed from "@/components/ReelsFeed"; 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function Feed() {
+export function Feed({ searchQuery }: { searchQuery: string }) {
   const { allItems, loading, filterItems } = useFeed(20);
   const [view, setView] = useState<"grid"|"reels">("grid");
-  const [searchQuery, setSearchQuery] = useState('');
 
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-  
   const displayedItems = useMemo(() => {
     if (searchQuery) {
         return filterItems(searchQuery);

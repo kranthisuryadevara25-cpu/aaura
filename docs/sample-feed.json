@@ -1,0 +1,165 @@
+
+{
+  "feed": [
+    {
+      "type": "temple",
+      "id": "temple-1",
+      "title": "Ram Mandir, Ayodhya",
+      "location": "Ayodhya, Uttar Pradesh",
+      "image": {
+        "url": "https://picsum.photos/seed/rammandir1/800/600",
+        "hint": "grand temple"
+      },
+      "engagement": {
+        "likes": 12000,
+        "comments": 850
+      },
+      "cta": {
+        "text": "View Temple",
+        "link": "/temples/ram-mandir-ayodhya"
+      }
+    },
+    {
+      "type": "media",
+      "id": "media-1",
+      "title": "Relaxing Flute Music for Meditation",
+      "author": {
+        "name": "Spiritual Soundscapes",
+        "avatarUrl": "https://picsum.photos/seed/channel1/100/100"
+      },
+      "media": {
+        "type": "audio",
+        "url": "placeholder.mp3",
+        "thumbnailUrl": "https://picsum.photos/seed/flute/800/600",
+        "hint": "flute music"
+      },
+      "engagement": {
+        "views": 250000,
+        "likes": 15000
+      }
+    },
+    {
+      "type": "story",
+      "id": "story-1",
+      "title": "The Abduction of Sita",
+      "summary": "A pivotal event in the Ramayana, where Sita is deceptively abducted by the demon king Ravana, triggering Rama's quest to rescue her.",
+      "image": {
+        "url": "https://picsum.photos/seed/ravana1/800/600",
+        "hint": "demon king"
+      },
+      "cta": {
+        "text": "Continue Reading",
+        "link": "/stories/sita-abduction"
+      }
+    },
+    {
+      "type": "deity",
+      "id": "deity-1",
+      "title": "Lord Ganesha",
+      "summary": "The remover of obstacles, the patron of arts and sciences, and the deva of intellect and wisdom.",
+      "image": {
+        "url": "https://picsum.photos/seed/ganesha1/800/600",
+        "hint": "Ganesha statue"
+      },
+      "cta": {
+        "text": "Read More",
+        "link": "/deities/ganesha"
+      }
+    },
+    {
+      "type": "panchang",
+      "id": "panchang-today",
+      "date": "2024-10-26",
+      "timings": {
+        "tithi": "Shukla Paksha, Ekadashi",
+        "nakshatra": "Shravana",
+        "rahukalam": "09:15 AM - 10:40 AM"
+      },
+      "isAuspicious": true
+    },
+    {
+      "type": "festival",
+      "id": "festival-1",
+      "title": "Diwali - The Festival of Lights",
+      "date": "2024-11-01",
+      "summary": "Symbolizing the spiritual victory of light over darkness, good over evil, and knowledge over ignorance.",
+      "image": {
+        "url": "https://picsum.photos/seed/diwali1/800/600",
+        "hint": "festival lights"
+      },
+      "cta": {
+        "text": "Learn More",
+        "link": "/festivals/diwali"
+      }
+    },
+    {
+      "type": "media",
+      "id": "media-2",
+      "title": "What is Dharma? | A Short Explanation",
+      "author": {
+        "name": "Modern Monk",
+        "avatarUrl": "https://picsum.photos/seed/channel2/100/100"
+      },
+      "media": {
+        "type": "short_video",
+        "url": "placeholder-short.mp4",
+        "thumbnailUrl": "https://picsum.photos/seed/dharma/450/800",
+        "hint": "spiritual talk"
+      },
+      "engagement": {
+        "views": 1200000,
+        "likes": 98000
+      }
+    },
+    {
+      "type": "forum",
+      "id": "post-1",
+      "title": "What is the best way to start a daily meditation practice?",
+      "author": {
+        "name": "AnxiousSeeker23",
+        "avatarUrl": null
+      },
+      "summary": "I've been trying to meditate for a few weeks now but can't seem to make it a consistent habit. I get distracted easily and then feel discouraged. Any tips for a beginner?",
+      "engagement": {
+        "comments": 15,
+        "likes": 42
+      },
+      "cta": {
+        "text": "Join Discussion",
+        "link": "/forum/post-1"
+      }
+    },
+    {
+      "type": "shop",
+      "id": "product-1",
+      "title": "Handcrafted Ganesha Idol",
+      "price": 49.99,
+      "image": {
+        "url": "https://picsum.photos/seed/idol/400/400",
+        "hint": "Ganesha idol"
+      },
+      "cta": {
+        "text": "Buy Now",
+        "link": "/shop/product-1"
+      }
+    },
+    {
+      "type": "temple",
+      "id": "temple-2",
+      "title": "Kedarnath Temple",
+      "location": "Kedarnath, Uttarakhand",
+      "image": {
+        "url": "https://picsum.photos/seed/kedarnath1/800/600",
+        "hint": "temple snow"
+      },
+      "engagement": {
+        "likes": 25000,
+        "comments": 1200
+      },
+      "cta": {
+        "text": "View Temple",
+        "link": "/temples/kedarnath-temple"
+      }
+    }
+  ]
+}

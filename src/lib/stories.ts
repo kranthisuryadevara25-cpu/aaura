@@ -1,3 +1,4 @@
+
 export type Story = {
     id: string;
     slug: string;

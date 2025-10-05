@@ -9,6 +9,9 @@ import { TempleCard } from './cards/temple-card';
 import { StoryCard } from './cards/story-card';
 import { DeityCard } from './cards/deity-card';
 import { VideoCard } from './cards/video-card';
+import { temples } from '@/lib/temples';
+import { stories } from '@/lib/stories';
+import { deities } from '@/lib/deities';
 
 // Fisher-Yates shuffle algorithm
 function shuffle(array: any[]) {
@@ -28,28 +31,19 @@ export function Feed() {
     const mediaQuery = useMemo(() => firestore ? query(collection(firestore, 'media'), limit(10)) : null, [firestore]);
     const { data: media, isLoading: mediaLoading } = useCollection(mediaQuery);
 
-    const templesQuery = useMemo(() => firestore ? query(collection(firestore, 'temples'), limit(5)) : null, [firestore]);
-    const { data: temples, isLoading: templesLoading } = useCollection(templesQuery);
-    
-    const storiesQuery = useMemo(() => firestore ? query(collection(firestore, 'stories'), limit(5)) : null, [firestore]);
-    const { data: stories, isLoading: storiesLoading } = useCollection(storiesQuery);
-    
-    const deitiesQuery = useMemo(() => firestore ? query(collection(firestore, 'deities'), limit(5)) : null, [firestore]);
-    const { data: deities, isLoading: deitiesLoading } = useCollection(deitiesQuery);
-
-    const isLoading = mediaLoading || templesLoading || storiesLoading || deitiesLoading;
+    const isLoading = mediaLoading;
     
     useEffect(() => {
         if (!isLoading) {
             const allItems = [
                 ...(media?.map(item => ({ ...item, type: 'video' })) || []),
-                ...(temples?.map(item => ({ ...item, type: 'temple' })) || []),
-                ...(stories?.map(item => ({ ...item, type: 'story' })) || []),
-                ...(deities?.map(item => ({ ...item, type: 'deity' })) || []),
+                ...(temples.map(item => ({ ...item, type: 'temple' })) || []),
+                ...(stories.map(item => ({ ...item, type: 'story' })) || []),
+                ...(deities.map(item => ({ ...item, type: 'deity' })) || []),
             ];
             setFeedItems(shuffle(allItems));
         }
-    }, [media, temples, stories, deities, isLoading]);
+    }, [media, isLoading]);
 
 
     if (isLoading) {

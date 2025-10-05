@@ -4,7 +4,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { placeholderImages } from '@/lib/placeholder-images';
 import { formatDistanceToNow } from 'date-fns';
 
 // A placeholder function to get user data - in a real app this would come from a query
@@ -22,14 +21,13 @@ const formatViews = (views: number) => {
 
 export function VideoCard({ video }: { video: any }) {
     const channel = getChannelData(video.userId);
-    const videoImage = placeholderImages.find(p => p.id === 'video-1') || placeholderImages[0];
 
     return (
         <Link href="#" className="group">
             <div className="flex flex-col space-y-3">
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-md transition-shadow group-hover:shadow-xl">
                     <Image
-                        src={video.thumbnailUrl || videoImage.imageUrl}
+                        src={video.thumbnailUrl}
                         alt={video.title}
                         data-ai-hint="spiritual video"
                         fill

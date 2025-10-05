@@ -70,4 +70,3 @@ export const festivals: Festival[] = [
 export const getFestivalBySlug = (slug: string) => {
     return festivals.find(f => f.slug === slug);
 }
-

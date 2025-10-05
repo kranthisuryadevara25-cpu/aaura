@@ -9,9 +9,10 @@ import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
-import { Dashboard } from "@/app/components/dashboard";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { Navigation } from "@/app/components/navigation";
+import { RightSidebar } from '@/app/components/right-sidebar';
+import { Feed } from '@/app/components/feed';
 
 function LoggedInView() {
   const { user } = useUser();
@@ -26,12 +27,12 @@ function LoggedInView() {
   const { data: userData, isLoading: isUserDocLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserDocLoading && (!userData || !userData.profileComplete)) {
+    if (!isUserDocLoading && userData && !userData.profileComplete) {
       router.push('/profile/setup');
     }
   }, [userData, isUserDocLoading, router]);
 
-  if (isUserDocLoading || !userData || !userData.profileComplete) {
+  if (isUserDocLoading || (userData && !userData.profileComplete)) {
      return (
       <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -47,14 +48,14 @@ function LoggedInView() {
             <Sidebar>
               <Navigation />
             </Sidebar>
-            <SidebarInset>
-              <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
-                <Dashboard />
-              </main>
-              <footer className="text-center p-6 text-sm text-muted-foreground">
-                <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
-              </footer>
-            </SidebarInset>
+            <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_auto]">
+              <div className="py-6 px-4 sm:px-6 lg:px-8">
+                 <div className="max-w-2xl mx-auto">
+                    <Feed />
+                 </div>
+              </div>
+              <RightSidebar />
+            </main>
           </div>
         </div>
     </SidebarProvider>

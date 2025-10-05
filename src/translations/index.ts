@@ -1092,7 +1092,7 @@ export const translations = {
       stotras: "স্তোত্র",
     },
     stories: {
-      title: "পৌরাণিক গল্প",
+      title: "पौরাণিক গল্প",
       description: "തലമുറകളെ രൂപപ്പെടുത്തിയ കാലാതീതമായ ഇതിഹാസങ്ങളും നാടോടിക്കഥകളും പര്യവേക്ഷണം ചെയ്യുക।",
     },
     storyDetail: {

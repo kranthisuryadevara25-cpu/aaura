@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star } from 'lucide-react';
 
 const MENU_ITEMS = [
-  { href: "/foryou", label: "home", icon: Home },
+  { href: "/", label: "home", icon: Home },
   { href: "/deities", label: "deities", icon: Sparkles },
   { href: "/stories", label: "stories", icon: ScrollText },
   { href: "/characters", label: "characters", icon: UserSquare },

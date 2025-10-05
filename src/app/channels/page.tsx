@@ -20,54 +20,56 @@ const channels = [
 export default function ChannelsPage() {
   return (
     <SidebarProvider>
-        <Sidebar>
-            <Navigation />
-        </Sidebar>
-        <SidebarInset>
-            <div className="min-h-screen bg-background text-foreground flex flex-col">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-                <div className="text-center mb-12">
-                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
-                         <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">Creator Channels</h1>
-                        <Button asChild>
-                            <Link href="/channels/create">
-                                <PlusCircle className="mr-2" />
-                                Create Channel
-                            </Link>
-                        </Button>
-                    </div>
-                    <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                        Follow your favorite spiritual guides and teachers.
-                    </p>
-                </div>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <Header />
+        <div className="flex flex-1">
+          <Sidebar>
+              <Navigation />
+          </Sidebar>
+          <SidebarInset>
+              <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+                  <div className="text-center mb-12">
+                      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
+                           <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">Creator Channels</h1>
+                          <Button asChild>
+                              <Link href="/channels/create">
+                                  <PlusCircle className="mr-2" />
+                                  Create Channel
+                              </Link>
+                          </Button>
+                      </div>
+                      <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+                          Follow your favorite spiritual guides and teachers.
+                      </p>
+                  </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {channels.map((channel) => (
-                    <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-transparent border-primary/20 hover:border-primary/50 transition-colors duration-300">
-                    <div className="relative mb-4">
-                        <Image
-                            src={channel.avatarUrl}
-                            alt={channel.name}
-                            data-ai-hint={channel.imageHint}
-                            width={128}
-                            height={128}
-                            className="rounded-full border-4 border-accent/20"
-                        />
-                    </div>
-                    <CardHeader className="p-0 mb-2">
-                        <CardTitle className="flex items-center justify-center gap-2 text-foreground">{channel.name} <CheckCircle className="text-blue-500 h-5 w-5" /></CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        <CardDescription className="line-clamp-2 mb-4">{channel.description}</CardDescription>
-                        <Button>Subscribe</Button>
-                    </CardContent>
-                    </Card>
-                ))}
-                </div>
-            </main>
-            </div>
-        </SidebarInset>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                  {channels.map((channel) => (
+                      <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-transparent border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                      <div className="relative mb-4">
+                          <Image
+                              src={channel.avatarUrl}
+                              alt={channel.name}
+                              data-ai-hint={channel.imageHint}
+                              width={128}
+                              height={128}
+                              className="rounded-full border-4 border-accent/20"
+                          />
+                      </div>
+                      <CardHeader className="p-0 mb-2">
+                          <CardTitle className="flex items-center justify-center gap-2 text-foreground">{channel.name} <CheckCircle className="text-blue-500 h-5 w-5" /></CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-0">
+                          <CardDescription className="line-clamp-2 mb-4">{channel.description}</CardDescription>
+                          <Button>Subscribe</Button>
+                      </CardContent>
+                      </Card>
+                  ))}
+                  </div>
+              </main>
+          </SidebarInset>
+        </div>
+      </div>
     </SidebarProvider>
   );
 }

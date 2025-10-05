@@ -156,182 +156,182 @@ export default function SettingsPage() {
 
   return (
     <SidebarProvider>
-        <Sidebar>
-            <Navigation />
-        </Sidebar>
-        <SidebarInset>
-            <div className="min-h-screen bg-background text-foreground flex flex-col">
-            <Header />
-            <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
-                <Card className="w-full max-w-2xl">
-                <CardHeader>
-                    <CardTitle>Profile & Personalization</CardTitle>
-                    <CardDescription>
-                    Manage your profile details to personalize your experience.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent>
-                    {isUserLoading ? (
-                        <div className="flex justify-center items-center h-40">
-                            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        </div>
-                    ) : (
-                    <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                       <FormField
-                          control={form.control}
-                          name="fullName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Full Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Your full name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="birthDate"
-                          render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                              <FormLabel>Birth Date</FormLabel>
-                              <Popover>
-                                <PopoverTrigger asChild>
-                                  <FormControl>
-                                    <Button
-                                      variant={'outline'}
-                                      className={cn(
-                                        'w-[240px] pl-3 text-left font-normal',
-                                        !field.value && 'text-muted-foreground'
-                                      )}
-                                    >
-                                      {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                    </Button>
-                                  </FormControl>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-auto p-0" align="start">
-                                  <Calendar
-                                    mode="single"
-                                    selected={field.value}
-                                    onSelect={(date) => {
-                                      if (date) {
-                                        field.onChange(date);
-                                        const sign = getZodiacSign(date);
-                                        form.setValue('zodiacSign', sign);
-                                      }
-                                    }}
-                                    disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                                    initialFocus
-                                  />
-                                </PopoverContent>
-                              </Popover>
-                              <FormDescription>Your zodiac sign will be automatically detected.</FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <Header />
+        <div className="flex flex-1">
+          <Sidebar>
+              <Navigation />
+          </Sidebar>
+          <SidebarInset>
+              <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
+                  <Card className="w-full max-w-2xl">
+                  <CardHeader>
+                      <CardTitle>Profile & Personalization</CardTitle>
+                      <CardDescription>
+                      Manage your profile details to personalize your experience.
+                      </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                      {isUserLoading ? (
+                          <div className="flex justify-center items-center h-40">
+                              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                          </div>
+                      ) : (
+                      <Form {...form}>
+                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                          <FormField
-                          control={form.control}
-                          name="timeOfBirth"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Time of Birth</FormLabel>
-                              <FormControl>
-                                <Input type="time" placeholder="HH:MM" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="placeOfBirth"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Place of Birth</FormLabel>
-                              <FormControl>
-                                <Input placeholder="City, Country" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="zodiacSign"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Zodiac Sign</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
+                            control={form.control}
+                            name="fullName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Full Name</FormLabel>
                                 <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select your zodiac sign" />
-                                  </SelectTrigger>
+                                  <Input placeholder="Your full name" {...field} />
                                 </FormControl>
-                                <SelectContent>
-                                  {zodiacSigns.map((sign) => (
-                                    <SelectItem key={sign} value={sign}>
-                                      {sign}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="birthDate"
+                            render={({ field }) => (
+                              <FormItem className="flex flex-col">
+                                <FormLabel>Birth Date</FormLabel>
+                                <Popover>
+                                  <PopoverTrigger asChild>
+                                    <FormControl>
+                                      <Button
+                                        variant={'outline'}
+                                        className={cn(
+                                          'w-[240px] pl-3 text-left font-normal',
+                                          !field.value && 'text-muted-foreground'
+                                        )}
+                                      >
+                                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      </Button>
+                                    </FormControl>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                      mode="single"
+                                      selected={field.value}
+                                      onSelect={(date) => {
+                                        if (date) {
+                                          field.onChange(date);
+                                          const sign = getZodiacSign(date);
+                                          form.setValue('zodiacSign', sign);
+                                        }
+                                      }}
+                                      disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                                      initialFocus
+                                    />
+                                  </PopoverContent>
+                                </Popover>
+                                <FormDescription>Your zodiac sign will be automatically detected.</FormDescription>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                           <FormField
+                            control={form.control}
+                            name="timeOfBirth"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Time of Birth</FormLabel>
+                                <FormControl>
+                                  <Input type="time" placeholder="HH:MM" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="placeOfBirth"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Place of Birth</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="City, Country" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="zodiacSign"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Zodiac Sign</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select your zodiac sign" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {zodiacSigns.map((sign) => (
+                                      <SelectItem key={sign} value={sign}>
+                                        {sign}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                           <FormField
+                            control={form.control}
+                            name="fatherName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Father's Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Father's full name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="motherName"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Mother's Name</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Mother's full name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <Button type="submit" disabled={isPending}>
+                          {isPending ? (
+                              <>
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                  Saving...
+                              </>
+                          ) : (
+                              <>
+                                  <Save className="mr-2 h-4 w-4" />
+                                  Save Profile
+                              </>
                           )}
-                        />
-                         <FormField
-                          control={form.control}
-                          name="fatherName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Father's Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Father's full name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={form.control}
-                          name="motherName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Mother's Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Mother's full name" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <Button type="submit" disabled={isPending}>
-                        {isPending ? (
-                            <>
-                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Saving...
-                            </>
-                        ) : (
-                            <>
-                                <Save className="mr-2 h-4 w-4" />
-                                Save Profile
-                            </>
-                        )}
-                        </Button>
-                    </form>
-                    </Form>
-                    )}
-                </CardContent>
-                </Card>
-            </main>
-            </div>
-        </SidebarInset>
+                          </Button>
+                      </form>
+                      </Form>
+                      )}
+                  </CardContent>
+                  </Card>
+              </main>
+          </SidebarInset>
+        </div>
+      </div>
     </SidebarProvider>
   );
 }
-
-    

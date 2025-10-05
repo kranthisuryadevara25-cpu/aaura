@@ -18,7 +18,6 @@ function LoggedInView() {
   const firestore = useFirestore();
   const router = useRouter();
 
-  // useMemo helps stabilize the docRef, preventing re-creations on every render
   const userDocRef = useMemo(() => {
     if (!user || !firestore) return undefined;
     return doc(firestore, `users/${user.uid}`);
@@ -27,13 +26,11 @@ function LoggedInView() {
   const { data: userData, isLoading: isUserDocLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    // If the user document has been checked, and it either doesn't exist or profile is incomplete, redirect.
     if (!isUserDocLoading && (!userData || !userData.profileComplete)) {
       router.push('/profile/setup');
     }
   }, [userData, isUserDocLoading, router]);
 
-  // Show loader while checking user document, or if we are about to redirect.
   if (isUserDocLoading || !userData || !userData.profileComplete) {
      return (
       <div className="flex justify-center items-center h-screen bg-background">
@@ -42,50 +39,49 @@ function LoggedInView() {
     );
   }
   
-  // Only render the dashboard if the profile is complete.
   return (
      <SidebarProvider>
-      <Sidebar>
-        <Navigation />
-      </Sidebar>
-      <SidebarInset>
         <div className="min-h-screen bg-background text-foreground flex flex-col">
           <Header />
-          <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
-            <Dashboard />
-          </main>
-          <footer className="text-center p-6 text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
-          </footer>
+          <div className="flex flex-1">
+            <Sidebar>
+              <Navigation />
+            </Sidebar>
+            <SidebarInset>
+              <main className="flex-grow container mx-auto px-4 py-8 md:py-12">
+                <Dashboard />
+              </main>
+              <footer className="text-center p-6 text-sm text-muted-foreground">
+                <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
+              </footer>
+            </SidebarInset>
+          </div>
         </div>
-      </SidebarInset>
     </SidebarProvider>
   );
 }
 
 function LoggedOutView() {
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
-          <div className="text-center">
-            <h1 className="text-5xl md:text-6xl font-headline font-bold tracking-tight text-primary">
-              Find Your aaura
-            </h1>
-            <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-              Your daily sanctuary for spiritual wellness. Explore videos, get personalized horoscopes, and connect with your inner self.
-            </p>
-            <Button asChild className="mt-8" size="lg">
-              <Link href="/login">Join the Community</Link>
-            </Button>
-          </div>
-        </main>
-        <footer className="text-center p-6 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
-        </footer>
-      </div>
-    </SidebarProvider>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <Header />
+      <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-5xl md:text-6xl font-headline font-bold tracking-tight text-primary">
+            Find Your aaura
+          </h1>
+          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+            Your daily sanctuary for spiritual wellness. Explore videos, get personalized horoscopes, and connect with your inner self.
+          </p>
+          <Button asChild className="mt-8" size="lg">
+            <Link href="/login">Join the Community</Link>
+          </Button>
+        </div>
+      </main>
+      <footer className="text-center p-6 text-sm text-muted-foreground">
+        <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
+      </footer>
+    </div>
   );
 }
 

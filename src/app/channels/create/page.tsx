@@ -81,62 +81,64 @@ export default function CreateChannelPage() {
 
   return (
     <SidebarProvider>
-      <Sidebar>
-        <Navigation />
-      </Sidebar>
-      <SidebarInset>
-        <div className="min-h-screen bg-background text-foreground flex flex-col">
-          <Header />
-          <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
-            <Card className="w-full max-w-2xl">
-              <CardHeader>
-                <CardTitle>Create Your Channel</CardTitle>
-                <CardDescription>Start sharing your spiritual content with the aaura community.</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Channel Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="E.g., Ancient Wisdom Today" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Description</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="A short summary of what your channel is about" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <Button type="submit" className="w-full" disabled={isPending}>
-                      {isPending ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                      )}
-                      Create Channel
-                    </Button>
-                  </form>
-                </Form>
-              </CardContent>
-            </Card>
-          </main>
+      <div className="min-h-screen bg-background text-foreground flex flex-col">
+        <Header />
+        <div className="flex flex-1">
+          <Sidebar>
+            <Navigation />
+          </Sidebar>
+          <SidebarInset>
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
+              <Card className="w-full max-w-2xl">
+                <CardHeader>
+                  <CardTitle>Create Your Channel</CardTitle>
+                  <CardDescription>Start sharing your spiritual content with the aaura community.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                      <FormField
+                        control={form.control}
+                        name="name"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Channel Name</FormLabel>
+                            <FormControl>
+                              <Input placeholder="E.g., Ancient Wisdom Today" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder="A short summary of what your channel is about" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full" disabled={isPending}>
+                        {isPending ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <PlusCircle className="mr-2 h-4 w-4" />
+                        )}
+                        Create Channel
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </main>
+          </SidebarInset>
         </div>
-      </SidebarInset>
+      </div>
     </SidebarProvider>
   );
 }

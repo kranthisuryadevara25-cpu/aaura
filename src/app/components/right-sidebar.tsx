@@ -11,7 +11,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
 
 export function RightSidebar() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const upcomingFestivals = festivals.slice(0, 2);
   const suggestedDeities = deities.slice(0, 2);
 
@@ -19,29 +19,32 @@ export function RightSidebar() {
     <aside className="w-full hidden lg:block p-4 space-y-6">
       <Card className="bg-transparent border-0 shadow-none">
         <CardHeader>
-          <CardTitle>Trending Festivals</CardTitle>
+          <CardTitle>{t.rightSidebar.trendingFestivals}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {upcomingFestivals.map((festival) => (
-            <div key={festival.id}>
-              <p className="font-semibold text-sm">{festival.name}</p>
-              <p className="text-xs text-muted-foreground">{format(festival.date, 'MMMM do')}</p>
-            </div>
-          ))}
+          {upcomingFestivals.map((festival) => {
+            const name = festival.name[language] || festival.name.en;
+            return (
+                <div key={festival.id}>
+                <p className="font-semibold text-sm">{name}</p>
+                <p className="text-xs text-muted-foreground">{format(festival.date, 'MMMM do')}</p>
+                </div>
+            )
+          })}
           <Button variant="outline" size="sm" className="w-full" asChild>
-            <Link href="/festivals">View All</Link>
+            <Link href="/festivals">{t.rightSidebar.viewAll}</Link>
           </Button>
         </CardContent>
       </Card>
       
       <Card className="bg-transparent border-0 shadow-none">
         <CardHeader>
-          <CardTitle>Suggested Deities</CardTitle>
+          <CardTitle>{t.rightSidebar.suggestedDeities}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {suggestedDeities.map((deity) => {
-            const name = (deity.name as any)[language] || deity.name.en;
-            const description = (deity.description as any)[language] || deity.description.en;
+            const name = deity.name[language] || deity.name.en;
+            const description = deity.description[language] || deity.description.en;
 
             return (
               <Link key={deity.id} href={`/deities/${deity.slug}`} className="flex items-center gap-3 group">

@@ -270,6 +270,45 @@
         "name",
         "description"
       ]
+    },
+    "Product": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Product",
+      "type": "object",
+      "description": "Represents a product in the marketplace.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the product."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the product."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the product."
+        },
+        "price": {
+          "type": "number",
+          "description": "Price of the product."
+        },
+        "imageUrl": {
+          "type": "string",
+          "description": "URL of the product image.",
+          "format": "uri"
+        },
+        "category": {
+          "type": "string",
+          "description": "Category like 'Idols', 'Incense', 'Books'."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "price",
+        "imageUrl"
+      ]
     }
   },
   "auth": {
@@ -338,8 +377,18 @@
           },
           "description": "Stores information about Hindu deities."
         }
+      },
+      {
+        "path": "/products/{productId}",
+        "definition": {
+          "entityName": "Product",
+          "schema": {
+            "$ref": "#/backend/entities/Product"
+          },
+          "description": "Stores all products for the marketplace."
+        }
       }
     ],
-    "reasoning": "The data model is designed for a content platform. Videos, Channels and Deities are in top-level collections for easy querying and discovery. User-specific data like subscriptions and horoscopes are nested under the user's document. This structure supports features like public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform. Videos, Channels, Deities and Products are in top-level collections for easy querying and discovery. User-specific data like subscriptions and horoscopes are nested under the user's document. This structure supports features like public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
   }
 }

@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
-import { getAuth } from "firebase/auth";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function Header() {

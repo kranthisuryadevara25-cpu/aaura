@@ -51,6 +51,14 @@ export default function LoginPage() {
   }, [user, router]);
   
   const handleAuthAction = async (action: 'signIn' | 'signUp', data: FormValues) => {
+    if (!auth) {
+        toast({
+            variant: 'destructive',
+            title: 'Authentication Failed',
+            description: 'Firebase Auth is not available.',
+        });
+        return;
+    }
     setIsSubmitting(true);
     try {
       if (action === 'signIn') {

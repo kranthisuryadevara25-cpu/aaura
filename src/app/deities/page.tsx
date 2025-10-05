@@ -13,7 +13,7 @@ import { Navigation } from '@/app/components/navigation';
 import { useLanguage } from '@/hooks/use-language';
 
 export default function DeitiesPage() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <SidebarProvider>
@@ -26,9 +26,9 @@ export default function DeitiesPage() {
           <SidebarInset>
               <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                   <div className="text-center mb-12">
-                      <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">Deity Explorer</h1>
+                      <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">{t.deities.title}</h1>
                       <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                          Discover the rich pantheon of Hindu gods and goddesses. Explore their stories, mantras, and significance.
+                          {t.deities.description}
                       </p>
                   </div>
 
@@ -56,7 +56,7 @@ export default function DeitiesPage() {
                       <CardContent className="mt-auto">
                           <Button asChild className="w-full">
                               <Link href={`/deities/${deity.slug}`}>
-                                  Explore <ArrowRight className="ml-2" />
+                                  {t.buttons.explore} <ArrowRight className="ml-2" />
                               </Link>
                           </Button>
                       </CardContent>

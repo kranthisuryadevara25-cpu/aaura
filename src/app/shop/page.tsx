@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
+import { useLanguage } from '@/hooks/use-language';
 
 const products = [
     { id: '1', name: 'Handcrafted Ganesha Idol', price: 49.99, imageUrl: 'https://picsum.photos/seed/idol/400/400', imageHint: 'Ganesha idol', description: 'A beautiful, handcrafted Ganesha idol for your home altar.' },
@@ -18,6 +19,7 @@ const products = [
 
 
 export default function ShopPage() {
+  const { t } = useLanguage();
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -29,9 +31,9 @@ export default function ShopPage() {
           <SidebarInset>
               <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                   <div className="text-center mb-12">
-                      <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">Spiritual Marketplace</h1>
+                      <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">{t.shop.title}</h1>
                       <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                          Find authentic items to support your spiritual practice.
+                          {t.shop.description}
                       </p>
                   </div>
 
@@ -56,7 +58,7 @@ export default function ShopPage() {
                       <CardContent className="mt-auto">
                           <Button className="w-full">
                               <ShoppingCart className="mr-2" />
-                              Add to Cart
+                              {t.buttons.addToCart}
                           </Button>
                       </CardContent>
                       </Card>

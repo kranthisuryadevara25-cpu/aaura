@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useParams, notFound, useRouter } from 'next/navigation';
+import { useParams, notFound } from 'next/navigation';
 import { getCharacterBySlug } from '@/lib/characters';
 import { getStoryBySlug } from '@/lib/stories';
 import { Header } from '@/app/components/header';
@@ -10,8 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 
@@ -19,7 +18,7 @@ export default function CharacterDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const character = getCharacterBySlug(slug);
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   if (!character) {
     notFound();
@@ -64,7 +63,7 @@ export default function CharacterDetailPage() {
                     <div className="md:col-span-2 space-y-8">
                         <Card className="bg-transparent border-primary/20">
                             <CardHeader>
-                                <CardTitle className="text-2xl text-primary">About {name}</CardTitle>
+                                <CardTitle className="text-2xl text-primary">{t.characterDetail.about} {name}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-lg text-foreground/90">{description}</p>
@@ -74,7 +73,7 @@ export default function CharacterDetailPage() {
                         {associatedStories.length > 0 && (
                             <Card className="bg-transparent border-primary/20">
                                 <CardHeader>
-                                    <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> Associated Stories</CardTitle>
+                                    <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.characterDetail.associatedStories}</CardTitle>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     {associatedStories.map(story => story && (

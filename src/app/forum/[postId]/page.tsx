@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -15,12 +15,13 @@ import { Navigation } from '@/app/components/navigation';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { useLanguage } from '@/hooks/use-language';
 
 const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long."),
@@ -57,6 +58,7 @@ export default function PostDetailPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const { t } = useLanguage();
 
   const postRef = useMemo(() => {
     if (!firestore || !postId) return null;
@@ -161,7 +163,7 @@ export default function PostDetailPage() {
 
                 <Separator className="my-8" />
                 
-                <h2 className="text-2xl font-bold mb-4">Discussion</h2>
+                <h2 className="text-2xl font-bold mb-4">{t.forum.discussionTitle}</h2>
 
                 <div className="space-y-6 mb-8">
                   {comments && comments.length > 0 ? (
@@ -169,7 +171,7 @@ export default function PostDetailPage() {
                       <CommentCard key={comment.id} comment={comment} author={usersMap.get(comment.authorId)} />
                     ))
                   ) : (
-                    <p className="text-muted-foreground text-center py-4">No comments yet. Be the first to reply!</p>
+                    <p className="text-muted-foreground text-center py-4">{t.forum.noComments}</p>
                   )}
                 </div>
 
@@ -187,7 +189,7 @@ export default function PostDetailPage() {
                           <FormItem className="w-full">
                             <FormControl>
                               <Textarea
-                                placeholder="Write a comment..."
+                                placeholder={t.forum.commentPlaceholder}
                                 className="resize-none"
                                 rows={2}
                                 {...field}

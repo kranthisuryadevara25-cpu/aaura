@@ -1,23 +1,33 @@
+
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
 import { getRitualBySlug } from '@/lib/rituals';
 import { Header } from '@/app/components/header';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import { Badge } from '@/components/ui/badge';
 import { CheckSquare, ShoppingBasket, Clock } from 'lucide-react';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function RitualDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const ritual = getRitualBySlug(slug);
+  const { language, t } = useLanguage();
 
   if (!ritual) {
     notFound();
   }
+  
+  const name = ritual.name[language] || ritual.name.en;
+  const description = ritual.description[language] || ritual.description.en;
+  const deity = ritual.deity[language] || ritual.deity.en;
+  const auspiciousTime = ritual.auspiciousTime[language] || ritual.auspiciousTime.en;
+  const procedure = ritual.procedure[language] || ritual.procedure.en;
+  const itemsRequired = ritual.itemsRequired[language] || ritual.itemsRequired.en;
 
   return (
     <SidebarProvider>
@@ -31,15 +41,15 @@ export default function RitualDetailPage() {
               <main className="container mx-auto px-4 py-8 md:py-12">
                   <article className="max-w-4xl mx-auto">
                       <header className="text-center mb-8">
-                          <Badge variant="default" className="mb-2">{ritual.deity}</Badge>
-                          <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{ritual.name}</h1>
-                          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{ritual.description}</p>
+                          <Badge variant="default" className="mb-2">{deity}</Badge>
+                          <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
+                          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{description}</p>
                       </header>
 
                       <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20 mb-8">
                           <Image
                               src={ritual.image.url}
-                              alt={ritual.name}
+                              alt={name}
                               data-ai-hint={ritual.image.hint}
                               fill
                               className="object-cover"
@@ -50,11 +60,11 @@ export default function RitualDetailPage() {
                           <div className="md:col-span-2">
                                <Card className="bg-transparent border-primary/20 mb-8">
                                   <CardHeader>
-                                      <CardTitle className="flex items-center gap-3 text-primary"><CheckSquare /> Step-by-Step Procedure</CardTitle>
+                                      <CardTitle className="flex items-center gap-3 text-primary"><CheckSquare /> {t.ritualDetail.procedure}</CardTitle>
                                   </CardHeader>
                                   <CardContent>
                                       <ol className="list-decimal list-inside space-y-4 text-foreground/90">
-                                          {ritual.procedure.map((step, index) => (
+                                          {procedure.map((step, index) => (
                                               <li key={index}>{step}</li>
                                           ))}
                                       </ol>
@@ -64,11 +74,11 @@ export default function RitualDetailPage() {
                           <div className="space-y-6">
                               <Card className="bg-transparent border-primary/20 sticky top-24">
                                   <CardHeader>
-                                      <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> Items Required</CardTitle>
+                                      <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> {t.ritualDetail.itemsRequired}</CardTitle>
                                   </CardHeader>
                                   <CardContent>
                                       <ul className="list-disc list-inside space-y-2 text-foreground/90">
-                                          {ritual.itemsRequired.map((item, index) => (
+                                          {itemsRequired.map((item, index) => (
                                               <li key={index}>{item}</li>
                                           ))}
                                       </ul>
@@ -76,10 +86,10 @@ export default function RitualDetailPage() {
                               </Card>
                                <Card className="bg-transparent border-primary/20">
                                   <CardHeader>
-                                      <CardTitle className="flex items-center gap-3 text-primary"><Clock /> Auspicious Time</CardTitle>
+                                      <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.ritualDetail.auspiciousTime}</CardTitle>
                                   </CardHeader>
                                   <CardContent>
-                                      <p className="text-foreground/90">{ritual.auspiciousTime}</p>
+                                      <p className="text-foreground/90">{auspiciousTime}</p>
                                   </CardContent>
                               </Card>
                           </div>

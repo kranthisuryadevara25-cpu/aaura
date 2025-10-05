@@ -13,7 +13,7 @@ import { Navigation } from '@/app/components/navigation';
 import { useLanguage } from '@/hooks/use-language';
 
 export default function StoriesPage() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <SidebarProvider>
@@ -27,10 +27,10 @@ export default function StoriesPage() {
               <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                   <div className="text-center mb-12">
                       <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                          <ScrollText className="h-10 w-10" /> Mythological Stories
+                          <ScrollText className="h-10 w-10" /> {t.stories.title}
                       </h1>
                       <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                          Explore the timeless epics and folk tales that have shaped generations.
+                          {t.stories.description}
                       </p>
                   </div>
 
@@ -59,7 +59,7 @@ export default function StoriesPage() {
                           <CardContent className="mt-auto">
                               <Button asChild className="w-full">
                                   <Link href={`/stories/${story.slug}`}>
-                                      Read Story <ArrowRight className="ml-2" />
+                                      {t.buttons.readStory} <ArrowRight className="ml-2" />
                                   </Link>
                               </Button>
                           </CardContent>

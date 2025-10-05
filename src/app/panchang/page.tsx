@@ -3,15 +3,17 @@
 
 import { Header } from '@/app/components/header';
 import { getTodaysPanchang } from '@/lib/panchang';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import { CalendarDays, Sunrise, Sunset, Moon, Star, AlertTriangle, PartyPopper } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getFestivalBySlug } from '@/lib/festivals';
 import Link from 'next/link';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function PanchangPage() {
+    const { t } = useLanguage();
     const panchang = getTodaysPanchang();
 
     const panchangItems = [
@@ -46,7 +48,7 @@ export default function PanchangPage() {
               <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                   <div className="text-center mb-12">
                       <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                          <CalendarDays className="h-10 w-10" /> Daily Panchang
+                          <CalendarDays className="h-10 w-10" /> {t.panchang.title}
                       </h1>
                       <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
                           {panchang.date}
@@ -60,14 +62,14 @@ export default function PanchangPage() {
                                  <div className="flex items-center gap-4">
                                      <PartyPopper className="h-8 w-8 text-primary" />
                                     <div>
-                                        <CardTitle className="text-primary">Today's Festivals</CardTitle>
+                                        <CardTitle className="text-primary">{t.panchang.todaysFestivals}</CardTitle>
                                         <div className="flex flex-wrap gap-2 mt-1">
                                             {panchang.festivals.map(festivalName => {
                                                 const festival = getFestivalBySlug(festivalName.toLowerCase().replace(/ /g, '-'));
                                                 if (festival) {
                                                     return (
                                                         <Link key={festival.id} href={`/festivals/${festival.slug}`} passHref>
-                                                            <Badge variant="default" className="cursor-pointer hover:bg-primary/80">{festival.name}</Badge>
+                                                            <Badge variant="default" className="cursor-pointer hover:bg-primary/80">{festival.name.en}</Badge>
                                                         </Link>
                                                     );
                                                 }
@@ -100,7 +102,7 @@ export default function PanchangPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                         <Card className="bg-transparent border-primary/20">
                             <CardHeader>
-                                <CardTitle>Astronomical Timings</CardTitle>
+                                <CardTitle>{t.panchang.astronomicalTimings}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {timings.map((item, index) => (
@@ -116,7 +118,7 @@ export default function PanchangPage() {
                         </Card>
                         <Card className="bg-transparent border-primary/20">
                             <CardHeader>
-                                <CardTitle>Inauspicious Timings</CardTitle>
+                                <CardTitle>{t.panchang.inauspiciousTimings}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {inauspiciousTimings.map((item, index) => (
@@ -139,4 +141,3 @@ export default function PanchangPage() {
     </SidebarProvider>
   );
 }
-

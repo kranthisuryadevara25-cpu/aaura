@@ -9,6 +9,7 @@ import { CheckCircle, PlusCircle } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import Link from 'next/link';
+import { useLanguage } from '@/hooks/use-language';
 
 const channels = [
     { id: '1', name: 'Yoga with Adriene', description: 'High-quality yoga and meditation videos for all levels.', avatarUrl: 'https://picsum.photos/seed/adriene/200/200', imageHint: 'woman yoga' },
@@ -18,6 +19,7 @@ const channels = [
 
 
 export default function ChannelsPage() {
+  const { t } = useLanguage();
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -30,16 +32,16 @@ export default function ChannelsPage() {
               <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                   <div className="text-center mb-12">
                       <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
-                           <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">Creator Channels</h1>
+                           <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">{t.channels.title}</h1>
                           <Button asChild>
                               <Link href="/channels/create">
                                   <PlusCircle className="mr-2" />
-                                  Create Channel
+                                  {t.channels.createButton}
                               </Link>
                           </Button>
                       </div>
                       <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                          Follow your favorite spiritual guides and teachers.
+                          {t.channels.description}
                       </p>
                   </div>
 
@@ -61,7 +63,7 @@ export default function ChannelsPage() {
                       </CardHeader>
                       <CardContent className="p-0">
                           <CardDescription className="line-clamp-2 mb-4">{channel.description}</CardDescription>
-                          <Button>Subscribe</Button>
+                          <Button>{t.buttons.subscribe}</Button>
                       </CardContent>
                       </Card>
                   ))}

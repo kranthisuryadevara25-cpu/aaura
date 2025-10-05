@@ -11,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { ArrowRight, BookOpen, Palmtree, UserSquare } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
@@ -20,7 +19,7 @@ export default function StoryDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const story = getStoryBySlug(slug);
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   if (!story) {
     notFound();
@@ -63,7 +62,7 @@ export default function StoryDetailPage() {
 
                       <Card className="bg-transparent border-primary/20 mb-8">
                           <CardHeader>
-                              <CardTitle className="text-2xl text-primary">Summary</CardTitle>
+                              <CardTitle className="text-2xl text-primary">{t.storyDetail.summary}</CardTitle>
                           </CardHeader>
                           <CardContent>
                               <p className="text-lg text-foreground/90">{summary}</p>
@@ -72,18 +71,18 @@ export default function StoryDetailPage() {
                       
                        <Card className="bg-transparent border-primary/20 mb-8">
                           <CardHeader>
-                              <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> The Full Story</CardTitle>
+                              <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.storyDetail.fullStory}</CardTitle>
                           </CardHeader>
                           <CardContent className="prose prose-lg max-w-none text-foreground/90">
                               <p>{fullText}</p>
-                              <p><em>(Full text, audio, and video versions coming soon)</em></p>
+                              <p><em>({t.storyDetail.comingSoon})</em></p>
                           </CardContent>
                       </Card>
 
                       {relatedCharacters.length > 0 && (
                           <Card className="bg-transparent border-primary/20 mb-8">
                               <CardHeader>
-                                  <CardTitle className="flex items-center gap-3 text-primary"><UserSquare /> Key Characters</CardTitle>
+                                  <CardTitle className="flex items-center gap-3 text-primary"><UserSquare /> {t.storyDetail.keyCharacters}</CardTitle>
                               </CardHeader>
                               <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                   {relatedCharacters.map(character => character && (
@@ -101,16 +100,16 @@ export default function StoryDetailPage() {
                       {relatedTemples.length > 0 && (
                           <Card className="bg-transparent border-primary/20">
                               <CardHeader>
-                                  <CardTitle className="flex items-center gap-3 text-primary"><Palmtree /> Related Temples</CardTitle>
+                                  <CardTitle className="flex items-center gap-3 text-primary"><Palmtree /> {t.storyDetail.relatedTemples}</CardTitle>
                               </CardHeader>
                               <CardContent className="space-y-4">
                                   {relatedTemples.map(temple => temple && (
                                       <Link key={temple.id} href={`/temples/${temple.slug}`} className="flex items-center gap-4 p-4 rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                           <div className="w-20 h-20 relative rounded-lg overflow-hidden shrink-0">
-                                            <Image src={temple.media.images[0].url} alt={temple.name} data-ai-hint={temple.media.images[0].hint} fill className="object-cover" />
+                                            <Image src={temple.media.images[0].url} alt={temple.name[language] || temple.name.en} data-ai-hint={temple.media.images[0].hint} fill className="object-cover" />
                                           </div>
                                           <div>
-                                            <h4 className="font-semibold text-lg text-primary group-hover:underline">{temple.name}</h4>
+                                            <h4 className="font-semibold text-lg text-primary group-hover:underline">{temple.name[language] || temple.name.en}</h4>
                                             <p className="text-sm text-muted-foreground">{temple.location.city}, {temple.location.state}</p>
                                           </div>
                                            <ArrowRight className="ml-auto h-5 w-5 shrink-0" />

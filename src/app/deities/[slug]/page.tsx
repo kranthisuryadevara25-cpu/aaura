@@ -6,10 +6,9 @@ import { getDeityBySlug } from '@/lib/deities';
 import { Header } from '@/app/components/header';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { notFound } from 'next/navigation';
-import { Music, BookOpen, Sparkles, Sunrise, Sunset, Loader2 } from 'lucide-react';
+import { Music, BookOpen, Sunrise, Sunset, Loader2 } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import { useEffect, useState } from 'react';
@@ -20,7 +19,7 @@ export default function DeityDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const deity = getDeityBySlug(slug);
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -87,7 +86,7 @@ export default function DeityDetailPage() {
                     <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-8">
                         <Card className="bg-card border-border">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-3 text-primary"><Sunrise /> Today's Relevance</CardTitle>
+                                <CardTitle className="flex items-center gap-3 text-primary"><Sunrise /> {t.deityDetail.todaysRelevance}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-foreground/90">{dailyContent.todaysRelevance}</p>
@@ -95,7 +94,7 @@ export default function DeityDetailPage() {
                         </Card>
                         <Card className="bg-card border-border">
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-3 text-primary"><Sunset /> Tomorrow's Importance</CardTitle>
+                                <CardTitle className="flex items-center gap-3 text-primary"><Sunset /> {t.deityDetail.tomorrowsImportance}</CardTitle>
                             </CardHeader>
                             <CardContent>
                                 <p className="text-foreground/90">{dailyContent.tomorrowsImportance}</p>
@@ -108,7 +107,7 @@ export default function DeityDetailPage() {
                   <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
                       <Card className="bg-card border-border">
                           <CardHeader>
-                              <CardTitle className="flex items-center gap-3 text-primary"><Music /> Mantras</CardTitle>
+                              <CardTitle className="flex items-center gap-3 text-primary"><Music /> {t.deityDetail.mantras}</CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-6">
                               {deity.mantras.map((mantra, index) => {
@@ -126,7 +125,7 @@ export default function DeityDetailPage() {
 
                       <Card className="bg-card border-border">
                           <CardHeader>
-                              <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> Stotras</CardTitle>
+                              <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.deityDetail.stotras}</CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-6">
                               {deity.stotras.map((stotra, index) => {

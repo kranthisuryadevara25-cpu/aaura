@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
 
 export default function CharactersPage() {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   return (
     <SidebarProvider>
@@ -28,10 +28,10 @@ export default function CharactersPage() {
               <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                   <div className="text-center mb-12">
                       <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                          <UserSquare className="h-10 w-10" /> Mythological Characters
+                          <UserSquare className="h-10 w-10" /> {t.characters.title}
                       </h1>
                       <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                          Discover the heroes, villains, gods, and sages of Hindu mythology.
+                          {t.characters.description}
                       </p>
                   </div>
 
@@ -61,7 +61,7 @@ export default function CharactersPage() {
                           <CardContent className="mt-auto">
                               <Button asChild className="w-full">
                                   <Link href={`/characters/${character.slug}`}>
-                                      Learn More <ArrowRight className="ml-2" />
+                                      {t.buttons.learnMore} <ArrowRight className="ml-2" />
                                   </Link>
                               </Button>
                           </CardContent>

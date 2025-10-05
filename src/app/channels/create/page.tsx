@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -26,6 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
+import { useLanguage } from '@/hooks/use-language';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'Channel name must be at least 3 characters.' }),
@@ -40,13 +41,14 @@ export default function CreateChannelPage() {
   const firestore = useFirestore();
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
+  const { t } = useLanguage();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
   });
 
   const onSubmit = (data: FormValues) => {
-    if (!user) {
+    if (!user || !firestore) {
       toast({ variant: 'destructive', title: 'You must be logged in to create a channel.' });
       return;
     }
@@ -59,21 +61,23 @@ export default function CreateChannelPage() {
         await setDocumentNonBlocking(channelRef, {
           userId: user.uid,
           name: data.name,
-          description: data.description,
+          description_en: data.description,
+          description_hi: data.description,
+          description_te: data.description,
           creationDate: serverTimestamp(),
         }, {});
 
         toast({
-          title: 'Channel Created!',
-          description: 'Your new channel has been successfully created.',
+          title: t.toasts.channelCreatedTitle,
+          description: t.toasts.channelCreatedDescription,
         });
         router.push('/channels');
       } catch (error) {
         console.error('Channel creation failed:', error);
         toast({
           variant: 'destructive',
-          title: 'Creation Failed',
-          description: 'Something went wrong while creating your channel. Please try again.',
+          title: t.toasts.creationFailedTitle,
+          description: t.toasts.creationFailedDescription,
         });
       }
     });
@@ -91,8 +95,8 @@ export default function CreateChannelPage() {
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
               <Card className="w-full max-w-2xl bg-card">
                 <CardHeader>
-                  <CardTitle>Create Your Channel</CardTitle>
-                  <CardDescription>Start sharing your spiritual content with the aaura community.</CardDescription>
+                  <CardTitle>{t.createChannel.title}</CardTitle>
+                  <CardDescription>{t.createChannel.description}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Form {...form}>
@@ -102,9 +106,9 @@ export default function CreateChannelPage() {
                         name="name"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Channel Name</FormLabel>
+                            <FormLabel>{t.createChannel.nameLabel}</FormLabel>
                             <FormControl>
-                              <Input placeholder="E.g., Ancient Wisdom Today" {...field} />
+                              <Input placeholder={t.createChannel.namePlaceholder} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -115,9 +119,9 @@ export default function CreateChannelPage() {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>{t.createChannel.descriptionLabel}</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="A short summary of what your channel is about" {...field} />
+                              <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -129,7 +133,7 @@ export default function CreateChannelPage() {
                         ) : (
                           <PlusCircle className="mr-2 h-4 w-4" />
                         )}
-                        Create Channel
+                        {t.createChannel.submitButton}
                       </Button>
                     </form>
                   </Form>

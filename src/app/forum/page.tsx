@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useMemo, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,6 +20,7 @@ import { Loader2, MessageCircle, Send } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { useLanguage } from '@/hooks/use-language';
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(500, "Post must be less than 500 characters."),
@@ -28,6 +29,7 @@ const postSchema = z.object({
 type PostFormValues = z.infer<typeof postSchema>;
 
 function PostCard({ post, author }: { post: any; author: any }) {
+  const { t } = useLanguage();
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-start gap-4 space-y-0">
@@ -51,7 +53,7 @@ function PostCard({ post, author }: { post: any; author: any }) {
       <CardFooter className="flex justify-end">
         <Button variant="ghost" asChild>
           <Link href={`/forum/${post.id}`}>
-            <MessageCircle className="mr-2 h-4 w-4" /> View Discussion
+            <MessageCircle className="mr-2 h-4 w-4" /> {t.forum.viewDiscussion}
           </Link>
         </Button>
       </CardFooter>
@@ -64,6 +66,7 @@ export default function ForumPage() {
   const firestore = useFirestore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
+  const { t } = useLanguage();
 
   const postsQuery = useMemo(() => {
     if (!firestore) return null;
@@ -125,17 +128,17 @@ export default function ForumPage() {
               <div className="max-w-3xl mx-auto">
                 <div className="text-center mb-12">
                   <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                    <MessageCircle className="h-10 w-10" /> Community Forum
+                    <MessageCircle className="h-10 w-10" /> {t.forum.title}
                   </h1>
                   <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                    Ask questions, share experiences, and connect with fellow seekers.
+                    {t.forum.description}
                   </p>
                 </div>
 
                 {user && (
                   <Card className="mb-8">
                     <CardHeader>
-                      <CardTitle>Create a New Post</CardTitle>
+                      <CardTitle>{t.forum.createPostTitle}</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <Form {...form}>
@@ -147,7 +150,7 @@ export default function ForumPage() {
                               <FormItem>
                                 <FormControl>
                                   <Textarea
-                                    placeholder="What's on your mind?"
+                                    placeholder={t.forum.createPostPlaceholder}
                                     className="resize-none"
                                     rows={4}
                                     {...field}
@@ -159,7 +162,7 @@ export default function ForumPage() {
                           />
                           <Button type="submit" disabled={isPending}>
                             {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            Post
+                            {t.buttons.post}
                           </Button>
                         </form>
                       </Form>
@@ -176,7 +179,7 @@ export default function ForumPage() {
                     ))
                   ) : (
                     <div className="text-center py-10">
-                      <p className="text-muted-foreground">No posts yet. Be the first to start a conversation!</p>
+                      <p className="text-muted-foreground">{t.forum.noPosts}</p>
                     </div>
                   )}
                 </div>

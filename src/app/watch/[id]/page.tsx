@@ -12,6 +12,8 @@ import { deities } from '@/lib/deities';
 import { useLanguage } from '@/hooks/use-language';
 import { FeedSidebar } from "@/components/feed-sidebar";
 import { VideoPlayer } from "@/components/video-player";
+import { Comments } from '@/components/comments';
+import { Separator } from '@/components/ui/separator';
 
 export default function WatchPage({ params }: { params: { id: string }}) {
   const { id } = params;
@@ -88,6 +90,8 @@ export default function WatchPage({ params }: { params: { id: string }}) {
     <div className="flex w-full h-screen bg-background text-foreground">
       <div className="flex-1 p-4 overflow-y-auto">
         <VideoPlayer contentId={id} onVideoEnd={handleVideoEnd} />
+        <Separator className="my-6" />
+        <Comments contentId={id} contentType="media" />
       </div>
       <aside className="w-[400px] border-l border-border overflow-y-auto hidden lg:block">
         <FeedSidebar items={upNextItems} isLoading={loading} />

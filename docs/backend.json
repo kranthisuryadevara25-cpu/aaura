@@ -602,16 +602,17 @@
     },
     "Comment": {
       "title": "Comment",
-      "description": "Represents a comment on a forum post.",
+      "description": "Represents a comment on a piece of content (e.g., post, video).",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "postId": { "type": "string" },
+        "contentId": { "type": "string", "description": "The ID of the content being commented on." },
+        "contentType": { "type": "string", "description": "The type of content (e.g., 'post', 'media')." },
         "authorId": { "type": "string" },
         "text": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["postId", "authorId", "text", "createdAt"]
+      "required": ["contentId", "contentType", "authorId", "text", "createdAt"]
     }
   },
   "auth": {
@@ -651,6 +652,14 @@
           "entityName": "Media",
           "schema": { "$ref": "#/entities/Media" },
           "description": "Stores all media on the platform (videos, audio, etc.)."
+        }
+      },
+      {
+        "path": "/media/{mediaId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": { "$ref": "#/entities/Comment" },
+          "description": "Stores comments for a specific media item."
         }
       },
       {

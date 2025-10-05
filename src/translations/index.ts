@@ -1277,5 +1277,3 @@ export const translations = {
     }
   },
 };
-
-    

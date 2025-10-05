@@ -3,11 +3,10 @@
 
 import { useMemo } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, limit, where } from 'firebase/firestore';
+import { collection, query, limit, where, orderBy } from 'firebase/firestore';
 import { Loader2, Youtube, Clapperboard, Sparkles } from 'lucide-react';
-import { VideoCard } from './cards/video-card';
-import { ShortCard } from './cards/short-card';
-import { DeityCard } from './cards/deity-card';
+import { VideoCard } from '@/components/cards/video-card';
+import { DeityCard } from '@/components/cards/deity-card';
 import { useLanguage } from '@/hooks/use-language';
 import { db } from '@/lib/firebase';
 import { Deity } from '@/lib/deities';
@@ -19,19 +18,19 @@ export function Dashboard() {
         return query(
             collection(db, 'media'), 
             where('mediaType', 'in', ['video', 'pravachan']), 
-            where('language', '==', language),
+            orderBy('uploadDate', 'desc'),
             limit(8)
         )
-    }, [language]);
+    }, []);
     
     const shortsQuery = useMemo(() => {
         return query(
             collection(db, 'media'), 
             where('mediaType', '==', 'short'), 
-            where('language', '==', language),
+            orderBy('uploadDate', 'desc'),
             limit(6)
         );
-    }, [language]);
+    }, []);
 
     const deitiesQuery = useMemo(() => query(collection(db, 'deities'), limit(4)), []);
     
@@ -43,7 +42,7 @@ export function Dashboard() {
 
     if (isLoading) {
         return (
-            <div className="flex justify-center items-center h-full">
+            <div className="flex justify-center items-center h-full p-8">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>
         );
@@ -52,37 +51,41 @@ export function Dashboard() {
     return (
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
             <div className="space-y-12">
-                {/* Videos Section */}
+                {/* Videos Section - Single Column Feed */}
                 {videos && videos.length > 0 && (
                      <div>
                         <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
                            <Youtube className="text-primary" /> For You
                         </h2>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-2 gap-x-4 gap-y-8">
+                        <div className="grid grid-cols-1 gap-y-8">
                             {videos.map(video => <VideoCard key={video.id} video={video} />)}
                         </div>
                     </div>
                 )}
                
-                {/* Shorts Section */}
+                {/* Shorts Section - Remains horizontal scroll */}
                 {shorts && shorts.length > 0 && (
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
                             <Clapperboard className="text-primary" /> Shorts
                         </h2>
-                        <div className="flex space-x-4 overflow-x-auto pb-4">
-                           {shorts.map(short => <ShortCard key={short.id} short={short} />)}
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                           {shorts.map(short => (
+                            <div key={short.id} className="aspect-[9/16] bg-secondary rounded-lg">
+                                {/* Placeholder for ShortCard */}
+                            </div>
+                           ))}
                         </div>
                     </div>
                 )}
 
-                 {/* Deities Section */}
+                 {/* Deities Section - Horizontal Cards */}
                 {deities && deities.length > 0 && (
                     <div>
                         <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
                            <Sparkles className="text-primary" /> Discover Deities
                         </h2>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                             {deities.map(deity => <DeityCard key={deity.id} deity={deity as Deity & {id: string}} />)}
                         </div>
                     </div>

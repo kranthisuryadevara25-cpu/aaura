@@ -1,4 +1,4 @@
-// src/app/components/feed.tsx
+
 "use client";
 import React, { useState, useMemo } from "react";
 import { useFeed } from "@/hooks/use-feed";
@@ -6,6 +6,8 @@ import { FeedCard } from "@/components/FeedCard";
 import ReelsFeed from "@/components/ReelsFeed"; 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { VideoCard } from "./cards/video-card";
+import { DeityCard } from "./cards/deity-card";
 
 export function Feed({ searchQuery }: { searchQuery: string }) {
   const { allItems, loading, filterItems } = useFeed(20);
@@ -22,6 +24,14 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
       return displayedItems.filter(item => item.kind === 'video' && item.mediaUrl);
   }, [displayedItems])
 
+  if (loading) {
+    return (
+        <div className="flex justify-center items-center h-96">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+    );
+  }
+
   return (
     <div className="px-4 py-4">
       <div className="flex items-center justify-start mb-4">
@@ -34,16 +44,13 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
       {view === "reels" ? (
         <ReelsFeed items={reelsItems} />
       ) : (
-        <div>
-          {loading ? (
-            <div className="flex justify-center items-center h-96">
-                <Loader2 className="h-16 w-16 animate-spin text-primary" />
-            </div>
-            ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {displayedItems.map((it) => <FeedCard key={it.id} item={it} />)}
-            </div>
-          )}
+        <div className="space-y-8">
+            {displayedItems.map((item) => {
+                if(item.kind === 'video') return <VideoCard key={item.id} video={item} />;
+                if(item.kind === 'deity') return <DeityCard key={item.id} deity={item} />;
+                // We can add more card types here for story, temple etc.
+                return <FeedCard key={item.id} item={item} />
+            })}
         </div>
       )}
     </div>

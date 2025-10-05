@@ -5,37 +5,38 @@ import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
 import Link from "next/link";
 import Image from "next/image";
+import { formatDistanceToNow } from 'date-fns';
+import { useDocumentData } from "react-firebase-hooks/firestore";
+import { doc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+
+
+const AuthorAvatar = ({ userId }: { userId: string }) => {
+  const [author, loading] = useDocumentData(userId ? doc(db, 'users', userId) : undefined);
+
+  if (loading || !author) {
+    return <div className="h-10 w-10 rounded-full bg-muted" />;
+  }
+
+  return (
+     <Avatar>
+        <AvatarImage src={author?.photoURL} />
+        <AvatarFallback>{author?.displayName?.[0] || 'A'}</AvatarFallback>
+      </Avatar>
+  )
+}
+
 
 export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const { language } = useLanguage();
 
-  // get text helpers
   const getText = (field?: Record<string,string> | string) => {
     if (!field) return "";
     if (typeof field === "string") return field;
     return (field[language] || field["en"] || Object.values(field)[0] || "");
   };
 
-  const cardContent = (
-    <div className="bg-card rounded-lg overflow-hidden shadow-sm hover:shadow-lg transition-shadow duration-300 group h-full flex flex-col">
-      <div className="relative aspect-video">
-        <Image src={item.thumbnail || "/placeholder.jpg"} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" alt={getText(item.title)} fill />
-        <span className="absolute top-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
-          {item.kind.toUpperCase()}
-        </span>
-      </div>
-
-      <div className="p-3 flex flex-col flex-grow">
-        <h3 className="text-sm font-semibold leading-snug truncate group-hover:text-primary">{getText(item.title)}</h3>
-        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 flex-grow">{getText(item.description)}</p>
-        <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-          <div>{item.meta?.views ? `${item.meta.views.toLocaleString()} views` : ""}</div>
-          <div>{item.meta?.duration ? `${Math.round(item.meta.duration / 60)} min` : ""}</div>
-        </div>
-      </div>
-    </div>
-  );
-  
   const getHref = () => {
     if (item.kind === 'video' && item.id) {
         return `/watch/${item.id.replace('video-', '')}`;
@@ -52,10 +53,29 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
     return "#";
   }
 
-
   return (
-    <Link href={getHref()} className="h-full">
-      {cardContent}
+    <Link href={getHref()} className="group">
+      <div className="aspect-video relative mb-3">
+        <Image src={item.thumbnail || "/placeholder.jpg"} className="w-full h-full object-cover rounded-lg" alt={getText(item.title)} fill />
+        <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+          {item.meta?.duration ? `${Math.round(item.meta.duration / 60)}:${String(item.meta.duration % 60).padStart(2, '0')}` : item.kind.toUpperCase()}
+        </span>
+      </div>
+
+      <div className="flex gap-3">
+        {item.meta?.userId && <AuthorAvatar userId={item.meta.userId} />}
+        <div className="flex-1">
+             <h3 className="text-md font-semibold leading-snug line-clamp-2 group-hover:text-primary">{getText(item.title)}</h3>
+            <div className="text-sm text-muted-foreground mt-1">
+                <p>{getText(item.meta?.channelName) || 'Aaura Content'}</p>
+                <div className="flex items-center gap-2">
+                    <span>{item.meta?.views ? `${item.meta.views.toLocaleString()} views` : "New"}</span>
+                    &bull;
+                    <span>{item.createdAt ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true }) : ''}</span>
+                </div>
+            </div>
+        </div>
+      </div>
     </Link>
   );
 };

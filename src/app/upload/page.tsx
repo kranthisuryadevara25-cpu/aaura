@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -24,6 +25,8 @@ import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { moderateContent } from '@/ai/ai-content-moderation';
+import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
+import { Navigation } from '../navigation';
 
 const formSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
@@ -117,69 +120,76 @@ export default function UploadPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header />
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
-        <Card className="w-full max-w-2xl">
-          <CardHeader>
-            <CardTitle>Upload a Video</CardTitle>
-            <CardDescription>Share your spiritual, religious, and wellness videos with the community. All content must be positive and uplifting.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="A short summary of your video's positive message" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="video"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Video File</FormLabel>
-                      <FormControl>
-                        <Input type="file" accept="video/*" {...fileRef} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isPending}>
-                  {isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Upload className="mr-2 h-4 w-4" />
-                  )}
-                  Moderate and Upload
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </main>
-    </div>
+    <SidebarProvider>
+        <Sidebar>
+            <Navigation />
+        </Sidebar>
+        <SidebarInset>
+            <div className="min-h-screen bg-background text-foreground flex flex-col">
+            <Header />
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
+                <Card className="w-full max-w-2xl">
+                <CardHeader>
+                    <CardTitle>Upload a Video</CardTitle>
+                    <CardDescription>Share your spiritual, religious, and wellness videos with the community. All content must be positive and uplifting.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                        <FormField
+                        control={form.control}
+                        name="title"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Title</FormLabel>
+                            <FormControl>
+                                <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="description"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Description</FormLabel>
+                            <FormControl>
+                                <Textarea placeholder="A short summary of your video's positive message" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <FormField
+                        control={form.control}
+                        name="video"
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Video File</FormLabel>
+                            <FormControl>
+                                <Input type="file" accept="video/*" {...fileRef} />
+                            </FormControl>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
+                        <Button type="submit" className="w-full" disabled={isPending}>
+                        {isPending ? (
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                            <Upload className="mr-2 h-4 w-4" />
+                        )}
+                        Moderate and Upload
+                        </Button>
+                    </form>
+                    </Form>
+                </CardContent>
+                </Card>
+            </main>
+            </div>
+        </SidebarInset>
+    </SidebarProvider>
   );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -6,7 +7,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users, Palmtree, ScrollText, UserSquare, BookHeart, CalendarDays } from 'lucide-react';
+import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users, Palmtree, ScrollText, UserSquare, BookHeart, CalendarDays, PartyPopper } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navigation() {
@@ -69,6 +70,14 @@ export function Navigation() {
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
+         <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Festivals">
+            <Link href="/festivals">
+              <PartyPopper />
+              <span>Festivals</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton asChild tooltip="Channels">
             <Link href="/channels">
@@ -107,3 +116,4 @@ export function Navigation() {
 }
 
     
+

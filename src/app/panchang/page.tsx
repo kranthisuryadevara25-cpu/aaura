@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Header } from '@/app/components/header';
@@ -7,6 +8,8 @@ import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
 import { Navigation } from '@/app/components/navigation';
 import { CalendarDays, Sunrise, Sunset, Moon, Star, AlertTriangle, PartyPopper } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { getFestivalBySlug } from '@/lib/festivals';
+import Link from 'next/link';
 
 export default function PanchangPage() {
     const panchang = getTodaysPanchang();
@@ -53,12 +56,26 @@ export default function PanchangPage() {
                   <div className="max-w-6xl mx-auto space-y-8">
                     {panchang.festivals.length > 0 && (
                         <Card className="bg-primary/10 border-primary/20">
-                            <CardHeader className="flex-row items-center gap-4">
-                                <PartyPopper className="h-8 w-8 text-primary" />
-                                <div>
-                                    <CardTitle className="text-primary">Today's Festivals</CardTitle>
-                                    <CardDescription>{panchang.festivals.join(', ')}</CardDescription>
-                                </div>
+                            <CardHeader>
+                                 <div className="flex items-center gap-4">
+                                     <PartyPopper className="h-8 w-8 text-primary" />
+                                    <div>
+                                        <CardTitle className="text-primary">Today's Festivals</CardTitle>
+                                        <div className="flex flex-wrap gap-2 mt-1">
+                                            {panchang.festivals.map(festivalName => {
+                                                const festival = getFestivalBySlug(festivalName.toLowerCase().replace(/ /g, '-'));
+                                                if (festival) {
+                                                    return (
+                                                        <Link key={festival.id} href={`/festivals/${festival.slug}`} passHref>
+                                                            <Badge variant="default" className="cursor-pointer hover:bg-primary/80">{festival.name}</Badge>
+                                                        </Link>
+                                                    );
+                                                }
+                                                return <Badge key={festivalName} variant="secondary">{festivalName}</Badge>;
+                                            })}
+                                        </div>
+                                    </div>
+                                 </div>
                             </CardHeader>
                         </Card>
                     )}
@@ -122,3 +139,4 @@ export default function PanchangPage() {
     </SidebarProvider>
   );
 }
+

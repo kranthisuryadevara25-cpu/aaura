@@ -532,6 +532,23 @@
         "festival": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["date"]
+    },
+    "Festival": {
+      "title": "Festival",
+      "type": "object",
+      "description": "Represents a cultural festival.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "duration": { "type": "string" },
+        "significance": { "type": "string" },
+        "associatedDeities": { "type": "array", "items": { "type": "string" } },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "relatedTemples": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "name", "description", "date", "significance"]
     }
   },
   "auth": {
@@ -660,8 +677,17 @@
           "schema": { "$ref": "#/entities/Panchang" },
           "description": "Stores daily panchang data, with the document ID being the date (e.g., '2025-10-05')."
         }
+      },
+      {
+        "path": "/festivals/{festivalId}",
+        "definition": {
+          "entityName": "Festival",
+          "schema": { "$ref": "#/entities/Festival" },
+          "description": "Stores details about cultural and religious festivals."
+        }
       }
     ],
-    "reasoning": "The data model is designed for a content platform with e-commerce and a new temple library. Videos, Channels, Deities, Shops, Products, and Temples are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples. This structure supports a multi-vendor marketplace, public video feeds, a detailed temple library, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce and a new temple library. Videos, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, and Rituals are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
   }
 }
+

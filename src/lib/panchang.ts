@@ -1,3 +1,6 @@
+
+import { festivals } from "./festivals";
+
 export type Panchang = {
     date: string;
     tithi: string;
@@ -18,6 +21,15 @@ export const getTodaysPanchang = (): Panchang => {
     // based on the user's location and the current date.
     const today = new Date();
     
+    // Find festivals that fall on today's date (ignoring time)
+    const todaysFestivals = festivals
+        .filter(f => 
+            f.date.getUTCDate() === today.getUTCDate() &&
+            f.date.getUTCMonth() === today.getUTCMonth() &&
+            f.date.getUTCFullYear() === today.getUTCFullYear()
+        )
+        .map(f => f.name);
+
     // Mock data for today
     return {
         date: today.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
@@ -31,6 +43,7 @@ export const getTodaysPanchang = (): Panchang => {
         sunset: "06:35 PM",
         moonrise: "02:20 PM",
         moonset: "01:50 AM (Next Day)",
-        festivals: ["Ganga Dussehra"]
+        festivals: todaysFestivals.length > 0 ? todaysFestivals : []
     };
 };
+

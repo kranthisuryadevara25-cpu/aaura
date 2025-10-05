@@ -32,7 +32,7 @@ export default function DeityDetailPage() {
             <Header />
             <main className="container mx-auto px-4 py-8 md:py-12">
                 <div className="text-center mb-8">
-                <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight">{deity.name}</h1>
+                <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{deity.name}</h1>
                 <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">{deity.description}</p>
                 </div>
 
@@ -40,7 +40,7 @@ export default function DeityDetailPage() {
                 <CarouselContent>
                     {deity.images.map((image, index) => (
                     <CarouselItem key={index}>
-                        <div className="aspect-video relative rounded-lg overflow-hidden">
+                        <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
                         <Image
                             src={image.url}
                             alt={`${deity.name} image ${index + 1}`}
@@ -57,30 +57,30 @@ export default function DeityDetailPage() {
                 </Carousel>
 
                 <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                    <Card>
+                    <Card className="bg-transparent border-primary/20">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-3"><Music /> Mantras</CardTitle>
+                            <CardTitle className="flex items-center gap-3 text-primary"><Music /> Mantras</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {deity.mantras.map((mantra, index) => (
                                 <div key={index}>
-                                    <p className="text-lg font-semibold font-body text-primary">{mantra.sanskrit}</p>
-                                    <p className="text-muted-foreground">{mantra.translation}</p>
+                                    <p className="text-xl font-semibold font-body text-foreground">{mantra.sanskrit}</p>
+                                    <p className="text-muted-foreground italic">{mantra.translation}</p>
                                 </div>
                             ))}
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="bg-transparent border-primary/20">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-3"><BookOpen /> Stotras</CardTitle>
+                            <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> Stotras</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
                             {deity.stotras.map((stotra, index) => (
                                 <div key={index}>
-                                    <h4 className="font-semibold text-lg">{stotra.title}</h4>
-                                    <p className="font-body text-primary/80 mt-1">{stotra.sanskrit}</p>
-                                    <p className="text-muted-foreground text-sm mt-1">{stotra.translation}</p>
+                                    <h4 className="font-semibold text-lg text-foreground">{stotra.title}</h4>
+                                    <p className="font-body text-foreground/80 mt-1">{stotra.sanskrit}</p>
+                                    <p className="text-muted-foreground text-sm mt-1 italic">{stotra.translation}</p>
                                 </div>
                             ))}
                         </CardContent>

@@ -29,7 +29,7 @@ export default function ChannelsPage() {
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                 <div className="text-center mb-12">
                     <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
-                         <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">Creator Channels</h1>
+                         <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">Creator Channels</h1>
                         <Button asChild>
                             <Link href="/channels/create">
                                 <PlusCircle className="mr-2" />
@@ -44,7 +44,7 @@ export default function ChannelsPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {channels.map((channel) => (
-                    <Card key={channel.id} className="flex flex-col text-center items-center p-6">
+                    <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-transparent border-primary/20 hover:border-primary/50 transition-colors duration-300">
                     <div className="relative mb-4">
                         <Image
                             src={channel.avatarUrl}
@@ -52,11 +52,11 @@ export default function ChannelsPage() {
                             data-ai-hint={channel.imageHint}
                             width={128}
                             height={128}
-                            className="rounded-full border-4 border-primary/20"
+                            className="rounded-full border-4 border-accent/20"
                         />
                     </div>
                     <CardHeader className="p-0 mb-2">
-                        <CardTitle className="flex items-center justify-center gap-2">{channel.name} <CheckCircle className="text-blue-500 h-5 w-5" /></CardTitle>
+                        <CardTitle className="flex items-center justify-center gap-2 text-foreground">{channel.name} <CheckCircle className="text-blue-500 h-5 w-5" /></CardTitle>
                     </CardHeader>
                     <CardContent className="p-0">
                         <CardDescription className="line-clamp-2 mb-4">{channel.description}</CardDescription>

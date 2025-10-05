@@ -22,7 +22,7 @@ export default function DeitiesPage() {
             <Header />
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">Deity Explorer</h1>
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">Deity Explorer</h1>
                     <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
                         Discover the rich pantheon of Hindu gods and goddesses. Explore their stories, mantras, and significance.
                     </p>
@@ -30,7 +30,7 @@ export default function DeitiesPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {deities.map((deity) => (
-                    <Card key={deity.id} className="flex flex-col overflow-hidden group">
+                    <Card key={deity.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
                     <CardContent className="p-0">
                         <div className="aspect-video relative">
                             <Image
@@ -43,7 +43,7 @@ export default function DeitiesPage() {
                         </div>
                     </CardContent>
                     <CardHeader>
-                        <CardTitle>{deity.name}</CardTitle>
+                        <CardTitle className="text-primary">{deity.name}</CardTitle>
                         <CardDescription className="line-clamp-3">{deity.description}</CardDescription>
                     </CardHeader>
                     <CardContent className="mt-auto">

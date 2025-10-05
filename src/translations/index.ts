@@ -133,7 +133,9 @@ export const translations = {
         description: "Start sharing your spiritual content with the aaura community.",
         nameLabel: "Channel Name",
         namePlaceholder: "E.g., Ancient Wisdom Today",
-        descriptionLabel: "Description",
+        descriptionEnLabel: "Description (English)",
+        descriptionHiLabel: "Description (Hindi)",
+        descriptionTeLabel: "Description (Telugu)",
         descriptionPlaceholder: "A short summary of what your channel is about",
         submitButton: "Create Channel",
     },
@@ -288,7 +290,9 @@ export const translations = {
         description: "ఆరా సంఘంతో మీ ఆధ్యాత్మిక కంటెంట్‌ను పంచుకోవడం ప్రారంభించండి.",
         nameLabel: "ఛానెల్ పేరు",
         namePlaceholder: "ఉదా., ప్రాచీన జ్ఞానం నేడు",
-        descriptionLabel: "వివరణ",
+        descriptionEnLabel: "వివరణ (ఆంగ్లం)",
+        descriptionHiLabel: "వివరణ (హిందీ)",
+        descriptionTeLabel: "వివరణ (తెలుగు)",
         descriptionPlaceholder: "మీ ఛానెల్ దేని గురించి క్లుప్తంగా చెప్పండి",
         submitButton: "ఛానెల్‌ని సృష్టించండి",
     },
@@ -443,7 +447,9 @@ export const translations = {
         description: "औरा समुदाय के साथ अपनी आध्यात्मिक सामग्री साझा करना शुरू करें।",
         nameLabel: "चैनल का नाम",
         namePlaceholder: "उदा., प्राचीन ज्ञान आज",
-        descriptionLabel: "विवरण",
+        descriptionEnLabel: "विवरण (अंग्रेजी)",
+        descriptionHiLabel: "विवरण (हिंदी)",
+        descriptionTeLabel: "विवरण (तेलुगु)",
         descriptionPlaceholder: "आपका चैनल किस बारे में है इसका संक्षिप्त सारांश",
         submitButton: "चैनल बनाएं",
     },
@@ -486,7 +492,7 @@ export const translations = {
     shop: { title: "आध्यात्मिक बाजारपेठ", description: "आपल्या आध्यात्मिक साधनेला समर्थन देण्यासाठी अस्सल वस्तू शोधा." },
     media: { title: "मीडिया लायब्ररी", description: "भजन, पॉडकास्ट, प्रवचन आणि आध्यात्मिक व्हिडिओ एक्सप्लोर करा.", noMediaFound: "कोणताही मीडिया आढळला नाही", startUploading: "काही आध्यात्मिक सामग्री अपलोड करून प्रारंभ करा.", uploadButton: "मीडिया अपलोड करा" },
     channels: { title: "निर्माता चॅनेल", description: "आपल्या आवडत्या आध्यात्मिक मार्गदर्शक आणि शिक्षकांचे अनुसरण करा.", createButton: "चॅनेल तयार करा" },
-    createChannel: { title: "आपला चॅनेल तयार करा", description: "ऑरा समुदायासह आपली आध्यात्मिक सामग्री सामायिक करण्यास प्रारंभ करा.", nameLabel: "चॅनेलचे नाव", namePlaceholder: "उदा., प्राचीन ज्ञान आज", descriptionLabel: "वर्णन", descriptionPlaceholder: "तुमचा चॅनेल कशाबद्दल आहे याचा थोडक्यात सारांश", submitButton: "चॅनेल तयार करा" },
+    createChannel: { title: "आपला चॅनेल तयार करा", description: "ऑरा समुदायासह आपली आध्यात्मिक सामग्री सामायिक करण्यास प्रारंभ करा.", nameLabel: "चॅनेलचे नाव", namePlaceholder: "उदा., प्राचीन ज्ञान आज", descriptionEnLabel: "वर्णन (इंग्रजी)", descriptionHiLabel: "वर्णन (हिंदी)", descriptionTeLabel: "वर्णन (तेलुगु)", descriptionPlaceholder: "तुमचा चॅनेल कशाबद्दल आहे याचा थोडक्यात सारांश", submitButton: "चॅनेल तयार करा" },
     forum: { title: "समुदाय मंच", description: "प्रश्न विचारा, अनुभव सामायिक करा आणि सहकारी साधकांशी संपर्क साधा.", createPostTitle: "नवीन पोस्ट तयार करा", createPostPlaceholder: "तुमच्या मनात काय आहे?", viewDiscussion: "चर्चा पहा", noPosts: "अद्याप कोणत्याही पोस्ट नाहीत. संभाषण सुरू करणारे पहिले व्हा!", discussionTitle: "चर्चा", noComments: "अद्याप कोणत्याही टिप्पण्या नाहीत. प्रत्युत्तर देणारे पहिले व्हा!", commentPlaceholder: "एक टिप्पणी लिहा..." },
     toasts: { channelCreatedTitle: "चॅनेल तयार झाला!", channelCreatedDescription: "तुमचा नवीन चॅनेल यशस्वीरित्या तयार झाला आहे.", creationFailedTitle: "निर्मिती अयशस्वी", creationFailedDescription: "तुमचा चॅनेल तयार करताना काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा." }
   },
@@ -511,7 +517,7 @@ export const translations = {
     shop: { title: "ஆன்மீக சந்தை", description: "உங்கள் ஆன்மீக பயிற்சிக்கு ஆதரவளிக்க உண்மையான பொருட்களைக் கண்டறியுங்கள்." },
     media: { title: "ஊடக நூலகம்", description: "பஜனைகள், பாட்காஸ்ட்கள், பிரவச்சனங்கள் மற்றும் ஆன்மீக வீடியோக்களை ஆராயுங்கள்.", noMediaFound: "ஊடகம் எதுவும் இல்லை", startUploading: "சில ஆன்மீக உள்ளடக்கத்தைப் பதிவேற்றுவதன் மூலம் தொடங்கவும்.", uploadButton: "ஊடகத்தைப் பதிவேற்று" },
     channels: { title: "உருவாக்குபவர் சேனல்கள்", description: "உங்களுக்குப் பிடித்த ஆன்மீக வழிகாட்டிகள் மற்றும் ஆசிரியர்களைப் பின்தொடரவும்.", createButton: "சேனலை உருவாக்கு" },
-    createChannel: { title: "உங்கள் சேனலை உருவாக்குங்கள்", description: "ஆரா சமூகத்துடன் உங்கள் ஆன்மீக உள்ளடக்கத்தைப் பகிரத் தொடங்குங்கள்.", nameLabel: "சேனல் பெயர்", namePlaceholder: "எ.கா., பண்டைய ஞானம் இன்று", descriptionLabel: "விளக்கம்", descriptionPlaceholder: "உங்கள் சேனல் எதைப் பற்றியது என்பதன் சுருக்கம்", submitButton: "சேனலை உருவாக்கு" },
+    createChannel: { title: "உங்கள் சேனலை உருவாக்குங்கள்", description: "ஆரா சமூகத்துடன் உங்கள் ஆன்மீக உள்ளடக்கத்தைப் பகிரத் தொடங்குங்கள்.", nameLabel: "சேனல் பெயர்", namePlaceholder: "எ.கா., பண்டைய ஞானம் இன்று", descriptionEnLabel: "விளக்கம் (ஆங்கிலம்)", descriptionHiLabel: "விளக்கம் (இந்தி)", descriptionTeLabel: "விளக்கம் (தெலுங்கு)", descriptionPlaceholder: "உங்கள் சேனல் எதைப் பற்றியது என்பதன் சுருக்கம்", submitButton: "சேனலை உருவாக்கு" },
     forum: { title: "சமூக மன்றம்", description: "கேள்விகளைக் கேளுங்கள், அனுபவங்களைப் பகிர்ந்து கொள்ளுங்கள், மற்றும் சக தேடுபவர்களுடன் இணையுங்கள்.", createPostTitle: "புதிய பதிவை உருவாக்கு", createPostPlaceholder: "உங்கள் மனதில் என்ன இருக்கிறது?", viewDiscussion: "விவாதத்தைக் காண்க", noPosts: "இன்னும் பதிவுகள் இல்லை. உரையாடலைத் தொடங்கும் முதல் நபராக இருங்கள்!", discussionTitle: "விவாதம்", noComments: "இன்னும் கருத்துகள் இல்லை. பதிலளிக்கும் முதல் நபராக இருங்கள்!", commentPlaceholder: "ஒரு கருத்தை எழுதுங்கள்..." },
     toasts: { channelCreatedTitle: "சேனல் உருவாக்கப்பட்டது!", channelCreatedDescription: "உங்கள் புதிய சேனல் வெற்றிகரமாக உருவாக்கப்பட்டது.", creationFailedTitle: "உருவாக்கம் தோல்வியடைந்தது", creationFailedDescription: "உங்கள் சேனலை உருவாக்கும்போது ஏதோ தவறு ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்." }
   },
@@ -536,7 +542,7 @@ export const translations = {
     shop: { title: "ಆಧ್ಯಾತ್ಮಿಕ ಮಾರುಕಟ್ಟೆ", description: "ನಿಮ್ಮ ಆಧ್ಯಾತ್ಮಿಕ ಅಭ್ಯಾಸವನ್ನು ಬೆಂಬಲಿಸಲು ಅಧಿಕೃತ ವಸ್ತುಗಳನ್ನು ಹುಡುಕಿ." },
     media: { title: "ಮಾಧ್ಯಮ ಗ್ರಂಥಾಲಯ", description: "ಭಜನೆಗಳು, ಪಾಡ್‌ಕಾಸ್ಟ್‌ಗಳು, ಪ್ರವಚನಗಳು ಮತ್ತು ಆಧ್ಯಾತ್ಮಿಕ ವೀಡಿಯೊಗಳನ್ನು ಅನ್ವೇಷಿಸಿ.", noMediaFound: "ಯಾವುದೇ ಮಾಧ್ಯಮ ಕಂಡುಬಂದಿಲ್ಲ", startUploading: "ಕೆಲವು ಆಧ್ಯಾತ್ಮಿಕ ವಿಷಯವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡುವ ಮೂಲಕ ಪ್ರಾರಂಭಿಸಿ.", uploadButton: "ಮಾಧ್ಯಮವನ್ನು ಅಪ್‌ಲೋಡ್ ಮಾಡಿ" },
     channels: { title: "ರಚನೆಕಾರರ ಚಾನೆಲ್‌ಗಳು", description: "ನಿಮ್ಮ ನೆಚ್ಚಿನ ಆಧ್ಯಾತ್ಮಿಕ ಮಾರ್ಗದರ್ಶಕರು ಮತ್ತು ಶಿಕ್ಷಕರನ್ನು ಅನುಸರಿಸಿ.", createButton: "ಚಾನೆಲ್ ರಚಿಸಿ" },
-    createChannel: { title: "ನಿಮ್ಮ ಚಾನೆಲ್ ರಚಿಸಿ", description: "ಆರಾ ಸಮುದಾಯದೊಂದಿಗೆ ನಿಮ್ಮ ಆಧ್ಯಾತ್ಮಿಕ ವಿಷಯವನ್ನು ಹಂಚಿಕೊಳ್ಳಲು ಪ್ರಾರಂಭಿಸಿ.", nameLabel: "ಚಾನೆಲ್ ಹೆಸರು", namePlaceholder: "ಉದಾ., ಪ್ರಾಚೀನ ಜ್ಞಾನ ಇಂದು", descriptionLabel: "ವಿವರಣೆ", descriptionPlaceholder: "ನಿಮ್ಮ ಚಾನೆಲ್ ಯಾವುದರ ಬಗ್ಗೆ ಎಂಬುದರ ಸಂಕ್ಷಿಪ್ತ ಸಾರಾಂಶ", submitButton: "ಚಾನೆಲ್ ರಚಿಸಿ" },
+    createChannel: { title: "ನಿಮ್ಮ ಚಾನೆಲ್ ರಚಿಸಿ", description: "ಆರಾ ಸಮುದಾಯದೊಂದಿಗೆ ನಿಮ್ಮ ಆಧ್ಯಾತ್ಮಿಕ ವಿಷಯವನ್ನು ಹಂಚಿಕೊಳ್ಳಲು ಪ್ರಾರಂಭಿಸಿ.", nameLabel: "ಚಾನೆಲ್ ಹೆಸರು", namePlaceholder: "ಉದಾ., ಪ್ರಾಚೀನ ಜ್ಞಾನ ಇಂದು", descriptionEnLabel: "ವಿವರಣೆ (ಇಂಗ್ಲಿಷ್)", descriptionHiLabel: "ವಿವರಣೆ (ಹಿಂದಿ)", descriptionTeLabel: "ವಿವರಣೆ (ತೆಲುಗು)", descriptionPlaceholder: "ನಿಮ್ಮ ಚಾನೆಲ್ ಯಾವುದರ ಬಗ್ಗೆ ಎಂಬುದರ ಸಂಕ್ಷಿಪ್ತ ಸಾರಾಂಶ", submitButton: "ಚಾನೆಲ್ ರಚಿಸಿ" },
     forum: { title: "ಸಮುದಾಯ ವೇದಿಕೆ", description: "ಪ್ರಶ್ನೆಗಳನ್ನು ಕೇಳಿ, ಅನುಭವಗಳನ್ನು ಹಂಚಿಕೊಳ್ಳಿ ಮತ್ತು ಸಹ ಅನ್ವೇಷಕರೊಂದಿಗೆ ಸಂಪರ್ಕ ಸಾಧಿಸಿ.", createPostTitle: "ಹೊಸ ಪೋಸ್ಟ್ ರಚಿಸಿ", createPostPlaceholder: "ನಿಮ್ಮ ಮನಸ್ಸಿನಲ್ಲಿ ಏನಿದೆ?", viewDiscussion: "ಚರ್ಚೆಯನ್ನು ವೀಕ್ಷಿಸಿ", noPosts: "ಇನ್ನೂ ಯಾವುದೇ ಪೋಸ್ಟ್‌ಗಳಿಲ್ಲ. ಸಂಭಾಷಣೆಯನ್ನು ಪ್ರಾರಂಭಿಸಿದವರಲ್ಲಿ ಮೊದಲಿಗರಾಗಿ!", discussionTitle: "ಚರ್ಚೆ", noComments: "ಇನ್ನೂ ಯಾವುದೇ ಕಾಮೆಂಟ್‌ಗಳಿಲ್ಲ. ಉತ್ತರಿಸಿದವರಲ್ಲಿ ಮೊದಲಿಗರಾಗಿ!", commentPlaceholder: "ಒಂದು ಕಾಮೆಂಟ್ ಬರೆಯಿರಿ..." },
     toasts: { channelCreatedTitle: "ಚಾನೆಲ್ ರಚಿಸಲಾಗಿದೆ!", channelCreatedDescription: "ನಿಮ್ಮ ಹೊಸ ಚಾನೆಲ್ ಯಶಸ್ವಿಯಾಗಿ ರಚಿಸಲಾಗಿದೆ.", creationFailedTitle: "ರಚನೆ ವಿಫಲವಾಗಿದೆ", creationFailedDescription: "ನಿಮ್ಮ ಚಾನೆಲ್ ರಚಿಸುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ." }
   },
@@ -561,10 +567,8 @@ export const translations = {
     shop: { title: "আধ্যাত্মিক বাজার", description: "আপনার আধ্যাত্মিক অনুশীলনকে সমর্থন করার জন্য খাঁটি জিনিস খুঁজুন।" },
     media: { title: "মিডিয়া লাইব্রেরি", description: "ভজন, পডকাস্ট, প্রবচন এবং আধ্যাত্মিক ভিডিও অন্বেষণ করুন।", noMediaFound: "কোন মিডিয়া পাওয়া যায়নি", startUploading: "কিছু আধ্যাত্মিক বিষয়বস্তু আপলোড করে শুরু করুন।", uploadButton: "মিডিয়া আপলোড করুন" },
     channels: { title: "নির্মাতা চ্যানেল", description: "আপনার প্রিয় আধ্যাত্মিক গাইড এবং শিক্ষকদের অনুসরণ করুন।", createButton: "চ্যানেল তৈরি করুন" },
-    createChannel: { title: "আপনার চ্যানেল তৈরি করুন", description: "অরা সম্প্রদায়ের সাথে আপনার আধ্যাত্মিক বিষয়বস্তু ভাগ করা শুরু করুন।", nameLabel: "চ্যানেলের নাম", namePlaceholder: "যেমন, প্রাচীন জ্ঞান আজ", descriptionLabel: "বর্ণনা", descriptionPlaceholder: "আপনার চ্যানেলটি কী সম্পর্কে তার একটি সংক্ষিপ্ত সারাংশ", submitButton: "চ্যানেল তৈরি করুন" },
+    createChannel: { title: "আপনার চ্যানেল তৈরি করুন", description: "অরা সম্প্রদায়ের সাথে আপনার আধ্যাত্মিক বিষয়বস্তু ভাগ করা শুরু করুন।", nameLabel: "চ্যানেলের নাম", namePlaceholder: "যেমন, প্রাচীন জ্ঞান আজ", descriptionEnLabel: "বর্ণনা (ইংরেজি)", descriptionHiLabel: "বর্ণনা (হিন্দি)", descriptionTeLabel: "বর্ণনা (তেলুগু)", descriptionPlaceholder: "আপনার চ্যানেলটি কী সম্পর্কে তার একটি সংক্ষিপ্ত সারাংশ", submitButton: "চ্যানেল তৈরি করুন" },
     forum: { title: "সম্প্রদায় ফোরাম", description: "প্রশ্ন জিজ্ঞাসা করুন, অভিজ্ঞতা ভাগ করুন এবং সহকর্মী অনুসন্ধানকারীদের সাথে সংযোগ স্থাপন করুন।", createPostTitle: "একটি নতুন পোস্ট তৈরি করুন", createPostPlaceholder: "আপনার মনে কি আছে?", viewDiscussion: "আলোচনা দেখুন", noPosts: "এখনও কোন পোস্ট নেই। একটি কথোপকথন শুরু করার জন্য প্রথম হন!", discussionTitle: "আলোচনা", noComments: "এখনও কোন মন্তব্য নেই। উত্তর দেওয়ার জন্য প্রথম হন!", commentPlaceholder: "একটি মন্তব্য লিখুন..." },
     toasts: { channelCreatedTitle: "চ্যানেল তৈরি হয়েছে!", channelCreatedDescription: "আপনার নতুন চ্যানেল সফলভাবে তৈরি হয়েছে।", creationFailedTitle: "নির্মাণ ব্যর্থ হয়েছে", creationFailedDescription: "আপনার চ্যানেল তৈরি করার সময় কিছু ভুল হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।" }
   },
 };
-
-    

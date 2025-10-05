@@ -30,7 +30,9 @@ import { useLanguage } from '@/hooks/use-language';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'Channel name must be at least 3 characters.' }),
-  description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
+  description_en: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
+  description_hi: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
+  description_te: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -61,9 +63,9 @@ export default function CreateChannelPage() {
         await setDocumentNonBlocking(channelRef, {
           userId: user.uid,
           name: data.name,
-          description_en: data.description,
-          description_hi: data.description,
-          description_te: data.description,
+          description_en: data.description_en,
+          description_hi: data.description_hi,
+          description_te: data.description_te,
           creationDate: serverTimestamp(),
         }, {});
 
@@ -116,10 +118,36 @@ export default function CreateChannelPage() {
                       />
                       <FormField
                         control={form.control}
-                        name="description"
+                        name="description_en"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>{t.createChannel.descriptionLabel}</FormLabel>
+                            <FormLabel>{t.createChannel.descriptionEnLabel}</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="description_hi"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t.createChannel.descriptionHiLabel}</FormLabel>
+                            <FormControl>
+                              <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                       <FormField
+                        control={form.control}
+                        name="description_te"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>{t.createChannel.descriptionTeLabel}</FormLabel>
                             <FormControl>
                               <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
                             </FormControl>

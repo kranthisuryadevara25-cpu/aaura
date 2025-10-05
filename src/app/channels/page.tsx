@@ -10,16 +10,22 @@ import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
 import { Navigation } from '@/app/components/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-
-const channels = [
-    { id: '1', name: 'Yoga with Adriene', description: 'High-quality yoga and meditation videos for all levels.', avatarUrl: 'https://picsum.photos/seed/adriene/200/200', imageHint: 'woman yoga' },
-    { id: '2', name: 'Sadhguru', description: 'Wisdom from a mystic. Sadhguru offers profound insights into life.', avatarUrl: 'https://picsum.photos/seed/sadhguru/200/200', imageHint: 'guru man' },
-    { id: '3', name: 'The Art of Living', description: 'Spiritual teachings and practices from Sri Sri Ravi Shankar.', avatarUrl: 'https://picsum.photos/seed/artofliving/200/200', imageHint: 'spiritual teacher' },
-];
-
+import { useCollection, useFirestore } from '@/firebase';
+import { useMemo } from 'react';
+import { collection, query } from 'firebase/firestore';
+import { Loader2 } from 'lucide-react';
 
 export default function ChannelsPage() {
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
+  const firestore = useFirestore();
+
+  const channelsQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'channels'));
+  }, [firestore]);
+
+  const { data: channels, isLoading } = useCollection(channelsQuery);
+
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -45,29 +51,37 @@ export default function ChannelsPage() {
                       </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {channels.map((channel) => (
-                      <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-card border-border hover:border-primary/50 transition-colors duration-300">
-                      <div className="relative mb-4">
-                          <Image
-                              src={channel.avatarUrl}
-                              alt={channel.name}
-                              data-ai-hint={channel.imageHint}
-                              width={128}
-                              height={128}
-                              className="rounded-full border-4 border-accent/20"
-                          />
-                      </div>
-                      <CardHeader className="p-0 mb-2">
-                          <CardTitle className="flex items-center justify-center gap-2 text-foreground">{channel.name} <CheckCircle className="text-blue-500 h-5 w-5" /></CardTitle>
-                      </CardHeader>
-                      <CardContent className="p-0">
-                          <CardDescription className="line-clamp-2 mb-4">{channel.description}</CardDescription>
-                          <Button>{t.buttons.subscribe}</Button>
-                      </CardContent>
-                      </Card>
-                  ))}
-                  </div>
+                  {isLoading ? (
+                    <div className="flex justify-center items-center h-64">
+                        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {channels && channels.map((channel) => {
+                        const description = channel[`description_${language}`] || channel.description_en;
+                        return (
+                        <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-card border-border hover:border-primary/50 transition-colors duration-300">
+                        <div className="relative mb-4">
+                            <Image
+                                src={`https://picsum.photos/seed/${channel.id}/200/200`}
+                                alt={channel.name}
+                                data-ai-hint="spiritual teacher"
+                                width={128}
+                                height={128}
+                                className="rounded-full border-4 border-accent/20"
+                            />
+                        </div>
+                        <CardHeader className="p-0 mb-2">
+                            <CardTitle className="flex items-center justify-center gap-2 text-foreground">{channel.name} <CheckCircle className="text-blue-500 h-5 w-5" /></CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-0">
+                            <CardDescription className="line-clamp-2 mb-4">{description}</CardDescription>
+                            <Button>{t.buttons.subscribe}</Button>
+                        </CardContent>
+                        </Card>
+                    )})}
+                    </div>
+                  )}
               </main>
           </SidebarInset>
         </div>

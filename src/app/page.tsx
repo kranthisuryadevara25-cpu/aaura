@@ -1,9 +1,9 @@
-
 "use client";
 import React from "react";
 import { Feed } from "@/app/components/feed";
 import { Sidebar } from "@/components/Sidebar";
 import { TopNav } from "@/components/TopNav";
+import { RightSidebar } from "@/app/components/right-sidebar";
 
 export default function Page() {
   return (
@@ -15,7 +15,7 @@ export default function Page() {
           <Feed />
         </main>
         <aside className="hidden xl:block w-80 border-l p-4">
-            <div>Trending</div>
+            <RightSidebar />
         </aside>
       </div>
     </div>

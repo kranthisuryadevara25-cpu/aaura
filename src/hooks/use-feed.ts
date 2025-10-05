@@ -1,10 +1,13 @@
 
 "use client";
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
+import { temples } from "@/lib/temples";
+import { stories } from "@/lib/stories";
+import { deities } from "@/lib/deities";
 
 function shuffle<T>(arr: T[]) {
   const a = arr.slice();
@@ -32,15 +35,9 @@ export const useFeed = (pageSize = 20) => {
       setLoading(true);
 
       const mediaQuery = query(collection(db, "media"), orderBy("uploadDate", "desc"), limit(pageSize));
-      const templesQuery = query(collection(db, 'temples'), limit(pageSize));
-      const storiesQuery = query(collection(db, 'stories'), orderBy("createdAt", "desc"), limit(pageSize));
-      const deitiesQuery = query(collection(db, 'deities'), limit(pageSize));
-
-      const [mediaSnap, templesSnap, storiesSnap, deitiesSnap] = await Promise.all([
+      
+      const [mediaSnap] = await Promise.all([
         getDocs(mediaQuery),
-        getDocs(templesQuery),
-        getDocs(storiesQuery),
-        getDocs(deitiesQuery),
       ]);
 
       if (canceled) return;
@@ -81,62 +78,38 @@ export const useFeed = (pageSize = 20) => {
         } as FeedItem;
       });
 
-      const templeItems: FeedItem[] = templesSnap.docs.map((d) => {
-        const data = d.data() as any;
-        return {
-            id: `temple-${d.id}`,
+      const templeItems: FeedItem[] = temples.map((data) => ({
+            id: `temple-${data.id}`,
             kind: "temple",
-            title: {
-                en: data.name_en,
-                hi: data.name_hi,
-            },
-            description: {
-                en: data.importance?.mythological_en,
-                hi: data.importance?.mythological_hi,
-            },
-            thumbnail: data.media?.images?.[0],
+            title: data.name,
+            description: data.importance.mythological,
+            thumbnail: data.media?.images?.[0].url,
             meta: { location: data.location, slug: data.slug, imageHint: data.media?.images?.[0]?.hint },
             createdAt: new Date(),
         }
-      });
+      ));
 
-      const storyItems: FeedItem[] = storiesSnap.docs.map((d) => {
-        const data = d.data() as any;
-        return {
-            id: `story-${d.id}`,
+      const storyItems: FeedItem[] = stories.map((data) => ({
+            id: `story-${data.id}`,
             kind: "story",
-            title: {
-                en: data.title_en,
-                hi: data.title_hi,
-            },
-            description: {
-                en: data.summary_en,
-                hi: data.summary_hi,
-            },
-            thumbnail: data.images?.[0],
-            meta: { slug: data.slug, imageHint: data.images?.[0]?.hint },
-            createdAt: data.createdAt?.toDate(),
+            title: data.title,
+            description: data.summary,
+            thumbnail: data.image?.url,
+            meta: { slug: data.slug, imageHint: data.image?.hint },
+            createdAt: new Date(), // Replace with actual createdAt field if available
         }
-      });
+      ));
 
-      const deityItems: FeedItem[] = deitiesSnap.docs.map((d) => {
-        const data = d.data() as any;
-        return {
-            id: `deity-${d.id}`,
+      const deityItems: FeedItem[] = deities.map((data) => ({
+            id: `deity-${data.id}`,
             kind: "deity",
-            title: {
-                en: data.name_en,
-                hi: data.name_hi,
-            },
-            description: {
-                en: data.description_en,
-                hi: data.description_hi,
-            },
-            thumbnail: data.images?.[0],
+            title: data.name,
+            description: data.description,
+            thumbnail: data.images?.[0].url,
             meta: { slug: data.slug, imageHint: data.images?.[0]?.hint },
             createdAt: new Date(),
         }
-      });
+      ));
 
       const combined = shuffle([...videos, ...templeItems, ...storyItems, ...deityItems]);
       

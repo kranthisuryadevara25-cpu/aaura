@@ -1074,6 +1074,7 @@ export const translations = {
     },
     panchang: {
       title: "দৈনিক পঞ্জিকা",
+      description: "আজকের তিথি, নক্ষত্র, শুভ ও অশুভ সময় জানুন।",
       astronomicalTimings: "জ্যোতির্বিদ্যা সংক্রান্ত সময়",
       inauspiciousTimings: "অশুভ সময়",
       todaysFestivals: "আজকের উৎসব",

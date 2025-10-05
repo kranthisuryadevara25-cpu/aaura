@@ -1,12 +1,11 @@
 // src/app/components/feed.tsx
 "use client";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useFeed } from "@/hooks/use-feed";
 import { FeedCard } from "@/components/FeedCard";
 import ReelsFeed from "@/components/ReelsFeed"; 
 import { Loader2 } from "lucide-react";
-import { TopNav } from "@/components/TopNav";
-import type { FeedItem } from "@/types/feed";
+import { Button } from "@/components/ui/button";
 
 export function Feed() {
   const { allItems, loading, filterItems } = useFeed(20);
@@ -32,8 +31,8 @@ export function Feed() {
     <div className="px-4 py-4">
       <div className="flex items-center justify-start mb-4">
         <div className="flex gap-2">
-          <button onClick={() => setView("grid")} className={`px-3 py-1 rounded-md text-sm font-medium ${view==="grid" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Home</button>
-          <button onClick={() => setView("reels")} className={`px-3 py-1 rounded-md text-sm font-medium ${view==="reels" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Reels</button>
+          <Button onClick={() => setView("grid")} variant={view === 'grid' ? 'default' : 'outline'}>Home</Button>
+          <Button onClick={() => setView("reels")} variant={view === 'reels' ? 'default' : 'outline'}>Reels</Button>
         </div>
       </div>
 

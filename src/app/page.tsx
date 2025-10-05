@@ -22,12 +22,14 @@ function LoggedInView() {
   const { data: userData, isLoading: isUserDocLoading } = useDoc(userDocRef);
 
   useEffect(() => {
-    if (!isUserDocLoading && userData && !userData.profileComplete) {
+    // If the user document has been checked, and it either doesn't exist or profile is incomplete, redirect.
+    if (!isUserDocLoading && (!userData || !userData.profileComplete)) {
       router.push('/profile/setup');
     }
   }, [userData, isUserDocLoading, router]);
 
-  if (isUserDocLoading || (userData && !userData.profileComplete)) {
+  // Show loader while checking user document, or if we are about to redirect.
+  if (isUserDocLoading || !userData || !userData.profileComplete) {
      return (
       <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -35,6 +37,7 @@ function LoggedInView() {
     );
   }
   
+  // Only render the dashboard if the profile is complete.
   return (
      <SidebarProvider>
       <Sidebar>

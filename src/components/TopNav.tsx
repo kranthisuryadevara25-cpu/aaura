@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 
 export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) => {
   const [user] = useAuthState(auth);
@@ -26,7 +26,7 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
   };
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b bg-background">
+    <header className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
       <div className="flex items-center gap-4">
         <Link href="/" className="text-2xl font-serif">Aaura</Link>
         <SearchBar onSearch={onSearch} />
@@ -56,6 +56,12 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                    <Link href="/profile/setup">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>Profile</span>
+                    </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>

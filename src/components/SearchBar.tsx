@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 import { useLanguage } from "@/hooks/use-language";
@@ -13,12 +13,20 @@ export const SearchBar = ({ onSearch }: SearchBarProps) => {
     const { t } = useLanguage();
     const [query, setQuery] = useState('');
 
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            if (onSearch) {
+                onSearch(query);
+            }
+        }, 300); // 300ms debounce delay
+
+        return () => {
+            clearTimeout(handler);
+        };
+    }, [query, onSearch]);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const newQuery = e.target.value;
-        setQuery(newQuery);
-        if (onSearch) {
-            onSearch(newQuery);
-        }
+        setQuery(e.target.value);
     };
 
     return (

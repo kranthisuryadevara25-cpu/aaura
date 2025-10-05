@@ -193,10 +193,13 @@ export default function ProfileSetupPage() {
                                 onSelect={field.onChange}
                                 disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                                 initialFocus
+                                fromYear={1900}
+                                toYear={new Date().getFullYear()}
+                                captionLayout="dropdown-buttons"
                               />
                             </PopoverContent>
                           </Popover>
-                           <FormDescription>Your birth date is used to calculate your zodiac sign. Please use YYYY-MM-DD format.</FormDescription>
+                           <FormDescription>You can also type your birth date in YYYY-MM-DD format.</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -274,3 +277,5 @@ export default function ProfileSetupPage() {
     </div>
   );
 }
+
+    

@@ -230,10 +230,13 @@ export default function SettingsPage() {
                                       }}
                                       disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                                       initialFocus
+                                      fromYear={1900}
+                                      toYear={new Date().getFullYear()}
+                                      captionLayout="dropdown-buttons"
                                     />
                                   </PopoverContent>
                                 </Popover>
-                                <FormDescription>Your zodiac sign will be automatically detected.</FormDescription>
+                                <FormDescription>You can also type your birth date in YYYY-MM-DD format.</FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -339,3 +342,5 @@ export default function SettingsPage() {
     </SidebarProvider>
   );
 }
+
+    

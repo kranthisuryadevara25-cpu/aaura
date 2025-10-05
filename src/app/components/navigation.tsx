@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -7,7 +6,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users, Palmtree, ScrollText, UserSquare } from 'lucide-react';
+import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users, Palmtree, ScrollText, UserSquare, BookHeart, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navigation() {
@@ -51,6 +50,22 @@ export function Navigation() {
             <Link href="/temples">
               <Palmtree />
               <span>Temples</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Rituals">
+            <Link href="/rituals">
+              <BookHeart />
+              <span>Rituals</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Panchang">
+            <Link href="/panchang">
+              <CalendarDays />
+              <span>Panchang</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

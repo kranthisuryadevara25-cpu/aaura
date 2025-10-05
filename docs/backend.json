@@ -501,6 +501,37 @@
         "images": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "name", "description"]
+    },
+    "Ritual": {
+      "title": "Ritual",
+      "type": "object",
+      "description": "Represents a ritual or pooja.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "procedure": { "type": "string" },
+        "deity": { "type": "string" },
+        "itemsRequired": { "type": "array", "items": { "type": "string" } },
+        "auspiciousTime": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" } }
+      },
+      "required": ["id", "name", "procedure"]
+    },
+    "Panchang": {
+      "title": "Panchang",
+      "type": "object",
+      "description": "Represents daily panchang data.",
+      "properties": {
+        "date": { "type": "string", "format": "date" },
+        "tithi": { "type": "string" },
+        "nakshatra": { "type": "string" },
+        "rahukalam": { "type": "string" },
+        "yamaGandam": { "type": "string" },
+        "sunrise": { "type": "string" },
+        "sunset": { "type": "string" },
+        "festival": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["date"]
     }
   },
   "auth": {
@@ -612,6 +643,22 @@
           "entityName": "Character",
           "schema": { "$ref": "#/entities/Character" },
           "description": "Stores mythological characters."
+        }
+      },
+      {
+        "path": "/rituals/{ritualId}",
+        "definition": {
+          "entityName": "Ritual",
+          "schema": { "$ref": "#/entities/Ritual" },
+          "description": "Stores guidelines for various rituals and poojas."
+        }
+      },
+      {
+        "path": "/panchang/{date}",
+        "definition": {
+          "entityName": "Panchang",
+          "schema": { "$ref": "#/entities/Panchang" },
+          "description": "Stores daily panchang data, with the document ID being the date (e.g., '2025-10-05')."
         }
       }
     ],

@@ -1,0 +1,37 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper function to check auth
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // User profile images: Only the owner can upload/update. Publicly readable.
+    match /users/{userId}/profileImage/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Media uploads (videos, audio, etc.):
+    // Only authenticated users can upload to their own designated folder.
+    // Content is publicly readable.
+    match /media/{userId}/{mediaId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Shop item images:
+    // Writable by the merchant user. Publicly readable.
+    match /shopItems/{sellerId}/{itemId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == sellerId;
+    }
+    
+    // Default deny all other access
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

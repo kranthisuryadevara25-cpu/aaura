@@ -26,7 +26,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format } from 'date-fns';
+import { format, parse } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useUser, useDoc, setDocumentNonBlocking, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
@@ -86,15 +86,6 @@ export default function SettingsPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      fullName: '',
-      birthDate: undefined,
-      timeOfBirth: '',
-      placeOfBirth: '',
-      fatherName: '',
-      motherName: '',
-      zodiacSign: '',
-    }
   });
 
   useEffect(() => {
@@ -205,16 +196,21 @@ export default function SettingsPage() {
                                 <Popover>
                                   <PopoverTrigger asChild>
                                     <FormControl>
-                                      <Button
-                                        variant={'outline'}
-                                        className={cn(
-                                          'w-[240px] pl-3 text-left font-normal',
-                                          !field.value && 'text-muted-foreground'
-                                        )}
-                                      >
-                                        {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                      </Button>
+                                      <div className="relative w-[240px]">
+                                      <Input
+                                        value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
+                                        onChange={(e) => {
+                                            const date = parse(e.target.value, 'yyyy-MM-dd', new Date());
+                                            if (!isNaN(date.getTime())) {
+                                                field.onChange(date);
+                                                const sign = getZodiacSign(date);
+                                                form.setValue('zodiacSign', sign);
+                                            }
+                                        }}
+                                        placeholder="YYYY-MM-DD"
+                                      />
+                                      <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
+                                      </div>
                                     </FormControl>
                                   </PopoverTrigger>
                                   <PopoverContent className="w-auto p-0" align="start">
@@ -236,7 +232,7 @@ export default function SettingsPage() {
                                     />
                                   </PopoverContent>
                                 </Popover>
-                                <FormDescription>You can also type your birth date in YYYY-MM-DD format.</FormDescription>
+                                <FormDescription>You can type your birth date or pick one from the calendar.</FormDescription>
                                 <FormMessage />
                               </FormItem>
                             )}
@@ -342,5 +338,3 @@ export default function SettingsPage() {
     </SidebarProvider>
   );
 }
-
-    

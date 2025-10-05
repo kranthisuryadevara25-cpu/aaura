@@ -1,16 +1,16 @@
 
 'use client';
 
-import { Deity } from '@/lib/deities';
+import type { Deity } from '@/lib/deities';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useLanguage } from '@/hooks/use-language';
+import { useLanguage } from '@/hooks/use-language.tsx';
 
 export function DeityCard({ deity }: { deity: Deity & { id: string } }) {
     const { language } = useLanguage();
 
-    const name = (deity.name as any)[language] || deity.name;
-    const description = (deity.description as any)[language] || deity.description;
+    const name = (deity.name as any)[language] || deity.name.en;
+    const description = (deity.description as any)[language] || deity.description.en;
 
     return (
         <Link href={`/deities/${deity.slug}`} className="group">

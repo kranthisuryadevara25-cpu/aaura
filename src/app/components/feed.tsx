@@ -2,12 +2,12 @@
 "use client";
 import React, { useState, useMemo } from "react";
 import { useFeed } from "@/hooks/use-feed";
-import { FeedCard } from "@/components/FeedCard";
 import ReelsFeed from "@/components/ReelsFeed"; 
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { VideoCard } from "./cards/video-card";
-import { DeityCard } from "./cards/deity-card";
+import { VideoCard } from "../cards/video-card";
+import { DeityCard } from "../cards/deity-card";
+import { FeedCard } from "@/components/FeedCard";
 
 export function Feed({ searchQuery }: { searchQuery: string }) {
   const { allItems, loading, filterItems } = useFeed(20);
@@ -44,11 +44,8 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
       {view === "reels" ? (
         <ReelsFeed items={reelsItems} />
       ) : (
-        <div className="space-y-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
             {displayedItems.map((item) => {
-                if(item.kind === 'video') return <VideoCard key={item.id} video={item} />;
-                if(item.kind === 'deity') return <DeityCard key={item.id} deity={item} />;
-                // We can add more card types here for story, temple etc.
                 return <FeedCard key={item.id} item={item} />
             })}
         </div>

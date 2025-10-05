@@ -1,4 +1,4 @@
-// src/app/components/right-sidebar.tsx
+
 'use client';
 import { useLanguage } from "@/hooks/use-language";
 import { festivals } from "@/lib/festivals";
@@ -15,7 +15,7 @@ export function RightSidebar() {
   const suggestedDeities = deities.slice(0, 3);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 sticky top-4">
       <Card>
         <CardHeader>
           <CardTitle>{t.rightSidebar.trendingFestivals}</CardTitle>

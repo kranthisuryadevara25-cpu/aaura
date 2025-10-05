@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useMemo } from 'react';
@@ -10,6 +9,7 @@ import { DeityCard } from '@/components/cards/deity-card';
 import { useLanguage } from '@/hooks/use-language';
 import { db } from '@/lib/firebase';
 import { Deity } from '@/lib/deities';
+import { ShortCard } from '@/components/cards/short-card';
 
 export function Dashboard() {
     const { language } = useLanguage();
@@ -18,6 +18,7 @@ export function Dashboard() {
         return query(
             collection(db, 'media'), 
             where('mediaType', 'in', ['video', 'pravachan']), 
+            where('status', '==', 'approved'),
             orderBy('uploadDate', 'desc'),
             limit(8)
         )
@@ -27,6 +28,7 @@ export function Dashboard() {
         return query(
             collection(db, 'media'), 
             where('mediaType', '==', 'short'), 
+            where('status', '==', 'approved'),
             orderBy('uploadDate', 'desc'),
             limit(6)
         );
@@ -69,12 +71,8 @@ export function Dashboard() {
                         <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
                             <Clapperboard className="text-primary" /> Shorts
                         </h2>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                           {shorts.map(short => (
-                            <div key={short.id} className="aspect-[9/16] bg-secondary rounded-lg">
-                                {/* Placeholder for ShortCard */}
-                            </div>
-                           ))}
+                        <div className="flex space-x-4 overflow-x-auto pb-4">
+                           {shorts.map(short => <ShortCard key={short.id} short={short} />)}
                         </div>
                     </div>
                 )}

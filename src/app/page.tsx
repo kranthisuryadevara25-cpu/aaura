@@ -17,7 +17,7 @@ export default function Page() {
         <main className="flex-1">
           <Dashboard />
         </main>
-        <aside className="hidden xl:block w-80 border-l p-4">
+        <aside className="hidden xl:block w-80 border-l p-4 shrink-0">
             <RightSidebar />
         </aside>
       </div>

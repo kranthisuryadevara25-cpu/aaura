@@ -19,14 +19,14 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, parse } from 'date-fns';
+import { format, parse, isValid } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useFirestore, useUser, setDocumentNonBlocking, useAuth } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/app/components/header';
 import { zodiacSigns } from '@/lib/zodiac';
-import { useTransition } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from 'firebase/auth';
 import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope';
@@ -74,12 +74,24 @@ export default function ProfileSetupPage() {
     defaultValues: {
       fullName: user?.displayName || '',
       placeOfBirth: '',
-      timeOfBirth: '',
+      timeOfBirth: '12:00',
       fatherName: '',
       motherName: '',
     },
   });
   
+  const birthDateValue = form.watch('birthDate');
+  const [dateInputValue, setDateInputValue] = useState(
+    birthDateValue ? format(birthDateValue, 'yyyy-MM-dd') : ''
+  );
+
+  useEffect(() => {
+    if (birthDateValue) {
+      setDateInputValue(format(birthDateValue, 'yyyy-MM-dd'));
+    }
+  }, [birthDateValue]);
+
+
   const onSubmit = (data: FormValues) => {
     if (!user || !firestore || !auth?.currentUser) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to complete your profile.' });
@@ -102,9 +114,10 @@ export default function ProfileSetupPage() {
           motherName: data.motherName,
           zodiacSign,
           profileComplete: true,
+          creationTimestamp: serverTimestamp(),
         };
         
-        setDocumentNonBlocking(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
+        await setDocumentNonBlocking(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
 
         const horoscopeResult = await generatePersonalizedHoroscope({
           zodiacSign: zodiacSign,
@@ -117,7 +130,7 @@ export default function ProfileSetupPage() {
           zodiacSign: zodiacSign,
           text: horoscopeResult.horoscope,
         };
-        setDocumentNonBlocking(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
+        await setDocumentNonBlocking(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
 
         toast({
           title: 'Profile Complete!',
@@ -172,27 +185,33 @@ export default function ProfileSetupPage() {
                           <FormLabel>Birth Date</FormLabel>
                           <Popover>
                             <PopoverTrigger asChild>
-                              <FormControl>
-                                <div className="relative w-[240px]">
-                                <Input
-                                  value={field.value ? format(field.value, 'yyyy-MM-dd') : ''}
-                                  onChange={(e) => {
-                                      const date = parse(e.target.value, 'yyyy-MM-dd', new Date());
-                                      if (!isNaN(date.getTime())) {
-                                          field.onChange(date);
+                              <div className="relative w-[240px]">
+                                <FormControl>
+                                  <Input
+                                    value={dateInputValue}
+                                    onChange={(e) => setDateInputValue(e.target.value)}
+                                    onBlur={() => {
+                                      const parsedDate = parse(dateInputValue, 'yyyy-MM-dd', new Date());
+                                      if (isValid(parsedDate)) {
+                                        field.onChange(parsedDate);
                                       }
-                                  }}
-                                  placeholder="YYYY-MM-DD"
-                                />
-                                <CalendarIcon className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
-                                </div>
-                              </FormControl>
+                                    }}
+                                    placeholder="YYYY-MM-DD"
+                                  />
+                                </FormControl>
+                                <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
+                              </div>
                             </PopoverTrigger>
                             <PopoverContent className="w-auto p-0" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
-                                onSelect={field.onChange}
+                                onSelect={(date) => {
+                                  field.onChange(date);
+                                  if (date) {
+                                    setDateInputValue(format(date, 'yyyy-MM-dd'));
+                                  }
+                                }}
                                 disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                                 initialFocus
                                 fromYear={1900}
@@ -213,7 +232,7 @@ export default function ProfileSetupPage() {
                         <FormItem>
                           <FormLabel>Time of Birth</FormLabel>
                           <FormControl>
-                            <Input type="time" placeholder="HH:MM" {...field} />
+                            <Input type="time" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -279,3 +298,5 @@ export default function ProfileSetupPage() {
     </div>
   );
 }
+
+    

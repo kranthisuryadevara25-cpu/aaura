@@ -95,20 +95,22 @@ export default function ProfileSetupPage() {
 
 
   const onSubmit = (data: FormValues) => {
-    if (!user || !firestore || !auth?.currentUser) {
+    if (!auth?.currentUser || !firestore) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to complete your profile.' });
       return;
     }
+
+    const currentUser = auth.currentUser;
 
     startTransition(async () => {
       try {
         const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
         const zodiacSign = getZodiacSign(data.birthDate);
         
-        await updateProfile(auth.currentUser, { displayName: data.fullName });
+        await updateProfile(currentUser, { displayName: data.fullName });
         
         const userProfileData = {
-          email: user.email,
+          email: currentUser.email,
           fullName: data.fullName,
           birthDate: formattedBirthDate,
           timeOfBirth: data.timeOfBirth,
@@ -120,7 +122,7 @@ export default function ProfileSetupPage() {
           creationTimestamp: serverTimestamp(),
         };
         
-        await setDoc(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
+        await setDoc(doc(firestore, `users/${currentUser.uid}`), userProfileData, { merge: true });
 
         const horoscopeResult = await generatePersonalizedHoroscope({
           zodiacSign: zodiacSign,
@@ -128,12 +130,12 @@ export default function ProfileSetupPage() {
         });
         
         const horoscopeData = {
-          userId: user.uid,
+          userId: currentUser.uid,
           date: format(new Date(), 'yyyy-MM-dd'),
           zodiacSign: zodiacSign,
           text: horoscopeResult.horoscope,
         };
-        await setDoc(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
+        await setDoc(doc(firestore, `users/${currentUser.uid}/horoscopes/daily`), horoscopeData, { merge: true });
 
         toast({
           title: 'Profile Complete!',
@@ -301,5 +303,3 @@ export default function ProfileSetupPage() {
     </div>
   );
 }
-
-    

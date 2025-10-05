@@ -1,41 +1,39 @@
-
-'use client';
-
-import { Loader2 } from 'lucide-react';
-import { TempleCard } from './cards/temple-card';
-import { StoryCard } from './cards/story-card';
-import { DeityCard } from './cards/deity-card';
-import { VideoCard } from './cards/video-card';
-import { useFeed } from '@/hooks/use-feed';
-import type { FeedItem } from '@/types/feed';
+// src/app/components/feed.tsx
+"use client";
+import React, { useState } from "react";
+import { useFeed } from "@/hooks/use-feed";
+import { FeedCard } from "@/components/FeedCard";
+import ReelsFeed from "@/components/ReelsFeed"; 
+import { Loader2 } from "lucide-react";
 
 export function Feed() {
-    const { items, loading } = useFeed();
+  const { items, loading } = useFeed(20);
+  const [view, setView] = useState<"grid"|"reels">("grid");
 
-    if (loading) {
-        return (
+  return (
+    <div className="px-4 py-4">
+      <div className="flex items-center justify-start mb-4">
+        <div className="flex gap-2">
+          <button onClick={() => setView("grid")} className={`px-3 py-1 rounded-md text-sm font-medium ${view==="grid" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Home</button>
+          <button onClick={() => setView("reels")} className={`px-3 py-1 rounded-md text-sm font-medium ${view==="reels" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`}>Reels</button>
+        </div>
+      </div>
+
+      {view === "reels" ? (
+        <ReelsFeed items={items} />
+      ) : (
+        <div>
+          {loading ? (
             <div className="flex justify-center items-center h-96">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>
-        );
-    }
-    
-    return (
-        <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-8">
-            {items.map((item: FeedItem) => {
-                switch (item.kind) {
-                    case 'video':
-                        return <VideoCard key={`video-${item.id}`} item={item} />;
-                    case 'temple':
-                        return <TempleCard key={`temple-${item.id}`} item={item} />;
-                    case 'story':
-                        return <StoryCard key={`story-${item.id}`} item={item} />;
-                    case 'deity':
-                        return <DeityCard key={`deity-${item.id}`} item={item} />;
-                    default:
-                        return null;
-                }
-            })}
+            ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {items.map((it) => <FeedCard key={it.id} item={it} />)}
+            </div>
+          )}
         </div>
-    );
+      )}
+    </div>
+  );
 }

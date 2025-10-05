@@ -8,15 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowRight, MapPin } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/hooks/use-language';
 
 export function TempleCard({ temple }: { temple: Temple & { id: string } }) {
+    const { language, t } = useLanguage();
+    const name = temple.name[language] || temple.name.en;
+
     return (
         <Card className="w-full">
             <CardContent className="p-0">
                 <div className="aspect-video relative">
                     <Image
                         src={temple.media.images[0].url}
-                        alt={temple.name}
+                        alt={name}
                         data-ai-hint={temple.media.images[0].hint}
                         fill
                         className="object-cover rounded-t-lg"
@@ -25,7 +29,7 @@ export function TempleCard({ temple }: { temple: Temple & { id: string } }) {
             </CardContent>
             <CardHeader>
                 <Badge variant="secondary">Temple Highlight</Badge>
-                <CardTitle className="text-xl mt-1">{temple.name}</CardTitle>
+                <CardTitle className="text-xl mt-1">{name}</CardTitle>
                 <CardDescription className="flex items-center gap-1.5">
                     <MapPin className="h-4 w-4" /> {temple.location.city}, {temple.location.state}
                 </CardDescription>
@@ -33,7 +37,7 @@ export function TempleCard({ temple }: { temple: Temple & { id: string } }) {
             <CardContent>
                  <Button asChild variant="outline" size="sm">
                     <Link href={`/temples/${temple.slug}`}>
-                        View Temple <ArrowRight className="ml-2" />
+                        {t.feed.templeCardView} <ArrowRight className="ml-2" />
                     </Link>
                 </Button>
             </CardContent>

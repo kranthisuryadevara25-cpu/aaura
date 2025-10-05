@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig } from 'lucide-react';
+import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navigation() {
@@ -27,6 +27,22 @@ export function Navigation() {
             <Link href="/deities">
               <LibraryBig />
               <span>Deities</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Channels">
+            <Link href="/channels">
+              <Users />
+              <span>Channels</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+         <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Shop">
+            <Link href="/shop">
+              <ShoppingBag />
+              <span>Shop</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

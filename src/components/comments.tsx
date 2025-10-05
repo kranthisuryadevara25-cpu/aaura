@@ -17,6 +17,7 @@ import { Loader2, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import Link from 'next/link';
 
 const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long."),
@@ -27,18 +28,18 @@ type CommentFormValues = z.infer<typeof commentSchema>;
 function CommentCard({ comment, author }: { comment: any; author: any }) {
   return (
     <div className="flex items-start gap-4">
-      <Avatar className="h-8 w-8">
+      <Avatar className="h-9 w-9">
         <AvatarImage src={author?.photoURL} />
         <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
       </Avatar>
-      <div className="w-full rounded-lg bg-secondary/50 p-3">
-        <div className="flex items-center justify-between">
+      <div className="w-full">
+        <div className="flex items-center gap-2">
           <p className="font-semibold text-sm">{author?.displayName || 'Anonymous'}</p>
           <p className="text-xs text-muted-foreground">
             {comment.createdAt ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
           </p>
         </div>
-        <p className="text-sm mt-1">{comment.text}</p>
+        <p className="text-sm mt-1 text-foreground/90">{comment.text}</p>
       </div>
     </div>
   );
@@ -55,9 +56,11 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
 
-  const commentsQuery = query(collection(db, contentType, contentId, 'comments'), orderBy('createdAt', 'asc'));
+  const commentsQuery = query(collection(db, contentType, contentId, 'comments'), orderBy('createdAt', 'desc'));
   const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
   
+  // This fetches all users, which is not ideal for performance but works for this stage.
+  // A better approach would be to fetch only the users who have commented.
   const usersQuery = collection(db, 'users');
   const [usersData, usersLoading] = useCollectionData(usersQuery, { idField: 'id' });
 
@@ -95,30 +98,13 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const isLoading = commentsLoading || usersLoading;
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">{t.forum.discussionTitle} ({comments?.length || 0})</h2>
+    <div className="max-w-4xl">
+      <h2 className="text-lg font-bold mb-4">{t.forum.discussionTitle} ({comments?.length || 0})</h2>
 
-      {isLoading ? (
-        <div className="flex justify-center items-center h-24">
-            <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      ) : (
-        <div className="space-y-6 mb-8">
-            {comments && comments.length > 0 ? (
-                comments.map(comment => (
-                <CommentCard key={comment.id} comment={comment} author={usersMap.get(comment.authorId)} />
-                ))
-            ) : (
-                <p className="text-muted-foreground text-center py-4">{t.forum.noComments}</p>
-            )}
-        </div>
-      )}
-
-
-      {user && (
+      {user ? (
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmitComment)} className="flex items-start gap-4 mt-6">
-            <Avatar className="h-9 w-9 mt-1">
+          <form onSubmit={form.handleSubmit(onSubmitComment)} className="flex items-start gap-4 mb-8">
+            <Avatar className="h-10 w-10 mt-1">
               <AvatarImage src={user.photoURL || undefined} />
               <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
             </Avatar>
@@ -131,7 +117,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
                     <Textarea
                       placeholder={t.forum.commentPlaceholder}
                       className="resize-none"
-                      rows={2}
+                      rows={1}
                       {...field}
                     />
                   </FormControl>
@@ -139,11 +125,33 @@ export function Comments({ contentId, contentType }: CommentsProps) {
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isPending} size="icon">
-              {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {t.buttons.comment}
             </Button>
           </form>
         </Form>
+      ) : (
+        <div className="text-sm text-center text-muted-foreground bg-secondary/50 p-4 rounded-lg mb-8">
+            <Link href="/login" className="text-primary underline font-semibold">Log in</Link> to post a comment.
+        </div>
+      )}
+
+
+      {isLoading ? (
+        <div className="flex justify-center items-center h-24">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ) : (
+        <div className="space-y-6">
+            {comments && comments.length > 0 ? (
+                comments.map(comment => (
+                <CommentCard key={comment.id} comment={comment} author={usersMap.get(comment.authorId)} />
+                ))
+            ) : (
+                <p className="text-muted-foreground text-sm text-center py-4">{t.forum.noComments}</p>
+            )}
+        </div>
       )}
     </div>
   );

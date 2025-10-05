@@ -41,7 +41,7 @@ export default function WatchPage({ params }: { params: { id: string }}) {
             id: item.id,
             type: 'video',
             title: getText(item as any, language) || 'Untitled Video',
-            thumbnail: 'https://picsum.photos/seed/video-placeholder/400/225',
+            thumbnail: item.thumbnailUrl || 'https://picsum.photos/seed/video-placeholder/400/225',
             href: `/watch/${item.id}`,
           }));
       
@@ -79,7 +79,7 @@ export default function WatchPage({ params }: { params: { id: string }}) {
 
   const handleVideoEnd = () => {
     if (upNextItems.length > 0) {
-      const nextItem = upNextItems[0];
+      const nextItem = upNextItems.find(item => item.type === 'video');
       if(nextItem && nextItem.href) {
         router.push(nextItem.href);
       }
@@ -88,7 +88,7 @@ export default function WatchPage({ params }: { params: { id: string }}) {
 
   return (
     <div className="flex w-full h-screen bg-background text-foreground">
-      <div className="flex-1 p-4 overflow-y-auto">
+      <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
         <VideoPlayer contentId={id} onVideoEnd={handleVideoEnd} />
         <Separator className="my-6" />
         <Comments contentId={id} contentType="media" />

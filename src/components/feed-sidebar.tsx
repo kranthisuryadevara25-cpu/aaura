@@ -21,21 +21,21 @@ export function FeedSidebar({ items, isLoading }: FeedSidebarProps) {
 
   return (
     <div className="flex flex-col gap-3 p-4">
-        <h2 className="text-xl font-bold">Up Next</h2>
+        <h2 className="text-xl font-bold px-2">Up Next</h2>
         {items.map(item => (
             <Link key={`${item.type}-${item.id}`} href={item.href} className="group">
-              <div className="flex gap-3 hover:bg-secondary/50 p-2 rounded-lg cursor-pointer transition-colors">
-                <div className="relative w-40 h-24 shrink-0">
+              <div className="flex gap-3 hover:bg-secondary p-2 rounded-lg cursor-pointer transition-colors">
+                <div className="relative w-40 h-24 shrink-0 rounded-md overflow-hidden">
                     <Image
                       src={item.thumbnail}
                       alt={item.title}
                       fill
-                      className="w-full h-full object-cover rounded-md"
+                      className="w-full h-full object-cover"
                     />
                 </div>
                 <div className="flex flex-col">
                   <p className="text-xs font-semibold uppercase tracking-wider text-primary">{item.type}</p>
-                  <h3 className="text-sm font-semibold text-foreground group-hover:text-primary line-clamp-2">
+                  <h3 className="text-sm font-semibold text-foreground group-hover:text-primary line-clamp-3">
                     {item.title}
                   </h3>
                 </div>

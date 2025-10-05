@@ -1,0 +1,18 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "temples",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "location.state",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "deity.name",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ]
+}

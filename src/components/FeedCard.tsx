@@ -71,7 +71,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
                 <div className="flex items-center gap-2">
                     <span>{item.meta?.views ? `${item.meta.views.toLocaleString()} views` : "New"}</span>
                     &bull;
-                    <span>{item.createdAt ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true }) : ''}</span>
+                    <span>{item.createdAt ? formatDistanceToNow(item.createdAt, { addSuffix: true }) : ''}</span>
                 </div>
             </div>
         </div>

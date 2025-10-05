@@ -18,10 +18,12 @@ import { LogOut, Search, Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
+import { useLanguage } from "@/hooks/use-language";
 
 export function Header() {
   const { user } = useUser();
   const auth = useAuth();
+  const { t } = useLanguage();
 
   const handleSignOut = () => {
     if (auth) {
@@ -45,7 +47,7 @@ export function Header() {
         <div className="flex-1 flex justify-center px-4 lg:px-16">
             <div className="relative w-full max-w-lg">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search temples, deities, stories, rituals..." className="pl-10" />
+                <Input placeholder={t.topnav.searchPlaceholder} className="pl-10" />
             </div>
         </div>
 

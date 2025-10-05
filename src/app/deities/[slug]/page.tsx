@@ -9,14 +9,30 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { notFound } from 'next/navigation';
-import { Music, BookOpen } from 'lucide-react';
+import { Music, BookOpen, Sparkles, Sunrise, Sunset, Loader2 } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '../../navigation';
+import { useEffect, useState } from 'react';
+import { getDeityDailyRelevance, type DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
 
 export default function DeityDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const deity = getDeityBySlug(slug);
+  const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (deity) {
+      setIsLoading(true);
+      getDeityDailyRelevance({ deityName: deity.name })
+        .then(content => {
+          setDailyContent(content);
+        })
+        .catch(console.error)
+        .finally(() => setIsLoading(false));
+    }
+  }, [deity]);
 
   if (!deity) {
     notFound();
@@ -55,6 +71,32 @@ export default function DeityDetailPage() {
                 <CarouselPrevious />
                 <CarouselNext />
                 </Carousel>
+
+                {isLoading ? (
+                  <div className="flex justify-center items-center h-40">
+                      <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                  </div>
+                ) : dailyContent && (
+                  <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-8">
+                      <Card className="bg-transparent border-primary/20">
+                          <CardHeader>
+                              <CardTitle className="flex items-center gap-3 text-primary"><Sunrise /> Today's Relevance</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                              <p className="text-foreground/90">{dailyContent.todaysRelevance}</p>
+                          </CardContent>
+                      </Card>
+                      <Card className="bg-transparent border-primary/20">
+                          <CardHeader>
+                              <CardTitle className="flex items-center gap-3 text-primary"><Sunset /> Tomorrow's Importance</CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                              <p className="text-foreground/90">{dailyContent.tomorrowsImportance}</p>
+                          </CardContent>
+                      </Card>
+                  </div>
+                )}
+
 
                 <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
                     <Card className="bg-transparent border-primary/20">

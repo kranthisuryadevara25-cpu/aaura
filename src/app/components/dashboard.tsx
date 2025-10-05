@@ -8,7 +8,7 @@ import { Loader2, Youtube, Clapperboard, Sparkles } from 'lucide-react';
 import { VideoCard } from './cards/video-card';
 import { ShortCard } from './cards/short-card';
 import { DeityCard } from './cards/deity-card';
-import { useLanguage } from '@/hooks/use-language';
+import { useLanguage } from '@/hooks/use-language.tsx';
 
 export function Dashboard() {
     const firestore = useFirestore();

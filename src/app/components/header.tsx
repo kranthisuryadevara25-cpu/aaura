@@ -18,7 +18,7 @@ import { LogOut, Languages, Search, Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/hooks/use-language";
+import { useLanguage } from "@/hooks/use-language.tsx";
 
 export function Header() {
   const { user } = useUser();

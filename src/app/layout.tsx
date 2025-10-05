@@ -9,7 +9,7 @@ import { SidebarProvider } from "@/components/ui/sidebar"
 import { BottomNavigation } from "./components/bottom-navigation"
 import { I18nextProvider } from 'react-i18next';
 import i18n from '@/lib/i18n';
-import { LanguageProvider } from "@/hooks/use-language";
+import { LanguageProvider } from "@/hooks/use-language.tsx";
 
 
 // This metadata is now static and won't be dynamically translated on the server.

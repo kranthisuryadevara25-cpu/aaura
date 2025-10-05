@@ -21,8 +21,8 @@ import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parse, isValid } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore, useUser, setDocumentNonBlocking, useAuth } from '@/firebase';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useUser, useAuth } from '@/firebase';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/app/components/header';
 import { zodiacSigns } from '@/lib/zodiac';
@@ -88,8 +88,10 @@ export default function ProfileSetupPage() {
   useEffect(() => {
     if (birthDateValue) {
       setDateInputValue(format(birthDateValue, 'yyyy-MM-dd'));
+      const sign = getZodiacSign(birthDateValue);
+      form.setValue('zodiacSign', sign);
     }
-  }, [birthDateValue]);
+  }, [birthDateValue, form]);
 
 
   const onSubmit = (data: FormValues) => {
@@ -106,6 +108,8 @@ export default function ProfileSetupPage() {
         await updateProfile(auth.currentUser, { displayName: data.fullName });
         
         const userProfileData = {
+          id: user.uid,
+          email: user.email,
           fullName: data.fullName,
           birthDate: formattedBirthDate,
           timeOfBirth: data.timeOfBirth,
@@ -117,7 +121,7 @@ export default function ProfileSetupPage() {
           creationTimestamp: serverTimestamp(),
         };
         
-        await setDocumentNonBlocking(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
+        await setDoc(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
 
         const horoscopeResult = await generatePersonalizedHoroscope({
           zodiacSign: zodiacSign,
@@ -130,7 +134,7 @@ export default function ProfileSetupPage() {
           zodiacSign: zodiacSign,
           text: horoscopeResult.horoscope,
         };
-        await setDocumentNonBlocking(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
+        await setDoc(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
 
         toast({
           title: 'Profile Complete!',
@@ -220,7 +224,7 @@ export default function ProfileSetupPage() {
                               />
                             </PopoverContent>
                           </Popover>
-                           <FormDescription>You can type your birth date or pick one from the calendar.</FormDescription>
+                           <FormDescription>You can type your birth date (YYYY-MM-DD) or pick one from the calendar.</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -299,4 +303,3 @@ export default function ProfileSetupPage() {
   );
 }
 
-    

@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, Video, Sparkles, Upload, ArrowRight } from 'lucide-react';
+import { Loader2, Video, Sparkles, Upload, ArrowRight, Film } from 'lucide-react';
 import { deities } from '@/lib/deities';
 import { placeholderImages } from '@/lib/placeholder-images';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function Dashboard() {
   const { user } = useUser();
@@ -84,7 +85,7 @@ export function Dashboard() {
       {/* Shorts Section */}
        {shorts && shorts.length > 0 && (
         <div>
-            <h2 className="text-3xl font-headline font-bold mb-4">Shorts</h2>
+            <h2 className="text-3xl font-headline font-bold mb-4 flex items-center gap-3"><Film /> Shorts</h2>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                 {shorts.map((short) => (
                     <Card key={short.id} className="overflow-hidden group aspect-[9/16] relative">
@@ -110,7 +111,7 @@ export function Dashboard() {
 
       {/* Main Video Feed */}
       <div>
-        <h2 className="text-3xl font-headline font-bold mb-4">Your Daily Feed</h2>
+        <h2 className="text-3xl font-headline font-bold mb-4 flex items-center gap-3"><Sparkles className="text-accent" /> For You</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-6 gap-y-8">
           {videos && videos.length > 0 ? videos.map((video) => (
             <div key={video.id} className="group">
@@ -184,5 +185,3 @@ export function Dashboard() {
     </div>
   );
 }
-
-    

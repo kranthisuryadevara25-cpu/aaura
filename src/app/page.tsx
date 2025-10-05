@@ -15,13 +15,14 @@ export default function Home() {
   const firestore = useFirestore();
 
   const videosQuery = useMemo(() => {
-    if (!firestore) return null;
+    // Only create the query if the user is logged in and firestore is available.
+    if (!firestore || !user) return null;
     return collection(firestore, 'videos');
-  }, [firestore]);
+  }, [firestore, user]);
 
   const { data: videos, isLoading: videosLoading } = useCollection(videosQuery);
 
-  const isLoading = isUserLoading || videosLoading;
+  const isLoading = isUserLoading || (user && videosLoading);
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">

@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut } from "lucide-react";
+import { LogOut, Languages } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function Header() {
@@ -38,7 +38,27 @@ export function Header() {
             </span>
           </Link>
         </div>
-        <div>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Languages className="h-5 w-5" />
+                <span className="sr-only">Select language</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Select Language</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>English</DropdownMenuItem>
+              <DropdownMenuItem>हिन्दी (Hindi)</DropdownMenuItem>
+              <DropdownMenuItem>বাংলা (Bengali)</DropdownMenuItem>
+              <DropdownMenuItem>తెలుగు (Telugu)</DropdownMenuItem>
+              <DropdownMenuItem>தமிழ் (Tamil)</DropdownMenuItem>
+              <DropdownMenuItem>ગુજરાતી (Gujarati)</DropdownMenuItem>
+              <DropdownMenuItem>ಕನ್ನಡ (Kannada)</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

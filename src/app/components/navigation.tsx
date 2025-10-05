@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users, Palmtree, ScrollText, UserSquare, BookHeart, CalendarDays, PartyPopper, Music } from 'lucide-react';
+import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users, Palmtree, ScrollText, UserSquare, BookHeart, CalendarDays, PartyPopper, Music, MessageCircle } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navigation() {
@@ -75,6 +75,14 @@ export function Navigation() {
             <Link href="/festivals">
               <PartyPopper />
               <span>Festivals</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Forum">
+            <Link href="/forum">
+              <MessageCircle />
+              <span>Forum</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

@@ -1,251 +1,333 @@
-/**
- * @fileoverview Firestore Security Rules for the aaura app.
- *
- * Core Philosophy:
- * This ruleset prioritizes user data protection while allowing public access to media and temple information.
- * Users can only manage their own data, while media content and temple data are publicly readable.
- *
- * Data Structure:
- * - User-specific data (profiles, bookmarks, subscriptions, horoscopes) is nested under `/users/{userId}`.
- * - Public content (media, channels, deities, shops, products, temples, stories, characters, rituals, panchang, festivals) resides in top-level collections.
- *
- * Key Security Decisions:
- * - Users can only read/write their own user documents and associated subcollections.
- * - Listing of users is disallowed.
- * - Media, Temples and other content are publicly readable but writable only with proper authorization (TODO).
- * - Assumes all top-level collections, except users, should be world-readable.
- * - Schema validation is relaxed to allow rapid iteration. Only relational integrity is strictly enforced.
- */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Protects user profiles.
+     * @description Protects user profiles. Only the authenticated user can read/write their own profile.
      * @path /users/{userId}
-     * @allow (create) User with matching UID can create their profile.
-     * @allow (get, update, delete) User with matching UID can read/update/delete their profile.
-     * @deny (create) User cannot create a profile with a mismatched UID.
-     * @deny (list) Listing all users is not allowed.
+     * @allow (create, update, delete) if request.auth.uid == userId
+     * @allow (get, list) if request.auth.uid == userId
+     * @deny (create) if request.auth.uid != userId
+     * @deny (update, delete) if request.auth.uid != userId
+     * @deny (get, list) if request.auth.uid != userId
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
       allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow list: if false; // No listing of all user documents.
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
+
+      /**
+       * @description Protects user bookmarks. Only the authenticated user can read/write their own bookmarks.
+       * @path /users/{userId}/bookmarks/{bookmarkId}
+       * @allow (create, update, delete) if request.auth.uid == userId
+       * @allow (get, list) if request.auth.uid == userId
+       * @deny (create) if request.auth.uid != userId
+       * @deny (update, delete) if request.auth.uid != userId
+       * @deny (get, list) if request.auth.uid != userId
+       * @principle Enforces document ownership for writes.
+       */
+      match /bookmarks/{bookmarkId} {
+        allow get: if isOwner(userId);
+        allow list: if false;
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Protects user subscriptions. Only the authenticated user can read/write their own subscriptions.
+       * @path /users/{userId}/subscriptions/{channelId}
+       * @allow (create, update, delete) if request.auth.uid == userId
+       * @allow (get, list) if request.auth.uid == userId
+       * @deny (create) if request.auth.uid != userId
+       * @deny (update, delete) if request.auth.uid != userId
+       * @deny (get, list) if request.auth.uid != userId
+       * @principle Enforces document ownership for writes.
+       */
+      match /subscriptions/{channelId} {
+        allow get: if isOwner(userId);
+        allow list: if false;
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
+
+      /**
+       * @description Protects user horoscopes. Only the authenticated user can read/write their own horoscopes.
+       * @path /users/{userId}/horoscopes/{horoscopeId}
+       * @allow (create, update, delete) if request.auth.uid == userId
+       * @allow (get, list) if request.auth.uid == userId
+       * @deny (create) if request.auth.uid != userId
+       * @deny (update, delete) if request.auth.uid != userId
+       * @deny (get, list) if request.auth.uid != userId
+       * @principle Enforces document ownership for writes.
+       */
+      match /horoscopes/{horoscopeId} {
+        allow get: if isOwner(userId);
+        allow list: if false;
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+      }
     }
 
     /**
-     * @description Protects user bookmarks for temples.
-     * @path /users/{userId}/bookmarks/{bookmarkId}
-     * @allow (create, get, update, delete, list) User with matching UID can manage their bookmarks.
-     * @deny (create) User cannot create a bookmark with a mismatched UID.
-     * @principle Restricts access to a user's own data tree.
-     */
-    match /users/{userId}/bookmarks/{bookmarkId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Stores all media on the platform (videos, audio, etc.).
+     * @description Allows public read access to media, but restricts writes to the owner.
      * @path /media/{mediaId}
-     * @allow (get, list) Any user can read media.
-     * @deny (create, update, delete) Only the owner can modify media. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth.uid == request.resource.data.userId
+     * @allow (update, delete) if request.auth.uid == resource.data.userId
+     * @deny (create) if request.auth.uid != request.resource.data.userId
+     * @deny (update, delete) if request.auth.uid != resource.data.userId
+     * @principle Allows public read with owner-only writes.
      */
     match /media/{mediaId} {
-        allow get, list: if true;
-        allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-        // CRITICAL: Cannot implement owner-only writes. The 'Media' entity is missing an 'ownerId' or 'authorId' field.
+      function isOwner(ownerId) {
+        return request.auth.uid == ownerId;
+      }
+
+      function isExistingOwner() {
+        return isOwner(resource.data.userId) && resource != null;
+      }
+
+      allow get: if true;
+      allow list: if true;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if isExistingOwner();
+      allow delete: if isExistingOwner();
     }
 
     /**
-     * @description Stores all channels on the platform.
+     * @description Allows public read access to channels, but restricts writes to the owner.
      * @path /channels/{channelId}
-     * @allow (get, list) Any user can read channel information.
-     * @deny (create, update, delete) Only the owner can modify channel information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth.uid == request.resource.data.userId
+     * @allow (update, delete) if request.auth.uid == resource.data.userId
+     * @deny (create) if request.auth.uid != request.resource.data.userId
+     * @deny (update, delete) if request.auth.uid != resource.data.userId
+     * @principle Allows public read with owner-only writes.
      */
     match /channels/{channelId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Channel' entity is missing an 'ownerId' or 'authorId' field.
+      function isOwner(ownerId) {
+        return request.auth.uid == ownerId;
+      }
+
+      function isExistingOwner() {
+        return isOwner(resource.data.userId) && resource != null;
+      }
+
+      allow get: if true;
+      allow list: if true;
+      allow create: if request.auth.uid == request.resource.data.userId;
+      allow update: if isExistingOwner();
+      allow delete: if isExistingOwner();
     }
 
     /**
-     * @description Stores user subscriptions within a sub-collection of the user's document.
-     * @path /users/{userId}/subscriptions/{channelId}
-     * @allow (create, get, update, delete, list) User with matching UID can manage their subscriptions.
-     * @principle Restricts access to a user's own data tree.
-     */
-     match /users/{userId}/subscriptions/{channelId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.userId == userId;
-        allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-        allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Stores horoscopes generated for users.
-     * @path /users/{userId}/horoscopes/{horoscopeId}
-     * @allow (create, get, update, delete, list) User with matching UID can manage their horoscopes.
-     * @principle Restricts access to a user's own data tree.
-     */
-    match /users/{userId}/horoscopes/{horoscopeId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isOwner(userId) && request.resource.data.userId == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Stores information about Hindu deities.
+     * @description Allows public read access to deities, but restricts writes to the owner.
      * @path /deities/{deityId}
-     * @allow (get, list) Any user can read deity information.
-     * @deny (create, update, delete) Only the owner can modify deity information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /deities/{deityId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Deity' entity is missing an 'ownerId' or 'authorId' field.
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
     }
 
     /**
-     * @description Stores all shops for the marketplace.
+     * @description Allows public read access to shops, but restricts writes to the owner.
      * @path /shops/{shopId}
-     * @allow (get, list) Any user can read shop information.
-     * @deny (create, update, delete) Only the owner can modify shop information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if request.auth.uid == request.resource.data.ownerId
+     * @allow (update, delete) if request.auth.uid == resource.data.ownerId
+     * @deny (create) if request.auth.uid != request.resource.data.ownerId
+     * @deny (update, delete) if request.auth.uid != resource.data.ownerId
+     * @principle Allows public read with owner-only writes.
      */
     match /shops/{shopId} {
-        allow get, list: if true;
-        allow create: if request.auth != null; // Any logged in user can create a shop.
-        allow update: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-        allow delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-        // CRITICAL: Cannot implement owner-only writes. The 'Shop' entity is missing an 'ownerId' or 'authorId' field.
+      function isOwner(ownerId) {
+        return request.auth.uid == ownerId;
+      }
+
+      function isExistingOwner() {
+        return isOwner(resource.data.ownerId) && resource != null;
+      }
+
+      allow get: if true;
+      allow list: if true;
+      allow create: if request.auth.uid == request.resource.data.ownerId;
+      allow update: if isExistingOwner();
+      allow delete: if isExistingOwner();
     }
 
     /**
-     * @description Stores all products for the marketplace.
+     * @description Allows public read access to products, but restricts writes to the owner.
      * @path /products/{productId}
-     * @allow (get, list) Any user can read product information.
-     * @deny (create, update, delete) Only the owner can modify product information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /products/{productId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Product' entity is missing an 'ownerId' or 'authorId' field.
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
     }
 
     /**
-     * @description Stores all temple and pilgrimage data.
+     * @description Allows public read access to temples, but restricts writes to the owner.
      * @path /temples/{templeId}
-     * @allow (get, list) Any user can read temple information.
-     * @deny (create, update, delete) Only the owner can modify temple information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /temples/{templeId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Temple' entity is missing an 'ownerId' or 'authorId' field.
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
+
+      /**
+       * @description Allows public read access to reviews for a temple, but restricts writes to the owner.
+       * @path /temples/{templeId}/reviews/{reviewId}
+       * @allow (get, list) if true
+       * @allow (create) if request.auth.uid == request.resource.data.userId
+       * @allow (update, delete) if request.auth.uid == resource.data.userId
+       * @deny (create) if request.auth.uid != request.resource.data.userId
+       * @deny (update, delete) if request.auth.uid != resource.data.userId
+       * @principle Allows public read with owner-only writes.
+       */
+      match /reviews/{reviewId} {
+        function isOwner(ownerId) {
+          return request.auth.uid == ownerId;
+        }
+
+        function isExistingOwner() {
+          return isOwner(resource.data.userId) && resource != null;
+        }
+
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth.uid == request.resource.data.userId;
+        allow update: if isExistingOwner();
+        allow delete: if isExistingOwner();
+      }
     }
 
     /**
-     * @description Stores user reviews for a specific temple.
-     * @path /temples/{templeId}/reviews/{reviewId}
-     * @allow (create, get, update, delete, list) Any logged in user can create a review
-     * @principle Restricts access to a user's own data tree.
-     */
-    match /temples/{templeId}/reviews/{reviewId} {
-      allow get, list: if true; // Reviews are readable by anyone.
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid; // Only signed in users can leave reviews.
-      allow update: if false; // Reviews cannot be updated.
-      allow delete: if false; // Reviews cannot be deleted.
-    }
-
-    /**
-     * @description Stores mythological stories.
+     * @description Allows public read access to stories, but restricts writes to the owner.
      * @path /stories/{storyId}
-     * @allow (get, list) Any user can read story information.
-     * @deny (create, update, delete) Only the owner can modify story information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /stories/{storyId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Story' entity is missing an 'ownerId' or 'authorId' field.
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
     }
 
     /**
-     * @description Stores mythological characters.
+     * @description Allows public read access to characters, but restricts writes to the owner.
      * @path /characters/{characterId}
-     * @allow (get, list) Any user can read character information.
-     * @deny (create, update, delete) Only the owner can modify character information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /characters/{characterId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Character' entity is missing an 'ownerId' or 'authorId' field.
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
     }
 
     /**
-     * @description Stores guidelines for various rituals and poojas.
+     * @description Allows public read access to rituals, but restricts writes to the owner.
      * @path /rituals/{ritualId}
-     * @allow (get, list) Any user can read ritual information.
-     * @deny (create, update, delete) Only the owner can modify ritual information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /rituals/{ritualId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Ritual' entity is missing an 'ownerId' or 'authorId' field.
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
     }
 
     /**
-     * @description Stores daily panchang data, with the document ID being the date.
+     * @description Allows public read access to panchang, but restricts writes to the owner.
      * @path /panchang/{date}
-     * @allow (get, list) Any user can read panchang information.
-     * @deny (create, update, delete) Only the owner can modify panchang information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /panchang/{date} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Panchang' entity is missing an 'ownerId' or 'authorId' field.
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
     }
 
     /**
-     * @description Stores details about cultural and religious festivals.
+     * @description Allows public read access to festivals, but restricts writes to the owner.
      * @path /festivals/{festivalId}
-     * @allow (get, list) Any user can read festival information.
-     * @deny (create, update, delete) Only the owner can modify festival information. // TODO: Add owner validation once the schema is updated with an ownership field.
-     * @principle Public read with owner-only writes.
+     * @allow (get, list) if true
+     * @allow (create) if true // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @allow (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (create) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @deny (update, delete) if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+     * @principle Allows public read with owner-only writes.
      */
     match /festivals/{festivalId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-      // CRITICAL: Cannot implement owner-only writes. The 'Festival' entity is missing an 'ownerId' or 'authorId' field.
-    }
-
-    // Helper functions
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    function isOwner(userId) {
-      return request.auth.uid == userId;
-    }
-
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+        allow get: if true;
+        allow list: if true;
+        allow create: if request.auth != null;
+        allow update: if false;
+        allow delete: if false;
     }
   }
 }

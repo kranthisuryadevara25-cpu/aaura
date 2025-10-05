@@ -555,6 +555,34 @@
         "relatedTemples": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["id", "name", "description", "date", "significance"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Represents a post in the community forum.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "authorId": { "type": "string" },
+        "content": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "likes": { "type": "number" }
+      },
+      "required": ["authorId", "content", "createdAt"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "Represents a comment on a forum post.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "postId": { "type": "string" },
+        "authorId": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["postId", "authorId", "text", "createdAt"]
     }
   },
   "auth": {
@@ -691,8 +719,24 @@
           "schema": { "$ref": "#/entities/Festival" },
           "description": "Stores details about cultural and religious festivals."
         }
+      },
+      {
+        "path": "/posts/{postId}",
+        "definition": {
+            "entityName": "Post",
+            "schema": { "$ref": "#/entities/Post" },
+            "description": "Stores forum posts."
+        }
+      },
+      {
+          "path": "/posts/{postId}/comments/{commentId}",
+          "definition": {
+              "entityName": "Comment",
+              "schema": { "$ref": "#/entities/Comment" },
+              "description": "Stores comments for a specific post."
+          }
       }
     ],
-    "reasoning": "The data model is designed for a content platform with e-commerce and a new temple library. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, and Rituals are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
   }
 }

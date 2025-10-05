@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
+import Link from 'next/link';
 
 const products = [
     { id: '1', name: 'Handcrafted Ganesha Idol', price: 49.99, imageUrl: 'https://picsum.photos/seed/idol/400/400', imageHint: 'Ganesha idol', description: 'A beautiful, handcrafted Ganesha idol for your home altar.' },
@@ -44,10 +45,15 @@ export default function ShopPage() {
                 <CardTitle className="text-foreground">{product.name}</CardTitle>
                 <CardDescription className="text-lg font-semibold text-primary">${product.price.toFixed(2)}</CardDescription>
             </CardHeader>
-            <CardContent className="mt-auto">
+            <CardContent className="mt-auto flex flex-col gap-2">
                 <Button className="w-full">
                     <ShoppingCart className="mr-2" />
                     {t.buttons.addToCart}
+                </Button>
+                 <Button asChild className="w-full" variant="secondary">
+                  <Link href={`/checkout/${product.id}`}>
+                    {t.buttons.buyNow}
+                  </Link>
                 </Button>
             </CardContent>
             </Card>

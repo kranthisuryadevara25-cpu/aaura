@@ -357,6 +357,12 @@
         "category": {
           "type": "string",
           "description": "Category like 'Idols', 'Incense', 'Books'."
+        },
+        "razorpay": {
+            "type": "object",
+            "properties": {
+                "price_in_paise": { "type": "number" }
+            }
         }
       },
       "required": [

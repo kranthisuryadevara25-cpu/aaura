@@ -8,6 +8,7 @@ import { Loader2 } from 'lucide-react';
 import { TempleCard } from './cards/temple-card';
 import { StoryCard } from './cards/story-card';
 import { DeityCard } from './cards/deity-card';
+import { VideoCard } from './cards/video-card';
 
 // Fisher-Yates shuffle algorithm
 function shuffle(array: any[]) {
@@ -24,28 +25,31 @@ export function Feed() {
     const firestore = useFirestore();
     const [feedItems, setFeedItems] = useState<any[]>([]);
     
-    const templesQuery = useMemo(() => firestore ? query(collection(firestore, 'temples'), limit(5)) : null, [firestore]);
-    const storiesQuery = useMemo(() => firestore ? query(collection(firestore, 'stories'), limit(5)) : null, [firestore]);
-    const deitiesQuery = useMemo(() => firestore ? query(collection(firestore, 'deities'), limit(5)) : null, [firestore]);
+    const mediaQuery = useMemo(() => firestore ? query(collection(firestore, 'media'), limit(10)) : null, [firestore]);
+    const { data: media, isLoading: mediaLoading } = useCollection(mediaQuery);
 
+    const templesQuery = useMemo(() => firestore ? query(collection(firestore, 'temples'), limit(5)) : null, [firestore]);
     const { data: temples, isLoading: templesLoading } = useCollection(templesQuery);
+    
+    const storiesQuery = useMemo(() => firestore ? query(collection(firestore, 'stories'), limit(5)) : null, [firestore]);
     const { data: stories, isLoading: storiesLoading } = useCollection(storiesQuery);
+    
+    const deitiesQuery = useMemo(() => firestore ? query(collection(firestore, 'deities'), limit(5)) : null, [firestore]);
     const { data: deities, isLoading: deitiesLoading } = useCollection(deitiesQuery);
 
-    const isLoading = templesLoading || storiesLoading || deitiesLoading;
+    const isLoading = mediaLoading || templesLoading || storiesLoading || deitiesLoading;
     
     useEffect(() => {
         if (!isLoading) {
             const allItems = [
+                ...(media?.map(item => ({ ...item, type: 'video' })) || []),
                 ...(temples?.map(item => ({ ...item, type: 'temple' })) || []),
                 ...(stories?.map(item => ({ ...item, type: 'story' })) || []),
                 ...(deities?.map(item => ({ ...item, type: 'deity' })) || []),
             ];
-            // Shuffle the items for a mixed feed experience. 
-            // In a real app, this would be handled by a recommendation engine.
             setFeedItems(shuffle(allItems));
         }
-    }, [temples, stories, deities, isLoading]);
+    }, [media, temples, stories, deities, isLoading]);
 
 
     if (isLoading) {
@@ -57,9 +61,11 @@ export function Feed() {
     }
     
     return (
-        <div className="space-y-6">
+        <div className="p-4 sm:p-6 lg:p-8 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-4 gap-y-8">
             {feedItems.map((item) => {
                 switch (item.type) {
+                    case 'video':
+                        return <VideoCard key={`video-${item.id}`} video={item} />;
                     case 'temple':
                         return <TempleCard key={`temple-${item.id}`} temple={item} />;
                     case 'story':

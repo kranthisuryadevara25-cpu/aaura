@@ -16,13 +16,12 @@ const getChannelData = (userId: string) => ({
 // A placeholder function to format view counts
 const formatViews = (views: number) => {
     if (views >= 1_000_000) return `${(views / 1_000_000).toFixed(1)}M views`;
-    if (views >= 1_000) return `${(views / 1_000).toFixed(1)}K views`;
+    if (views >= 1_000) return `${(views / 1_000).toFixed(0)}K views`;
     return `${views} views`;
 }
 
 export function VideoCard({ video }: { video: any }) {
     const channel = getChannelData(video.userId);
-
     const videoImage = placeholderImages.find(p => p.id === 'video-1') || placeholderImages[0];
 
     return (
@@ -48,7 +47,7 @@ export function VideoCard({ video }: { video: any }) {
                         </h4>
                         <p className="text-xs text-muted-foreground mt-1">{channel.name}</p>
                         <p className="text-xs text-muted-foreground">
-                            {formatViews(video.views)} &bull; {formatDistanceToNow(video.uploadDate.toDate(), { addSuffix: true })}
+                            {formatViews(video.views)} &bull; {video.uploadDate ? formatDistanceToNow(video.uploadDate.toDate(), { addSuffix: true }) : 'just now'}
                         </p>
                     </div>
                 </div>
@@ -56,4 +55,3 @@ export function VideoCard({ video }: { video: any }) {
         </Link>
     );
 }
-

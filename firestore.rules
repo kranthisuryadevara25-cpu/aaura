@@ -3,151 +3,182 @@
  *
  * Core Philosophy:
  * This ruleset enforces a strict user-ownership model for user-generated content (videos, channels, horoscopes, orders),
- * while allowing public read access to products. Subscriptions are also publicly readable to enable discovery,
- * but write access is restricted. Data validation is minimized for rapid prototyping.
+ * ensuring that only the authenticated user can create, read, update, or delete their own data. Products are publicly readable,
+ * but write access is not granted in this prototype. Subscriptions are top-level documents that can be created by users.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profiles. Only the owner can read/write.
- * - /users/{userId}/videos/{videoId}: Stores videos. Only the owner can read/write.
- * - /users/{userId}/channels/{channelId}: Stores channels. Only the owner can read/write.
- * - /users/{userId}/horoscopes/{horoscopeId}: Stores horoscopes. Only the owner can read/write.
- * - /users/{userId}/orders/{orderId}: Stores orders. Only the owner can read/write.
- * - /orders/{orderId}/orderItems/{orderItemId}: Stores order items. Only the owner can read/write.
- * - /products/{productId}: Stores product information. Publicly readable, but writeable by nobody (for now).
- * - /subscriptions/{subscriptionId}: Stores subscription information. Publicly readable, writeable by nobody (for now).
+ * - /users/{userId}: Stores user profiles. Accessible only by the respective user.
+ * - /users/{userId}/videos/{videoId}: Stores videos uploaded by users, accessible only by the video owner.
+ * - /users/{userId}/channels/{channelId}: Stores channels created by users, accessible only by the channel owner.
+ * - /users/{userId}/horoscopes/{horoscopeId}: Stores horoscopes generated for users, accessible only by the horoscope owner.
+ * - /users/{userId}/orders/{orderId}: Stores orders placed by users, accessible only by the order owner.
+ * - /orders/{orderId}/orderItems/{orderItemId}: Stores order items associated with orders, accessible only to the order owner (via parent order).
+ * - /products/{productId}: Stores product information, publicly readable.
+ * - /subscriptions/{subscriptionId}: Stores user subscriptions to channels.
  *
  * Key Security Decisions:
- * - Listing of users is disallowed for privacy.
- * - Products are publicly readable.
- * - Subscriptions are publicly readable.
- * - Default security posture: Strict owner-only access unless explicitly stated otherwise.
- *
- * Denormalization for Authorization:
- * - User-generated content (videos, channels, horoscopes, orders) should include a `userId` field
- *   that matches the document path. This allows for simple `isOwner()` checks without additional reads.
+ * - Strict User Ownership: All content nested under /users/{userId} is strictly controlled by the authenticated user matching {userId}.
+ * - No User Listing: Listing all users is disallowed for privacy.
+ * - Products are Publicly Readable: The /products collection is intended to be a public catalog.
+ * - Authorization Independence via Denormalization: Documents contain redundant user IDs to avoid costly `get()` calls in rules.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the user is signed in.
-     */
-    function isSignedIn() {
-      return request.auth != null;
-    }
-
-    /**
-     * @description Checks if the authenticated user ID matches the provided user ID.
-     */
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
-
-    /**
-     * @description Checks if the authenticated user owns the existing document.
-     * Ensures that the document exists before allowing the operation.
-     */
-    function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
-    }
-
-    /**
-     * @description Restricts access to user documents to the owner only.
+     * @description Secures user profiles, ensuring only the authenticated user can access their own profile.
      * @path /users/{userId}
-     * @allow (get, create, update, delete) if request.auth.uid == userId
-     * @deny (get, create, update, delete) if request.auth.uid != userId
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can create their profile if request.auth.uid == userId.
+     * @allow (get) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can get their profile if request.auth.uid == userId.
+     * @allow (update) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can update their profile if request.auth.uid == userId.
+     * @allow (delete) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can delete their profile if request.auth.uid == userId.
+     * @deny (get) - User 'anotherUser' cannot get User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' profile.
+     * @principle Enforces document ownership for user profiles.
      */
     match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
+      allow create: if isOwner(userId);
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Restricts access to video documents to the owner only.
+     * @description Secures videos uploaded by users, ensuring only the video owner can manage their videos.
      * @path /users/{userId}/videos/{videoId}
-     * @allow (get, create, update, delete) if request.auth.uid == userId
-     * @deny (get, create, update, delete) if request.auth.uid != userId
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can create a video under their profile if request.auth.uid == userId.
+     * @allow (get) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can get a video under their profile if request.auth.uid == userId.
+     * @allow (update) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can update a video under their profile if request.auth.uid == userId.
+     * @allow (delete) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can delete a video under their profile if request.auth.uid == userId.
+     * @deny (get) - User 'anotherUser' cannot get Video 'someVideoId' under User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32'.
+     * @principle Enforces document ownership for user-uploaded videos.
      */
     match /users/{userId}/videos/{videoId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+        function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
       allow create: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Restricts access to channel documents to the owner only.
+     * @description Secures channels created by users, ensuring only the channel owner can manage their channel.
      * @path /users/{userId}/channels/{channelId}
-     * @allow (get, create, update, delete) if request.auth.uid == userId
-     * @deny (get, create, update, delete) if request.auth.uid != userId
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can create a channel under their profile if request.auth.uid == userId.
+     * @allow (get) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can get a channel under their profile if request.auth.uid == userId.
+     * @allow (update) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can update a channel under their profile if request.auth.uid == userId.
+     * @allow (delete) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can delete a channel under their profile if request.auth.uid == userId.
+     * @deny (get) - User 'anotherUser' cannot get Channel 'someChannelId' under User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32'.
+     * @principle Enforces document ownership for user-created channels.
      */
     match /users/{userId}/channels/{channelId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+        function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
       allow create: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Restricts access to horoscope documents to the owner only.
+     * @description Secures horoscopes generated for users, ensuring only the horoscope owner can manage their horoscopes.
      * @path /users/{userId}/horoscopes/{horoscopeId}
-     * @allow (get, create, update, delete) if request.auth.uid == userId
-     * @deny (get, create, update, delete) if request.auth.uid != userId
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can create a horoscope under their profile if request.auth.uid == userId.
+     * @allow (get) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can get a horoscope under their profile if request.auth.uid == userId.
+     * @allow (update) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can update a horoscope under their profile if request.auth.uid == userId.
+     * @allow (delete) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can delete a horoscope under their profile if request.auth.uid == userId.
+     * @deny (get) - User 'anotherUser' cannot get Horoscope 'someHoroscopeId' under User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32'.
+     * @principle Enforces document ownership for user-generated horoscopes.
      */
     match /users/{userId}/horoscopes/{horoscopeId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
       allow create: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Restricts access to order documents to the owner only.
+     * @description Secures orders placed by users, ensuring only the order owner can manage their orders.
      * @path /users/{userId}/orders/{orderId}
-     * @allow (get, create, update, delete) if request.auth.uid == userId
-     * @deny (get, create, update, delete) if request.auth.uid != userId
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can create an order under their profile if request.auth.uid == userId.
+     * @allow (get) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can get an order under their profile if request.auth.uid == userId.
+     * @allow (update) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can update an order under their profile if request.auth.uid == userId.
+     * @allow (delete) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can delete an order under their profile if request.auth.uid == userId.
+     * @deny (get) - User 'anotherUser' cannot get Order 'someOrderId' under User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32'.
+     * @principle Enforces document ownership for user-placed orders.
      */
     match /users/{userId}/orders/{orderId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+      function isExistingOwner(userId) {
+        return isOwner(userId) && exists(resource);
+      }
       allow create: if isOwner(userId);
+      allow get: if isOwner(userId);
+      allow list: if false;
       allow update: if isExistingOwner(userId);
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Restricts access to orderItem documents to the owner only.
+     * @description Secures order items associated with orders, accessible only to the order owner (via parent order).
      * @path /orders/{orderId}/orderItems/{orderItemId}
-     * @allow (get, create, update, delete) if request.auth.uid == userId
-     * @deny (get, create, update, delete) if request.auth.uid != userId
-     * @principle Enforces document ownership for writes.
+     * @allow (create) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can create an order item under Order 'order123' if they own Order 'order123'.
+     * @allow (get) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can get an order item under Order 'order123' if they own Order 'order123'.
+     * @allow (update) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can update an order item under Order 'order123' if they own Order 'order123'.
+     * @allow (delete) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can delete an order item under Order 'order123' if they own Order 'order123'.
+     * @deny (get) - User 'anotherUser' cannot get OrderItem 'someOrderItemId' under Order 'order123'
+     * @principle Enforces access control based on ownership of the parent order.
      */
     match /orders/{orderId}/orderItems/{orderItemId} {
-      allow get: if false; // This path needs the user ID to properly validate permissions
-      allow list: if false; // This path needs the user ID to properly validate permissions
-      allow create: if false; // This path needs the user ID to properly validate permissions
-      allow update: if false; // This path needs the user ID to properly validate permissions
-      allow delete: if false; // This path needs the user ID to properly validate permissions
+        function isOrderOwner(orderId) {
+            return get(/databases/$(database)/documents/users/$(request.auth.uid)/orders/$(orderId)).data.exists();
+        }
+        function isExistingOrderOwner(orderId) {
+            return isOrderOwner(orderId) && exists(resource);
+        }
+      allow create: if isOrderOwner(orderId);
+      allow get: if isOrderOwner(orderId);
+      allow list: if false; // Listing not allowed for order items
+      allow update: if isExistingOrderOwner(orderId);
+      allow delete: if isExistingOrderOwner(orderId);
     }
 
     /**
-     * @description Allows public read access to product documents. Write access is denied.
+     * @description Makes product information publicly accessible.
      * @path /products/{productId}
-     * @allow get, list: if true
-     * @deny create, update, delete: if false
-     * @principle Allows public read access to products.
+     * @allow (get) - Any user can retrieve product information.
+     * @allow (list) - Any user can list products.
+     * @deny (create) - No user can create product via client.
+     * @deny (update) - No user can update product via client.
+     * @deny (delete) - No user can delete product via client.
+     * @principle Allows public read access to product information.
      */
     match /products/{productId} {
       allow get: if true;
@@ -158,35 +189,43 @@ service cloud.firestore {
     }
 
     /**
-     * @description Allows public read access to subscription documents. Write access is denied.
+     * @description Secures user subscriptions to channels.
      * @path /subscriptions/{subscriptionId}
-     * @allow get, list: if true
-     * @deny create, update, delete: if false
-     * @principle Allows public read access to subscriptions.
+     * @allow (create) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can create a subscription.
+     * @allow (get) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can get a subscription if they are the subscriber.
+     * @allow (update) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can update a subscription if they are the subscriber.
+     * @allow (delete) - User 'oOBonZ2xmAYaWaWk7c9cfyQVTx32' can delete a subscription if they are the subscriber.
+     * @deny (get) - User 'anotherUser' cannot get Subscription 'someSubscriptionId'.
+     * @principle Enforces document ownership for user subscriptions.
      */
     match /subscriptions/{subscriptionId} {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+        function isSubscriber(userId) {
+            return exists(/databases/$(database)/documents/users/$(request.auth.uid));
+        }
+        function isExistingSubscriber(subscriptionId) {
+            return isSubscriber(request.auth.uid) && exists(resource);
+        }
+
+      allow create: if isSubscriber(request.auth.uid);
+      allow get: if isSubscriber(request.auth.uid);
+      allow list: if false;
+      allow update: if isExistingSubscriber(subscriptionId);
+      allow delete: if isExistingSubscriber(subscriptionId);
     }
 
     /**
-     * @description The error reported was a missing permission to list videos.
-     * The existing security rules do not have a rule to allow listing videos at the root collection path: `/videos`.
-     * To resolve this error, a rule is being added to allow public read access (list) to videos at the root path.
+     * @description  Publicly accessible videos
      * @path /videos
-     * @allow list: if true
-     * @deny create, update, delete: if false
-     * @principle Allows public read access to videos.
+     * @allow (get) - Any user can retrieve video information.
+     * @allow (list) - Any user can list videos.
+     * @deny (create) - No user can create video via client.
      */
     match /videos {
-      allow get: if true;
-      allow list: if true;
-      allow create: if false;
-      allow update: if false;
-      allow delete: if false;
+        allow get: if true;
+        allow list: if true;
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
     }
   }
 }

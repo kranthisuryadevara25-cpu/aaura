@@ -14,15 +14,21 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BookOpen, Palmtree, UserSquare } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function StoryDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const story = getStoryBySlug(slug);
+  const { language } = useLanguage();
 
   if (!story) {
     notFound();
   }
+
+  const title = story.title[language] || story.title.en;
+  const summary = story.summary[language] || story.summary.en;
+  const fullText = story.fullText[language] || story.fullText.en;
 
   const relatedCharacters = story.relatedCharacters.map(slug => getCharacterBySlug(slug)).filter(Boolean);
   const relatedTemples = story.relatedTemples.map(slug => getTempleBySlug(slug)).filter(Boolean);
@@ -39,7 +45,7 @@ export default function StoryDetailPage() {
               <main className="container mx-auto px-4 py-8 md:py-12">
                   <article className="max-w-4xl mx-auto">
                       <header className="text-center mb-8">
-                          <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{story.title}</h1>
+                          <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{title}</h1>
                           <div className="mt-4 flex justify-center flex-wrap gap-2">
                               {story.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
                           </div>
@@ -48,7 +54,7 @@ export default function StoryDetailPage() {
                       <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20 mb-8">
                           <Image
                               src={story.image.url}
-                              alt={story.title}
+                              alt={title}
                               data-ai-hint={story.image.hint}
                               fill
                               className="object-cover"
@@ -60,7 +66,7 @@ export default function StoryDetailPage() {
                               <CardTitle className="text-2xl text-primary">Summary</CardTitle>
                           </CardHeader>
                           <CardContent>
-                              <p className="text-lg text-foreground/90">{story.summary}</p>
+                              <p className="text-lg text-foreground/90">{summary}</p>
                           </CardContent>
                       </Card>
                       
@@ -69,7 +75,7 @@ export default function StoryDetailPage() {
                               <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> The Full Story</CardTitle>
                           </CardHeader>
                           <CardContent className="prose prose-lg max-w-none text-foreground/90">
-                              <p>{story.fullText}</p>
+                              <p>{fullText}</p>
                               <p><em>(Full text, audio, and video versions coming soon)</em></p>
                           </CardContent>
                       </Card>
@@ -83,9 +89,9 @@ export default function StoryDetailPage() {
                                   {relatedCharacters.map(character => character && (
                                       <Link key={character.id} href={`/characters/${character.slug}`} className="block p-4 text-center rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                           <div className="w-24 h-24 relative mx-auto rounded-full overflow-hidden mb-2 border-2 border-accent/20">
-                                            <Image src={character.image.url} alt={character.name} data-ai-hint={character.image.hint} fill className="object-cover" />
+                                            <Image src={character.image.url} alt={character.name[language] || character.name.en} data-ai-hint={character.image.hint} fill className="object-cover" />
                                           </div>
-                                          <h4 className="font-semibold text-md text-foreground group-hover:underline">{character.name}</h4>
+                                          <h4 className="font-semibold text-md text-foreground group-hover:underline">{character.name[language] || character.name.en}</h4>
                                       </Link>
                                   ))}
                               </CardContent>

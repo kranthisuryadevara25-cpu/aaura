@@ -13,16 +13,21 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, BookOpen } from 'lucide-react';
 import Link from 'next/link';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function CharacterDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const character = getCharacterBySlug(slug);
+  const { language } = useLanguage();
 
   if (!character) {
     notFound();
   }
   
+  const name = character.name[language] || character.name.en;
+  const description = character.description[language] || character.description.en;
+  const role = character.role[language] || character.role.en;
   const associatedStories = character.associatedStories.map(slug => getStoryBySlug(slug)).filter(Boolean);
 
   return (
@@ -41,16 +46,16 @@ export default function CharacterDetailPage() {
                              <div className="aspect-square relative rounded-t-lg overflow-hidden">
                                 <Image
                                     src={character.image.url}
-                                    alt={character.name}
+                                    alt={name}
                                     data-ai-hint={character.image.hint}
                                     fill
                                     className="object-cover"
                                 />
                             </div>
                             <CardHeader>
-                                <CardTitle className="text-4xl font-headline text-primary">{character.name}</CardTitle>
+                                <CardTitle className="text-4xl font-headline text-primary">{name}</CardTitle>
                                 <div className="flex flex-wrap gap-2 pt-2">
-                                    <Badge variant="default">{character.role}</Badge>
+                                    <Badge variant="default">{role}</Badge>
                                     {character.attributes.map(attr => <Badge key={attr} variant="secondary">{attr}</Badge>)}
                                 </div>
                             </CardHeader>
@@ -59,10 +64,10 @@ export default function CharacterDetailPage() {
                     <div className="md:col-span-2 space-y-8">
                         <Card className="bg-transparent border-primary/20">
                             <CardHeader>
-                                <CardTitle className="text-2xl text-primary">About {character.name}</CardTitle>
+                                <CardTitle className="text-2xl text-primary">About {name}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <p className="text-lg text-foreground/90">{character.description}</p>
+                                <p className="text-lg text-foreground/90">{description}</p>
                             </CardContent>
                         </Card>
                         
@@ -74,8 +79,8 @@ export default function CharacterDetailPage() {
                                 <CardContent className="space-y-4">
                                     {associatedStories.map(story => story && (
                                         <Link key={story.id} href={`/stories/${story.slug}`} className="block p-4 rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
-                                            <h4 className="font-semibold text-lg text-primary group-hover:underline">{story.title}</h4>
-                                            <p className="text-sm text-muted-foreground line-clamp-2">{story.summary}</p>
+                                            <h4 className="font-semibold text-lg text-primary group-hover:underline">{story.title[language] || story.title.en}</h4>
+                                            <p className="text-sm text-muted-foreground line-clamp-2">{story.summary[language] || story.summary.en}</p>
                                         </Link>
                                     ))}
                                 </CardContent>

@@ -96,7 +96,7 @@ export default function ProfileSetupPage() {
 
         toast({
           title: 'Profile Complete!',
-          description: 'Welcome to Aura! Your spiritual journey begins now.',
+          description: 'Welcome to aaura! Your spiritual journey begins now.',
         });
         
         router.push('/');
@@ -248,5 +248,3 @@ export default function ProfileSetupPage() {
     </div>
   );
 }
-
-    

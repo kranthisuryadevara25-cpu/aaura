@@ -91,7 +91,7 @@ export default function CreateChannelPage() {
             <Card className="w-full max-w-2xl">
               <CardHeader>
                 <CardTitle>Create Your Channel</CardTitle>
-                <CardDescription>Start sharing your spiritual content with the Aura community.</CardDescription>
+                <CardDescription>Start sharing your spiritual content with the aaura community.</CardDescription>
               </CardHeader>
               <CardContent>
                 <Form {...form}>

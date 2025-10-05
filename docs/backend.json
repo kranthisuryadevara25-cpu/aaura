@@ -4,7 +4,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the Aura app.",
+      "description": "Represents a user of the aaura app.",
       "properties": {
         "id": {
           "type": "string",
@@ -456,5 +456,3 @@
     "reasoning": "The data model is designed for a content platform with e-commerce. Videos, Channels, Deities, Shops, and Products are in top-level collections for easy querying. User-specific data like subscriptions and horoscopes are nested under the user's document. Products are linked to Shops via a shopId. This structure supports a multi-vendor marketplace, public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
   }
 }
-
-    

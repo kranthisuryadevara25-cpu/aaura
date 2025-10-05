@@ -47,7 +47,7 @@ function LoggedInView() {
             <Dashboard />
           </main>
           <footer className="text-center p-6 text-sm text-muted-foreground">
-            <p>&copy; {new Date().getFullYear()} Aura. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
           </footer>
         </div>
       </SidebarInset>
@@ -63,7 +63,7 @@ function LoggedOutView() {
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl font-headline font-bold tracking-tight text-primary">
-              Find Your Aura
+              Find Your aaura
             </h1>
             <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
               Your daily sanctuary for spiritual wellness. Explore videos, get personalized horoscopes, and connect with your inner self.
@@ -74,7 +74,7 @@ function LoggedOutView() {
           </div>
         </main>
         <footer className="text-center p-6 text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} Aura. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
         </footer>
       </div>
     </SidebarProvider>
@@ -95,5 +95,3 @@ export default function Home() {
 
   return user ? <LoggedInView /> : <LoggedOutView />;
 }
-
-    

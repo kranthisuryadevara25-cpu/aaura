@@ -34,7 +34,7 @@ export function Header() {
           <Link href="/" className="flex items-center gap-3 group">
             <Icons.logo className="h-8 w-8 text-accent transition-transform group-hover:rotate-12" />
             <span className="text-2xl font-headline font-bold text-foreground">
-              Aura
+              aaura
             </span>
           </Link>
         </div>

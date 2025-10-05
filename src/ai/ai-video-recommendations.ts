@@ -35,7 +35,7 @@ const prompt = ai.definePrompt({
   name: 'videoRecommendationsPrompt',
   input: {schema: VideoRecommendationsInputSchema},
   output: {schema: VideoRecommendationsOutputSchema},
-  prompt: `You are an expert in spiritual and wellness content. Based on the user's watch history, you will recommend other relevant videos on the Aura platform.
+  prompt: `You are an expert in spiritual and wellness content. Based on the user's watch history, you will recommend other relevant videos on the aaura platform.
 
   Video Watch History:
   {{#each videoWatchHistory}}

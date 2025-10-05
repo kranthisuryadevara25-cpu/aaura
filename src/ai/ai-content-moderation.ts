@@ -38,7 +38,7 @@ const prompt = ai.definePrompt({
   name: 'moderateContentPrompt',
   input: {schema: ModerateContentInputSchema},
   output: {schema: ModerateContentOutputSchema},
-  prompt: `You are an AI content moderator for "Aura," a platform dedicated exclusively to positive religious, spiritual, and wellness content. Your task is to analyze video metadata to ensure it aligns with the platform's core values.
+  prompt: `You are an AI content moderator for "aaura," a platform dedicated exclusively to positive religious, spiritual, and wellness content. Your task is to analyze video metadata to ensure it aligns with the platform's core values.
 
   **Platform Rules:**
   1.  **Content Theme:** Must be strictly religious, spiritual, or wellness-focused (e.g., Hindu, Buddhist, Christian teachings, myths, scriptures, pooja rituals, yoga, meditation, positive mantras, uplifting stories).

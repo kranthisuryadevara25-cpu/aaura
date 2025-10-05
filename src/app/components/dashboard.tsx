@@ -132,7 +132,7 @@ export function Dashboard() {
                   </Avatar>
                   <div>
                     <h3 className="font-semibold text-foreground text-base leading-snug line-clamp-2">{video.title}</h3>
-                    <p className="text-muted-foreground text-sm mt-1">Aura Creator</p>
+                    <p className="text-muted-foreground text-sm mt-1">aaura Creator</p>
                     <p className="text-muted-foreground text-sm">{video.views} views &middot; {new Date(video.uploadDate?.toDate()).toLocaleDateString()}</p>
                   </div>
                 </div>

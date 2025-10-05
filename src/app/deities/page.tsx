@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '../navigation';
+import { Navigation } from '@/app/components/navigation';
 
 export default function DeitiesPage() {
   return (

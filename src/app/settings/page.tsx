@@ -35,7 +35,7 @@ import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope
 import { zodiacSigns } from '@/lib/zodiac';
 import { useMemo, useTransition } from 'react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '../navigation';
+import { Navigation } from '@/app/components/navigation';
 
 const formSchema = z.object({
   zodiacSign: z.string({ required_error: 'Please select your zodiac sign.' }),

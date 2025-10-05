@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, PlusCircle } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '../navigation';
+import { Navigation } from '@/app/components/navigation';
 import Link from 'next/link';
 
 const channels = [

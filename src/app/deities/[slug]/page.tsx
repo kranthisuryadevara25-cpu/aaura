@@ -11,7 +11,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { notFound } from 'next/navigation';
 import { Music, BookOpen, Sparkles, Sunrise, Sunset, Loader2 } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '../../navigation';
+import { Navigation } from '@/app/components/navigation';
 import { useEffect, useState } from 'react';
 import { getDeityDailyRelevance, type DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
 

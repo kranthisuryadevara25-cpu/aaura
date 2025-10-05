@@ -7,7 +7,7 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '../navigation';
+import { Navigation } from '@/app/components/navigation';
 
 const products = [
     { id: '1', name: 'Handcrafted Ganesha Idol', price: 49.99, imageUrl: 'https://picsum.photos/seed/idol/400/400', imageHint: 'Ganesha idol', description: 'A beautiful, handcrafted Ganesha idol for your home altar.' },

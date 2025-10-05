@@ -26,7 +26,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { moderateContent } from '@/ai/ai-content-moderation';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '../navigation';
+import { Navigation } from '@/app/components/navigation';
 
 const formSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters.' }),

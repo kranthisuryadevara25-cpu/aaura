@@ -25,7 +25,7 @@ import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/navigation';
+import { Navigation } from '@/app/components/navigation';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'Channel name must be at least 3 characters.' }),

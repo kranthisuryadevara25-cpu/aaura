@@ -1,17 +1,40 @@
 
 'use client';
 
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Header } from "@/app/components/header";
-import { useUser } from '@/firebase';
+import { useUser, useDoc, useFirestore } from '@/firebase';
+import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { Dashboard } from "@/app/components/dashboard";
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { Navigation } from "@/app/components/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 function LoggedInView() {
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const router = useRouter();
+
+  const userDocRef = user ? doc(firestore, `users/${user.uid}`) : undefined;
+  const { data: userData, isLoading: isUserDocLoading } = useDoc(userDocRef);
+
+  useEffect(() => {
+    if (!isUserDocLoading && userData && !userData.profileComplete) {
+      router.push('/profile/setup');
+    }
+  }, [userData, isUserDocLoading, router]);
+
+  if (isUserDocLoading || (userData && !userData.profileComplete)) {
+     return (
+      <div className="flex justify-center items-center h-screen bg-background">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
   return (
      <SidebarProvider>
       <Sidebar>

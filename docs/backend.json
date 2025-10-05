@@ -15,9 +15,9 @@
           "description": "User's email address.",
           "format": "email"
         },
-        "displayName": {
+        "fullName": {
           "type": "string",
-          "description": "User's display name or channel name."
+          "description": "User's full name."
         },
         "photoURL": {
           "type": "string",
@@ -30,13 +30,34 @@
         },
         "birthDate": {
           "type": "string",
-          "description": "User's birth date for horoscope personalization.",
+          "description": "User's birth date.",
           "format": "date"
+        },
+        "placeOfBirth": {
+            "type": "string",
+            "description": "User's place of birth."
+        },
+        "timeOfBirth": {
+            "type": "string",
+            "description": "User's time of birth.",
+            "format": "time"
+        },
+        "fatherName": {
+            "type": "string",
+            "description": "User's father's name."
+        },
+        "motherName": {
+            "type": "string",
+            "description": "User's mother's name."
         },
         "creationTimestamp": {
           "type": "string",
           "description": "Timestamp of user account creation.",
           "format": "date-time"
+        },
+        "profileComplete": {
+            "type": "boolean",
+            "description": "Flag to indicate if the user has completed their profile."
         }
       },
       "required": [
@@ -435,3 +456,5 @@
     "reasoning": "The data model is designed for a content platform with e-commerce. Videos, Channels, Deities, Shops, and Products are in top-level collections for easy querying. User-specific data like subscriptions and horoscopes are nested under the user's document. Products are linked to Shops via a shopId. This structure supports a multi-vendor marketplace, public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
   }
 }
+
+    

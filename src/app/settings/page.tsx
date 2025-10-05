@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Loader2, Save } from 'lucide-react';
@@ -38,8 +39,13 @@ import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
 import { Navigation } from '@/app/components/navigation';
 
 const formSchema = z.object({
-  zodiacSign: z.string({ required_error: 'Please select your zodiac sign.' }),
+  fullName: z.string().min(1, 'Full name is required.'),
   birthDate: z.date({ required_error: 'Please select your birth date.' }),
+  timeOfBirth: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please use HH:MM format.'),
+  placeOfBirth: z.string().min(1, 'Place of birth is required.'),
+  fatherName: z.string().min(1, "Father's name is required."),
+  motherName: z.string().min(1, "Mother's name is required."),
+  zodiacSign: z.string({ required_error: 'Please select your zodiac sign.' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -79,19 +85,29 @@ export default function SettingsPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-        zodiacSign: '',
-        birthDate: undefined,
+      fullName: '',
+      birthDate: undefined,
+      timeOfBirth: '',
+      placeOfBirth: '',
+      fatherName: '',
+      motherName: '',
+      zodiacSign: '',
     }
   });
 
   useEffect(() => {
     if (userData) {
       form.reset({
-        zodiacSign: userData.zodiacSign || '',
+        fullName: userData.fullName || user?.displayName || '',
         birthDate: userData.birthDate ? new Date(userData.birthDate) : undefined,
+        timeOfBirth: userData.timeOfBirth || '',
+        placeOfBirth: userData.placeOfBirth || '',
+        fatherName: userData.fatherName || '',
+        motherName: userData.motherName || '',
+        zodiacSign: userData.zodiacSign || '',
       });
     }
-  }, [userData, form]);
+  }, [userData, user, form]);
   
   const onSubmit = (data: FormValues) => {
     if (!user || !firestore) {
@@ -103,14 +119,13 @@ export default function SettingsPage() {
       try {
         const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
         
-        // Update user profile in Firestore
         const userProfileData = {
-          zodiacSign: data.zodiacSign,
+          ...data,
           birthDate: formattedBirthDate,
+          profileComplete: true,
         };
         setDocumentNonBlocking(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
 
-        // Generate and save horoscope
         const horoscopeResult = await generatePersonalizedHoroscope({
           zodiacSign: data.zodiacSign,
           birthDate: formattedBirthDate,
@@ -122,19 +137,18 @@ export default function SettingsPage() {
           zodiacSign: data.zodiacSign,
           text: horoscopeResult.horoscope,
         };
-        // We use 'daily' as the ID to ensure there's only one horoscope per user per day which is overwritten
         setDocumentNonBlocking(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
 
         toast({
           title: 'Settings Saved!',
-          description: 'Your horoscope has been generated and is available on the dashboard.',
+          description: 'Your profile has been updated and your horoscope generated.',
         });
       } catch (error) {
-        console.error('Failed to save settings and generate horoscope:', error);
+        console.error('Failed to save settings:', error);
         toast({
           variant: 'destructive',
           title: 'An Error Occurred',
-          description: 'Could not save your settings or generate your horoscope. Please try again.',
+          description: 'Could not save your settings. Please try again.',
         });
       }
     });
@@ -151,9 +165,9 @@ export default function SettingsPage() {
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
                 <Card className="w-full max-w-2xl">
                 <CardHeader>
-                    <CardTitle>Personalization Settings</CardTitle>
+                    <CardTitle>Profile & Personalization</CardTitle>
                     <CardDescription>
-                    Provide your birth details to receive personalized daily horoscopes. This information is kept private.
+                    Manage your profile details to personalize your experience.
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -164,6 +178,19 @@ export default function SettingsPage() {
                     ) : (
                     <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                       <FormField
+                          control={form.control}
+                          name="fullName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Your full name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                           control={form.control}
                           name="birthDate"
@@ -206,6 +233,32 @@ export default function SettingsPage() {
                             </FormItem>
                           )}
                         />
+                         <FormField
+                          control={form.control}
+                          name="timeOfBirth"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Time of Birth</FormLabel>
+                              <FormControl>
+                                <Input type="time" placeholder="HH:MM" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="placeOfBirth"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Place of Birth</FormLabel>
+                              <FormControl>
+                                <Input placeholder="City, Country" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <FormField
                           control={form.control}
                           name="zodiacSign"
@@ -230,6 +283,32 @@ export default function SettingsPage() {
                             </FormItem>
                           )}
                         />
+                         <FormField
+                          control={form.control}
+                          name="fatherName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Father's Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Father's full name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="motherName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Mother's Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Mother's full name" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                         <Button type="submit" disabled={isPending}>
                         {isPending ? (
                             <>
@@ -239,7 +318,7 @@ export default function SettingsPage() {
                         ) : (
                             <>
                                 <Save className="mr-2 h-4 w-4" />
-                                Save and Generate Horoscope
+                                Save Profile
                             </>
                         )}
                         </Button>
@@ -254,3 +333,5 @@ export default function SettingsPage() {
     </SidebarProvider>
   );
 }
+
+    

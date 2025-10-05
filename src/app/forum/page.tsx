@@ -1,13 +1,14 @@
 
 'use client';
 
-import { useMemo, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useFirestore, useUser, useCollection } from '@/firebase';
-import { collection, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { auth, db } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, serverTimestamp, query, orderBy, addDoc } from 'firebase/firestore';
 import { Header } from '@/app/components/header';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
@@ -62,28 +63,18 @@ function PostCard({ post, author }: { post: any; author: any }) {
 }
 
 export default function ForumPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const [user] = useAuthState(auth);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
 
-  const postsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'posts'), orderBy('createdAt', 'desc'));
-  }, [firestore]);
-  const { data: posts, isLoading: postsLoading } = useCollection(postsQuery);
+  const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+  const [posts, postsLoading] = useCollectionData(postsQuery, { idField: 'id' });
 
-  const usersQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-  const { data: usersData, isLoading: usersLoading } = useCollection(usersQuery);
+  const usersQuery = collection(db, 'users');
+  const [usersData, usersLoading] = useCollectionData(usersQuery, { idField: 'id' });
 
-  const usersMap = useMemo(() => {
-    if (!usersData) return new Map();
-    return new Map(usersData.map(u => [u.id, u]));
-  }, [usersData]);
+  const usersMap = new Map(usersData?.map(u => [u.id, u]));
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
@@ -91,14 +82,14 @@ export default function ForumPage() {
   });
 
   const onSubmit = (data: PostFormValues) => {
-    if (!user || !firestore) {
+    if (!user) {
       toast({ variant: 'destructive', title: 'You must be logged in to post.' });
       return;
     }
     startTransition(async () => {
       try {
-        const postsCollection = collection(firestore, 'posts');
-        await addDocumentNonBlocking(postsCollection, {
+        const postsCollection = collection(db, 'posts');
+        await addDoc(postsCollection, {
           authorId: user.uid,
           content: data.content,
           createdAt: serverTimestamp(),

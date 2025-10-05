@@ -1,10 +1,12 @@
 
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from "@/app/components/header";
-import { useUser, useDoc, useFirestore } from '@/firebase';
+import { auth, db } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -14,18 +16,12 @@ import { Navigation } from "@/app/components/navigation";
 import { Feed } from '@/app/components/feed';
 import { RightSidebar } from "@/app/components/right-sidebar";
 
-
 function LoggedInView() {
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const [user] = useAuthState(auth);
   const router = useRouter();
 
-  const userDocRef = useMemo(() => {
-    if (!user || !firestore) return undefined;
-    return doc(firestore, `users/${user.uid}`);
-  }, [user, firestore]);
-
-  const { data: userData, isLoading: isUserDocLoading } = useDoc(userDocRef);
+  const userDocRef = user ? doc(db, `users/${user.uid}`) : undefined;
+  const [userData, isUserDocLoading] = useDocumentData(userDocRef);
 
   useEffect(() => {
     if (!isUserDocLoading && userData && !userData.profileComplete) {
@@ -87,11 +83,10 @@ function LoggedOutView() {
   );
 }
 
-
 export default function Home() {
-  const { user, isUserLoading } = useUser();
+  const [user, loading] = useAuthState(auth);
 
-  if (isUserLoading) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

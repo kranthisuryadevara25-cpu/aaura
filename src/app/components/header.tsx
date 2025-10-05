@@ -3,7 +3,8 @@
 
 import { Icons } from "@/app/components/icons";
 import Link from "next/link";
-import { useUser, useAuth } from "@/firebase";
+import { auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -21,14 +22,11 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useLanguage } from "@/hooks/use-language";
 
 export function Header() {
-  const { user } = useUser();
-  const auth = useAuth();
+  const [user] = useAuthState(auth);
   const { t } = useLanguage();
 
   const handleSignOut = () => {
-    if (auth) {
-      auth.signOut();
-    }
+    auth.signOut();
   };
   
   return (

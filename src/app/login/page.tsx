@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -16,7 +17,8 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAuth, useUser } from '@/firebase';
+import { auth } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 import { Header } from '@/app/components/header';
@@ -32,8 +34,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const auth = useAuth();
-  const { user, isUserLoading } = useUser();
+  const [user, loading] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<FormValues>({
@@ -51,14 +52,6 @@ export default function LoginPage() {
   }, [user, router]);
   
   const handleAuthAction = async (action: 'signIn' | 'signUp', data: FormValues) => {
-    if (!auth) {
-        toast({
-            variant: 'destructive',
-            title: 'Authentication Failed',
-            description: 'Firebase Auth is not available.',
-        });
-        return;
-    }
     setIsSubmitting(true);
     try {
       if (action === 'signIn') {
@@ -66,7 +59,6 @@ export default function LoginPage() {
       } else {
         await createUserWithEmailAndPassword(auth, data.email, data.password);
       }
-      // onAuthStateChanged will handle the redirect
       toast({ title: 'Success!', description: action === 'signIn' ? 'You are now signed in.' : 'Your account has been created.' });
     } catch (error: any) {
       let description = 'An unexpected error occurred.';
@@ -100,7 +92,7 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || user) {
+  if (loading || user) {
     return (
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

@@ -21,7 +21,8 @@ import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parse, isValid } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore, useUser, useAuth } from '@/firebase';
+import { auth, db } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/app/components/header';
@@ -64,9 +65,7 @@ const getZodiacSign = (date: Date): (typeof zodiacSigns)[number] => {
 export default function ProfileSetupPage() {
   const { toast } = useToast();
   const router = useRouter();
-  const firestore = useFirestore();
-  const auth = useAuth();
-  const { user } = useUser();
+  const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -95,7 +94,7 @@ export default function ProfileSetupPage() {
 
 
   const onSubmit = (data: FormValues) => {
-    if (!auth?.currentUser || !firestore) {
+    if (!auth?.currentUser) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to complete your profile.' });
       return;
     }
@@ -122,7 +121,7 @@ export default function ProfileSetupPage() {
           creationTimestamp: serverTimestamp(),
         };
         
-        await setDoc(doc(firestore, `users/${currentUser.uid}`), userProfileData, { merge: true });
+        await setDoc(doc(db, `users/${currentUser.uid}`), userProfileData, { merge: true });
 
         const horoscopeResult = await generatePersonalizedHoroscope({
           zodiacSign: zodiacSign,
@@ -135,7 +134,7 @@ export default function ProfileSetupPage() {
           zodiacSign: zodiacSign,
           text: horoscopeResult.horoscope,
         };
-        await setDoc(doc(firestore, `users/${currentUser.uid}/horoscopes/daily`), horoscopeData, { merge: true });
+        await setDoc(doc(db, `users/${currentUser.uid}/horoscopes/daily`), horoscopeData, { merge: true });
 
         toast({
           title: 'Profile Complete!',

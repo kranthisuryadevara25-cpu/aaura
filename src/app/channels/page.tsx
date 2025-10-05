@@ -10,21 +10,24 @@ import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
 import { Navigation } from '@/app/components/navigation';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollection, useFirestore } from '@/firebase';
-import { useMemo } from 'react';
-import { collection, query } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, DocumentData } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+
+interface Channel extends DocumentData {
+  id: string;
+  name: string;
+  description_en: string;
+  [key: string]: any;
+}
 
 export default function ChannelsPage() {
   const { language, t } = useLanguage();
-  const firestore = useFirestore();
-
-  const channelsQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'channels'));
-  }, [firestore]);
-
-  const { data: channels, isLoading } = useCollection(channelsQuery);
+  const channelsQuery = query(collection(db, 'channels'));
+  const [channels, isLoading] = useCollectionData(channelsQuery, {
+    idField: 'id',
+  });
 
   return (
     <SidebarProvider>
@@ -57,7 +60,7 @@ export default function ChannelsPage() {
                     </div>
                   ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                    {channels && channels.map((channel) => {
+                    {channels && channels.map((channel: Channel) => {
                         const description = channel[`description_${language}`] || channel.description_en;
                         return (
                         <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-card border-border hover:border-primary/50 transition-colors duration-300">

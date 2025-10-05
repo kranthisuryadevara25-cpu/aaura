@@ -2,44 +2,42 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useFirestore, useCollection, useUser } from '@/firebase';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, limit, where } from 'firebase/firestore';
 import { Loader2, Youtube, Clapperboard, Sparkles } from 'lucide-react';
 import { VideoCard } from './cards/video-card';
 import { ShortCard } from './cards/short-card';
 import { DeityCard } from './cards/deity-card';
-import { useLanguage } from '@/hooks/use-language.tsx';
+import { useLanguage } from '@/hooks/use-language';
+import { db } from '@/lib/firebase';
+import { Deity } from '@/lib/deities';
 
 export function Dashboard() {
-    const firestore = useFirestore();
-    const { user } = useUser();
     const { language } = useLanguage();
 
     const videosQuery = useMemo(() => {
-        if (!firestore) return null;
         return query(
-            collection(firestore, 'media'), 
+            collection(db, 'media'), 
             where('mediaType', 'in', ['video', 'pravachan']), 
             where('language', '==', language),
             limit(8)
         )
-    }, [firestore, language]);
+    }, [language]);
     
     const shortsQuery = useMemo(() => {
-        if (!firestore) return null;
         return query(
-            collection(firestore, 'media'), 
+            collection(db, 'media'), 
             where('mediaType', '==', 'short'), 
             where('language', '==', language),
             limit(6)
         );
-    }, [firestore, language]);
+    }, [language]);
 
-    const deitiesQuery = useMemo(() => firestore ? query(collection(firestore, 'deities'), limit(4)) : null, [firestore]);
+    const deitiesQuery = useMemo(() => query(collection(db, 'deities'), limit(4)), []);
     
-    const { data: videos, isLoading: videosLoading } = useCollection(videosQuery);
-    const { data: shorts, isLoading: shortsLoading } = useCollection(shortsQuery);
-    const { data: deities, isLoading: deitiesLoading } = useCollection(deitiesQuery);
+    const [videos, videosLoading] = useCollectionData(videosQuery, { idField: 'id' });
+    const [shorts, shortsLoading] = useCollectionData(shortsQuery, { idField: 'id' });
+    const [deities, deitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
 
     const isLoading = videosLoading || shortsLoading || deitiesLoading;
 
@@ -85,7 +83,7 @@ export function Dashboard() {
                            <Sparkles className="text-primary" /> Discover Deities
                         </h2>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {deities.map(deity => <DeityCard key={deity.id} deity={deity} />)}
+                            {deities.map(deity => <DeityCard key={deity.id} deity={deity as Deity & {id: string}} />)}
                         </div>
                     </div>
                 )}

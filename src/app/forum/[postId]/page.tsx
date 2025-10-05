@@ -1,14 +1,15 @@
 
 'use client';
 
-import { useMemo, useTransition } from 'react';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useParams, notFound } from 'next/navigation';
-import { useFirestore, useUser, useDoc, useCollection } from '@/firebase';
-import { collection, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { auth, db } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
+import { collection, doc, serverTimestamp, query, orderBy, addDoc } from 'firebase/firestore';
 import { Header } from '@/app/components/header';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
@@ -54,40 +55,24 @@ export default function PostDetailPage() {
   const params = useParams();
   const postId = params.postId as string;
 
-  const { user } = useUser();
-  const firestore = useFirestore();
+  const [user] = useAuthState(auth);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
 
-  const postRef = useMemo(() => {
-    if (!firestore || !postId) return null;
-    return doc(firestore, 'posts', postId);
-  }, [firestore, postId]);
-  const { data: post, isLoading: postLoading } = useDoc(postRef);
+  const postRef = doc(db, 'posts', postId);
+  const [post, postLoading] = useDocumentData(postRef);
 
-  const authorRef = useMemo(() => {
-    if (!firestore || !post?.authorId) return null;
-    return doc(firestore, 'users', post.authorId);
-  }, [firestore, post]);
-  const { data: author, isLoading: authorLoading } = useDoc(authorRef);
+  const authorRef = post ? doc(db, 'users', post.authorId) : undefined;
+  const [author, authorLoading] = useDocumentData(authorRef);
   
-  const commentsQuery = useMemo(() => {
-    if (!firestore || !postId) return null;
-    return query(collection(firestore, 'posts', postId, 'comments'), orderBy('createdAt', 'asc'));
-  }, [firestore, postId]);
-  const { data: comments, isLoading: commentsLoading } = useCollection(commentsQuery);
+  const commentsQuery = query(collection(db, 'posts', postId, 'comments'), orderBy('createdAt', 'asc'));
+  const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
   
-  const usersQuery = useMemo(() => {
-    if (!firestore) return null;
-    return collection(firestore, 'users');
-  }, [firestore]);
-  const { data: usersData, isLoading: usersLoading } = useCollection(usersQuery);
+  const usersQuery = collection(db, 'users');
+  const [usersData, usersLoading] = useCollectionData(usersQuery, { idField: 'id' });
 
-  const usersMap = useMemo(() => {
-    if (!usersData) return new Map();
-    return new Map(usersData.map(u => [u.id, u]));
-  }, [usersData]);
+  const usersMap = new Map(usersData?.map(u => [u.id, u]));
 
 
   const form = useForm<CommentFormValues>({
@@ -96,14 +81,14 @@ export default function PostDetailPage() {
   });
 
   const onSubmitComment = (data: CommentFormValues) => {
-    if (!user || !firestore || !postId) {
+    if (!user || !postId) {
       toast({ variant: 'destructive', title: 'You must be logged in to comment.' });
       return;
     }
     startTransition(async () => {
       try {
-        const commentsCollection = collection(firestore, 'posts', postId, 'comments');
-        await addDocumentNonBlocking(commentsCollection, {
+        const commentsCollection = collection(db, 'posts', postId, 'comments');
+        await addDoc(commentsCollection, {
           postId: postId,
           authorId: user.uid,
           text: data.text,

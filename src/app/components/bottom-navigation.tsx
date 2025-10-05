@@ -5,11 +5,12 @@ import Link from 'next/link';
 import { Home, Compass, PlusSquare, Bell, User } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useUser } from '@/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebase';
 
 export function BottomNavigation() {
   const pathname = usePathname();
-  const { user } = useUser();
+  const [user] = useAuthState(auth);
 
   if (!user) {
     return null;

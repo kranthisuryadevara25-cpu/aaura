@@ -17,9 +17,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore, useUser } from '@/firebase';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Loader2, Upload } from 'lucide-react';
 import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
@@ -41,8 +41,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function UploadPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const firestore = useFirestore();
-  const { user } = useUser();
+  const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -73,9 +72,8 @@ export default function UploadPage() {
         const mediaFile = data.media[0];
         const mediaDataUri = await toBase64(mediaFile);
         
-        // Moderate content using the enhanced AI flow
         const moderationResult = await moderateContent({
-          videoDataUri: mediaDataUri, // The AI flow expects a 'videoDataUri' field.
+          videoDataUri: mediaDataUri, 
           title: data.title,
           description: data.description,
         });
@@ -90,13 +88,11 @@ export default function UploadPage() {
           return;
         }
 
-        // In a real app, you would upload to a service like Firebase Storage.
-        // For now, we use placeholders.
         const placeholderMediaUrl = 'https://placehold.co/600x400.mp4?text=Media+Processing';
         const placeholderThumbnailUrl = 'https://picsum.photos/seed/spirit/600/400';
         
-        const mediaCollection = collection(firestore, 'media');
-        await addDocumentNonBlocking(mediaCollection, {
+        const mediaCollection = collection(db, 'media');
+        await addDoc(mediaCollection, {
           userId: user.uid,
           title: data.title,
           description: data.description,

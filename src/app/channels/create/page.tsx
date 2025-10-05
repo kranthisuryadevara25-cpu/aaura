@@ -17,9 +17,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore, useUser } from '@/firebase';
-import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { doc, serverTimestamp } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { Loader2, PlusCircle } from 'lucide-react';
 import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
@@ -40,8 +40,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function CreateChannelPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const firestore = useFirestore();
-  const { user } = useUser();
+  const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
 
@@ -50,7 +49,7 @@ export default function CreateChannelPage() {
   });
 
   const onSubmit = (data: FormValues) => {
-    if (!user || !firestore) {
+    if (!user) {
       toast({ variant: 'destructive', title: 'You must be logged in to create a channel.' });
       return;
     }
@@ -58,16 +57,16 @@ export default function CreateChannelPage() {
     startTransition(async () => {
       try {
         const channelId = user.uid; // Use user's UID as channel ID for a 1-to-1 mapping
-        const channelRef = doc(firestore, 'channels', channelId);
+        const channelRef = doc(db, 'channels', channelId);
 
-        await setDocumentNonBlocking(channelRef, {
+        await setDoc(channelRef, {
           userId: user.uid,
           name: data.name,
           description_en: data.description_en,
           description_hi: data.description_hi,
           description_te: data.description_te,
           creationDate: serverTimestamp(),
-        }, {});
+        });
 
         toast({
           title: t.toasts.channelCreatedTitle,

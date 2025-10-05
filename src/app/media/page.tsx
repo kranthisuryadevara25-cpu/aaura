@@ -2,7 +2,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { useUser, useCollection, useFirestore } from '@/firebase';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -14,6 +14,7 @@ import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
 import { Navigation } from '@/app/components/navigation';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/hooks/use-language';
+import { db } from '@/lib/firebase';
 
 const getIconForType = (type: string) => {
     switch (type) {
@@ -29,16 +30,13 @@ const getIconForType = (type: string) => {
 }
 
 export default function MediaPage() {
-  const { user } = useUser();
-  const firestore = useFirestore();
   const { language, t } = useLanguage();
 
   const mediaQuery = useMemo(() => {
-    if (!firestore) return null;
-    return query(collection(firestore, 'media'));
-  }, [firestore]);
+    return query(collection(db, 'media'));
+  }, []);
 
-  const { data: media, isLoading } = useCollection(mediaQuery);
+  const [media, isLoading] = useCollectionData(mediaQuery, { idField: 'id' });
   
   const getImageForId = (id: string) => {
       const images = placeholderImages.filter(p => p.id.startsWith('video'));
@@ -72,7 +70,7 @@ export default function MediaPage() {
                 </div>
               ) : media && media.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                  {media.map((item) => {
+                  {media.map((item: any) => {
                     const title = item[`title_${language}`] || item.title_en;
                     const description = item[`description_${language}`] || item.description_en;
                     return (

@@ -28,13 +28,15 @@ import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parse, isValid } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore, useUser, useDoc, setDocumentNonBlocking, useAuth } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/app/components/header';
 import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope';
 import { zodiacSigns } from '@/lib/zodiac';
-import { useMemo, useTransition, useEffect, useState } from 'react';
+import { useTransition, useEffect, useState } from 'react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import { updateProfile } from 'firebase/auth';
@@ -72,17 +74,11 @@ const getZodiacSign = (date: Date): (typeof zodiacSigns)[number] => {
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const firestore = useFirestore();
-  const auth = useAuth();
-  const { user } = useUser();
+  const [user, loading] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
 
-  const userDocRef = useMemo(() => {
-    if (!firestore || !user) return undefined;
-    return doc(firestore, `users/${user.uid}`);
-  }, [firestore, user]);
-  
-  const { data: userData, isLoading: isUserLoading } = useDoc(userDocRef);
+  const userDocRef = user ? doc(db, `users/${user.uid}`) : undefined;
+  const [userData, isUserLoading] = useDocumentData(userDocRef);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -95,7 +91,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     if (userData) {
-      const initialBirthDate = userData.birthDate ? new Date(userData.birthDate) : undefined;
+      const initialBirthDate = userData.birthDate ? parse(userData.birthDate, 'yyyy-MM-dd', new Date()) : undefined;
       form.reset({
         fullName: userData.fullName || user?.displayName || '',
         birthDate: initialBirthDate,
@@ -120,7 +116,7 @@ export default function SettingsPage() {
 
   
   const onSubmit = (data: FormValues) => {
-    if (!user || !firestore || !auth?.currentUser) {
+    if (!user || !auth?.currentUser) {
       toast({ variant: 'destructive', title: 'Error', description: 'User or database not available.' });
       return;
     }
@@ -136,7 +132,7 @@ export default function SettingsPage() {
           birthDate: formattedBirthDate,
           profileComplete: true,
         };
-        await setDocumentNonBlocking(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
+        await setDoc(doc(db, `users/${user.uid}`), userProfileData, { merge: true });
 
         const horoscopeResult = await generatePersonalizedHoroscope({
           zodiacSign: data.zodiacSign,
@@ -149,7 +145,7 @@ export default function SettingsPage() {
           zodiacSign: data.zodiacSign,
           text: horoscopeResult.horoscope,
         };
-        await setDocumentNonBlocking(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
+        await setDoc(doc(db, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
 
         toast({
           title: 'Settings Saved!',
@@ -184,7 +180,7 @@ export default function SettingsPage() {
                       </CardDescription>
                   </CardHeader>
                   <CardContent>
-                      {isUserLoading ? (
+                      {isUserLoading || loading ? (
                           <div className="flex justify-center items-center h-40">
                               <Loader2 className="h-12 w-12 animate-spin text-primary" />
                           </div>
@@ -354,5 +350,3 @@ export default function SettingsPage() {
     </SidebarProvider>
   );
 }
-
-    

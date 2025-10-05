@@ -48,21 +48,21 @@ export function Header() {
         <div className="flex-1 flex justify-center px-4 lg:px-16">
             <div className="relative w-full max-w-lg">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder={t('header.search_placeholder')} className="pl-10" />
+                <Input placeholder={t('topnav.search_placeholder')} className="pl-10" />
             </div>
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2">
-           <Button variant="ghost" size="icon" title={t('header.notifications')}>
+           <Button variant="ghost" size="icon" title={t('topnav.notifications')}>
               <Bell className="h-5 w-5" />
-              <span className="sr-only">{t('header.notifications')}</span>
+              <span className="sr-only">{t('topnav.notifications')}</span>
           </Button>
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon">
                 <Languages className="h-5 w-5" />
-                <span className="sr-only">{t('header.select_language')}</span>
+                <span className="sr-only">{t('topnav.profile')}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -70,6 +70,11 @@ export function Header() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => setLanguage('en')}>English</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setLanguage('hi')}>हिन्दी (Hindi)</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage('te')}>తెలుగు (Telugu)</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage('mr')}>मराठी (Marathi)</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage('ta')}>தமிழ் (Tamil)</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage('kn')}>ಕನ್ನಡ (Kannada)</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage('bn')}>বাংলা (Bengali)</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

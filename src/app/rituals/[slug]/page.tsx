@@ -3,11 +3,8 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { getRitualBySlug } from '@/lib/rituals';
-import { Header } from '@/app/components/header';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { Badge } from '@/components/ui/badge';
 import { CheckSquare, ShoppingBasket, Clock } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
@@ -30,75 +27,63 @@ export default function RitualDetailPage() {
   const itemsRequired = ritual.itemsRequired[language] || ritual.itemsRequired.en;
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-              <Navigation />
-          </Sidebar>
-          <SidebarInset>
-              <main className="container mx-auto px-4 py-8 md:py-12">
-                  <article className="max-w-4xl mx-auto">
-                      <header className="text-center mb-8">
-                          <Badge variant="default" className="mb-2">{deity}</Badge>
-                          <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
-                          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{description}</p>
-                      </header>
+    <main className="container mx-auto px-4 py-8 md:py-12">
+        <article className="max-w-4xl mx-auto">
+            <header className="text-center mb-8">
+                <Badge variant="default" className="mb-2">{deity}</Badge>
+                <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
+                <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{description}</p>
+            </header>
 
-                      <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20 mb-8">
-                          <Image
-                              src={ritual.image.url}
-                              alt={name}
-                              data-ai-hint={ritual.image.hint}
-                              fill
-                              className="object-cover"
-                          />
-                      </div>
-                      
-                      <div className="grid md:grid-cols-3 gap-8">
-                          <div className="md:col-span-2">
-                               <Card className="bg-transparent border-primary/20 mb-8">
-                                  <CardHeader>
-                                      <CardTitle className="flex items-center gap-3 text-primary"><CheckSquare /> {t.ritualDetail.procedure}</CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                      <ol className="list-decimal list-inside space-y-4 text-foreground/90">
-                                          {procedure.map((step, index) => (
-                                              <li key={index}>{step}</li>
-                                          ))}
-                                      </ol>
-                                  </CardContent>
-                              </Card>
-                          </div>
-                          <div className="space-y-6">
-                              <Card className="bg-transparent border-primary/20 sticky top-24">
-                                  <CardHeader>
-                                      <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> {t.ritualDetail.itemsRequired}</CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                      <ul className="list-disc list-inside space-y-2 text-foreground/90">
-                                          {itemsRequired.map((item, index) => (
-                                              <li key={index}>{item}</li>
-                                          ))}
-                                      </ul>
-                                  </CardContent>
-                              </Card>
-                               <Card className="bg-transparent border-primary/20">
-                                  <CardHeader>
-                                      <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.ritualDetail.auspiciousTime}</CardTitle>
-                                  </CardHeader>
-                                  <CardContent>
-                                      <p className="text-foreground/90">{auspiciousTime}</p>
-                                  </CardContent>
-                              </Card>
-                          </div>
-                      </div>
-                  </article>
-              </main>
-          </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+            <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20 mb-8">
+                <Image
+                    src={ritual.image.url}
+                    alt={name}
+                    data-ai-hint={ritual.image.hint}
+                    fill
+                    className="object-cover"
+                />
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-8">
+                <div className="md:col-span-2">
+                      <Card className="bg-transparent border-primary/20 mb-8">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-primary"><CheckSquare /> {t.ritualDetail.procedure}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ol className="list-decimal list-inside space-y-4 text-foreground/90">
+                                {procedure.map((step, index) => (
+                                    <li key={index}>{step}</li>
+                                ))}
+                            </ol>
+                        </CardContent>
+                    </Card>
+                </div>
+                <div className="space-y-6">
+                    <Card className="bg-transparent border-primary/20 sticky top-24">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> {t.ritualDetail.itemsRequired}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <ul className="list-disc list-inside space-y-2 text-foreground/90">
+                                {itemsRequired.map((item, index) => (
+                                    <li key={index}>{item}</li>
+                                ))}
+                            </ul>
+                        </CardContent>
+                    </Card>
+                      <Card className="bg-transparent border-primary/20">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.ritualDetail.auspiciousTime}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-foreground/90">{auspiciousTime}</p>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </article>
+    </main>
   );
 }

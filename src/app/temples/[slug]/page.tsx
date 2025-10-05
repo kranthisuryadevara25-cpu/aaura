@@ -3,13 +3,10 @@
 
 import { useParams, notFound } from 'next/navigation';
 import { getTempleBySlug } from '@/lib/temples';
-import { Header } from '@/app/components/header';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -20,7 +17,7 @@ export default function TempleDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const temple = getTempleBySlug(slug);
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   if (!temple) {
     notFound();
@@ -41,125 +38,113 @@ export default function TempleDetailPage() {
 
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-              <Navigation />
-          </Sidebar>
-          <SidebarInset>
-              <main className="container mx-auto px-4 py-8 md:py-12">
-                  {/* Header Section */}
-                  <div className="text-center mb-8">
-                      <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
-                      <p className="mt-2 text-lg text-muted-foreground flex items-center justify-center gap-2">
-                          <MapPin className="h-5 w-5" /> {temple.location.city}, {temple.location.state}
-                      </p>
-                      <div className="mt-4 flex justify-center items-center gap-4">
-                          <Badge variant="secondary">Pilgrimage</Badge>
-                          <Badge variant="secondary">{deityName}</Badge>
-                           <Button variant="outline" size="sm">
-                              <Bookmark className="mr-2 h-4 w-4" /> Bookmark
-                          </Button>
-                      </div>
-                  </div>
-
-                  {/* Image Carousel */}
-                  <Carousel className="w-full max-w-5xl mx-auto mb-12">
-                      <CarouselContent>
-                          {temple.media.images.map((image, index) => (
-                          <CarouselItem key={index}>
-                              <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
-                                  <Image
-                                      src={image.url}
-                                      alt={`${name} image ${index + 1}`}
-                                      data-ai-hint={image.hint}
-                                      fill
-                                      className="object-cover"
-                                  />
-                              </div>
-                          </CarouselItem>
-                          ))}
-                      </CarouselContent>
-                      <CarouselPrevious />
-                      <CarouselNext />
-                  </Carousel>
-
-                  {/* Main Content Grid */}
-                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-                      {/* Left Column (Main Details) */}
-                      <div className="lg:col-span-2 space-y-8">
-                          <Card className="bg-transparent border-primary/20">
-                              <CardHeader>
-                                  <CardTitle className="flex items-center gap-3 text-primary"><BookOpen />Significance</CardTitle>
-                              </CardHeader>
-                              <CardContent className="space-y-4">
-                                  <div>
-                                      <h4 className="font-semibold text-lg">Mythological Importance</h4>
-                                      <p className="text-foreground/90">{mythologicalImportance}</p>
-                                  </div>
-                                  <Separator />
-                                  <div>
-                                      <h4 className="font-semibold text-lg">Historical Importance</h4>
-                                      <p className="text-foreground/90">{historicalImportance}</p>
-                                  </div>
-                              </CardContent>
-                          </Card>
-                          
-                           <Card className="bg-transparent border-primary/20">
-                              <CardHeader>
-                                  <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> Festivals & Special Days</CardTitle>
-                              </CardHeader>
-                              <CardContent>
-                                  <p className="text-foreground/90">{festivals}</p>
-                              </CardContent>
-                          </Card>
-                      </div>
-
-                      {/* Right Column (Visiting Info) */}
-                      <div className="space-y-6">
-                          <Card className="bg-transparent border-primary/20">
-                              <CardHeader>
-                                  <CardTitle className="flex items-center gap-3 text-primary"><Clock /> Visiting Information</CardTitle>
-                              </CardHeader>
-                              <CardContent className="space-y-3 text-sm">
-                                  <p><strong className="text-foreground">Timings:</strong> {timings}</p>
-                                  <p><strong className="text-foreground">Dress Code:</strong> {dressCode}</p>
-                                  <p><strong className="text-foreground">Pooja Guidelines:</strong> {poojaGuidelines}</p>
-                              </CardContent>
-                          </Card>
-
-                          <Card className="bg-transparent border-primary/20">
-                              <CardHeader>
-                                  <CardTitle className="flex items-center gap-3 text-primary">Travel & Facilities</CardTitle>
-                              </CardHeader>
-                               <CardContent className="space-y-4 text-sm">
-                                  <div className="flex items-start gap-3">
-                                      <Building className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Accommodation:</strong> {accommodation}</div>
-                                  </div>
-                                   <div className="flex items-start gap-3">
-                                      <Utensils className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Food:</strong> {food}</div>
-                                  </div>
-                                  <div className="flex items-start gap-3">
-                                      <Plane className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Transport:</strong> {transport}</div>
-                                  </div>
-                                  <div className="flex items-start gap-3">
-                                      <Users className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Other Places to Visit:</strong> {placesToVisit}</div>
-                                  </div>
-                              </CardContent>
-                          </Card>
-                      </div>
-                  </div>
-
-              </main>
-          </SidebarInset>
+    <main className="container mx-auto px-4 py-8 md:py-12">
+        {/* Header Section */}
+        <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
+            <p className="mt-2 text-lg text-muted-foreground flex items-center justify-center gap-2">
+                <MapPin className="h-5 w-5" /> {temple.location.city}, {temple.location.state}
+            </p>
+            <div className="mt-4 flex justify-center items-center gap-4">
+                <Badge variant="secondary">Pilgrimage</Badge>
+                <Badge variant="secondary">{deityName}</Badge>
+                  <Button variant="outline" size="sm">
+                    <Bookmark className="mr-2 h-4 w-4" /> {t.buttons.bookmark}
+                </Button>
+            </div>
         </div>
-      </div>
-    </SidebarProvider>
+
+        {/* Image Carousel */}
+        <Carousel className="w-full max-w-5xl mx-auto mb-12">
+            <CarouselContent>
+                {temple.media.images.map((image, index) => (
+                <CarouselItem key={index}>
+                    <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
+                        <Image
+                            src={image.url}
+                            alt={`${name} image ${index + 1}`}
+                            data-ai-hint={image.hint}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
+                </CarouselItem>
+                ))}
+            </CarouselContent>
+            <CarouselPrevious />
+            <CarouselNext />
+        </Carousel>
+
+        {/* Main Content Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+            {/* Left Column (Main Details) */}
+            <div className="lg:col-span-2 space-y-8">
+                <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary"><BookOpen />{t.templeDetail.significance}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div>
+                            <h4 className="font-semibold text-lg">{t.templeDetail.mythologicalImportance}</h4>
+                            <p className="text-foreground/90">{mythologicalImportance}</p>
+                        </div>
+                        <Separator />
+                        <div>
+                            <h4 className="font-semibold text-lg">{t.templeDetail.historicalImportance}</h4>
+                            <p className="text-foreground/90">{historicalImportance}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                  <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> {t.templeDetail.festivals}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-foreground/90">{festivals}</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            {/* Right Column (Visiting Info) */}
+            <div className="space-y-6">
+                <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.templeDetail.visitingInfo}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                        <p><strong className="text-foreground">{t.templeDetail.timings}:</strong> {timings}</p>
+                        <p><strong className="text-foreground">{t.templeDetail.dressCode}:</strong> {dressCode}</p>
+                        <p><strong className="text-foreground">{t.templeDetail.poojaGuidelines}:</strong> {poojaGuidelines}</p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary">{t.templeDetail.travelFacilities}</CardTitle>
+                    </CardHeader>
+                      <CardContent className="space-y-4 text-sm">
+                        <div className="flex items-start gap-3">
+                            <Building className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.accommodation}:</strong> {accommodation}</div>
+                        </div>
+                          <div className="flex items-start gap-3">
+                            <Utensils className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.food}:</strong> {food}</div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Plane className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.transport}:</strong> {transport}</div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Users className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.placesToVisit}:</strong> {placesToVisit}</div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+
+    </main>
   );
 }

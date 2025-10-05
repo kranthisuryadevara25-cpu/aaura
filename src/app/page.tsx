@@ -3,7 +3,6 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Header } from "@/app/components/header";
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
@@ -11,10 +10,7 @@ import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
-import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
-import { Navigation } from "@/app/components/navigation";
 import { Feed } from '@/app/components/feed';
-import { RightSidebar } from "@/app/components/right-sidebar";
 
 function LoggedInView() {
   const [user] = useAuthState(auth);
@@ -38,32 +34,13 @@ function LoggedInView() {
   }
   
   return (
-     <SidebarProvider>
-        <div className="min-h-screen bg-background text-foreground flex flex-col">
-          <Header />
-          <div className="flex flex-1">
-            <Sidebar>
-              <Navigation />
-            </Sidebar>
-            <main className="flex-1 grid grid-cols-1 lg:grid-cols-12">
-                <div className="col-span-12 lg:col-span-8 xl:col-span-9">
-                    <Feed />
-                </div>
-                <div className="hidden lg:block lg:col-span-4 xl:col-span-3 border-l">
-                    <RightSidebar />
-                </div>
-            </main>
-          </div>
-        </div>
-    </SidebarProvider>
+    <Feed />
   );
 }
 
 function LoggedOutView() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header />
-      <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
+    <div className="flex-grow container mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-5xl md:text-6xl font-headline font-bold tracking-tight text-primary">
             Find Your aaura
@@ -75,11 +52,7 @@ function LoggedOutView() {
             <Link href="/login">Join the Community</Link>
           </Button>
         </div>
-      </main>
-      <footer className="text-center p-6 text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} aaura. All rights reserved.</p>
-      </footer>
-    </div>
+      </div>
   );
 }
 

@@ -21,11 +21,8 @@ import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { Loader2, PlusCircle } from 'lucide-react';
-import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { useLanguage } from '@/hooks/use-language';
 
 const formSchema = z.object({
@@ -85,91 +82,79 @@ export default function CreateChannelPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-            <Navigation />
-          </Sidebar>
-          <SidebarInset>
-            <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
-              <Card className="w-full max-w-2xl bg-card">
-                <CardHeader>
-                  <CardTitle>{t.createChannel.title}</CardTitle>
-                  <CardDescription>{t.createChannel.description}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t.createChannel.nameLabel}</FormLabel>
-                            <FormControl>
-                              <Input placeholder={t.createChannel.namePlaceholder} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={form.control}
-                        name="description_en"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t.createChannel.descriptionEnLabel}</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                       <FormField
-                        control={form.control}
-                        name="description_hi"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t.createChannel.descriptionHiLabel}</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                       <FormField
-                        control={form.control}
-                        name="description_te"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>{t.createChannel.descriptionTeLabel}</FormLabel>
-                            <FormControl>
-                              <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" className="w-full" disabled={isPending}>
-                        {isPending ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <PlusCircle className="mr-2 h-4 w-4" />
-                        )}
-                        {t.createChannel.submitButton}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
-            </main>
-          </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+    <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
+      <Card className="w-full max-w-2xl bg-card">
+        <CardHeader>
+          <CardTitle>{t.createChannel.title}</CardTitle>
+          <CardDescription>{t.createChannel.description}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t.createChannel.nameLabel}</FormLabel>
+                    <FormControl>
+                      <Input placeholder={t.createChannel.namePlaceholder} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description_en"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t.createChannel.descriptionEnLabel}</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                <FormField
+                control={form.control}
+                name="description_hi"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t.createChannel.descriptionHiLabel}</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+                <FormField
+                control={form.control}
+                name="description_te"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{t.createChannel.descriptionTeLabel}</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder={t.createChannel.descriptionPlaceholder} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <PlusCircle className="mr-2 h-4 w-4" />
+                )}
+                {t.createChannel.submitButton}
+              </Button>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+    </main>
   );
 }

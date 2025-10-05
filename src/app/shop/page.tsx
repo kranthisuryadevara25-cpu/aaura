@@ -1,13 +1,10 @@
 
 'use client';
 
-import { Header } from '@/app/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ShoppingCart } from 'lucide-react';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { useLanguage } from '@/hooks/use-language';
 
 const products = [
@@ -21,53 +18,41 @@ const products = [
 export default function ShopPage() {
   const { t } = useLanguage();
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-              <Navigation />
-          </Sidebar>
-          <SidebarInset>
-              <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-                  <div className="text-center mb-12">
-                      <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">{t.shop.title}</h1>
-                      <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                          {t.shop.description}
-                      </p>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                  {products.map((product) => (
-                      <Card key={product.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
-                      <CardContent className="p-0">
-                          <div className="aspect-square relative">
-                              <Image
-                                  src={product.imageUrl}
-                                  alt={product.name}
-                                  data-ai-hint={product.imageHint}
-                                  fill
-                                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                              />
-                          </div>
-                      </CardContent>
-                      <CardHeader>
-                          <CardTitle className="text-foreground">{product.name}</CardTitle>
-                          <CardDescription className="text-lg font-semibold text-primary">${product.price.toFixed(2)}</CardDescription>
-                      </CardHeader>
-                      <CardContent className="mt-auto">
-                          <Button className="w-full">
-                              <ShoppingCart className="mr-2" />
-                              {t.buttons.addToCart}
-                          </Button>
-                      </CardContent>
-                      </Card>
-                  ))}
-                  </div>
-              </main>
-          </SidebarInset>
+    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+        <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">{t.shop.title}</h1>
+            <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+                {t.shop.description}
+            </p>
         </div>
-      </div>
-    </SidebarProvider>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {products.map((product) => (
+            <Card key={product.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
+            <CardContent className="p-0">
+                <div className="aspect-square relative">
+                    <Image
+                        src={product.imageUrl}
+                        alt={product.name}
+                        data-ai-hint={product.imageHint}
+                        fill
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                </div>
+            </CardContent>
+            <CardHeader>
+                <CardTitle className="text-foreground">{product.name}</CardTitle>
+                <CardDescription className="text-lg font-semibold text-primary">${product.price.toFixed(2)}</CardDescription>
+            </CardHeader>
+            <CardContent className="mt-auto">
+                <Button className="w-full">
+                    <ShoppingCart className="mr-2" />
+                    {t.buttons.addToCart}
+                </Button>
+            </CardContent>
+            </Card>
+        ))}
+        </div>
+    </main>
   );
 }

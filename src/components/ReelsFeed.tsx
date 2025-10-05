@@ -1,23 +1,40 @@
-// src/components/ReelsFeed.tsx
-import React from 'react';
-import type { FeedItem } from '@/types/feed';
+"use client";
+import React, { useRef, useEffect } from "react";
+import type { FeedItem } from "@/types/feed";
+import { useLanguage } from "@/hooks/use-language";
 
-interface ReelsFeedProps {
-  items: FeedItem[];
-}
+export default function ReelsFeed({ items }: { items: FeedItem[] }) {
+  const { language } = useLanguage();
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-const ReelsFeed: React.FC<ReelsFeedProps> = ({ items }) => {
-  const reelItems = items.filter(item => item.kind === 'video' || item.meta?.mediaType === 'short');
+  useEffect(() => {
+    // optional: implement autoplay/visibility tracking with IntersectionObserver
+    const el = containerRef.current;
+    return () => {};
+  }, [items]);
+
+  const getText = (field?: Record<string,string> | string) => {
+    if (!field) return "";
+    if (typeof field === "string") return field;
+    return (field[language] || field["en"] || Object.values(field)[0] || "");
+  };
 
   return (
-    <div className="flex justify-center">
-      <div className="w-full max-w-sm h-[80vh] bg-black rounded-xl flex flex-col items-center justify-center text-white">
-        <p className="text-lg">Reels View</p>
-        <p className="text-sm text-muted-foreground">(Coming Soon)</p>
-        <p className="text-xs mt-4">{reelItems.length} potential reels found in feed.</p>
-      </div>
+    <div ref={containerRef} className="h-[85vh] overflow-y-scroll snap-y snap-mandatory rounded-lg">
+      {items.map((item) => (
+        <div key={item.id} className="snap-start h-full relative flex items-center justify-center bg-black">
+          {item.kind === "video" && item.mediaUrl ? (
+            <video src={item.mediaUrl} className="w-full h-full object-cover" playsInline autoPlay muted loop />
+          ) : (
+            <img src={item.thumbnail || "/placeholder.jpg"} className="w-full h-full object-cover" alt={getText(item.title)} />
+          )}
+
+          <div className="absolute bottom-8 left-4 text-white p-3 bg-black/40 rounded max-w-[80%]">
+            <h3 className="text-lg font-bold">{getText(item.title)}</h3>
+            <p className="text-sm mt-1 line-clamp-2">{getText(item.description)}</p>
+          </div>
+        </div>
+      ))}
     </div>
   );
-};
-
-export default ReelsFeed;
+}

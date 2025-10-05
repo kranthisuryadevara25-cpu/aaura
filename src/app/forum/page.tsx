@@ -9,9 +9,6 @@ import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc } from 'firebase/firestore';
-import { Header } from '@/app/components/header';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -107,78 +104,66 @@ export default function ForumPage() {
   const isLoading = postsLoading || usersLoading;
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-            <Navigation />
-          </Sidebar>
-          <SidebarInset>
-            <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-              <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-12">
-                  <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                    <MessageCircle className="h-10 w-10" /> {t.forum.title}
-                  </h1>
-                  <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                    {t.forum.description}
-                  </p>
-                </div>
+    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+      <div className="max-w-3xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+            <MessageCircle className="h-10 w-10" /> {t.forum.title}
+          </h1>
+          <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+            {t.forum.description}
+          </p>
+        </div>
 
-                {user && (
-                  <Card className="mb-8">
-                    <CardHeader>
-                      <CardTitle>{t.forum.createPostTitle}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                          <FormField
-                            control={form.control}
-                            name="content"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormControl>
-                                  <Textarea
-                                    placeholder={t.forum.createPostPlaceholder}
-                                    className="resize-none"
-                                    rows={4}
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )}
+        {user && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>{t.forum.createPostTitle}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="content"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <Textarea
+                            placeholder={t.forum.createPostPlaceholder}
+                            className="resize-none"
+                            rows={4}
+                            {...field}
                           />
-                          <Button type="submit" disabled={isPending}>
-                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                            {t.buttons.post}
-                          </Button>
-                        </form>
-                      </Form>
-                    </CardContent>
-                  </Card>
-                )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" disabled={isPending}>
+                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                    {t.buttons.post}
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
+        )}
 
-                <div className="space-y-6">
-                  {isLoading ? (
-                    <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
-                  ) : posts && posts.length > 0 ? (
-                    posts.map(post => (
-                      <PostCard key={post.id} post={post} author={usersMap.get(post.authorId)} />
-                    ))
-                  ) : (
-                    <div className="text-center py-10">
-                      <p className="text-muted-foreground">{t.forum.noPosts}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </main>
-          </SidebarInset>
+        <div className="space-y-6">
+          {isLoading ? (
+            <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
+          ) : posts && posts.length > 0 ? (
+            posts.map(post => (
+              <PostCard key={post.id} post={post} author={usersMap.get(post.authorId)} />
+            ))
+          ) : (
+            <div className="text-center py-10">
+              <p className="text-muted-foreground">{t.forum.noPosts}</p>
+            </div>
+          )}
         </div>
       </div>
-    </SidebarProvider>
+    </main>
   );
 }

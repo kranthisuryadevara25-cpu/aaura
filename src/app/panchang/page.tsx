@@ -1,11 +1,8 @@
 
 'use client';
 
-import { Header } from '@/app/components/header';
 import { getTodaysPanchang } from '@/lib/panchang';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { CalendarDays, Sunrise, Sunset, Moon, Star, AlertTriangle, PartyPopper } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getFestivalBySlug } from '@/lib/festivals';
@@ -13,7 +10,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 
 export default function PanchangPage() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const panchang = getTodaysPanchang();
 
     const panchangItems = [
@@ -37,107 +34,95 @@ export default function PanchangPage() {
 
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-              <Navigation />
-          </Sidebar>
-          <SidebarInset>
-              <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-                  <div className="text-center mb-12">
-                      <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                          <CalendarDays className="h-10 w-10" /> {t.panchang.title}
-                      </h1>
-                      <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                          {panchang.date}
-                      </p>
-                  </div>
-                  
-                  <div className="max-w-6xl mx-auto space-y-8">
-                    {panchang.festivals.length > 0 && (
-                        <Card className="bg-primary/10 border-primary/20">
-                            <CardHeader>
-                                 <div className="flex items-center gap-4">
-                                     <PartyPopper className="h-8 w-8 text-primary" />
-                                    <div>
-                                        <CardTitle className="text-primary">{t.panchang.todaysFestivals}</CardTitle>
-                                        <div className="flex flex-wrap gap-2 mt-1">
-                                            {panchang.festivals.map(festivalName => {
-                                                const festival = getFestivalBySlug(festivalName.toLowerCase().replace(/ /g, '-'));
-                                                if (festival) {
-                                                    return (
-                                                        <Link key={festival.id} href={`/festivals/${festival.slug}`} passHref>
-                                                            <Badge variant="default" className="cursor-pointer hover:bg-primary/80">{festival.name.en}</Badge>
-                                                        </Link>
-                                                    );
-                                                }
-                                                return <Badge key={festivalName} variant="secondary">{festivalName}</Badge>;
-                                            })}
-                                        </div>
-                                    </div>
-                                 </div>
-                            </CardHeader>
-                        </Card>
-                    )}
-
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                        {panchangItems.map((item, index) => (
-                            <Card key={index} className="bg-transparent border-primary/20 text-center">
-                                <CardHeader>
-                                    <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
-                                        <item.icon className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <CardTitle className="text-lg text-foreground">{item.label}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <p className="font-semibold text-muted-foreground">{item.value}</p>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <Card className="bg-transparent border-primary/20">
-                            <CardHeader>
-                                <CardTitle>{t.panchang.astronomicalTimings}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {timings.map((item, index) => (
-                                     <div key={index} className="flex justify-between items-center text-foreground/90">
-                                        <div className="flex items-center gap-3">
-                                            <item.icon className="h-5 w-5 text-accent" />
-                                            <span>{item.label}</span>
-                                        </div>
-                                        <span className="font-mono font-semibold">{item.value}</span>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-transparent border-primary/20">
-                            <CardHeader>
-                                <CardTitle>{t.panchang.inauspiciousTimings}</CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {inauspiciousTimings.map((item, index) => (
-                                     <div key={index} className="flex justify-between items-center">
-                                        <div className="flex items-center gap-3">
-                                            <item.icon className={`h-5 w-5 ${item.color}`} />
-                                            <span className="text-foreground/90">{item.label}</span>
-                                        </div>
-                                        <span className="font-mono font-semibold">{item.value}</span>
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    </div>
-                  </div>
-              </main>
-          </SidebarInset>
+    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+        <div className="text-center mb-12">
+            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                <CalendarDays className="h-10 w-10" /> {t.panchang.title}
+            </h1>
+            <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+                {panchang.date}
+            </p>
         </div>
-      </div>
-    </SidebarProvider>
+        
+        <div className="max-w-6xl mx-auto space-y-8">
+        {panchang.festivals.length > 0 && (
+            <Card className="bg-primary/10 border-primary/20">
+                <CardHeader>
+                      <div className="flex items-center gap-4">
+                          <PartyPopper className="h-8 w-8 text-primary" />
+                        <div>
+                            <CardTitle className="text-primary">{t.panchang.todaysFestivals}</CardTitle>
+                            <div className="flex flex-wrap gap-2 mt-1">
+                                {panchang.festivals.map(festivalSlug => {
+                                    const festival = getFestivalBySlug(festivalSlug.toLowerCase().replace(/ /g, '-'));
+                                    if (festival) {
+                                        return (
+                                            <Link key={festival.id} href={`/festivals/${festival.slug}`} passHref>
+                                                <Badge variant="default" className="cursor-pointer hover:bg-primary/80">{festival.name[language] || festival.name.en}</Badge>
+                                            </Link>
+                                        );
+                                    }
+                                    return <Badge key={festivalSlug} variant="secondary">{festivalSlug}</Badge>;
+                                })}
+                            </div>
+                        </div>
+                      </div>
+                </CardHeader>
+            </Card>
+        )}
+
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {panchangItems.map((item, index) => (
+                <Card key={index} className="bg-transparent border-primary/20 text-center">
+                    <CardHeader>
+                        <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
+                            <item.icon className="h-6 w-6 text-primary" />
+                        </div>
+                        <CardTitle className="text-lg text-foreground">{item.label}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="font-semibold text-muted-foreground">{item.value}</p>
+                    </CardContent>
+                </Card>
+            ))}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <Card className="bg-transparent border-primary/20">
+                <CardHeader>
+                    <CardTitle>{t.panchang.astronomicalTimings}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {timings.map((item, index) => (
+                          <div key={index} className="flex justify-between items-center text-foreground/90">
+                            <div className="flex items-center gap-3">
+                                <item.icon className="h-5 w-5 text-accent" />
+                                <span>{item.label}</span>
+                            </div>
+                            <span className="font-mono font-semibold">{item.value}</span>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+            <Card className="bg-transparent border-primary/20">
+                <CardHeader>
+                    <CardTitle>{t.panchang.inauspiciousTimings}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    {inauspiciousTimings.map((item, index) => (
+                          <div key={index} className="flex justify-between items-center">
+                            <div className="flex items-center gap-3">
+                                <item.icon className={`h-5 w-5 ${item.color}`} />
+                                <span className="text-foreground/90">{item.label}</span>
+                            </div>
+                            <span className="font-mono font-semibold">{item.value}</span>
+                        </div>
+                    ))}
+                </CardContent>
+            </Card>
+        </div>
+        </div>
+    </main>
   );
 }

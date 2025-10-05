@@ -21,12 +21,9 @@ import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { Loader2, Upload } from 'lucide-react';
-import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { moderateContent } from '@/ai/ai-content-moderation';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
@@ -124,103 +121,91 @@ export default function UploadPage() {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-              <Navigation />
-          </Sidebar>
-          <SidebarInset>
-              <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
-                  <Card className="w-full max-w-2xl">
-                  <CardHeader>
-                      <CardTitle>Upload Media</CardTitle>
-                      <CardDescription>Share your spiritual, religious, and wellness content with the community. All content must be positive and uplifting.</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                      <Form {...form}>
-                      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                          <FormField
-                            control={form.control}
-                            name="title"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Title</FormLabel>
-                                <FormControl>
-                                    <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="description"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Description</FormLabel>
-                                <FormControl>
-                                    <Textarea placeholder="A short summary of your media's positive message" {...field} />
-                                </FormControl>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="mediaType"
-                            render={({ field }) => (
-                              <FormItem>
-                                <FormLabel>Media Type</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                  <FormControl>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select a media type" />
-                                    </SelectTrigger>
-                                  </FormControl>
-                                  <SelectContent>
-                                    <SelectItem value="video">Video</SelectItem>
-                                    <SelectItem value="short">Short</SelectItem>
-                                    <SelectItem value="bhajan">Bhajan</SelectItem>
-                                    <SelectItem value="podcast">Podcast</SelectItem>
-                                    <SelectItem value="pravachan">Pravachan</SelectItem>
-                                    <SelectItem value="audiobook">Audiobook</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <FormMessage />
-                              </FormItem>
-                            )}
-                          />
-                          <FormField
-                            control={form.control}
-                            name="media"
-                            render={({ field }) => (
-                              <FormItem>
-                              <FormLabel>Media File</FormLabel>
-                              <FormControl>
-                                  <Input type="file" accept="video/*,audio/*" {...fileRef} />
-                              </FormControl>
-                              <FormMessage />
-                              </FormItem>
-                          )}
-                          />
-                          <Button type="submit" className="w-full" disabled={isPending}>
-                          {isPending ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          ) : (
-                              <Upload className="mr-2 h-4 w-4" />
-                          )}
-                          Moderate and Upload
-                          </Button>
-                      </form>
-                      </Form>
-                  </CardContent>
-                  </Card>
-              </main>
-          </SidebarInset>
-        </div>
-      </div>
-    </SidebarProvider>
+    <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
+        <Card className="w-full max-w-2xl">
+        <CardHeader>
+            <CardTitle>Upload Media</CardTitle>
+            <CardDescription>Share your spiritual, religious, and wellness content with the community. All content must be positive and uplifting.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                          <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Description</FormLabel>
+                      <FormControl>
+                          <Textarea placeholder="A short summary of your media's positive message" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="mediaType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Media Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a media type" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="video">Video</SelectItem>
+                          <SelectItem value="short">Short</SelectItem>
+                          <SelectItem value="bhajan">Bhajan</SelectItem>
+                          <SelectItem value="podcast">Podcast</SelectItem>
+                          <SelectItem value="pravachan">Pravachan</SelectItem>
+                          <SelectItem value="audiobook">Audiobook</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="media"
+                  render={({ field }) => (
+                    <FormItem>
+                    <FormLabel>Media File</FormLabel>
+                    <FormControl>
+                        <Input type="file" accept="video/*,audio/*" {...fileRef} />
+                    </FormControl>
+                    <FormMessage />
+                    </FormItem>
+                )}
+                />
+                <Button type="submit" className="w-full" disabled={isPending}>
+                {isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                    <Upload className="mr-2 h-4 w-4" />
+                )}
+                Moderate and Upload
+                </Button>
+            </form>
+            </Form>
+        </CardContent>
+        </Card>
+    </main>
   );
 }

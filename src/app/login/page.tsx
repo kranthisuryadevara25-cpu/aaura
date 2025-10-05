@@ -21,7 +21,6 @@ import { auth } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
-import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
@@ -101,8 +100,6 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
         <Card className="w-full max-w-md bg-card">
           <CardHeader>
@@ -164,6 +161,5 @@ export default function LoginPage() {
           </CardContent>
         </Card>
       </main>
-    </div>
   );
 }

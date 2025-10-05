@@ -10,9 +10,6 @@ import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { collection, doc, serverTimestamp, query, orderBy, addDoc } from 'firebase/firestore';
-import { Header } from '@/app/components/header';
-import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
-import { Navigation } from '@/app/components/navigation';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -118,84 +115,72 @@ export default function PostDetailPage() {
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen bg-background text-foreground flex flex-col">
-        <Header />
-        <div className="flex flex-1">
-          <Sidebar>
-            <Navigation />
-          </Sidebar>
-          <SidebarInset>
-            <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-              <div className="max-w-3xl mx-auto">
-                <Card>
-                  <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-                    <Avatar>
-                      <AvatarImage src={author?.photoURL} />
-                      <AvatarFallback>{author?.displayName?.[0] || 'A'}</AvatarFallback>
-                    </Avatar>
-                    <div className="w-full">
-                       <p className="font-semibold">{author?.displayName || 'Anonymous'}</p>
-                       <p className="text-xs text-muted-foreground">
-                        {post.createdAt ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
-                       </p>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-lg whitespace-pre-wrap">{post.content}</p>
-                  </CardContent>
-                </Card>
+    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+      <div className="max-w-3xl mx-auto">
+        <Card>
+          <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+            <Avatar>
+              <AvatarImage src={author?.photoURL} />
+              <AvatarFallback>{author?.displayName?.[0] || 'A'}</AvatarFallback>
+            </Avatar>
+            <div className="w-full">
+                <p className="font-semibold">{author?.displayName || 'Anonymous'}</p>
+                <p className="text-xs text-muted-foreground">
+                {post.createdAt ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+                </p>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-lg whitespace-pre-wrap">{post.content}</p>
+          </CardContent>
+        </Card>
 
-                <Separator className="my-8" />
-                
-                <h2 className="text-2xl font-bold mb-4">{t.forum.discussionTitle}</h2>
+        <Separator className="my-8" />
+        
+        <h2 className="text-2xl font-bold mb-4">{t.forum.discussionTitle}</h2>
 
-                <div className="space-y-6 mb-8">
-                  {comments && comments.length > 0 ? (
-                    comments.map(comment => (
-                      <CommentCard key={comment.id} comment={comment} author={usersMap.get(comment.authorId)} />
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-center py-4">{t.forum.noComments}</p>
-                  )}
-                </div>
-
-                {user && (
-                  <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmitComment)} className="flex items-start gap-4">
-                      <Avatar className="h-9 w-9 mt-1">
-                        <AvatarImage src={user.photoURL || undefined} />
-                        <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <FormField
-                        control={form.control}
-                        name="text"
-                        render={({ field }) => (
-                          <FormItem className="w-full">
-                            <FormControl>
-                              <Textarea
-                                placeholder={t.forum.commentPlaceholder}
-                                className="resize-none"
-                                rows={2}
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button type="submit" disabled={isPending} size="icon">
-                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                      </Button>
-                    </form>
-                  </Form>
-                )}
-
-              </div>
-            </main>
-          </SidebarInset>
+        <div className="space-y-6 mb-8">
+          {comments && comments.length > 0 ? (
+            comments.map(comment => (
+              <CommentCard key={comment.id} comment={comment} author={usersMap.get(comment.authorId)} />
+            ))
+          ) : (
+            <p className="text-muted-foreground text-center py-4">{t.forum.noComments}</p>
+          )}
         </div>
+
+        {user && (
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmitComment)} className="flex items-start gap-4">
+              <Avatar className="h-9 w-9 mt-1">
+                <AvatarImage src={user.photoURL || undefined} />
+                <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <FormField
+                control={form.control}
+                name="text"
+                render={({ field }) => (
+                  <FormItem className="w-full">
+                    <FormControl>
+                      <Textarea
+                        placeholder={t.forum.commentPlaceholder}
+                        className="resize-none"
+                        rows={2}
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" disabled={isPending} size="icon">
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              </Button>
+            </form>
+          </Form>
+        )}
+
       </div>
-    </SidebarProvider>
+    </main>
   );
 }

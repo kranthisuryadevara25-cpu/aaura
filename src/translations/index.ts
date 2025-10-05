@@ -36,8 +36,10 @@ export const translations = {
     },
     feed: {
       templeCardView: "View Temple",
+      templeHighlight: "Temple Highlight",
       deityReadMore: "Read More",
       storyContinue: "Continue Reading",
+      storyLabel: "Mythological Story",
     },
     deities: {
       title: "Deity Explorer",
@@ -198,8 +200,10 @@ export const translations = {
     },
     feed: {
       templeCardView: "దేవాలయాన్ని వీక్షించండి",
+      templeHighlight: "దేవాలయ ముఖ్యాంశం",
       deityReadMore: "ఇంకా చదవండి",
       storyContinue: "కథ కొనసాగించండి",
+      storyLabel: "పౌరాణిక కథ",
     },
      deities: {
       title: "దేవతల అన్వేషణి",
@@ -360,8 +364,10 @@ export const translations = {
     },
     feed: {
       templeCardView: "मंदिर देखें",
+      templeHighlight: "मंदिर हाइलाइट",
       deityReadMore: "और पढ़ें",
       storyContinue: "कहानी जारी रखें",
+      storyLabel: "पौराणिक कहानी",
     },
      deities: {
       title: "देवता एक्सप्लोरर",
@@ -520,8 +526,10 @@ export const translations = {
     },
     feed: {
       templeCardView: "मंदिर पहा",
+      templeHighlight: "मंदिर हायलाइट",
       deityReadMore: "अधिक वाचा",
       storyContinue: "कथा पुढे वाचा",
+      storyLabel: "पौराणिक कथा",
     },
     deities: {
       title: "देवता एक्सप्लोरर",
@@ -677,8 +685,10 @@ export const translations = {
     },
     feed: {
       templeCardView: "கோயிலைக் காண்க",
+      templeHighlight: "கோயில் சிறப்பம்சம்",
       deityReadMore: "மேலும் படிக்க",
       storyContinue: "கதையைத் தொடரவும்",
+      storyLabel: "புராணக் கதை",
     },
     deities: {
       title: "தெய்வ எக்ஸ்ப்ளோரர்",
@@ -692,7 +702,7 @@ export const translations = {
     },
     stories: {
       title: "புராணக் கதைகள்",
-      description: "തലமுறைகளை வடிவமைத்த காலமற்ற காவியங்கள் மற்றும் நாட்டுப்புறக் கதைகளை ஆராயுங்கள்.",
+      description: "തലമുറകളെ வடிவமைத்த காலமற்ற காவியங்கள் மற்றும் நாட்டுப்புறக் கதைகளை ஆராயுங்கள்.",
     },
     storyDetail: {
       summary: "சுருக்கம்",
@@ -834,8 +844,10 @@ export const translations = {
     },
     feed: {
       templeCardView: "ದೇವಾಲಯವನ್ನು ವೀಕ್ಷಿಸಿ",
+      templeHighlight: "ದೇವಾಲಯದ ಮುಖ್ಯಾಂಶ",
       deityReadMore: "ಇನ್ನಷ್ಟು ಓದಿ",
       storyContinue: "ಕಥೆಯನ್ನು ಮುಂದುವರಿಸಿ",
+      storyLabel: "ಪೌರಾಣಿಕ ಕಥೆ",
     },
     deities: {
       title: "ದೇವತೆಗಳ ಪರಿಶೋಧಕ",
@@ -991,8 +1003,10 @@ export const translations = {
     },
     feed: {
       templeCardView: "মন্দির দেখুন",
+      templeHighlight: "মন্দিরের বিশেষত্ব",
       deityReadMore: "আরও পড়ুন",
       storyContinue: "গল্প চালিয়ে যান",
+      storyLabel: "পৌরাণিক গল্প",
     },
     deities: {
       title: "দেবতা এক্সপ্লোরার",
@@ -1006,7 +1020,7 @@ export const translations = {
     },
     stories: {
       title: "পৌরাণিক গল্প",
-      description: "തലമുറകളെ രൂപപ്പെടുത്തിയ കാലാതീതമായ ഇതിഹാസങ്ങളും നാടോടിക്കഥകളും പര്യവേക്ഷണം ചെയ്യുക.",
+      description: "തലമുറകളെ രൂപപ്പെടുത്തിയ കാലാതീതമായ ഇതിഹാസങ്ങളും നാടോടിക്കഥകളും പര്യവേക്ഷണം ചെയ്യുക।",
     },
     storyDetail: {
       summary: "সারাংশ",

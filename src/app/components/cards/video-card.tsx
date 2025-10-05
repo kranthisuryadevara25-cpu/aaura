@@ -5,12 +5,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
+import { useLanguage } from '@/hooks/use-language';
+import { FeedItem } from '@/types/feed';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
-// A placeholder function to get user data - in a real app this would come from a query
-const getChannelData = (userId: string) => ({
-    name: 'Sadhguru',
-    avatarUrl: 'https://picsum.photos/seed/sadhguru/40/40',
-});
 
 // A placeholder function to format view counts
 const formatViews = (views: number) => {
@@ -19,16 +19,18 @@ const formatViews = (views: number) => {
     return `${views} views`;
 }
 
-export function VideoCard({ video }: { video: any }) {
-    const channel = getChannelData(video.userId);
+export function VideoCard({ item }: { item: FeedItem }) {
+    const { language } = useLanguage();
+    const title = item.title?.[language] || item.title?.en || 'Untitled';
+    const [channel, loading] = useDocumentData(item.meta?.userId ? doc(db, 'users', item.meta.userId) : undefined);
 
     return (
         <Link href="#" className="group">
             <div className="flex flex-col space-y-3">
                 <div className="relative aspect-video w-full overflow-hidden rounded-lg shadow-md transition-shadow group-hover:shadow-xl">
                     <Image
-                        src={video.thumbnailUrl}
-                        alt={video.title}
+                        src={item.thumbnail || "https://picsum.photos/seed/placeholder/600/400"}
+                        alt={title}
                         data-ai-hint="spiritual video"
                         fill
                         className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -36,16 +38,16 @@ export function VideoCard({ video }: { video: any }) {
                 </div>
                 <div className="flex items-start space-x-3">
                     <Avatar className="h-9 w-9">
-                        <AvatarImage src={channel.avatarUrl} alt={channel.name} />
-                        <AvatarFallback>{channel.name.charAt(0)}</AvatarFallback>
+                        <AvatarImage src={channel?.photoURL} alt={channel?.displayName} />
+                        <AvatarFallback>{channel?.displayName?.charAt(0) || 'A'}</AvatarFallback>
                     </Avatar>
                     <div className="flex flex-col">
                         <h4 className="text-sm font-semibold leading-tight text-foreground line-clamp-2">
-                           {video.title}
+                           {title}
                         </h4>
-                        <p className="text-xs text-muted-foreground mt-1">{channel.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{loading ? 'Loading...' : channel?.displayName}</p>
                         <p className="text-xs text-muted-foreground">
-                            {formatViews(video.views)} &bull; {video.uploadDate ? formatDistanceToNow(video.uploadDate.toDate(), { addSuffix: true }) : 'just now'}
+                            {formatViews(item.meta?.views || 0)} &bull; {item.createdAt ? formatDistanceToNow(item.createdAt.toDate(), { addSuffix: true }) : 'just now'}
                         </p>
                     </div>
                 </div>

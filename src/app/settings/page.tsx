@@ -44,6 +44,25 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
+const getZodiacSign = (date: Date): (typeof zodiacSigns)[number] => {
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+
+  if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'Aries';
+  if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return 'Taurus';
+  if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return 'Gemini';
+  if ((month === 6 && day >= 21) || (month === 7 && day <= 22)) return 'Cancer';
+  if ((month === 7 && day >= 23) || (month === 8 && day <= 22)) return 'Leo';
+  if ((month === 8 && day >= 23) || (month === 9 && day <= 22)) return 'Virgo';
+  if ((month === 9 && day >= 23) || (month === 10 && day <= 22)) return 'Libra';
+  if ((month === 10 && day >= 23) || (month === 11 && day <= 21)) return 'Scorpio';
+  if ((month === 11 && day >= 22) || (month === 12 && day <= 21)) return 'Sagittarius';
+  if ((month === 12 && day >= 22) || (month === 1 && day <= 19)) return 'Capricorn';
+  if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return 'Aquarius';
+  return 'Pisces';
+};
+
+
 export default function SettingsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
@@ -61,7 +80,7 @@ export default function SettingsPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
         zodiacSign: '',
-        birthDate: new Date(),
+        birthDate: undefined,
     }
   });
 
@@ -69,7 +88,7 @@ export default function SettingsPage() {
     if (userData) {
       form.reset({
         zodiacSign: userData.zodiacSign || '',
-        birthDate: userData.birthDate ? new Date(userData.birthDate) : new Date(),
+        birthDate: userData.birthDate ? new Date(userData.birthDate) : undefined,
       });
     }
   }, [userData, form]);
@@ -146,64 +165,70 @@ export default function SettingsPage() {
                     <Form {...form}>
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                         <FormField
-                        control={form.control}
-                        name="zodiacSign"
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Zodiac Sign</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select your zodiac sign" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                {zodiacSigns.map((sign) => (
-                                    <SelectItem key={sign} value={sign}>
-                                    {sign}
-                                    </SelectItem>
-                                ))}
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
-                        <FormField
-                        control={form.control}
-                        name="birthDate"
-                        render={({ field }) => (
+                          control={form.control}
+                          name="birthDate"
+                          render={({ field }) => (
                             <FormItem className="flex flex-col">
-                            <FormLabel>Birth Date</FormLabel>
-                            <Popover>
+                              <FormLabel>Birth Date</FormLabel>
+                              <Popover>
                                 <PopoverTrigger asChild>
-                                <FormControl>
+                                  <FormControl>
                                     <Button
-                                    variant={'outline'}
-                                    className={cn(
+                                      variant={'outline'}
+                                      className={cn(
                                         'w-[240px] pl-3 text-left font-normal',
                                         !field.value && 'text-muted-foreground'
-                                    )}
+                                      )}
                                     >
-                                    {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                      {field.value ? format(field.value, 'PPP') : <span>Pick a date</span>}
+                                      <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                     </Button>
-                                </FormControl>
+                                  </FormControl>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="start">
-                                <Calendar
+                                  <Calendar
                                     mode="single"
                                     selected={field.value}
-                                    onSelect={field.onChange}
+                                    onSelect={(date) => {
+                                      if (date) {
+                                        field.onChange(date);
+                                        const sign = getZodiacSign(date);
+                                        form.setValue('zodiacSign', sign);
+                                      }
+                                    }}
                                     disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                                     initialFocus
-                                />
+                                  />
                                 </PopoverContent>
-                            </Popover>
-                            <FormDescription>Used to generate your personalized horoscope.</FormDescription>
-                            <FormMessage />
+                              </Popover>
+                              <FormDescription>Your zodiac sign will be automatically detected.</FormDescription>
+                              <FormMessage />
                             </FormItem>
-                        )}
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="zodiacSign"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Zodiac Sign</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select your zodiac sign" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {zodiacSigns.map((sign) => (
+                                    <SelectItem key={sign} value={sign}>
+                                      {sign}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
                         />
                         <Button type="submit" disabled={isPending}>
                         {isPending ? (

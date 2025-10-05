@@ -310,8 +310,7 @@
           "description": "Name of the shop."
         },
         "description": {
-          "type": "string",
-          "description": "Description of the shop."
+          "type": "string",          "description": "Description of the shop."
         }
       },
       "required": [
@@ -363,6 +362,110 @@
         "price",
         "imageUrl"
       ]
+    },
+    "Temple": {
+      "title": "Temple",
+      "type": "object",
+      "description": "Represents a temple or pilgrimage site.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the temple."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the temple."
+        },
+        "deity": {
+          "type": "object",
+          "properties": {
+            "name": { "type": "string" },
+            "significance": { "type": "string" }
+          }
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "address": { "type": "string" },
+            "city": { "type": "string" },
+            "district": { "type": "string" },
+            "state": { "type": "string" },
+            "pincode": { "type": "string" },
+            "geo": {
+              "type": "object",
+              "properties": {
+                "lat": { "type": "number" },
+                "lng": { "type": "number" }
+              }
+            }
+          }
+        },
+        "importance": {
+          "type": "object",
+          "properties": {
+            "historical": { "type": "string" },
+            "mythological": { "type": "string" }
+          }
+        },
+        "media": {
+          "type": "object",
+          "properties": {
+            "images": {
+              "type": "array",
+              "items": { "type": "string", "format": "uri" }
+            },
+            "videos": {
+              "type": "array",
+              "items": { "type": "string", "format": "uri" }
+            }
+          }
+        },
+        "visitingInfo": {
+          "type": "object",
+          "properties": {
+            "timings": { "type": "string" },
+            "festivals": { "type": "string" },
+            "poojaGuidelines": { "type": "string" },
+            "dressCode": { "type": "string" }
+          }
+        },
+        "nearbyInfo": {
+          "type": "object",
+          "properties": {
+            "placesToVisit": { "type": "string" },
+            "accommodation": { "type": "string" },
+            "food": { "type": "string" },
+            "transport": { "type": "string" }
+          }
+        }
+      },
+      "required": ["id", "name", "deity", "location", "importance"]
+    },
+    "Review": {
+      "title": "Review",
+      "type": "object",
+      "description": "A user review for a temple.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "templeId": { "type": "string" },
+        "rating": { "type": "number", "minimum": 1, "maximum": 5 },
+        "comment": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "templeId", "rating", "comment", "timestamp"]
+    },
+    "Bookmark": {
+      "title": "Bookmark",
+      "type": "object",
+      "description": "Represents a user bookmarking a temple.",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "templeId": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "userId", "templeId", "timestamp"]
     }
   },
   "auth": {
@@ -376,19 +479,23 @@
         "path": "/users/{userId}",
         "definition": {
           "entityName": "User",
-          "schema": {
-            "$ref": "#/backend/entities/User"
-          },
+          "schema": { "$ref": "#/entities/User" },
           "description": "Stores user profiles."
+        }
+      },
+      {
+        "path": "/users/{userId}/bookmarks/{bookmarkId}",
+        "definition": {
+          "entityName": "Bookmark",
+          "schema": { "$ref": "#/entities/Bookmark" },
+          "description": "Stores user bookmarks for temples."
         }
       },
       {
         "path": "/videos/{videoId}",
         "definition": {
           "entityName": "Video",
-          "schema": {
-            "$ref": "#/backend/entities/Video"
-          },
+          "schema": { "$ref": "#/entities/Video" },
           "description": "Stores all videos on the platform."
         }
       },
@@ -396,9 +503,7 @@
         "path": "/channels/{channelId}",
         "definition": {
           "entityName": "Channel",
-          "schema": {
-            "$ref": "#/backend/entities/Channel"
-          },
+          "schema": { "$ref": "#/entities/Channel" },
           "description": "Stores all channels on the platform."
         }
       },
@@ -406,9 +511,7 @@
         "path": "/users/{userId}/subscriptions/{channelId}",
         "definition": {
             "entityName": "Subscription",
-            "schema": {
-                "$ref": "#/backend/entities/Subscription"
-            },
+            "schema": { "$ref": "#/entities/Subscription" },
             "description": "Stores user subscriptions within a sub-collection of the user's document."
         }
       },
@@ -416,9 +519,7 @@
         "path": "/users/{userId}/horoscopes/{horoscopeId}",
         "definition": {
           "entityName": "Horoscope",
-          "schema": {
-            "$ref": "#/backend/entities/Horoscope"
-          },
+          "schema": { "$ref": "#/entities/Horoscope" },
           "description": "Stores horoscopes generated for users."
         }
       },
@@ -426,9 +527,7 @@
         "path": "/deities/{deityId}",
         "definition": {
           "entityName": "Deity",
-          "schema": {
-            "$ref": "#/backend/entities/Deity"
-          },
+          "schema": { "$ref": "#/entities/Deity" },
           "description": "Stores information about Hindu deities."
         }
       },
@@ -436,9 +535,7 @@
         "path": "/shops/{shopId}",
         "definition": {
             "entityName": "Shop",
-            "schema": {
-                "$ref": "#/backend/entities/Shop"
-            },
+            "schema": { "$ref": "#/entities/Shop" },
             "description": "Stores all shops for the marketplace."
         }
       },
@@ -446,13 +543,29 @@
         "path": "/products/{productId}",
         "definition": {
           "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
+          "schema": { "$ref": "#/entities/Product" },
           "description": "Stores all products for the marketplace."
+        }
+      },
+      {
+        "path": "/temples/{templeId}",
+        "definition": {
+          "entityName": "Temple",
+          "schema": { "$ref": "#/entities/Temple" },
+          "description": "Stores all temple and pilgrimage data."
+        }
+      },
+      {
+        "path": "/temples/{templeId}/reviews/{reviewId}",
+        "definition": {
+          "entityName": "Review",
+          "schema": { "$ref": "#/entities/Review" },
+          "description": "Stores user reviews for a specific temple."
         }
       }
     ],
-    "reasoning": "The data model is designed for a content platform with e-commerce. Videos, Channels, Deities, Shops, and Products are in top-level collections for easy querying. User-specific data like subscriptions and horoscopes are nested under the user's document. Products are linked to Shops via a shopId. This structure supports a multi-vendor marketplace, public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce and a new temple library. Videos, Channels, Deities, Shops, Products, and Temples are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples. This structure supports a multi-vendor marketplace, public video feeds, a detailed temple library, and personalized user content while keeping data organized."
   }
 }
+
+    

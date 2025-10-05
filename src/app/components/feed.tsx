@@ -1,14 +1,33 @@
+
 // src/app/components/feed.tsx
 "use client";
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useFeed } from "@/hooks/use-feed";
 import { FeedCard } from "@/components/FeedCard";
 import ReelsFeed from "@/components/ReelsFeed"; 
 import { Loader2 } from "lucide-react";
+import { TopNav } from "@/components/TopNav";
+import type { FeedItem } from "@/types/feed";
 
 export function Feed() {
-  const { items, loading } = useFeed(20);
+  const { allItems, loading, filterItems } = useFeed(20);
   const [view, setView] = useState<"grid"|"reels">("grid");
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
+  
+  const displayedItems = useMemo(() => {
+    if (searchQuery) {
+        return filterItems(searchQuery);
+    }
+    return allItems;
+  }, [searchQuery, allItems, filterItems]);
+
+  const reelsItems = useMemo(() => {
+      return displayedItems.filter(item => item.kind === 'video' && item.mediaUrl);
+  }, [displayedItems])
 
   return (
     <div className="px-4 py-4">
@@ -20,7 +39,7 @@ export function Feed() {
       </div>
 
       {view === "reels" ? (
-        <ReelsFeed items={items} />
+        <ReelsFeed items={reelsItems} />
       ) : (
         <div>
           {loading ? (
@@ -29,7 +48,7 @@ export function Feed() {
             </div>
             ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              {items.map((it) => <FeedCard key={it.id} item={it} />)}
+              {displayedItems.map((it) => <FeedCard key={it.id} item={it} />)}
             </div>
           )}
         </div>

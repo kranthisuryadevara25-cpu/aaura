@@ -1,3 +1,4 @@
+
 "use client";
 import React from "react";
 import { Feed } from "@/app/components/feed";
@@ -13,9 +14,8 @@ export default function Page() {
         <main className="flex-1">
           <Feed />
         </main>
-        {/* Optional right rail on desktop */}
         <aside className="hidden xl:block w-80 border-l p-4">
-          <div>Trending Festivals</div>
+            <div>Trending</div>
         </aside>
       </div>
     </div>

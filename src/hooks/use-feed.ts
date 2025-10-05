@@ -1,6 +1,6 @@
 
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { FeedItem } from "@/types/feed";
@@ -18,9 +18,15 @@ function shuffle<T>(arr: T[]) {
   return a;
 }
 
-export const useFeed = (pageSize = 10) => {
+const getTextFromField = (field: Record<string, string> | string | undefined, lang: string): string => {
+    if (!field) return "";
+    if (typeof field === "string") return field;
+    return field[lang] || field["en"] || "";
+};
+
+export const useFeed = (pageSize = 20) => {
   const { language } = useLanguage();
-  const [items, setItems] = useState<FeedItem[]>([]);
+  const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,7 +69,7 @@ export const useFeed = (pageSize = 10) => {
           thumbnail: data.thumbnailUrl || "",
           mediaUrl: data.mediaUrl,
           meta: { duration: data.duration, views: data.views, userId: data.userId, uploadDate: data.uploadDate },
-          createdAt: data.uploadDate,
+          createdAt: data.uploadDate?.toDate(),
         } as FeedItem;
       });
 
@@ -72,17 +78,10 @@ export const useFeed = (pageSize = 10) => {
         id: `temple-${t.id}`,
         kind: "temple",
         title: t.name,
-        description: { 
-            en: `${t.location.city}, ${t.location.state}`,
-            hi: `${t.location.city}, ${t.location.state}`,
-            te: `${t.location.city}, ${t.location.state}`,
-            mr: `${t.location.city}, ${t.location.state}`,
-            ta: `${t.location.city}, ${t.location.state}`,
-            kn: `${t.location.city}, ${t.location.state}`,
-            bn: `${t.location.city}, ${t.location.state}`,
-         },
+        description: t.importance.mythological,
         thumbnail: t.media.images[0].url,
         meta: { location: t.location, slug: t.slug, imageHint: t.media.images[0].hint },
+        createdAt: new Date(), // Mock date
       }));
 
       const storyItems: FeedItem[] = stories.map((s) => ({
@@ -92,6 +91,7 @@ export const useFeed = (pageSize = 10) => {
         description: s.summary,
         thumbnail: s.image.url,
         meta: { slug: s.slug, imageHint: s.image.hint },
+        createdAt: new Date(), // Mock date
       }));
 
       const deityItems: FeedItem[] = deities.map((d) => ({
@@ -101,12 +101,13 @@ export const useFeed = (pageSize = 10) => {
         description: d.description,
         thumbnail: d.images[0].url,
         meta: { slug: d.slug, imageHint: d.images[0].hint },
+        createdAt: new Date(), // Mock date
       }));
 
       // 3) Combine & shuffle
       const combined = shuffle([...videos, ...templeItems, ...storyItems, ...deityItems]);
       if (!canceled) {
-        setItems(combined);
+        setAllItems(combined);
         setLoading(false);
       }
     }
@@ -115,7 +116,19 @@ export const useFeed = (pageSize = 10) => {
     return () => {
       canceled = true;
     };
-  }, [language, pageSize]); 
+  }, [pageSize]); 
 
-  return { items, loading };
+  const filterItems = useCallback((searchQuery: string): FeedItem[] => {
+    if (!searchQuery) {
+        return allItems;
+    }
+    const lowercasedQuery = searchQuery.toLowerCase();
+    return allItems.filter(item => {
+        const title = getTextFromField(item.title, language).toLowerCase();
+        const description = getTextFromField(item.description, language).toLowerCase();
+        return title.includes(lowercasedQuery) || description.includes(lowercasedQuery);
+    });
+  }, [allItems, language]);
+
+  return { allItems, loading, filterItems };
 };

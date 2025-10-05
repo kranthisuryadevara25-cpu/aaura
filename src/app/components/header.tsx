@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
 import { getAuth } from "firebase/auth";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 export function Header() {
   const { user } = useUser();
@@ -27,14 +28,17 @@ export function Header() {
   };
   
   return (
-    <header className="py-4 px-4 md:px-6 border-b">
+    <header className="py-4 px-4 md:px-6 border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
       <div className="container mx-auto flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-3 group">
-          <Icons.logo className="h-8 w-8 text-accent transition-transform group-hover:rotate-12" />
-          <span className="text-2xl font-headline font-bold text-foreground">
-            Aura
-          </span>
-        </Link>
+        <div className="flex items-center gap-4">
+          { user && <SidebarTrigger /> }
+          <Link href="/" className="flex items-center gap-3 group">
+            <Icons.logo className="h-8 w-8 text-accent transition-transform group-hover:rotate-12" />
+            <span className="text-2xl font-headline font-bold text-foreground">
+              Aura
+            </span>
+          </Link>
+        </div>
         <div>
           {user ? (
             <DropdownMenu>

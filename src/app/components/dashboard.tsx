@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useUser, useCollection, useDoc, useFirestore } from '@/firebase';
 import { collection, doc, limit, query } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
@@ -8,21 +8,20 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, Video, Images, Sparkles, Upload } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export function Dashboard() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const [activeTab, setActiveTab] = useState('feed');
 
   const videosQuery = useMemo(() => {
     if (!firestore || !user) return null;
-    return query(collection(firestore, 'videos'), limit(6));
+    return query(collection(firestore, 'videos'), limit(12));
   }, [firestore, user]);
 
-  // Assuming horoscope is stored with an ID like 'daily'
   const horoscopeRef = useMemo(() => {
     if (!firestore || !user) return null;
-    // For simplicity, we'll assume there is one daily horoscope document.
-    // In a real app, you might query by date.
     return doc(firestore, `users/${user.uid}/horoscopes/daily`);
   }, [firestore, user]);
 
@@ -33,99 +32,117 @@ export function Dashboard() {
     { id: 1, title: 'Mystic Forest', src: 'https://picsum.photos/seed/mystic/600/400', hint: 'forest' },
     { id: 2, title: 'Celestial Sky', src: 'https://picsum.photos/seed/celestial/600/400', hint: 'sky' },
     { id: 3, title: 'Spiritual Altar', src: 'https://picsum.photos/seed/altar/600/400', hint: 'spiritual' },
+    { id: 4, title: 'Soothing Waterfall', src: 'https://picsum.photos/seed/waterfall/600/400', hint: 'waterfall' },
+    { id: 5, title: 'Zen Garden', src: 'https://picsum.photos/seed/zen/600/400', hint: 'zen' },
+    { id: 6, title: 'Sunlit Meadow', src: 'https://picsum.photos/seed/meadow/600/400', hint: 'meadow' },
   ];
 
-  if (videosLoading || horoscopeLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const isLoading = videosLoading || horoscopeLoading;
 
   return (
     <div>
-        <div className="flex justify-between items-center mb-12">
+        <div className="flex justify-between items-center mb-8">
           <div className="text-left">
             <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">
-              Your Daily Feed
+              Daily Feed
             </h1>
-            <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-              A curated feed of spiritual content just for you.
+            <p className="mt-2 max-w-2xl text-lg text-muted-foreground">
+              Your curated spiritual and wellness content.
             </p>
           </div>
-          <Button asChild>
+           <Button asChild>
               <Link href="/upload"><Upload className="mr-2"/>Upload Video</Link>
             </Button>
         </div>
 
-      {/* Horoscope Section */}
-      {horoscope && (
-        <Card className="mb-12 bg-primary/10 border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Sparkles className="text-accent"/>
-              Today's Horoscope
-            </CardTitle>
-             <CardDescription>A personalized message for your zodiac sign: {horoscope.zodiacSign}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg">{horoscope.text}</p>
-          </CardContent>
-        </Card>
-      )}
+        <Tabs defaultValue="feed" className="w-full" value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-3 md:w-auto md:inline-flex mb-8">
+            <TabsTrigger value="feed"><Video className="mr-2"/>Videos</TabsTrigger>
+            <TabsTrigger value="images"><Images className="mr-2"/>Images</TabsTrigger>
+            <TabsTrigger value="horoscope"><Sparkles className="mr-2"/>Horoscope</TabsTrigger>
+          </TabsList>
 
-      {/* Videos Section */}
-      <div className="mb-12">
-        <h2 className="text-3xl font-headline font-bold mb-6 flex items-center gap-2"><Video /> Latest Videos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {videos && videos.map((video) => (
-            <Card key={video.id}>
-              <CardHeader>
-                <CardTitle>{video.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video bg-muted rounded-md mb-4 overflow-hidden">
-                  {video.thumbnailUrl && (
-                    <Image 
-                      src={video.thumbnailUrl} 
-                      alt={video.title} 
-                      width={600} 
-                      height={400} 
-                      className="object-cover w-full h-full"
-                    />
-                  )}
-                </div>
-                <p className="text-muted-foreground line-clamp-3">{video.description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-        {(!videos || videos.length === 0) && <p className="text-muted-foreground">No videos uploaded yet. Be the first!</p>}
-      </div>
+          {isLoading && (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+          )}
 
-      {/* Images Section */}
-       <div>
-        <h2 className="text-3xl font-headline font-bold mb-6 flex items-center gap-2"><Images /> Inspirational Images</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {images.map((image) => (
-            <Card key={image.id}>
-              <CardContent className="p-0">
-                <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-                    <Image 
-                      src={image.src}
-                      alt={image.title}
-                      data-ai-hint={image.hint}
-                      width={600}
-                      height={400}
-                      className="object-cover w-full h-full"
-                    />
+          {!isLoading && (
+            <>
+              <TabsContent value="feed">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {videos && videos.map((video) => (
+                    <Card key={video.id} className="overflow-hidden group">
+                      <CardContent className="p-0">
+                         <Link href="#">
+                            <div className="aspect-video bg-muted rounded-t-md overflow-hidden">
+                              {video.thumbnailUrl && (
+                                <Image 
+                                  src={video.thumbnailUrl} 
+                                  alt={video.title} 
+                                  width={600} 
+                                  height={400} 
+                                  className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-105"
+                                />
+                              )}
+                            </div>
+                            <div className="p-4">
+                                <h3 className="font-semibold text-lg line-clamp-2">{video.title}</h3>
+                                <p className="text-muted-foreground text-sm mt-1">Aura Creator</p>
+                                <p className="text-muted-foreground text-sm">1.2k views &middot; 2 days ago</p>
+                            </div>
+                         </Link>
+                      </CardContent>
+                    </Card>
+                  ))}
                 </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </div>
+                {(!videos || videos.length === 0) && <p className="text-muted-foreground text-center py-16">No videos uploaded yet. Be the first!</p>}
+              </TabsContent>
+
+              <TabsContent value="images">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                  {images.map((image) => (
+                    <Card key={image.id} className="overflow-hidden group">
+                      <CardContent className="p-0">
+                        <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+                            <Image 
+                              src={image.src}
+                              alt={image.title}
+                              data-ai-hint={image.hint}
+                              width={600}
+                              height={400}
+                              className="object-cover w-full h-full transform transition-transform duration-300 group-hover:scale-105"
+                            />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="horoscope">
+                {horoscope ? (
+                  <Card className="max-w-2xl mx-auto bg-gradient-to-br from-primary/10 to-transparent border-primary/20">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-3 text-3xl">
+                        <Sparkles className="text-accent h-8 w-8"/>
+                        Today's Horoscope
+                      </CardTitle>
+                      <CardDescription>A personalized message for your zodiac sign: {horoscope.zodiacSign}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-xl leading-relaxed">{horoscope.text}</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <p className="text-muted-foreground text-center py-16">Your daily horoscope is not available yet.</p>
+                )}
+              </TabsContent>
+            </>
+          )}
+
+        </Tabs>
     </div>
   );
 }

@@ -3,7 +3,6 @@ import React from "react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SearchBar } from "@/components/SearchBar";
 import Link from "next/link";
-import { Icons } from "@/app/components/icons";
 import { Button } from "./ui/button";
 import { auth } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -26,14 +25,9 @@ export const TopNav = () => {
   };
 
   return (
-    <header className="flex items-center justify-between px-4 py-2 border-b bg-background sticky top-0 z-20">
+    <header className="flex items-center justify-between px-4 py-3 border-b bg-background">
       <div className="flex items-center gap-4">
-        <Link href="/" className="flex items-center gap-3 group">
-            <Icons.logo className="h-8 w-8 text-primary transition-transform group-hover:rotate-12" />
-            <span className="hidden sm:inline-block text-2xl font-headline font-bold text-foreground">
-              aaura
-            </span>
-        </Link>
+        <div className="text-2xl font-serif">Aaura</div>
         <SearchBar />
       </div>
 

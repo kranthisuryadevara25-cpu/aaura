@@ -1,71 +1,23 @@
+"use client";
+import React from "react";
+import { Feed } from "@/app/components/feed";
+import { Sidebar } from "@/components/Sidebar";
+import { TopNav } from "@/components/TopNav";
 
-'use client';
-
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebase';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc } from 'firebase/firestore';
-import { Button } from '@/components/ui/button';
-import Link from 'next/link';
-import { Loader2 } from 'lucide-react';
-import { Feed } from '@/app/components/feed';
-
-function LoggedInView() {
-  const [user] = useAuthState(auth);
-  const router = useRouter();
-
-  const userDocRef = user ? doc(db, `users/${user.uid}`) : undefined;
-  const [userData, isUserDocLoading] = useDocumentData(userDocRef);
-
-  useEffect(() => {
-    if (!isUserDocLoading && userData && !userData.profileComplete) {
-      router.push('/profile/setup');
-    }
-  }, [userData, isUserDocLoading, router]);
-
-  if (isUserDocLoading || (userData && !userData.profileComplete)) {
-     return (
-      <div className="flex justify-center items-center h-screen bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-  
+export default function Page() {
   return (
-    <Feed />
-  );
-}
-
-function LoggedOutView() {
-  return (
-    <div className="flex-grow container mx-auto px-4 py-8 md:py-16 flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-5xl md:text-6xl font-headline font-bold tracking-tight text-primary">
-            Find Your aaura
-          </h1>
-          <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
-            Your daily sanctuary for spiritual wellness. Explore videos, get personalized horoscopes, and connect with your inner self.
-          </p>
-          <Button asChild className="mt-8" size="lg">
-            <Link href="/login">Join the Community</Link>
-          </Button>
-        </div>
+    <div className="min-h-screen bg-background text-foreground">
+      <TopNav />
+      <div className="flex">
+        <Sidebar />
+        <main className="flex-1">
+          <Feed />
+        </main>
+        {/* Optional right rail on desktop */}
+        <aside className="hidden xl:block w-80 border-l p-4">
+          <div>Trending Festivals</div>
+        </aside>
       </div>
+    </div>
   );
-}
-
-export default function Home() {
-  const [user, loading] = useAuthState(auth);
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  return user ? <LoggedInView /> : <LoggedOutView />;
 }

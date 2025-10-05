@@ -11,7 +11,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, BookOpen, Sparkles, AlertTriangle, Users, Building, Utensils, Plane } from 'lucide-react';
+import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Bookmark } from 'lucide-react';
 
@@ -117,7 +117,7 @@ export default function TempleDetailPage() {
 
                           <Card className="bg-transparent border-primary/20">
                               <CardHeader>
-                                  <CardTitle className="flex items-center gap-3 text-primary"><AlertTriangle /> Nearby Facilities</CardTitle>
+                                  <CardTitle className="flex items-center gap-3 text-primary">Travel & Facilities</CardTitle>
                               </CardHeader>
                                <CardContent className="space-y-4 text-sm">
                                   <div className="flex items-start gap-3">

@@ -77,9 +77,9 @@ export const temples: Temple[] = [
     },
     nearbyInfo: {
       placesToVisit: "Hanuman Garhi, Kanak Bhawan, Sarayu River Ghats.",
-      accommodation: "Various hotels, guesthouses, and dharamshalas are available in Ayodhya.",
+      accommodation: "Various hotels, guesthouses, and dharamshalas are available in Ayodhya. Booking in advance is recommended.",
       food: "Local vegetarian cuisine is widely available. Temple trust provides 'Prasadam'.",
-      transport: "Nearest Airport: Ayodhya (AYJ). Well-connected by rail and road.",
+      transport: "Nearest Airport: Ayodhya (AYJ). Well-connected by rail (Ayodhya Dham Jn) and road.",
     },
   },
   {
@@ -118,7 +118,7 @@ export const temples: Temple[] = [
     },
     nearbyInfo: {
       placesToVisit: "Bhairavnath Temple, Vasuki Tal, Chorabari Tal (Gandhi Sarovar).",
-      accommodation: "Guesthouses by GMVN, private lodges, and tents are available in Kedarnath.",
+      accommodation: "Guesthouses by GMVN, private lodges, and tents are available in Kedarnath. Booking is essential.",
       food: "Basic vegetarian food is available. It's advisable to carry some energy bars and snacks.",
       transport: "Nearest motorable road is Gaurikund. From there, it's a 16 km trek. Pony and helicopter services are available.",
     },
@@ -128,5 +128,3 @@ export const temples: Temple[] = [
 export const getTempleBySlug = (slug: string) => {
     return temples.find(t => t.slug === slug);
 }
-
-    

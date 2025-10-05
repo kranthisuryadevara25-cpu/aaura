@@ -83,6 +83,24 @@
       "description": "A short, positive affirmation.",
       "imageUrl": "https://images.unsplash.com/photo-1601859574742-9fab5c6a8b11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwb3NpdGl2ZSUyMGFmZmlybWF0aW9ufGVufDB8fHx8MTc1OTY1NTUwOHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "positive affirmation"
+    },
+    {
+      "id": "story-1",
+      "description": "An ancient Indian epic manuscript.",
+      "imageUrl": "https://images.unsplash.com/photo-1631631623129-c764de2c59a9?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "epic manuscript"
+    },
+    {
+      "id": "story-2",
+      "description": "A depiction of a mythological battle.",
+      "imageUrl": "https://images.unsplash.com/photo-1597793005553-614a5135a246?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "mythological battle"
+    },
+    {
+      "id": "story-3",
+      "description": "A god surrounded by celestial light.",
+      "imageUrl": "https://images.unsplash.com/photo-1629814424282-35985d113f94?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageHint": "celestial light"
     }
   ]
 }

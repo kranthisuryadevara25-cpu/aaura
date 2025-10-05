@@ -466,6 +466,41 @@
         "timestamp": { "type": "string", "format": "date-time" }
       },
       "required": ["id", "userId", "templeId", "timestamp"]
+    },
+    "Story": {
+      "title": "Story",
+      "type": "object",
+      "description": "Represents a mythological story.",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "summary": { "type": "string" },
+        "fullText": { "type": "string" },
+        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
+        "audioGuide": { "type": "string", "format": "uri" },
+        "videoLink": { "type": "string", "format": "uri" },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "relatedCharacters": { "type": "array", "items": { "type": "string" } },
+        "relatedTemples": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "title", "summary", "fullText", "createdAt", "updatedAt"]
+    },
+    "Character": {
+      "title": "Character",
+      "type": "object",
+      "description": "Represents a mythological character.",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "role": { "type": "string" },
+        "associatedStories": { "type": "array", "items": { "type": "string" } },
+        "attributes": { "type": "array", "items": { "type": "string" } },
+        "images": { "type": "array", "items": { "type": "string" } }
+      },
+      "required": ["id", "name", "description"]
     }
   },
   "auth": {
@@ -562,10 +597,24 @@
           "schema": { "$ref": "#/entities/Review" },
           "description": "Stores user reviews for a specific temple."
         }
+      },
+       {
+        "path": "/stories/{storyId}",
+        "definition": {
+          "entityName": "Story",
+          "schema": { "$ref": "#/entities/Story" },
+          "description": "Stores mythological stories."
+        }
+      },
+      {
+        "path": "/characters/{characterId}",
+        "definition": {
+          "entityName": "Character",
+          "schema": { "$ref": "#/entities/Character" },
+          "description": "Stores mythological characters."
+        }
       }
     ],
     "reasoning": "The data model is designed for a content platform with e-commerce and a new temple library. Videos, Channels, Deities, Shops, Products, and Temples are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples. This structure supports a multi-vendor marketplace, public video feeds, a detailed temple library, and personalized user content while keeping data organized."
   }
 }
-
-    

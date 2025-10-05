@@ -20,9 +20,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
+} from "@/components/ui/alert-dialog";
+import { Comments } from './comments';
+import { Separator } from './ui/separator';
 
-export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVideoEnd: () => void }) {
+export function VideoPlayer({ contentId }: { contentId: string }) {
   const { language, t } = useLanguage();
   const { toast } = useToast();
   const [user] = useAuthState(auth);
@@ -84,7 +86,6 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
           controls 
           autoPlay 
           className="w-full h-full"
-          onEnded={onVideoEnd}
         />
       </div>
       
@@ -133,6 +134,9 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
         <p className="font-semibold text-sm">Description</p>
         <p className="text-sm text-foreground/80 whitespace-pre-wrap mt-1">{description}</p>
       </div>
+
+      <Separator className="my-6" />
+      <Comments contentId={contentId} contentType="media" />
     </div>
   );
 }

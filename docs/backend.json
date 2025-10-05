@@ -65,46 +65,55 @@
         "email"
       ]
     },
-    "Video": {
+    "Media": {
       "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Video",
+      "title": "Media",
       "type": "object",
-      "description": "Represents a video on the platform.",
+      "description": "Represents a media item on the platform, such as a video, bhajan, podcast, or pravachan.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the video."
+          "description": "Unique identifier for the media item."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the User (creator) who uploaded the video."
+          "description": "Reference to the User (creator) who uploaded the media."
         },
         "title": {
           "type": "string",
-          "description": "Title of the video."
+          "description": "Title of the media."
         },
         "description": {
           "type": "string",
-          "description": "Description of the video content."
+          "description": "Description of the media content."
         },
         "uploadDate": {
           "type": "string",
-          "description": "Date and time the video was uploaded.",
+          "description": "Date and time the media was uploaded.",
           "format": "date-time"
         },
-        "videoUrl": {
+        "mediaUrl": {
           "type": "string",
-          "description": "URL of the video file in Firebase Storage.",
+          "description": "URL of the media file in Firebase Storage or YouTube.",
           "format": "uri"
         },
         "thumbnailUrl": {
           "type": "string",
-          "description": "URL of the video thumbnail image.",
+          "description": "URL of the media thumbnail image.",
           "format": "uri"
         },
-        "category": {
+        "mediaType": {
           "type": "string",
-          "description": "Category like 'Meditation', 'Yoga', 'Scripture'."
+          "description": "The type of media.",
+          "enum": ["video", "short", "bhajan", "podcast", "pravachan", "audiobook"]
+        },
+        "duration": {
+            "type": "number",
+            "description": "Duration of the media in seconds."
+        },
+        "language": {
+            "type": "string",
+            "description": "Language of the media content."
         },
         "tags": {
           "type": "array",
@@ -115,15 +124,11 @@
         },
         "views": {
             "type": "number",
-            "description": "Number of times the video has been viewed."
+            "description": "Number of times the media has been viewed."
         },
         "likes": {
             "type": "number",
-            "description": "Number of likes the video has received."
-        },
-        "isShortForm": {
-            "type": "boolean",
-            "description": "True if the video is a short-form reel."
+            "description": "Number of likes the media has received."
         }
       },
       "required": [
@@ -131,7 +136,8 @@
         "userId",
         "title",
         "uploadDate",
-        "videoUrl"
+        "mediaUrl",
+        "mediaType"
       ]
     },
     "Channel": {
@@ -575,11 +581,11 @@
         }
       },
       {
-        "path": "/videos/{videoId}",
+        "path": "/media/{mediaId}",
         "definition": {
-          "entityName": "Video",
-          "schema": { "$ref": "#/entities/Video" },
-          "description": "Stores all videos on the platform."
+          "entityName": "Media",
+          "schema": { "$ref": "#/entities/Media" },
+          "description": "Stores all media on the platform (videos, audio, etc.)."
         }
       },
       {
@@ -687,7 +693,6 @@
         }
       }
     ],
-    "reasoning": "The data model is designed for a content platform with e-commerce and a new temple library. Videos, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, and Rituals are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce and a new temple library. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, and Rituals are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
   }
 }
-

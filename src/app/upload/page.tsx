@@ -27,11 +27,13 @@ import { useRouter } from 'next/navigation';
 import { moderateContent } from '@/ai/ai-content-moderation';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const formSchema = z.object({
   title: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
   description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
-  video: z.instanceof(FileList).refine((files) => files?.length === 1, 'Video is required.'),
+  media: z.instanceof(FileList).refine((files) => files?.length === 1, 'A media file is required.'),
+  mediaType: z.enum(['video', 'short', 'bhajan', 'podcast', 'pravachan', 'audiobook']),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -45,9 +47,12 @@ export default function UploadPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      mediaType: 'video',
+    }
   });
 
-  const fileRef = form.register('video');
+  const fileRef = form.register('media');
 
   const toBase64 = (file: File) =>
     new Promise<string>((resolve, reject) => {
@@ -65,12 +70,12 @@ export default function UploadPage() {
 
     startTransition(async () => {
       try {
-        const videoFile = data.video[0];
-        const videoDataUri = await toBase64(videoFile);
+        const mediaFile = data.media[0];
+        const mediaDataUri = await toBase64(mediaFile);
         
         // Moderate content using the enhanced AI flow
         const moderationResult = await moderateContent({
-          videoDataUri, // While not used by the prompt logic, it's part of the input type
+          videoDataUri: mediaDataUri, // The AI flow expects a 'videoDataUri' field.
           title: data.title,
           description: data.description,
         });
@@ -87,27 +92,30 @@ export default function UploadPage() {
 
         // In a real app, you would upload to a service like Firebase Storage.
         // For now, we use placeholders.
-        const placeholderVideoUrl = 'https://placehold.co/600x400.mp4?text=Video+Processing';
+        const placeholderMediaUrl = 'https://placehold.co/600x400.mp4?text=Media+Processing';
         const placeholderThumbnailUrl = 'https://picsum.photos/seed/spirit/600/400';
         
-        const videosCollection = collection(firestore, 'videos');
-        await addDocumentNonBlocking(videosCollection, {
+        const mediaCollection = collection(firestore, 'media');
+        await addDocumentNonBlocking(mediaCollection, {
           userId: user.uid,
           title: data.title,
           description: data.description,
-          videoUrl: placeholderVideoUrl,
+          mediaUrl: placeholderMediaUrl,
           thumbnailUrl: placeholderThumbnailUrl,
           uploadDate: serverTimestamp(),
-          category: 'Spiritual',
+          mediaType: data.mediaType,
+          duration: 0,
+          language: 'English',
+          tags: [data.mediaType],
           likes: 0,
           views: 0,
         });
 
         toast({
           title: 'Upload Successful!',
-          description: 'Your video has been submitted and is being processed.',
+          description: 'Your media has been submitted and is being processed.',
         });
-        router.push('/');
+        router.push('/media');
       } catch (error) {
         console.error('Upload failed:', error);
         toast({
@@ -131,46 +139,71 @@ export default function UploadPage() {
               <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
                   <Card className="w-full max-w-2xl">
                   <CardHeader>
-                      <CardTitle>Upload a Video</CardTitle>
-                      <CardDescription>Share your spiritual, religious, and wellness videos with the community. All content must be positive and uplifting.</CardDescription>
+                      <CardTitle>Upload Media</CardTitle>
+                      <CardDescription>Share your spiritual, religious, and wellness content with the community. All content must be positive and uplifting.</CardDescription>
                   </CardHeader>
                   <CardContent>
                       <Form {...form}>
                       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                           <FormField
-                          control={form.control}
-                          name="title"
-                          render={({ field }) => (
-                              <FormItem>
-                              <FormLabel>Title</FormLabel>
-                              <FormControl>
-                                  <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                              </FormItem>
-                          )}
+                            control={form.control}
+                            name="title"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Title</FormLabel>
+                                <FormControl>
+                                    <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
                           />
                           <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                              <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                  <Textarea placeholder="A short summary of your video's positive message" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                              </FormItem>
-                          )}
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>Description</FormLabel>
+                                <FormControl>
+                                    <Textarea placeholder="A short summary of your media's positive message" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                                </FormItem>
+                            )}
                           />
                           <FormField
-                          control={form.control}
-                          name="video"
-                          render={({ field }) => (
+                            control={form.control}
+                            name="mediaType"
+                            render={({ field }) => (
                               <FormItem>
-                              <FormLabel>Video File</FormLabel>
+                                <FormLabel>Media Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select a media type" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="video">Video</SelectItem>
+                                    <SelectItem value="short">Short</SelectItem>
+                                    <SelectItem value="bhajan">Bhajan</SelectItem>
+                                    <SelectItem value="podcast">Podcast</SelectItem>
+                                    <SelectItem value="pravachan">Pravachan</SelectItem>
+                                    <SelectItem value="audiobook">Audiobook</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={form.control}
+                            name="media"
+                            render={({ field }) => (
+                              <FormItem>
+                              <FormLabel>Media File</FormLabel>
                               <FormControl>
-                                  <Input type="file" accept="video/*" {...fileRef} />
+                                  <Input type="file" accept="video/*,audio/*" {...fileRef} />
                               </FormControl>
                               <FormMessage />
                               </FormItem>

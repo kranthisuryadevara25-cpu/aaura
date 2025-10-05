@@ -10,8 +10,11 @@ import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function DeitiesPage() {
+  const { language } = useLanguage();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -30,13 +33,16 @@ export default function DeitiesPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {deities.map((deity) => (
+                  {deities.map((deity) => {
+                      const name = (deity.name as any)[language] || deity.name.en;
+                      const description = (deity.description as any)[language] || deity.description.en;
+                      return (
                       <Card key={deity.id} className="flex flex-col overflow-hidden group bg-card border-border hover:border-primary/50 transition-colors duration-300">
                       <CardContent className="p-0">
                           <div className="aspect-video relative">
                               <Image
                                   src={deity.images[0].url}
-                                  alt={deity.name}
+                                  alt={name}
                                   data-ai-hint={deity.images[0].hint}
                                   fill
                                   className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -44,8 +50,8 @@ export default function DeitiesPage() {
                           </div>
                       </CardContent>
                       <CardHeader>
-                          <CardTitle className="text-primary">{deity.name}</CardTitle>
-                          <CardDescription className="line-clamp-3">{deity.description}</CardDescription>
+                          <CardTitle className="text-primary">{name}</CardTitle>
+                          <CardDescription className="line-clamp-3">{description}</CardDescription>
                       </CardHeader>
                       <CardContent className="mt-auto">
                           <Button asChild className="w-full">
@@ -55,7 +61,7 @@ export default function DeitiesPage() {
                           </Button>
                       </CardContent>
                       </Card>
-                  ))}
+                  )})}
                   </div>
               </main>
           </SidebarInset>
@@ -64,3 +70,5 @@ export default function DeitiesPage() {
     </SidebarProvider>
   );
 }
+
+    

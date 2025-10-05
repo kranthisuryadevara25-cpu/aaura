@@ -14,18 +14,22 @@ import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar'
 import { Navigation } from '@/app/components/navigation';
 import { useEffect, useState } from 'react';
 import { getDeityDailyRelevance, type DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function DeityDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const deity = getDeityBySlug(slug);
+  const { language } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const deityName = deity ? (deity.name as any)[language] || deity.name.en : '';
 
   useEffect(() => {
     if (deity) {
       setIsLoading(true);
-      getDeityDailyRelevance({ deityName: deity.name })
+      getDeityDailyRelevance({ deityName: deity.name.en }) // AI flow works best with English name
         .then(content => {
           setDailyContent(content);
         })
@@ -38,6 +42,9 @@ export default function DeityDetailPage() {
     notFound();
   }
 
+  const description = (deity.description as any)[language] || deity.description.en;
+
+
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -49,8 +56,8 @@ export default function DeityDetailPage() {
           <SidebarInset>
               <main className="container mx-auto px-4 py-8 md:py-12">
                   <div className="text-center mb-8">
-                  <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{deity.name}</h1>
-                  <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">{deity.description}</p>
+                  <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{deityName}</h1>
+                  <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">{description}</p>
                   </div>
 
                   <Carousel className="w-full max-w-4xl mx-auto mb-12">
@@ -60,7 +67,7 @@ export default function DeityDetailPage() {
                           <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
                           <Image
                               src={image.url}
-                              alt={`${deity.name} image ${index + 1}`}
+                              alt={`${deityName} image ${index + 1}`}
                               data-ai-hint={image.hint}
                               fill
                               className="object-cover"
@@ -105,12 +112,16 @@ export default function DeityDetailPage() {
                               <CardTitle className="flex items-center gap-3 text-primary"><Music /> Mantras</CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-6">
-                              {deity.mantras.map((mantra, index) => (
+                              {deity.mantras.map((mantra, index) => {
+                                const translationKey = `translation_${language}` as keyof typeof mantra;
+                                const translation = (mantra as any)[translationKey] || mantra.translation_en;
+                                return (
                                   <div key={index}>
                                       <p className="text-xl font-semibold font-body text-foreground">{mantra.sanskrit}</p>
-                                      <p className="text-muted-foreground italic">{mantra.translation}</p>
+                                      <p className="text-muted-foreground italic">{translation}</p>
                                   </div>
-                              ))}
+                                );
+                              })}
                           </CardContent>
                       </Card>
 
@@ -119,13 +130,18 @@ export default function DeityDetailPage() {
                               <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> Stotras</CardTitle>
                           </CardHeader>
                           <CardContent className="space-y-6">
-                              {deity.stotras.map((stotra, index) => (
+                              {deity.stotras.map((stotra, index) => {
+                                const title = (stotra.title as any)[language] || stotra.title.en;
+                                const translationKey = `translation_${language}` as keyof typeof stotra;
+                                const translation = (stotra as any)[translationKey] || stotra.translation_en;
+                                return(
                                   <div key={index}>
-                                      <h4 className="font-semibold text-lg text-foreground">{stotra.title}</h4>
+                                      <h4 className="font-semibold text-lg text-foreground">{title}</h4>
                                       <p className="font-body text-foreground/80 mt-1">{stotra.sanskrit}</p>
-                                      <p className="text-muted-foreground text-sm mt-1 italic">{stotra.translation}</p>
+                                      <p className="text-muted-foreground text-sm mt-1 italic">{translation}</p>
                                   </div>
-                              ))}
+                                )
+                              })}
                           </CardContent>
                       </Card>
                   </div>
@@ -136,3 +152,5 @@ export default function DeityDetailPage() {
     </SidebarProvider>
   );
 }
+
+    

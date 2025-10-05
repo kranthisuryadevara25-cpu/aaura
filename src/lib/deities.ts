@@ -164,3 +164,5 @@ export const deities: Deity[] = [
 export const getDeityBySlug = (slug: string) => {
     return deities.find(d => d.slug === slug);
 }
+
+    

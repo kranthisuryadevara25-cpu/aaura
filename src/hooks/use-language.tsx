@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useUser, useFirestore, useDoc } from '@/firebase';
 import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -24,29 +24,33 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Path to the user's language preference document
-  const preferenceRef = user && firestore ? doc(firestore, `users/${user.uid}/preferences/default`) : null;
+  const preferenceRef = useMemo(() => {
+    if (user && firestore) {
+      return doc(firestore, `users/${user.uid}/preferences/default`);
+    }
+    return null;
+  }, [user, firestore]);
+  
   const { data: preferenceData, isLoading: isPreferenceLoading } = useDoc(preferenceRef);
 
   // Effect to initialize language from Firestore or browser settings
   useEffect(() => {
-    // Only proceed when the preference data has loaded
     if (!isPreferenceLoading) {
       const savedLanguage = preferenceData?.language;
       const browserLanguage = i18n.language.split('-')[0];
       const initialLang = savedLanguage || browserLanguage;
-
-      // Only change language if it's different from the current state
-      if (initialLang !== language) {
+      
+      if (initialLang !== i18n.language) {
         i18n.changeLanguage(initialLang).then(() => {
-          setLanguageState(initialLang);
+            setLanguageState(initialLang);
         });
       }
       setIsLoading(false);
     }
-  }, [isPreferenceLoading, preferenceData, i18n, language]);
+  }, [isPreferenceLoading, preferenceData, i18n]);
 
   const setLanguage = useCallback((lang: string) => {
-    if (lang === language) return; // Prevent updates if language is the same
+    if (lang === i18n.language) return;
 
     setIsLoading(true);
     i18n.changeLanguage(lang).then(() => {
@@ -57,9 +61,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
         setDocumentNonBlocking(preferenceRef, { language: lang }, { merge: true });
       }
     });
-  }, [i18n, user, firestore, preferenceRef, language]);
+  }, [i18n, user, firestore, preferenceRef]);
   
-  const value = { language, setLanguage, isLoading };
+  const value = useMemo(() => ({ language, setLanguage, isLoading }), [language, setLanguage, isLoading]);
 
   return (
     <LanguageContext.Provider value={value}>

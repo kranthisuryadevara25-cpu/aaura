@@ -10,8 +10,11 @@ import { ArrowRight, Palmtree } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
+import { useLanguage } from '@/hooks/use-language';
 
 export default function TemplesPage() {
+  const { language } = useLanguage();
+
   return (
     <SidebarProvider>
       <div className="min-h-screen bg-background text-foreground flex flex-col">
@@ -32,13 +35,16 @@ export default function TemplesPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {temples.map((temple) => (
+                  {temples.map((temple) => {
+                    const name = temple.name[language] || temple.name.en;
+                    
+                    return (
                       <Card key={temple.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
                           <CardContent className="p-0">
                               <div className="aspect-video relative">
                                   <Image
                                       src={temple.media.images[0].url}
-                                      alt={temple.name}
+                                      alt={name}
                                       data-ai-hint={temple.media.images[0].hint}
                                       fill
                                       className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -46,7 +52,7 @@ export default function TemplesPage() {
                               </div>
                           </CardContent>
                           <CardHeader>
-                              <CardTitle className="text-primary">{temple.name}</CardTitle>
+                              <CardTitle className="text-primary">{name}</CardTitle>
                               <CardDescription className="line-clamp-3">{temple.location.city}, {temple.location.state}</CardDescription>
                           </CardHeader>
                           <CardContent className="mt-auto">
@@ -57,7 +63,8 @@ export default function TemplesPage() {
                               </Button>
                           </CardContent>
                       </Card>
-                  ))}
+                    )
+                  })}
                   </div>
               </main>
           </SidebarInset>

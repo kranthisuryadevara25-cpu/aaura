@@ -14,16 +14,31 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Bookmark } from 'lucide-react';
-
+import { useLanguage } from '@/hooks/use-language';
 
 export default function TempleDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const temple = getTempleBySlug(slug);
+  const { language } = useLanguage();
 
   if (!temple) {
     notFound();
   }
+
+  const name = temple.name[language] || temple.name.en;
+  const deityName = temple.deity.name[language] || temple.deity.name.en;
+  const mythologicalImportance = temple.importance.mythological[language] || temple.importance.mythological.en;
+  const historicalImportance = temple.importance.historical[language] || temple.importance.historical.en;
+  const festivals = temple.visitingInfo.festivals[language] || temple.visitingInfo.festivals.en;
+  const timings = temple.visitingInfo.timings[language] || temple.visitingInfo.timings.en;
+  const dressCode = temple.visitingInfo.dressCode[language] || temple.visitingInfo.dressCode.en;
+  const poojaGuidelines = temple.visitingInfo.poojaGuidelines[language] || temple.visitingInfo.poojaGuidelines.en;
+  const accommodation = temple.nearbyInfo.accommodation[language] || temple.nearbyInfo.accommodation.en;
+  const food = temple.nearbyInfo.food[language] || temple.nearbyInfo.food.en;
+  const transport = temple.nearbyInfo.transport[language] || temple.nearbyInfo.transport.en;
+  const placesToVisit = temple.nearbyInfo.placesToVisit[language] || temple.nearbyInfo.placesToVisit.en;
+
 
   return (
     <SidebarProvider>
@@ -37,13 +52,13 @@ export default function TempleDetailPage() {
               <main className="container mx-auto px-4 py-8 md:py-12">
                   {/* Header Section */}
                   <div className="text-center mb-8">
-                      <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{temple.name}</h1>
+                      <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
                       <p className="mt-2 text-lg text-muted-foreground flex items-center justify-center gap-2">
                           <MapPin className="h-5 w-5" /> {temple.location.city}, {temple.location.state}
                       </p>
                       <div className="mt-4 flex justify-center items-center gap-4">
                           <Badge variant="secondary">Pilgrimage</Badge>
-                          <Badge variant="secondary">{temple.deity.name}</Badge>
+                          <Badge variant="secondary">{deityName}</Badge>
                            <Button variant="outline" size="sm">
                               <Bookmark className="mr-2 h-4 w-4" /> Bookmark
                           </Button>
@@ -58,7 +73,7 @@ export default function TempleDetailPage() {
                               <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
                                   <Image
                                       src={image.url}
-                                      alt={`${temple.name} image ${index + 1}`}
+                                      alt={`${name} image ${index + 1}`}
                                       data-ai-hint={image.hint}
                                       fill
                                       className="object-cover"
@@ -82,12 +97,12 @@ export default function TempleDetailPage() {
                               <CardContent className="space-y-4">
                                   <div>
                                       <h4 className="font-semibold text-lg">Mythological Importance</h4>
-                                      <p className="text-foreground/90">{temple.importance.mythological}</p>
+                                      <p className="text-foreground/90">{mythologicalImportance}</p>
                                   </div>
                                   <Separator />
                                   <div>
                                       <h4 className="font-semibold text-lg">Historical Importance</h4>
-                                      <p className="text-foreground/90">{temple.importance.historical}</p>
+                                      <p className="text-foreground/90">{historicalImportance}</p>
                                   </div>
                               </CardContent>
                           </Card>
@@ -97,7 +112,7 @@ export default function TempleDetailPage() {
                                   <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> Festivals & Special Days</CardTitle>
                               </CardHeader>
                               <CardContent>
-                                  <p className="text-foreground/90">{temple.visitingInfo.festivals}</p>
+                                  <p className="text-foreground/90">{festivals}</p>
                               </CardContent>
                           </Card>
                       </div>
@@ -109,9 +124,9 @@ export default function TempleDetailPage() {
                                   <CardTitle className="flex items-center gap-3 text-primary"><Clock /> Visiting Information</CardTitle>
                               </CardHeader>
                               <CardContent className="space-y-3 text-sm">
-                                  <p><strong className="text-foreground">Timings:</strong> {temple.visitingInfo.timings}</p>
-                                  <p><strong className="text-foreground">Dress Code:</strong> {temple.visitingInfo.dressCode}</p>
-                                  <p><strong className="text-foreground">Pooja Guidelines:</strong> {temple.visitingInfo.poojaGuidelines}</p>
+                                  <p><strong className="text-foreground">Timings:</strong> {timings}</p>
+                                  <p><strong className="text-foreground">Dress Code:</strong> {dressCode}</p>
+                                  <p><strong className="text-foreground">Pooja Guidelines:</strong> {poojaGuidelines}</p>
                               </CardContent>
                           </Card>
 
@@ -122,19 +137,19 @@ export default function TempleDetailPage() {
                                <CardContent className="space-y-4 text-sm">
                                   <div className="flex items-start gap-3">
                                       <Building className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Accommodation:</strong> {temple.nearbyInfo.accommodation}</div>
+                                      <div><strong className="text-foreground block">Accommodation:</strong> {accommodation}</div>
                                   </div>
                                    <div className="flex items-start gap-3">
                                       <Utensils className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Food:</strong> {temple.nearbyInfo.food}</div>
+                                      <div><strong className="text-foreground block">Food:</strong> {food}</div>
                                   </div>
                                   <div className="flex items-start gap-3">
                                       <Plane className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Transport:</strong> {temple.nearbyInfo.transport}</div>
+                                      <div><strong className="text-foreground block">Transport:</strong> {transport}</div>
                                   </div>
                                   <div className="flex items-start gap-3">
                                       <Users className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                                      <div><strong className="text-foreground block">Other Places to Visit:</strong> {temple.nearbyInfo.placesToVisit}</div>
+                                      <div><strong className="text-foreground block">Other Places to Visit:</strong> {placesToVisit}</div>
                                   </div>
                               </CardContent>
                           </Card>

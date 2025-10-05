@@ -1,0 +1,30 @@
+
+{
+  "sidebar": {
+    "home": "Home",
+    "deities": "Deities",
+    "stories": "Stories",
+    "characters": "Characters",
+    "temples": "Temples",
+    "rituals": "Rituals",
+    "panchang": "Panchang",
+    "festivals": "Festivals",
+    "forum": "Forum",
+    "channels": "Channels",
+    "media": "Media",
+    "shop": "Shop",
+    "upload": "Upload",
+    "settings": "Settings"
+  },
+  "header": {
+    "search_placeholder": "Search temples, deities, stories...",
+    "notifications": "Notifications",
+    "select_language": "Select Language",
+    "logout": "Log out"
+  },
+  "cards": {
+    "view_temple": "View Temple",
+    "read_more": "Read More",
+    "continue_reading": "Continue Reading"
+  }
+}

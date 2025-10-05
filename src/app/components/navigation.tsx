@@ -9,123 +9,41 @@ import {
 } from '@/components/ui/sidebar';
 import { Home, LibraryBig, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Users, Film, ShoppingBag, Upload, Settings } from 'lucide-react';
 import Link from 'next/link';
+import { useTranslation } from 'react-i18next';
 
 export function Navigation() {
+  const { t } = useTranslation();
+
+  const navItems = [
+    { href: "/", icon: Home, label: t('sidebar.home') },
+    { href: "/deities", icon: LibraryBig, label: t('sidebar.deities') },
+    { href: "/stories", icon: ScrollText, label: t('sidebar.stories') },
+    { href: "/characters", icon: UserSquare, label: t('sidebar.characters') },
+    { href: "/temples", icon: Palmtree, label: t('sidebar.temples') },
+    { href: "/rituals", icon: BookHeart, label: t('sidebar.rituals') },
+    { href: "/panchang", icon: CalendarDays, label: t('sidebar.panchang') },
+    { href: "/festivals", icon: PartyPopper, label: t('sidebar.festivals') },
+    { href: "/forum", icon: MessageCircle, label: t('sidebar.forum') },
+    { href: "/channels", icon: Users, label: t('sidebar.channels') },
+    { href: "/media", icon: Film, label: t('sidebar.media') },
+    { href: "/shop", icon: ShoppingBag, label: t('sidebar.shop') },
+    { href: "/upload", icon: Upload, label: t('sidebar.upload') },
+    { href: "/settings", icon: Settings, label: t('sidebar.settings') },
+  ];
+
   return (
     <SidebarContent className="p-4">
       <SidebarMenu>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Home">
-            <Link href="/">
-              <Home />
-              <span>Home</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Deities">
-            <Link href="/deities">
-              <LibraryBig />
-              <span>Deities</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Stories">
-            <Link href="/stories">
-              <ScrollText />
-              <span>Stories</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Characters">
-            <Link href="/characters">
-              <UserSquare />
-              <span>Characters</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Temples & Pilgrimages">
-            <Link href="/temples">
-              <Palmtree />
-              <span>Temples</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Rituals">
-            <Link href="/rituals">
-              <BookHeart />
-              <span>Rituals</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Daily Panchang">
-            <Link href="/panchang">
-              <CalendarDays />
-              <span>Panchang</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Festivals & Events">
-            <Link href="/festivals">
-              <PartyPopper />
-              <span>Festivals</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Forum & Q&A">
-            <Link href="/forum">
-              <MessageCircle />
-              <span>Forum</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Channels">
-            <Link href="/channels">
-              <Users />
-              <span>Channels</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Media">
-            <Link href="/media">
-              <Film />
-              <span>Media</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Shop">
-            <Link href="/shop">
-              <ShoppingBag />
-              <span>Shop</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Upload">
-            <Link href="/upload">
-              <Upload />
-              <span>Upload</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Settings">
-            <Link href="/settings">
-              <Settings />
-              <span>Settings</span>
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
+        {navItems.map(item => (
+          <SidebarMenuItem key={item.href}>
+            <SidebarMenuButton asChild tooltip={item.label}>
+              <Link href={item.href}>
+                <item.icon />
+                <span>{item.label}</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        ))}
       </SidebarMenu>
     </SidebarContent>
   );

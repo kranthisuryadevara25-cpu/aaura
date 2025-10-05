@@ -1,0 +1,30 @@
+
+{
+  "sidebar": {
+    "home": "मुख्य पृष्ठ",
+    "deities": "देवी-देवता",
+    "stories": "कथाएं",
+    "characters": "पौराणिक पात्र",
+    "temples": "मंदिर",
+    "rituals": "अनुष्ठान",
+    "panchang": "पंचांग",
+    "festivals": "त्योहार",
+    "forum": "मंच",
+    "channels": "चैनल",
+    "media": "मीडिया",
+    "shop": "दुकान",
+    "upload": "अपलोड",
+    "settings": "सेटिंग्स"
+  },
+  "header": {
+    "search_placeholder": "मंदिर, देवता, कहानियाँ खोजें...",
+    "notifications": "सूचनाएं",
+    "select_language": "भाषा चुनें",
+    "logout": "लॉग आउट"
+  },
+  "cards": {
+    "view_temple": "मंदिर देखें",
+    "read_more": " और पढ़ें",
+    "continue_reading": "पढ़ना जारी रखें"
+  }
+}

@@ -102,7 +102,6 @@ export default function ProfileSetupPage() {
           motherName: data.motherName,
           zodiacSign,
           profileComplete: true,
-          email: user.email,
         };
         
         setDocumentNonBlocking(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });

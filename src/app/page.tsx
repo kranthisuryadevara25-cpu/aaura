@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Header } from "@/app/components/header";
 import { useUser, useDoc, useFirestore } from '@/firebase';
@@ -18,7 +18,12 @@ function LoggedInView() {
   const firestore = useFirestore();
   const router = useRouter();
 
-  const userDocRef = user ? doc(firestore, `users/${user.uid}`) : undefined;
+  // useMemo helps stabilize the docRef, preventing re-creations on every render
+  const userDocRef = useMemo(() => {
+    if (!user || !firestore) return undefined;
+    return doc(firestore, `users/${user.uid}`);
+  }, [user, firestore]);
+
   const { data: userData, isLoading: isUserDocLoading } = useDoc(userDocRef);
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { FeedItem } from "@/types/feed";
@@ -33,23 +33,33 @@ export const useFeed = (pageSize = 10) => {
       const mediaSnap = await getDocs(mediaQuery);
       const videos: FeedItem[] = mediaSnap.docs.map((d) => {
         const data = d.data() as any;
+        
         const title: Record<string, string> = {};
+        if (data.title) title.en = data.title; // legacy fallback
         if (data.title_en) title.en = data.title_en;
         if (data.title_hi) title.hi = data.title_hi;
         if (data.title_te) title.te = data.title_te;
-        if (data.title) title.en = data.title; // Fallback
+        if (data.title_mr) title.mr = data.title_mr;
+        if (data.title_ta) title.ta = data.title_ta;
+        if (data.title_kn) title.kn = data.title_kn;
+        if (data.title_bn) title.bn = data.title_bn;
+
 
         const description: Record<string, string> = {};
+        if (data.description) description.en = data.description; // legacy fallback
         if (data.description_en) description.en = data.description_en;
         if (data.description_hi) description.hi = data.description_hi;
         if (data.description_te) description.te = data.description_te;
-        if(data.description) description.en = data.description; // Fallback
+        if (data.description_mr) description.mr = data.description_mr;
+        if (data.description_ta) description.ta = data.description_ta;
+        if (data.description_kn) description.kn = data.description_kn;
+        if (data.description_bn) description.bn = data.description_bn;
 
         return {
           id: `video-${d.id}`,
           kind: "video",
-          title,
-          description,
+          title: title,
+          description: description,
           thumbnail: data.thumbnailUrl || "",
           mediaUrl: data.mediaUrl,
           meta: { duration: data.duration, views: data.views, userId: data.userId, uploadDate: data.uploadDate },
@@ -62,7 +72,15 @@ export const useFeed = (pageSize = 10) => {
         id: `temple-${t.id}`,
         kind: "temple",
         title: t.name,
-        description: { en: `${t.location.city}, ${t.location.state}` }, // Simple description
+        description: { 
+            en: `${t.location.city}, ${t.location.state}`,
+            hi: `${t.location.city}, ${t.location.state}`,
+            te: `${t.location.city}, ${t.location.state}`,
+            mr: `${t.location.city}, ${t.location.state}`,
+            ta: `${t.location.city}, ${t.location.state}`,
+            kn: `${t.location.city}, ${t.location.state}`,
+            bn: `${t.location.city}, ${t.location.state}`,
+         },
         thumbnail: t.media.images[0].url,
         meta: { location: t.location, slug: t.slug, imageHint: t.media.images[0].hint },
       }));

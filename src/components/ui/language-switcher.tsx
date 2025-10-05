@@ -1,15 +1,6 @@
 "use client";
 
-import { useLanguage, LanguageCode } from "@/hooks/use-language.tsx";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Languages } from "lucide-react";
-import { Button } from "./button";
+import { useLanguage, LanguageCode } from "@/hooks/use-language";
 
 const languages: { code: LanguageCode; label: string }[] = [
   { code: "en", label: "English" },
@@ -25,18 +16,16 @@ export const LanguageSwitcher = () => {
   const { language, setLanguage } = useLanguage();
 
   return (
-    <Select value={language} onValueChange={(value) => setLanguage(value as LanguageCode)}>
-      <SelectTrigger className="w-auto h-auto p-2 border-none" variant="ghost" size="icon">
-        <Languages className="h-5 w-5" />
-        <span className="sr-only">Select Language</span>
-      </SelectTrigger>
-      <SelectContent align="end">
-        {languages.map((lang) => (
-          <SelectItem key={lang.code} value={lang.code}>
-            {lang.label}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <select
+      value={language}
+      onChange={(e) => setLanguage(e.target.value as LanguageCode)}
+      className="border rounded p-1 bg-background text-foreground"
+    >
+      {languages.map((lang) => (
+        <option key={lang.code} value={lang.code}>
+          {lang.label}
+        </option>
+      ))}
+    </select>
   );
 };

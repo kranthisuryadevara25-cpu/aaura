@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useLanguage, LanguageCode } from "@/hooks/use-language";
+import { useLanguage, LanguageCode } from "@/hooks/use-language.tsx";
 import {
   Select,
   SelectContent,
@@ -27,11 +26,9 @@ export const LanguageSwitcher = () => {
 
   return (
     <Select value={language} onValueChange={(value) => setLanguage(value as LanguageCode)}>
-      <SelectTrigger asChild>
-         <Button variant="ghost" size="icon">
-            <Languages className="h-5 w-5" />
-            <span className="sr-only">Select Language</span>
-          </Button>
+      <SelectTrigger className="w-auto h-auto p-2 border-none" variant="ghost" size="icon">
+        <Languages className="h-5 w-5" />
+        <span className="sr-only">Select Language</span>
       </SelectTrigger>
       <SelectContent align="end">
         {languages.map((lang) => (

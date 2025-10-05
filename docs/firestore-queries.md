@@ -14,11 +14,20 @@ Fetch the top 20 temples, ordered by their average rating, with support for pagi
 **Query Structure:**
 
 ```javascript
-import { collection, query, orderBy, limit, startAfter, getDocs } from 'firebase/firestore';
+import { collection, query, orderBy, limit, startAfter, getDocs, select } from 'firebase/firestore';
 
-async function fetchTopTemples(db, lastVisibleTemple) {
+async function fetchTopTemples(db, lang, lastVisibleTemple) {
   const templesRef = collection(db, 'temples');
+  
+  // Dynamically select language fields
+  const nameField = `name_${lang}`;
+  const descriptionField = `description_${lang}`;
+
   let q;
+
+  // The 'select' clause is not directly supported in client-side queries for filtering fields before retrieval.
+  // The client will fetch the whole document and you select the fields in your application code.
+  // The example below shows the query structure; field selection happens post-fetch.
 
   if (lastVisibleTemple) {
     // Fetch the next page
@@ -42,7 +51,17 @@ async function fetchTopTemples(db, lastVisibleTemple) {
   // Get the last visible document for pagination
   const newLastVisible = documentSnapshots.docs[documentSnapshots.docs.length - 1];
 
-  const temples = documentSnapshots.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  // Map the data and select the correct language fields
+  const temples = documentSnapshots.docs.map(doc => {
+      const data = doc.data();
+      return {
+          id: doc.id,
+          name: data[nameField] || data.name_en, // Fallback to English
+          location: data.location, // Assuming location is not multilingual
+          imageUrl: data.media.images[0].url,
+          // ... other fields
+      }
+  });
 
   return { temples, newLastVisible };
 }
@@ -66,7 +85,7 @@ To perform this query, you need an index on the `rating` field in the `temples` 
 
 ### 2. DeityCard Feed (Latest Added)
 
-Fetch the 10 most recently added deities. This assumes you add a `createdAt` timestamp field when creating deity documents.
+Fetch the 10 most recently added deities.
 
 **Query Structure:**
 
@@ -78,7 +97,16 @@ const deitiesRef = collection(db, 'deities');
 const q = query(deitiesRef, orderBy('createdAt', 'desc'), limit(10));
 
 const querySnapshot = await getDocs(q);
-const deities = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+const deities = querySnapshot.docs.map(doc => {
+    const data = doc.data();
+    return {
+        id: doc.id,
+        name: data[`name_${lang}`] || data.name_en,
+        description: data[`description_${lang}`] || data.description_en,
+        // ...other fields
+    };
+});
 ```
 
 **Required Index:**
@@ -269,3 +297,5 @@ const q = query(
   ]
 }
 ```
+
+    

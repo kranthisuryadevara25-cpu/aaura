@@ -91,14 +91,10 @@
           "type": "string",
           "description": "Reference to the User (creator) who uploaded the media."
         },
-        "title": {
-          "type": "string",
-          "description": "Title of the media."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the media content."
-        },
+        "title_en": { "type": "string", "description": "Title of the media in English." },
+        "title_hi": { "type": "string", "description": "Title of the media in Hindi." },
+        "description_en": { "type": "string", "description": "Description of the media in English." },
+        "description_hi": { "type": "string", "description": "Description of the media in Hindi." },
         "uploadDate": {
           "type": "string",
           "description": "Date and time the media was uploaded.",
@@ -125,7 +121,7 @@
         },
         "language": {
             "type": "string",
-            "description": "Language of the media content."
+            "description": "Original language of the media content."
         },
         "tags": {
           "type": "array",
@@ -146,7 +142,7 @@
       "required": [
         "id",
         "userId",
-        "title",
+        "title_en",
         "uploadDate",
         "mediaUrl",
         "mediaType"
@@ -170,10 +166,8 @@
           "type": "string",
           "description": "Name of the channel."
         },
-        "description": {
-          "type": "string",
-          "description": "Description of the channel content."
-        },
+        "description_en": { "type": "string", "description": "Description of the channel content in English." },
+        "description_hi": { "type": "string", "description": "Description of the channel content in Hindi." },
         "creationDate": {
           "type": "string",
           "description": "Date the channel was created.",
@@ -241,17 +235,15 @@
           "type": "string",
           "description": "The zodiac sign of the user."
         },
-        "text": {
-          "type": "string",
-          "description": "The text content of the horoscope."
-        }
+        "text_en": { "type": "string", "description": "Horoscope text in English." },
+        "text_hi": { "type": "string", "description": "Horoscope text in Hindi." }
       },
       "required": [
         "id",
         "userId",
         "date",
         "zodiacSign",
-        "text"
+        "text_en"
       ]
     },
     "Deity": {
@@ -264,14 +256,10 @@
           "type": "string",
           "description": "Unique identifier for the deity."
         },
-        "name": {
-          "type": "string",
-          "description": "The name of the deity."
-        },
-        "description": {
-          "type": "string",
-          "description": "A brief description of the deity."
-        },
+        "name_en": { "type": "string", "description": "Name of the deity in English." },
+        "name_hi": { "type": "string", "description": "Name of the deity in Hindi." },
+        "description_en": { "type": "string", "description": "Description in English." },
+        "description_hi": { "type": "string", "description": "Description in Hindi." },
         "images": {
           "type": "array",
           "description": "A list of image URLs for the deity.",
@@ -287,7 +275,8 @@
             "type": "object",
             "properties": {
               "sanskrit": {"type": "string"},
-              "translation": {"type": "string"}
+              "translation_en": {"type": "string"},
+              "translation_hi": {"type": "string"}
             }
           }
         },
@@ -297,17 +286,19 @@
            "items": {
             "type": "object",
             "properties": {
-              "title": {"type": "string"},
+              "title_en": {"type": "string"},
+              "title_hi": {"type": "string"},
               "sanskrit": {"type": "string"},
-              "translation": {"type": "string"}
+              "translation_en": {"type": "string"},
+              "translation_hi": {"type": "string"}
             }
           }
         }
       },
       "required": [
         "id",
-        "name",
-        "description"
+        "name_en",
+        "description_en"
       ]
     },
     "Shop": {
@@ -327,9 +318,8 @@
           "type": "string",
           "description": "Name of the shop."
         },
-        "description": {
-          "type": "string",          "description": "Description of the shop."
-        }
+        "description_en": { "type": "string", "description": "Description of the shop in English." },
+        "description_hi": { "type": "string", "description": "Description of the shop in Hindi." }
       },
       "required": [
         "id",
@@ -351,14 +341,10 @@
             "type": "string",
             "description": "ID of the shop that sells this product."
         },
-        "name": {
-          "type": "string",
-          "description": "Name of the product."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the product."
-        },
+        "name_en": { "type": "string", "description": "Name of the product in English." },
+        "name_hi": { "type": "string", "description": "Name of the product in Hindi." },
+        "description_en": { "type": "string", "description": "Description of the product in English." },
+        "description_hi": { "type": "string", "description": "Description of the product in Hindi." },
         "price": {
           "type": "number",
           "description": "Price of the product."
@@ -376,7 +362,7 @@
       "required": [
         "id",
         "shopId",
-        "name",
+        "name_en",
         "price",
         "imageUrl"
       ]
@@ -386,19 +372,16 @@
       "type": "object",
       "description": "Represents a temple or pilgrimage site.",
       "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the temple."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the temple."
-        },
+        "id": { "type": "string" },
+        "name_en": { "type": "string", "description": "Name of the temple in English." },
+        "name_hi": { "type": "string", "description": "Name of the temple in Hindi." },
         "deity": {
           "type": "object",
           "properties": {
-            "name": { "type": "string" },
-            "significance": { "type": "string" }
+            "name_en": { "type": "string" },
+            "name_hi": { "type": "string" },
+            "significance_en": { "type": "string" },
+            "significance_hi": { "type": "string" }
           }
         },
         "location": {
@@ -421,8 +404,10 @@
         "importance": {
           "type": "object",
           "properties": {
-            "historical": { "type": "string" },
-            "mythological": { "type": "string" }
+            "historical_en": { "type": "string" },
+            "historical_hi": { "type": "string" },
+            "mythological_en": { "type": "string" },
+            "mythological_hi": { "type": "string" }
           }
         },
         "media": {
@@ -441,23 +426,31 @@
         "visitingInfo": {
           "type": "object",
           "properties": {
-            "timings": { "type": "string" },
-            "festivals": { "type": "string" },
-            "poojaGuidelines": { "type": "string" },
-            "dressCode": { "type": "string" }
+            "timings_en": { "type": "string" },
+            "timings_hi": { "type": "string" },
+            "festivals_en": { "type": "string" },
+            "festivals_hi": { "type": "string" },
+            "poojaGuidelines_en": { "type": "string" },
+            "poojaGuidelines_hi": { "type": "string" },
+            "dressCode_en": { "type": "string" },
+            "dressCode_hi": { "type": "string" }
           }
         },
         "nearbyInfo": {
           "type": "object",
           "properties": {
-            "placesToVisit": { "type": "string" },
-            "accommodation": { "type": "string" },
-            "food": { "type": "string" },
-            "transport": { "type": "string" }
+            "placesToVisit_en": { "type": "string" },
+            "placesToVisit_hi": { "type": "string" },
+            "accommodation_en": { "type": "string" },
+            "accommodation_hi": { "type": "string" },
+            "food_en": { "type": "string" },
+            "food_hi": { "type": "string" },
+            "transport_en": { "type": "string" },
+            "transport_hi": { "type": "string" }
           }
         }
       },
-      "required": ["id", "name", "deity", "location", "importance"]
+      "required": ["id", "name_en", "deity", "location", "importance"]
     },
     "Review": {
       "title": "Review",
@@ -491,9 +484,12 @@
       "description": "Represents a mythological story.",
       "properties": {
         "id": { "type": "string" },
-        "title": { "type": "string" },
-        "summary": { "type": "string" },
-        "fullText": { "type": "string" },
+        "title_en": { "type": "string" },
+        "title_hi": { "type": "string" },
+        "summary_en": { "type": "string" },
+        "summary_hi": { "type": "string" },
+        "fullText_en": { "type": "string" },
+        "fullText_hi": { "type": "string" },
         "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
         "audioGuide": { "type": "string", "format": "uri" },
         "videoLink": { "type": "string", "format": "uri" },
@@ -503,7 +499,7 @@
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "title", "summary", "fullText", "createdAt", "updatedAt"]
+      "required": ["id", "title_en", "summary_en", "fullText_en", "createdAt", "updatedAt"]
     },
     "Character": {
       "title": "Character",
@@ -511,14 +507,17 @@
       "description": "Represents a mythological character.",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
-        "role": { "type": "string" },
+        "name_en": { "type": "string" },
+        "name_hi": { "type": "string" },
+        "description_en": { "type": "string" },
+        "description_hi": { "type": "string" },
+        "role_en": { "type": "string" },
+        "role_hi": { "type": "string" },
         "associatedStories": { "type": "array", "items": { "type": "string" } },
         "attributes": { "type": "array", "items": { "type": "string" } },
         "images": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["id", "name", "description"]
+      "required": ["id", "name_en", "description_en"]
     },
     "Ritual": {
       "title": "Ritual",
@@ -526,14 +525,16 @@
       "description": "Represents a ritual or pooja.",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "procedure": { "type": "string" },
+        "name_en": { "type": "string" },
+        "name_hi": { "type": "string" },
+        "procedure_en": { "type": "string" },
+        "procedure_hi": { "type": "string" },
         "deity": { "type": "string" },
         "itemsRequired": { "type": "array", "items": { "type": "string" } },
         "auspiciousTime": { "type": "string" },
         "images": { "type": "array", "items": { "type": "string", "format": "uri" } }
       },
-      "required": ["id", "name", "procedure"]
+      "required": ["id", "name_en", "procedure_en"]
     },
     "Panchang": {
       "title": "Panchang",
@@ -547,7 +548,8 @@
         "yamaGandam": { "type": "string" },
         "sunrise": { "type": "string" },
         "sunset": { "type": "string" },
-        "festival": { "type": "array", "items": { "type": "string" } }
+        "festival_en": { "type": "array", "items": { "type": "string" } },
+        "festival_hi": { "type": "array", "items": { "type": "string" } }
       },
       "required": ["date"]
     },
@@ -557,16 +559,19 @@
       "description": "Represents a cultural festival.",
       "properties": {
         "id": { "type": "string" },
-        "name": { "type": "string" },
-        "description": { "type": "string" },
+        "name_en": { "type": "string" },
+        "name_hi": { "type": "string" },
+        "description_en": { "type": "string" },
+        "description_hi": { "type": "string" },
         "date": { "type": "string", "format": "date-time" },
         "duration": { "type": "string" },
-        "significance": { "type": "string" },
+        "significance_en": { "type": "string" },
+        "significance_hi": { "type": "string" },
         "associatedDeities": { "type": "array", "items": { "type": "string" } },
         "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
         "relatedTemples": { "type": "array", "items": { "type": "string" } }
       },
-      "required": ["id", "name", "description", "date", "significance"]
+      "required": ["id", "name_en", "description_en", "date", "significance_en"]
     },
     "Post": {
       "title": "Post",
@@ -760,3 +765,5 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, preferences and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
   }
 }
+
+    

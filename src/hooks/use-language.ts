@@ -1,9 +1,9 @@
-
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useUser, useFirestore, useDoc, setDocumentNonBlocking } from '@/firebase';
+import { useUser, useFirestore, useDoc } from '@/firebase';
+import { setDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { doc } from 'firebase/firestore';
 
 interface LanguageContextType {

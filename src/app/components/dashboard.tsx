@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useFirestore, useCollection, useUser } from '@/firebase';
-import { collection, query, limit } from 'firebase/firestore';
+import { collection, query, limit, where } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import { VideoCard } from './cards/video-card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
@@ -86,4 +86,3 @@ export function Dashboard() {
         </main>
     );
 }
-

@@ -11,7 +11,7 @@ export const Sidebar = () => {
     <aside className="w-60 hidden md:block border-r p-4">
       <nav className="space-y-2">
         {MENU.map((m) => (
-          <div key={m} className="py-2 px-3 rounded hover:bg-muted cursor-pointer">
+          <div key={m} className="py-2 px-3 rounded hover:bg-secondary cursor-pointer">
             {t.sidebar[m as keyof typeof t.sidebar] || m.charAt(0).toUpperCase() + m.slice(1)}
           </div>
         ))}

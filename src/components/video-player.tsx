@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { useLanguage } from '@/hooks/use-language';
 
-export function VideoPlayer({ contentId }: { contentId: string }) {
+export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVideoEnd: () => void }) {
   const { language, t } = useLanguage();
 
   const [media, loadingMedia] = useDocumentData(doc(db, 'media', contentId));
@@ -35,7 +35,14 @@ export function VideoPlayer({ contentId }: { contentId: string }) {
   return (
     <div className="w-full">
       <div className="aspect-video bg-black rounded-lg overflow-hidden">
-        <video src={media.mediaUrl} controls autoPlay className="w-full h-full" />
+        <video 
+          key={contentId} // Add key to force re-render on ID change
+          src={media.mediaUrl} 
+          controls 
+          autoPlay 
+          className="w-full h-full"
+          onEnded={onVideoEnd} // Trigger callback when video finishes
+        />
       </div>
       <div className="py-4">
         <h1 className="text-2xl font-bold font-headline">{title}</h1>

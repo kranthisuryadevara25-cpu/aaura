@@ -14,15 +14,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Languages, Search, Bell } from "lucide-react";
+import { LogOut, Search, Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
-import { useLanguage, LanguageCode } from "@/hooks/use-language";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 
 export function Header() {
   const { user } = useUser();
   const auth = useAuth();
-  const { setLanguage } = useLanguage();
 
   const handleSignOut = () => {
     if (auth) {
@@ -56,25 +55,7 @@ export function Header() {
               <span className="sr-only">Notifications</span>
           </Button>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Languages className="h-5 w-5" />
-                <span className="sr-only">Select Language</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Select Language</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => setLanguage('en')}>English</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setLanguage('hi')}>हिन्दी (Hindi)</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setLanguage('te')}>తెలుగు (Telugu)</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setLanguage('mr')}>मराठी (Marathi)</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setLanguage('ta')}>தமிழ் (Tamil)</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setLanguage('kn')}>ಕನ್ನಡ (Kannada)</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setLanguage('bn')}>বাংলা (Bengali)</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <LanguageSwitcher />
 
           {user ? (
             <DropdownMenu>

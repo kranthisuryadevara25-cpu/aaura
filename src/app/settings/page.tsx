@@ -33,7 +33,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/app/components/header';
 import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope';
 import { zodiacSigns } from '@/lib/zodiac';
-import { useMemo, useTransition } from 'react';
+import { useMemo, useTransition, useEffect } from 'react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
 
@@ -59,14 +59,20 @@ export default function SettingsPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    values: {
-      zodiacSign: userData?.zodiacSign || '',
-      birthDate: userData?.birthDate ? new Date(userData.birthDate) : new Date(),
-    },
-    resetOptions: {
-        keepDirtyValues: true,
+    defaultValues: {
+        zodiacSign: '',
+        birthDate: new Date(),
     }
   });
+
+  useEffect(() => {
+    if (userData) {
+      form.reset({
+        zodiacSign: userData.zodiacSign || '',
+        birthDate: userData.birthDate ? new Date(userData.birthDate) : new Date(),
+      });
+    }
+  }, [userData, form]);
   
   const onSubmit = (data: FormValues) => {
     if (!user || !firestore) {

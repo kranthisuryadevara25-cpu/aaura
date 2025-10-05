@@ -17,7 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth, useUser } from '@/firebase';
-import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 import { Header } from '@/app/components/header';
 import { useToast } from '@/hooks/use-toast';
@@ -54,23 +54,42 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       if (action === 'signIn') {
-        initiateEmailSignIn(auth, data.email, data.password);
+        await signInWithEmailAndPassword(auth, data.email, data.password);
       } else {
-        initiateEmailSignUp(auth, data.email, data.password);
+        await createUserWithEmailAndPassword(auth, data.email, data.password);
       }
-      // Non-blocking, so we don't await. The onAuthStateChanged listener will handle the redirect.
-      // We can give some feedback to the user
-      toast({ title: 'Processing...', description: 'Please wait a moment.' });
+      // onAuthStateChanged will handle the redirect
+      toast({ title: 'Success!', description: action === 'signIn' ? 'You are now signed in.' : 'Your account has been created.' });
     } catch (error: any) {
-      console.error(error);
+      let description = 'An unexpected error occurred.';
+      switch (error.code) {
+        case 'auth/user-not-found':
+          description = 'No account found with this email. Please sign up.';
+          break;
+        case 'auth/wrong-password':
+          description = 'Incorrect password. Please try again.';
+          break;
+        case 'auth/email-already-in-use':
+          description = 'This email is already in use. Please sign in.';
+          break;
+        case 'auth/weak-password':
+          description = 'The password is too weak. Please choose a stronger password.';
+          break;
+        case 'auth/invalid-credential':
+           description = 'Invalid credentials. Please check your email and password.';
+           break;
+        default:
+          description = error.message;
+          break;
+      }
       toast({
         variant: 'destructive',
         title: 'Authentication Failed',
-        description: error.message || 'An unexpected error occurred.',
+        description: description,
       });
+    } finally {
       setIsSubmitting(false);
     }
-    // We don't turn off isSubmitting here because we expect a redirect or a listener to handle the UI change.
   };
 
   if (isUserLoading || user) {

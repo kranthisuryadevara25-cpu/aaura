@@ -8,10 +8,12 @@ import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
-import { placeholderImages } from '@/lib/placeholder-images';
+import { temples } from '@/lib/temples';
+import { stories } from '@/lib/stories';
+import { deities } from '@/lib/deities';
 
 export function FeedSidebar({ currentId }: { currentId: string }) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
 
   const mediaQuery = query(
     collection(db, 'media'),
@@ -30,41 +32,70 @@ export function FeedSidebar({ currentId }: { currentId: string }) {
     );
   }
 
-  const upNextFeed = media?.filter((item) => item.id !== currentId);
+  const getText = (field: Record<string, string> | undefined, lang: string) => {
+    if (!field) return "";
+    return field[lang] || field.en || "";
+  };
+
+  const videoItems = (media || []).map(item => ({
+    id: item.id,
+    type: 'video',
+    title: getText(item as any, language) || 'Untitled Video',
+    thumbnail: 'https://picsum.photos/seed/video-placeholder/400/225',
+    href: `/watch/${item.id}`,
+  }));
+
+  const templeItems = temples.map(item => ({
+    id: item.id,
+    type: 'temple',
+    title: getText(item.name, language),
+    thumbnail: item.media.images[0]?.url || 'https://picsum.photos/seed/temple-placeholder/400/225',
+    href: `/temples/${item.slug}`,
+  }));
   
-  const getImageForId = (id: string) => {
-      const images = placeholderImages.filter(p => p.id.startsWith('video'));
-      if (!media) return images[0].imageUrl;
-      // use a simple hash function to get a consistent image for each video id
-      const index = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % images.length;
-      return images[index].imageUrl;
-  }
+  const storyItems = stories.map(item => ({
+    id: item.id,
+    type: 'story',
+    title: getText(item.title, language),
+    thumbnail: item.image?.url || 'https://picsum.photos/seed/story-placeholder/400/225',
+    href: `/stories/${item.slug}`,
+  }));
+
+  const deityItems = deities.map(item => ({
+    id: item.id,
+    type: 'deity',
+    title: getText(item.name, language),
+    thumbnail: item.images[0]?.url || 'https://picsum.photos/seed/deity-placeholder/400/225',
+    href: `/deities/${item.slug}`,
+  }));
+
+  const allItems = [...videoItems, ...templeItems, ...storyItems, ...deityItems]
+    .filter(item => item.id !== currentId)
+    .sort(() => Math.random() - 0.5);
 
   return (
-    <div className="p-4 space-y-4">
-      <h2 className="text-xl font-bold">Up Next</h2>
-      {upNextFeed?.map((item: any) => {
-        const title = item[`title_${language}`] || item.title_en;
-        const authorId = item.userId;
-        
-        return (
-          <Link href={`/watch/${item.id}`} key={item.id} className="flex gap-3 group">
-            <div className="w-40 h-24 relative rounded-lg overflow-hidden shrink-0">
-              <Image
-                src={getImageForId(item.id)}
-                alt={title}
-                fill
-                className="object-cover"
-              />
-            </div>
-            <div>
-              <p className="font-semibold text-sm line-clamp-2 group-hover:text-primary">{title}</p>
-              <p className="text-xs text-muted-foreground mt-1">Creator Name</p>
-              <p className="text-xs text-muted-foreground">{item.views || 0} views</p>
-            </div>
-          </Link>
-        );
-      })}
+    <div className="flex flex-col gap-3 p-4">
+        <h2 className="text-xl font-bold">Up Next</h2>
+        {allItems.map(item => (
+            <Link key={`${item.type}-${item.id}`} href={item.href} className="group">
+              <div className="flex gap-3 hover:bg-secondary/50 p-2 rounded-lg cursor-pointer transition-colors">
+                <div className="relative w-40 h-24 shrink-0">
+                    <Image
+                      src={item.thumbnail}
+                      alt={item.title}
+                      fill
+                      className="w-full h-full object-cover rounded-md"
+                    />
+                </div>
+                <div className="flex flex-col">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-primary">{item.type}</p>
+                  <h3 className="text-sm font-semibold text-foreground group-hover:text-primary line-clamp-2">
+                    {item.title}
+                  </h3>
+                </div>
+              </div>
+            </Link>
+        ))}
     </div>
   );
 }

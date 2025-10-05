@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig, Users, Palmtree, ScrollText, UserSquare, BookHeart, CalendarDays, PartyPopper, Music, MessageCircle } from 'lucide-react';
+import { Home, LibraryBig, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Users, Film, ShoppingBag, Upload, Settings } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navigation() {
@@ -47,7 +47,7 @@ export function Navigation() {
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Temples">
+          <SidebarMenuButton asChild tooltip="Temples & Pilgrimages">
             <Link href="/temples">
               <Palmtree />
               <span>Temples</span>
@@ -63,7 +63,7 @@ export function Navigation() {
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Panchang">
+          <SidebarMenuButton asChild tooltip="Daily Panchang">
             <Link href="/panchang">
               <CalendarDays />
               <span>Panchang</span>
@@ -71,7 +71,7 @@ export function Navigation() {
           </SidebarMenuButton>
         </SidebarMenuItem>
          <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Festivals">
+          <SidebarMenuButton asChild tooltip="Festivals & Events">
             <Link href="/festivals">
               <PartyPopper />
               <span>Festivals</span>
@@ -79,7 +79,7 @@ export function Navigation() {
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton asChild tooltip="Forum">
+          <SidebarMenuButton asChild tooltip="Forum & Q&A">
             <Link href="/forum">
               <MessageCircle />
               <span>Forum</span>
@@ -97,7 +97,7 @@ export function Navigation() {
         <SidebarMenuItem>
           <SidebarMenuButton asChild tooltip="Media">
             <Link href="/media">
-              <Music />
+              <Film />
               <span>Media</span>
             </Link>
           </SidebarMenuButton>
@@ -130,5 +130,3 @@ export function Navigation() {
     </SidebarContent>
   );
 }
-
-    

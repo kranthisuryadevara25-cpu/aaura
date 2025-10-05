@@ -3,6 +3,7 @@ import "./globals.css"
 import { Toaster } from "@/components/ui/toaster"
 import { FirebaseClientProvider } from "@/firebase/client-provider"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { BottomNavigation } from "./components/bottom-navigation"
 
 export const metadata: Metadata = {
   title: "aaura",
@@ -27,7 +28,10 @@ export default function RootLayout({
       <body className="font-body antialiased">
         <FirebaseClientProvider>
           <SidebarProvider>
-            {children}
+            <div className="pb-16 md:pb-0">
+              {children}
+            </div>
+            <BottomNavigation />
           </SidebarProvider>
         </FirebaseClientProvider>
         <Toaster />

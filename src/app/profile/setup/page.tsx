@@ -108,7 +108,6 @@ export default function ProfileSetupPage() {
         await updateProfile(auth.currentUser, { displayName: data.fullName });
         
         const userProfileData = {
-          id: user.uid,
           email: user.email,
           fullName: data.fullName,
           birthDate: formattedBirthDate,
@@ -303,3 +302,4 @@ export default function ProfileSetupPage() {
   );
 }
 
+    

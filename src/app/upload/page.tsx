@@ -108,6 +108,7 @@ export default function UploadPage() {
           thumbnailUrl: placeholderThumbnailUrl,
           uploadDate: serverTimestamp(),
           mediaType: data.mediaType,
+          status: 'pending', // Set status to pending for admin review
           duration: 0,
           language: 'en',
           tags: [data.mediaType],
@@ -116,8 +117,8 @@ export default function UploadPage() {
         });
 
         toast({
-          title: 'Upload Successful!',
-          description: 'Your media has been submitted and is being processed.',
+          title: 'Upload Submitted!',
+          description: 'Your media has been submitted for review.',
         });
         router.push('/media');
       } catch (error) {
@@ -263,7 +264,7 @@ export default function UploadPage() {
                 ) : (
                     <Upload className="mr-2 h-4 w-4" />
                 )}
-                Moderate and Upload
+                Submit for Review
                 </Button>
             </form>
             </Form>
@@ -272,3 +273,5 @@ export default function UploadPage() {
     </main>
   );
 }
+
+    

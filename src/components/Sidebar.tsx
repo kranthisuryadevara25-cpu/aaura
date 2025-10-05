@@ -3,7 +3,7 @@
 import React from "react";
 import { useLanguage } from "@/hooks/use-language";
 import Link from 'next/link';
-import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star } from 'lucide-react';
+import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star, ShieldCheck } from 'lucide-react';
 
 const MENU_ITEMS = [
   { href: "/", label: "home", icon: Home },
@@ -21,6 +21,7 @@ const MENU_ITEMS = [
   { href: "/shop", label: "shop", icon: ShoppingCart },
   { href: "/upload", label: "upload", icon: Upload },
   { href: "/settings", label: "settings", icon: Settings },
+  { href: "/admin/review", label: "admin", icon: ShieldCheck, admin: true },
 ];
 
 
@@ -30,7 +31,7 @@ export const Sidebar = () => {
   return (
     <aside className="w-60 hidden md:block border-r p-4">
       <nav className="space-y-1">
-        {MENU_ITEMS.map(({ href, label, icon: Icon }) => (
+        {MENU_ITEMS.map(({ href, label, icon: Icon, admin }) => (
           <Link
             key={label}
             href={href}
@@ -40,9 +41,12 @@ export const Sidebar = () => {
             <span>
               {t.sidebar[label as keyof typeof t.sidebar] || label.charAt(0).toUpperCase() + label.slice(1)}
             </span>
+            {admin && <span className="ml-auto text-xs bg-accent text-accent-foreground px-2 rounded-full">Admin</span>}
           </Link>
         ))}
       </nav>
     </aside>
   );
 };
+
+    

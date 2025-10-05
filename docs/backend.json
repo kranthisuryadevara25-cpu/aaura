@@ -130,6 +130,11 @@
             "type": "string"
           }
         },
+        "status": {
+            "type": "string",
+            "description": "Moderation status of the media.",
+            "enum": ["pending", "approved", "rejected"]
+        },
         "views": {
             "type": "number",
             "description": "Number of times the media has been viewed."
@@ -145,7 +150,8 @@
         "title_en",
         "uploadDate",
         "mediaUrl",
-        "mediaType"
+        "mediaType",
+        "status"
       ]
     },
     "Channel": {
@@ -771,3 +777,5 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, preferences and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
   }
 }
+
+    

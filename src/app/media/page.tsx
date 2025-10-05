@@ -3,7 +3,7 @@
 
 import { useMemo } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, where } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -30,7 +30,7 @@ export default function MediaPage() {
   const { language, t } = useLanguage();
 
   const mediaQuery = useMemo(() => {
-    return query(collection(db, 'media'));
+    return query(collection(db, 'media'), where('status', '==', 'approved'));
   }, []);
 
   const [media, isLoading] = useCollectionData(mediaQuery, { idField: 'id' });
@@ -106,3 +106,5 @@ export default function MediaPage() {
     </main>
   );
 }
+
+    

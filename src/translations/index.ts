@@ -17,6 +17,7 @@ export const translations = {
       shop: "Shop",
       upload: "Upload",
       settings: "Settings",
+      admin: "Admin Review",
     },
     topnav: {
       searchPlaceholder: "Search temples, stories, rituals...",
@@ -34,6 +35,8 @@ export const translations = {
       viewProcedure: "View Procedure",
       post: "Post",
       addToCart: "Add to Cart",
+      approve: "Approve",
+      reject: "Reject",
     },
     feed: {
       templeCardView: "View Temple",
@@ -164,6 +167,12 @@ export const translations = {
       noComments: "No comments yet. Be the first to reply!",
       commentPlaceholder: "Write a comment...",
     },
+    admin: {
+        reviewTitle: "Content Moderation Queue",
+        reviewDescription: "Review and approve or reject content uploaded by creators.",
+        pending: "Pending",
+        noPending: "No content is currently pending review.",
+    },
     toasts: {
       channelCreatedTitle: "Channel Created!",
       channelCreatedDescription: "Your new channel has been successfully created.",
@@ -193,6 +202,7 @@ export const translations = {
       shop: "షాప్",
       upload: "అప్‌లోడ్",
       settings: "సెట్టింగ్స్",
+      admin: "అడ్మిన్ సమీక్ష",
     },
     topnav: {
       searchPlaceholder: "దేవాలయాలు, కథలు, పూజలు శోధించండి...",
@@ -210,6 +220,8 @@ export const translations = {
       viewProcedure: "విధానం చూడండి",
       post: "పోస్ట్ చేయండి",
       addToCart: "కార్ట్‌కు జోడించండి",
+      approve: "ఆమోదించండి",
+      reject: "తిరస్కరించండి",
     },
     feed: {
       templeCardView: "దేవాలయాన్ని వీక్షించండి",
@@ -346,6 +358,12 @@ export const translations = {
       creationFailedTitle: "సృష్టి విఫలమైంది",
       creationFailedDescription: "మీ ఛానెల్‌ని సృష్టిస్తున్నప్పుడు ఏదో తప్పు జరిగింది. దయచేసి మళ్లీ ప్రయత్నించండి.",
     },
+    admin: {
+        reviewTitle: "కంటెంట్ మోడరేషన్ క్యూ",
+        reviewDescription: "సృష్టికర్తలు అప్‌లోడ్ చేసిన కంటెంట్‌ను సమీక్షించి, ఆమోదించండి లేదా తిరస్కరించండి.",
+        pending: "పెండింగ్‌లో ఉంది",
+        noPending: "ప్రస్తుతం సమీక్ష కోసం ఏ కంటెంట్ పెండింగ్‌లో లేదు.",
+    },
     rightSidebar: {
         trendingFestivals: "ట్రెండింగ్ పండుగలు",
         viewAll: "అన్నీ చూడండి",
@@ -369,6 +387,7 @@ export const translations = {
       shop: "दुकान",
       upload: "अपलोड",
       settings: "सेटिंग्स",
+      admin: "एडमिन समीक्षा",
     },
     topnav: {
       searchPlaceholder: "मंदिर, देवता, कहानियाँ, अनुष्ठान खोजें...",
@@ -386,6 +405,8 @@ export const translations = {
       viewProcedure: "प्रक्रिया देखें",
       post: "पोस्ट करें",
       addToCart: "कार्ट में डालें",
+      approve: "स्वीकृत करें",
+      reject: "अस्वीकार करें",
     },
     feed: {
       templeCardView: "मंदिर देखें",
@@ -522,6 +543,12 @@ export const translations = {
       creationFailedTitle: "निर्माण विफल",
       creationFailedDescription: "आपका चैनल बनाते समय कुछ गलत हो गया। कृपया पुन: प्रयास करें।",
     },
+    admin: {
+        reviewTitle: "सामग्री मॉडरेशन कतार",
+        reviewDescription: "रचनाकारों द्वारा अपलोड की गई सामग्री की समीक्षा करें और उसे स्वीकृत या अस्वीकृत करें।",
+        pending: "लंबित",
+        noPending: "वर्तमान में कोई भी सामग्री समीक्षा के लिए लंबित नहीं है।",
+    },
     rightSidebar: {
         trendingFestivals: "ट्रेंडिंग त्यौहार",
         viewAll: "सभी देखें",
@@ -545,6 +572,7 @@ export const translations = {
       shop: "दुकान",
       upload: "अपलोड करा",
       settings: "सेटिंग्ज",
+      admin: "प्रशासक पुनरावलोकन",
     },
     topnav: { searchPlaceholder: "मंदिरे, कथा, विधी शोधा..." },
     buttons: {
@@ -560,6 +588,8 @@ export const translations = {
       viewProcedure: "प्रक्रिया पहा",
       post: "पोस्ट करा",
       addToCart: "कार्टमध्ये जोडा",
+      approve: "मंजूर करा",
+      reject: "नाकारा",
     },
     feed: {
       templeCardView: "मंदिर पहा",
@@ -693,6 +723,12 @@ export const translations = {
       creationFailedTitle: "निर्मिती अयशस्वी",
       creationFailedDescription: "तुमचा चॅनेल तयार करताना काहीतरी चूक झाली. कृपया पुन्हा प्रयत्न करा.",
     },
+    admin: {
+        reviewTitle: "सामग्री मॉडरेशन रांग",
+        reviewDescription: "निर्मात्यांनी अपलोड केलेल्या सामग्रीचे पुनरावलोकन करा आणि मंजूर करा किंवा नाकारा.",
+        pending: "प्रलंबित",
+        noPending: "सध्या कोणतीही सामग्री पुनरावलोकनासाठी प्रलंबित नाही.",
+    },
     rightSidebar: {
         trendingFestivals: "ट्रेंडिंग सण",
         viewAll: "सर्व पहा",
@@ -716,6 +752,7 @@ export const translations = {
       shop: "கடை",
       upload: "பதிவேற்று",
       settings: "அமைப்புகள்",
+      admin: "நிர்வாகி ஆய்வு",
     },
     topnav: { searchPlaceholder: "கோயில்கள், கதைகள், சடங்குகளைத் தேடுங்கள்..." },
     buttons: {
@@ -731,6 +768,8 @@ export const translations = {
       viewProcedure: "செயல்முறையைக் காண்க",
       post: "பதிவு செய்",
       addToCart: "வண்டியில் சேர்",
+      approve: "ஒப்புதல்",
+      reject: "நிராகரி",
     },
     feed: {
       templeCardView: "கோயிலைக் காண்க",
@@ -751,7 +790,7 @@ export const translations = {
     },
     stories: {
       title: "புராணக் கதைகள்",
-      description: "തലമുറകളെ வடிவமைத்த காலமற்ற காவியங்கள் மற்றும் நாட்டுப்புறக் கதைகளை ஆராயுங்கள்.",
+      description: "തലമുറകളെ வடிவமைத்த കാലാതീതമായ ഇതിഹാസങ്ങളും നാടോടിക്കഥകളും പര്യവേക്ഷണം ചെയ്യുക.",
     },
     storyDetail: {
       summary: "சுருக்கம்",
@@ -864,6 +903,12 @@ export const translations = {
       creationFailedTitle: "உருவாக்கம் தோல்வியடைந்தது",
       creationFailedDescription: "உங்கள் சேனலை உருவாக்கும்போது ஏதோ தவறு ஏற்பட்டது. தயவுசெய்து மீண்டும் முயற்சிக்கவும்.",
     },
+    admin: {
+        reviewTitle: "உள்ளடக்க மதிப்பாய்வு வரிசை",
+        reviewDescription: "உருவாக்குபவர்களால் பதிவேற்றப்பட்ட உள்ளடக்கத்தை மதிப்பாய்வு செய்து, அங்கீகரிக்கவும் அல்லது நிராகரிக்கவும்.",
+        pending: "நிலுவையில் உள்ளது",
+        noPending: "தற்போது மதிப்பாய்வுக்காக எந்த உள்ளடக்கமும் நிலுவையில் இல்லை.",
+    },
     rightSidebar: {
         trendingFestivals: "பிரபலமான திருவிழாக்கள்",
         viewAll: "அனைத்தையும் காட்டு",
@@ -887,6 +932,7 @@ export const translations = {
       shop: "ಅಂಗಡಿ",
       upload: "ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
       settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
+      admin: "ನಿರ್ವಾಹಕ ವಿಮರ್ಶೆ",
     },
     topnav: { searchPlaceholder: "ದೇವಾಲಯಗಳು, ಕಥೆಗಳು, ಆಚರಣೆಗಳನ್ನು ಹುಡುಕಿ..." },
     buttons: {
@@ -902,6 +948,8 @@ export const translations = {
       viewProcedure: "ವಿಧಾನವನ್ನು ವೀಕ್ಷಿಸಿ",
       post: "ಪೋಸ್ಟ್ ಮಾಡಿ",
       addToCart: "ಕಾರ್ಟ್‌ಗೆ ಸೇರಿಸಿ",
+      approve: "ಅನುಮೋದಿಸಿ",
+      reject: "ತಿರಸ್ಕರಿಸಿ",
     },
     feed: {
       templeCardView: "ದೇವಾಲಯವನ್ನು ವೀಕ್ಷಿಸಿ",
@@ -1035,6 +1083,12 @@ export const translations = {
       creationFailedTitle: "ರಚನೆ ವಿಫಲವಾಗಿದೆ",
       creationFailedDescription: "ನಿಮ್ಮ ಚಾನೆಲ್ ರಚಿಸುವಾಗ ಏನೋ ತಪ್ಪಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.",
     },
+    admin: {
+        reviewTitle: "ವಿಷಯ ಮಾಡರೇಶನ್ ಕ್ಯೂ",
+        reviewDescription: "ರಚನೆಕಾರರು ಅಪ್‌ಲೋಡ್ ಮಾಡಿದ ವಿಷಯವನ್ನು ವಿಮರ್ಶಿಸಿ ಮತ್ತು ಅನುಮೋದಿಸಿ ಅಥವಾ ತಿರಸ್ಕರಿಸಿ.",
+        pending: "ಬಾಕಿ ಇದೆ",
+        noPending: "ಪ್ರಸ್ತುತ ಯಾವುದೇ ವಿಷಯ ವಿಮರ್ಶೆಗೆ ಬಾಕಿ ಇಲ್ಲ.",
+    },
     rightSidebar: {
         trendingFestivals: "ಟ್ರೆಂಡಿಂಗ್ ಹಬ್ಬಗಳು",
         viewAll: "ಎಲ್ಲವನ್ನೂ ನೋಡಿ",
@@ -1058,6 +1112,7 @@ export const translations = {
       shop: "দোকান",
       upload: "আপলোড করুন",
       settings: "সেটিংস",
+      admin: "অ্যাডমিন পর্যালোচনা",
     },
     topnav: { searchPlaceholder: "মন্দির, গল্প, আচার-অনুষ্ঠান অনুসন্ধান করুন..." },
     buttons: {
@@ -1073,6 +1128,8 @@ export const translations = {
       viewProcedure: "পদ্ধতি দেখুন",
       post: "পোস্ট করুন",
       addToCart: "কার্টে যোগ করুন",
+      approve: "অনুমোদন করুন",
+      reject: "প্রত্যাখ্যান করুন",
     },
     feed: {
       templeCardView: "মন্দির দেখুন",
@@ -1207,6 +1264,12 @@ export const translations = {
       creationFailedTitle: "নির্মাণ ব্যর্থ হয়েছে",
       creationFailedDescription: "আপনার চ্যানেল তৈরি করার সময় কিছু ভুল হয়েছে। অনুগ্রহ করে আবার চেষ্টা করুন।",
     },
+    admin: {
+        reviewTitle: "বিষয়বস্তু মডারেশন সারি",
+        reviewDescription: "নির্মাতাদের দ্বারা আপলোড করা বিষয়বস্তু পর্যালোচনা করুন এবং অনুমোদন বা প্রত্যাখ্যান করুন।",
+        pending: "বিচারাধীন",
+        noPending: "বর্তমানে পর্যালোচনার জন্য কোনো বিষয়বস্তু বিচারাধীন নেই।",
+    },
     rightSidebar: {
         trendingFestivals: "ট্রেন্ডিং উৎসব",
         viewAll: "সব দেখুন",
@@ -1214,3 +1277,5 @@ export const translations = {
     }
   },
 };
+
+    

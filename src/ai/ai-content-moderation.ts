@@ -2,7 +2,7 @@
 'use server';
 
 /**
- * @fileOverview A content moderation AI agent.
+ * @fileOverview A content moderation AI agent for a spiritual and wellness platform.
  *
  * - moderateContent - A function that handles the content moderation process.
  * - ModerateContentInput - The input type for the moderateContent function.
@@ -16,7 +16,7 @@ const ModerateContentInputSchema = z.object({
   videoDataUri: z
     .string()
     .describe(
-      "A video file, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
+      "A video file, as a data URI. This is not used in the prompt but required by the type."
     ),
   title: z.string().describe('The title of the video.'),
   description: z.string().describe('The description of the video.'),
@@ -25,7 +25,8 @@ export type ModerateContentInput = z.infer<typeof ModerateContentInputSchema>;
 
 const ModerateContentOutputSchema = z.object({
   isAppropriate: z.boolean().describe('Whether or not the content is appropriate for the platform.'),
-  reason: z.string().describe('The reason why the content is not appropriate, if applicable.'),
+  reason: z.string().describe('The reason why the content is not appropriate. This will be shown to the user.'),
+  sentimentScore: z.number().describe('The sentiment score of the content, from 0 (negative) to 100 (positive).'),
 });
 export type ModerateContentOutput = z.infer<typeof ModerateContentOutputSchema>;
 
@@ -37,17 +38,23 @@ const prompt = ai.definePrompt({
   name: 'moderateContentPrompt',
   input: {schema: ModerateContentInputSchema},
   output: {schema: ModerateContentOutputSchema},
-  prompt: `You are an AI content moderator for a spiritual and wellness platform.
+  prompt: `You are an AI content moderator for "Aura," a platform dedicated exclusively to positive religious, spiritual, and wellness content. Your task is to analyze video metadata to ensure it aligns with the platform's core values.
 
-  Your task is to determine if the provided video content is appropriate for the platform.
-  The platform only allows positive, religious, spiritual, and wellness content such as religious videos, yoga tutorials, meditation guides, devotional music, spiritual talks, and uplifting stories. No secular, negative, or non-spiritual content is allowed.
+  **Platform Rules:**
+  1.  **Content Theme:** Must be strictly religious, spiritual, or wellness-focused (e.g., Hindu, Buddhist, Christian teachings, myths, scriptures, pooja rituals, yoga, meditation, positive mantras, uplifting stories).
+  2.  **Positivity Requirement:** Content must be overwhelmingly positive. The sentiment score must be 80 or higher.
+  3.  **Prohibited Content:** Absolutely no secular, political, violent, hateful, negative, or non-spiritual content is allowed.
 
-  Analyze the following information to determine if the content is appropriate:
+  **Your Analysis:**
+  Analyze the provided Title and Description. Based on the rules, determine if the content is appropriate.
 
-  Title: {{{title}}}
-  Description: {{{description}}}
+  - If it violates any rule, set \`isAppropriate\` to \`false\` and provide a clear, concise \`reason\` for the rejection that will be shown to the user.
+  - If it is appropriate, set \`isAppropriate\` to \`true\` and set the \`reason\` to "Content is appropriate.".
+  - Calculate a \`sentimentScore\` from 0 (very negative) to 100 (very positive).
 
-  Based on your analysis, set the isAppropriate output field to true if the content is appropriate, and false otherwise. If the content is not appropriate, provide a reason in the reason output field.
+  **Video Metadata:**
+  - Title: {{{title}}}
+  - Description: {{{description}}}
 
   Respond in JSON format.
   `,
@@ -61,6 +68,13 @@ const moderateContentFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
+    if (output) {
+        // Enforce the 80% positivity rule
+        if (output.sentimentScore < 80) {
+            output.isAppropriate = false;
+            output.reason = `Content does not meet the 80% positivity requirement. Detected sentiment score: ${output.sentimentScore}.`;
+        }
+    }
     return output!;
   }
 );

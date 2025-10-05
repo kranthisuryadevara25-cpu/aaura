@@ -4,12 +4,11 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "User",
       "type": "object",
-      "description": "Represents a user of the Mythalogical app.",
+      "description": "Represents a user of the Aura app.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the user.",
-          "format": "uuid"
+          "description": "Unique identifier for the user (Firebase Auth UID)."
         },
         "email": {
           "type": "string",
@@ -18,7 +17,12 @@
         },
         "displayName": {
           "type": "string",
-          "description": "User's display name."
+          "description": "User's display name or channel name."
+        },
+        "photoURL": {
+          "type": "string",
+          "description": "URL for the user's profile picture.",
+          "format": "uri"
         },
         "zodiacSign": {
           "type": "string",
@@ -37,15 +41,14 @@
       },
       "required": [
         "id",
-        "email",
-        "displayName"
+        "email"
       ]
     },
     "Video": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Video",
       "type": "object",
-      "description": "Represents a video uploaded to the platform.",
+      "description": "Represents a video on the platform.",
       "properties": {
         "id": {
           "type": "string",
@@ -53,7 +56,7 @@
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the User who uploaded the video. (Relationship: User 1:N Video)"
+          "description": "Reference to the User (creator) who uploaded the video."
         },
         "title": {
           "type": "string",
@@ -68,16 +71,9 @@
           "description": "Date and time the video was uploaded.",
           "format": "date-time"
         },
-        "tags": {
-          "type": "array",
-          "description": "Keywords associated with the video, to improve searchability",
-          "items": {
-            "type": "string"
-          }
-        },
         "videoUrl": {
           "type": "string",
-          "description": "URL of the video file.",
+          "description": "URL of the video file in Firebase Storage.",
           "format": "uri"
         },
         "thumbnailUrl": {
@@ -87,156 +83,49 @@
         },
         "category": {
           "type": "string",
-          "description": "Category that the video belongs to."
+          "description": "Category like 'Meditation', 'Yoga', 'Scripture'."
+        },
+        "tags": {
+          "type": "array",
+          "description": "Keywords for search and discovery.",
+          "items": {
+            "type": "string"
+          }
+        },
+        "views": {
+            "type": "number",
+            "description": "Number of times the video has been viewed."
+        },
+        "likes": {
+            "type": "number",
+            "description": "Number of likes the video has received."
+        },
+        "isShortForm": {
+            "type": "boolean",
+            "description": "True if the video is a short-form reel."
         }
       },
       "required": [
         "id",
         "userId",
         "title",
-        "description",
         "uploadDate",
-        "videoUrl",
-        "thumbnailUrl"
-      ]
-    },
-    "Product": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Product",
-      "type": "object",
-      "description": "Represents a product in the spiritual marketplace.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the product."
-        },
-        "name": {
-          "type": "string",
-          "description": "Name of the product."
-        },
-        "description": {
-          "type": "string",
-          "description": "Description of the product."
-        },
-        "imageUrl": {
-          "type": "string",
-          "description": "URL of the product image.",
-          "format": "uri"
-        },
-        "price": {
-          "type": "number",
-          "description": "Price of the product."
-        },
-        "category": {
-          "type": "string",
-          "description": "Category that the product belongs to."
-        },
-        "stockQuantity": {
-          "type": "number",
-          "description": "Amount of available stock."
-        }
-      },
-      "required": [
-        "id",
-        "name",
-        "description",
-        "imageUrl",
-        "price",
-        "stockQuantity"
-      ]
-    },
-    "Order": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Order",
-      "type": "object",
-      "description": "Represents a user order in the spiritual marketplace.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the order."
-        },
-        "userId": {
-          "type": "string",
-          "description": "Reference to the User who placed the order. (Relationship: User 1:N Order)"
-        },
-        "orderDate": {
-          "type": "string",
-          "description": "The date and time the order was placed.",
-          "format": "date-time"
-        },
-        "totalAmount": {
-          "type": "number",
-          "description": "Total amount of the order."
-        },
-        "status": {
-          "type": "string",
-          "description": "Status of the order (e.g., pending, processing, shipped, completed)."
-        },
-        "orderItems": {
-          "type": "array",
-          "description": "A list of items in the order.",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "orderDate",
-        "totalAmount",
-        "status",
-        "orderItems"
-      ]
-    },
-    "OrderItem": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "OrderItem",
-      "type": "object",
-      "description": "Represents an item in an order.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the order item."
-        },
-        "orderId": {
-          "type": "string",
-          "description": "Reference to the Order that includes this item. (Relationship: Order 1:N OrderItem)"
-        },
-        "productId": {
-          "type": "string",
-          "description": "Reference to the Product being ordered. (Relationship: Product 1:N OrderItem)"
-        },
-        "quantity": {
-          "type": "number",
-          "description": "Quantity of the product ordered."
-        },
-        "itemPrice": {
-          "type": "number",
-          "description": "Price of the item at the time of the order."
-        }
-      },
-      "required": [
-        "id",
-        "orderId",
-        "productId",
-        "quantity",
-        "itemPrice"
+        "videoUrl"
       ]
     },
     "Channel": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Channel",
       "type": "object",
-      "description": "Represents a channel on the platform, similar to a YouTube channel, where users can subscribe to creators.",
+      "description": "Represents a creator's channel on the platform.",
       "properties": {
         "id": {
           "type": "string",
-          "description": "Unique identifier for the channel."
+          "description": "Unique identifier for the channel (typically the same as the userId)."
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the User who owns the channel. (Relationship: User 1:N Channel)"
+          "description": "Reference to the User who owns the channel."
         },
         "name": {
           "type": "string",
@@ -248,22 +137,14 @@
         },
         "creationDate": {
           "type": "string",
-          "description": "Date and time the channel was created.",
+          "description": "Date the channel was created.",
           "format": "date-time"
-        },
-        "videoIds": {
-          "type": "array",
-          "description": "References to the Videos in this channel. (Relationship: Channel 1:N Video)",
-          "items": {
-            "type": "string"
-          }
         }
       },
       "required": [
         "id",
         "userId",
         "name",
-        "description",
         "creationDate"
       ]
     },
@@ -279,15 +160,15 @@
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the User who is subscribing. (Relationship: User 1:N Subscription)"
+          "description": "ID of the user who is subscribing."
         },
         "channelId": {
           "type": "string",
-          "description": "Reference to the Channel being subscribed to. (Relationship: Channel 1:N Subscription)"
+          "description": "ID of the channel being subscribed to."
         },
         "subscriptionDate": {
           "type": "string",
-          "description": "Date and time the user subscribed to the channel.",
+          "description": "Date of subscription.",
           "format": "date-time"
         }
       },
@@ -302,7 +183,7 @@
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Horoscope",
       "type": "object",
-      "description": "Represents a daily or weekly horoscope generated for a user.",
+      "description": "Represents a daily horoscope generated for a user.",
       "properties": {
         "id": {
           "type": "string",
@@ -310,7 +191,7 @@
         },
         "userId": {
           "type": "string",
-          "description": "Reference to the User for whom the horoscope is generated. (Relationship: User 1:N Horoscope)"
+          "description": "Reference to the User for whom the horoscope is generated."
         },
         "date": {
           "type": "string",
@@ -337,8 +218,7 @@
   },
   "auth": {
     "providers": [
-      "password",
-      "anonymous"
+      "password"
     ]
   },
   "firestore": {
@@ -350,53 +230,37 @@
           "schema": {
             "$ref": "#/backend/entities/User"
           },
-          "description": "Stores user profiles.  User documents are only accessible by the respective user or admins.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user, obtained from Firebase Auth."
-            }
-          ]
+          "description": "Stores user profiles."
         }
       },
       {
-        "path": "/users/{userId}/videos/{videoId}",
+        "path": "/videos/{videoId}",
         "definition": {
           "entityName": "Video",
           "schema": {
             "$ref": "#/backend/entities/Video"
           },
-          "description": "Stores videos uploaded by users. Ensures that the userId matches the authenticated user. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user who uploaded the video."
-            },
-            {
-              "name": "videoId",
-              "description": "The unique ID of the video."
-            }
-          ]
+          "description": "Stores all videos on the platform."
         }
       },
       {
-        "path": "/users/{userId}/channels/{channelId}",
+        "path": "/channels/{channelId}",
         "definition": {
           "entityName": "Channel",
           "schema": {
             "$ref": "#/backend/entities/Channel"
           },
-          "description": "Stores channels created by users. Ensures that the userId matches the authenticated user. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user who owns the channel."
+          "description": "Stores all channels on the platform."
+        }
+      },
+      {
+        "path": "/users/{userId}/subscriptions/{channelId}",
+        "definition": {
+            "entityName": "Subscription",
+            "schema": {
+                "$ref": "#/backend/entities/Subscription"
             },
-            {
-              "name": "channelId",
-              "description": "The unique ID of the channel."
-            }
-          ]
+            "description": "Stores user subscriptions within a sub-collection of the user's document."
         }
       },
       {
@@ -406,92 +270,10 @@
           "schema": {
             "$ref": "#/backend/entities/Horoscope"
           },
-          "description": "Stores horoscopes generated for users. Ensures that the userId matches the authenticated user. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user for whom the horoscope is generated."
-            },
-            {
-              "name": "horoscopeId",
-              "description": "The unique ID of the horoscope."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/users/{userId}/orders/{orderId}",
-        "definition": {
-          "entityName": "Order",
-          "schema": {
-            "$ref": "#/backend/entities/Order"
-          },
-          "description": "Stores orders placed by users. Ensures that the userId matches the authenticated user. Includes denormalized 'userId' for authorization independence.",
-          "params": [
-            {
-              "name": "userId",
-              "description": "The unique ID of the user who placed the order."
-            },
-            {
-              "name": "orderId",
-              "description": "The unique ID of the order."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/orders/{orderId}/orderItems/{orderItemId}",
-        "definition": {
-          "entityName": "OrderItem",
-          "schema": {
-            "$ref": "#/backend/entities/OrderItem"
-          },
-          "description": "Stores order items associated with orders. Ensures that the orderId matches a valid order. Includes denormalized 'orderId' for authorization independence.",
-          "params": [
-            {
-              "name": "orderId",
-              "description": "The unique ID of the order."
-            },
-            {
-              "name": "orderItemId",
-              "description": "The unique ID of the order item."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/products/{productId}",
-        "definition": {
-          "entityName": "Product",
-          "schema": {
-            "$ref": "#/backend/entities/Product"
-          },
-          "description": "Stores product information for the spiritual marketplace. Products are globally accessible.",
-          "params": [
-            {
-              "name": "productId",
-              "description": "The unique ID of the product."
-            }
-          ]
-        }
-      },
-      {
-        "path": "/subscriptions/{subscriptionId}",
-        "definition": {
-          "entityName": "Subscription",
-          "schema": {
-            "$ref": "#/backend/entities/Subscription"
-          },
-          "description": "Stores user subscriptions to channels. Requires validation of user and channel existence.  Top-level collection to simplify queries.",
-          "params": [
-            {
-              "name": "subscriptionId",
-              "description": "The unique ID of the subscription."
-            }
-          ]
+          "description": "Stores horoscopes generated for users."
         }
       }
     ],
-    "reasoning": "The Firestore data structure is designed to support a content-focused platform for religious, spiritual, and wellness content. It prioritizes authorization independence and security. User-owned data (videos, channels, horoscopes, and orders) are stored under the `/users/{userId}` path to simplify ownership-based security rules. The `products` collection is global since products are not user-specific. Subscriptions are stored under a top-level `subscriptions` collection. All document IDs are auto-generated to prevent ID conflicts and unauthorized access by predicting IDs. The design aims to ensure that all documents within a collection have the same security requirements to simplify rules."
+    "reasoning": "The data model is designed for a content platform. Videos and Channels are in top-level collections for easy querying and discovery. User-specific data like subscriptions and horoscopes are nested under the user's document. This structure supports features like public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
   }
 }

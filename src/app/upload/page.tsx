@@ -16,7 +16,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAuth, useFirestore, useUser } from '@/firebase';
+import { useFirestore, useUser } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { Loader2, Upload } from 'lucide-react';
@@ -65,9 +65,9 @@ export default function UploadPage() {
         const videoFile = data.video[0];
         const videoDataUri = await toBase64(videoFile);
         
-        // Moderate content
+        // Moderate content using the enhanced AI flow
         const moderationResult = await moderateContent({
-          videoDataUri,
+          videoDataUri, // While not used by the prompt logic, it's part of the input type
           title: data.title,
           description: data.description,
         });
@@ -77,15 +77,15 @@ export default function UploadPage() {
             variant: 'destructive',
             title: 'Content Moderation Failed',
             description: moderationResult.reason,
+            duration: 9000,
           });
           return;
         }
 
-        // For this example, we'll use a placeholder for the video and thumbnail URLs.
-        // In a real app, you would upload the file to a service like Firebase Storage
-        // and get the URLs from there.
-        const placeholderVideoUrl = 'https://placehold.co/600x400.mp4?text=Video';
-        const placeholderThumbnailUrl = 'https://placehold.co/600x400?text=Thumbnail';
+        // In a real app, you would upload to a service like Firebase Storage.
+        // For now, we use placeholders.
+        const placeholderVideoUrl = 'https://placehold.co/600x400.mp4?text=Video+Processing';
+        const placeholderThumbnailUrl = 'https://picsum.photos/seed/spirit/600/400';
         
         const videosCollection = collection(firestore, 'videos');
         await addDocumentNonBlocking(videosCollection, {
@@ -96,11 +96,13 @@ export default function UploadPage() {
           thumbnailUrl: placeholderThumbnailUrl,
           uploadDate: serverTimestamp(),
           category: 'Spiritual',
+          likes: 0,
+          views: 0,
         });
 
         toast({
           title: 'Upload Successful!',
-          description: 'Your video has been added.',
+          description: 'Your video has been submitted and is being processed.',
         });
         router.push('/');
       } catch (error) {
@@ -121,7 +123,7 @@ export default function UploadPage() {
         <Card className="w-full max-w-2xl">
           <CardHeader>
             <CardTitle>Upload a Video</CardTitle>
-            <CardDescription>Share your spiritual and mythological videos with the community.</CardDescription>
+            <CardDescription>Share your spiritual, religious, and wellness videos with the community. All content must be positive and uplifting.</CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
@@ -133,7 +135,7 @@ export default function UploadPage() {
                     <FormItem>
                       <FormLabel>Title</FormLabel>
                       <FormControl>
-                        <Input placeholder="E.g., The Story of Ganesha" {...field} />
+                        <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -146,7 +148,7 @@ export default function UploadPage() {
                     <FormItem>
                       <FormLabel>Description</FormLabel>
                       <FormControl>
-                        <Textarea placeholder="A short summary of your video" {...field} />
+                        <Textarea placeholder="A short summary of your video's positive message" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -171,7 +173,7 @@ export default function UploadPage() {
                   ) : (
                     <Upload className="mr-2 h-4 w-4" />
                   )}
-                  Upload and Submit
+                  Moderate and Upload
                 </Button>
               </form>
             </Form>

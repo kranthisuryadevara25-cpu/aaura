@@ -46,7 +46,7 @@ export const useFeed = (pageSize = 10) => {
         if(data.description) description.en = data.description; // Fallback
 
         return {
-          id: d.id,
+          id: `video-${d.id}`,
           kind: "video",
           title,
           description,
@@ -59,7 +59,7 @@ export const useFeed = (pageSize = 10) => {
 
       // 2) Map mock temples/stories/deities into FeedItem format
       const templeItems: FeedItem[] = temples.map((t) => ({
-        id: t.id,
+        id: `temple-${t.id}`,
         kind: "temple",
         title: t.name,
         description: { en: `${t.location.city}, ${t.location.state}` }, // Simple description
@@ -68,7 +68,7 @@ export const useFeed = (pageSize = 10) => {
       }));
 
       const storyItems: FeedItem[] = stories.map((s) => ({
-        id: s.id,
+        id: `story-${s.id}`,
         kind: "story",
         title: s.title,
         description: s.summary,
@@ -77,7 +77,7 @@ export const useFeed = (pageSize = 10) => {
       }));
 
       const deityItems: FeedItem[] = deities.map((d) => ({
-        id: d.id,
+        id: `deity-${d.id}`,
         kind: "deity",
         title: d.name,
         description: d.description,

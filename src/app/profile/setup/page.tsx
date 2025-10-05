@@ -170,7 +170,7 @@ export default function ProfileSetupPage() {
                               />
                             </PopoverContent>
                           </Popover>
-                           <FormDescription>This helps us determine your birth sign.</FormDescription>
+                           <FormDescription>Your birth date is used to calculate your zodiac sign. Please use YYYY-MM-DD format.</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}

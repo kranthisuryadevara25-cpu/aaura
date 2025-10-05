@@ -1,8 +1,6 @@
 
-'use client';
-
-import { useParams, notFound } from 'next/navigation';
-import { getTempleBySlug } from '@/lib/temples';
+import { notFound } from 'next/navigation';
+import { getTempleBySlug, temples } from '@/lib/temples';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
@@ -11,34 +9,77 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Bookmark } from 'lucide-react';
-import { useLanguage } from '@/hooks/use-language';
+import { translations } from '@/translations';
 
-export default function TempleDetailPage() {
-  const params = useParams();
-  const slug = params.slug as string;
+// Generate static pages for all temples at build time
+export function generateStaticParams() {
+  return temples.map((temple) => ({
+    slug: temple.slug,
+  }));
+}
+
+// Helper to get text based on a "language" - for server components, we'd get lang from params or headers
+// For this static generation example, we will default to English ('en')
+const getText = (field: { [key: string]: string } | undefined, lang: string = 'en') => {
+    if (!field) return "";
+    return field[lang] || field.en || Object.values(field)[0] || "";
+};
+
+export default function TempleDetailPage({ params }: { params: { slug: string } }) {
+  const { slug } = params;
   const temple = getTempleBySlug(slug);
-  const { language, t } = useLanguage();
 
   if (!temple) {
     notFound();
   }
 
-  const name = temple.name[language] || temple.name.en;
-  const deityName = temple.deity.name[language] || temple.deity.name.en;
-  const mythologicalImportance = temple.importance.mythological[language] || temple.importance.mythological.en;
-  const historicalImportance = temple.importance.historical[language] || temple.importance.historical.en;
-  const festivals = temple.visitingInfo.festivals[language] || temple.visitingInfo.festivals.en;
-  const timings = temple.visitingInfo.timings[language] || temple.visitingInfo.timings.en;
-  const dressCode = temple.visitingInfo.dressCode[language] || temple.visitingInfo.dressCode.en;
-  const poojaGuidelines = temple.visitingInfo.poojaGuidelines[language] || temple.visitingInfo.poojaGuidelines.en;
-  const accommodation = temple.nearbyInfo.accommodation[language] || temple.nearbyInfo.accommodation.en;
-  const food = temple.nearbyInfo.food[language] || temple.nearbyInfo.food.en;
-  const transport = temple.nearbyInfo.transport[language] || temple.nearbyInfo.transport.en;
-  const placesToVisit = temple.nearbyInfo.placesToVisit[language] || temple.nearbyInfo.placesToVisit.en;
+  // We'll use 'en' as the default language for this server-rendered page.
+  // In a more dynamic app, this could come from user preference or headers.
+  const language = 'en';
+  const t = translations[language];
+
+  const name = getText(temple.name, language);
+  const deityName = getText(temple.deity.name, language);
+  const mythologicalImportance = getText(temple.importance.mythological, language);
+  const historicalImportance = getText(temple.importance.historical, language);
+  const festivals = getText(temple.visitingInfo.festivals, language);
+  const timings = getText(temple.visitingInfo.timings, language);
+  const dressCode = getText(temple.visitingInfo.dressCode, language);
+  const poojaGuidelines = getText(temple.visitingInfo.poojaGuidelines, language);
+  const accommodation = getText(temple.nearbyInfo.accommodation, language);
+  const food = getText(temple.nearbyInfo.food, language);
+  const transport = getText(temple.nearbyInfo.transport, language);
+  const placesToVisit = getText(temple.nearbyInfo.placesToVisit, language);
+  
+  const templeJsonLd = {
+      '@context': 'https://schema.org',
+      '@type': 'TouristAttraction',
+      name: name,
+      description: mythologicalImportance,
+      image: temple.media.images.map(img => img.url),
+      address: {
+        '@type': 'PostalAddress',
+        streetAddress: temple.location.address,
+        addressLocality: temple.location.city,
+        addressRegion: temple.location.state,
+        postalCode: temple.location.pincode,
+        addressCountry: 'IN'
+      },
+      geo: {
+        '@type': 'GeoCoordinates',
+        latitude: temple.location.geo.lat,
+        longitude: temple.location.geo.lng
+      }
+  };
 
 
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(templeJsonLd) }}
+        />
+
         {/* Header Section */}
         <div className="text-center mb-8">
             <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
@@ -65,6 +106,7 @@ export default function TempleDetailPage() {
                             alt={`${name} image ${index + 1}`}
                             data-ai-hint={image.hint}
                             fill
+                            priority={index === 0} // Prioritize loading the first image
                             className="object-cover"
                         />
                     </div>

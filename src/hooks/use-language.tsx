@@ -20,35 +20,44 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const [language, setLanguageState] = useState(i18n.language);
+  const [language, setLanguageState] = useState(i18n.language.split('-')[0]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Path to the user's language preference document
   const preferenceRef = user && firestore ? doc(firestore, `users/${user.uid}/preferences/default`) : null;
   const { data: preferenceData, isLoading: isPreferenceLoading } = useDoc(preferenceRef);
 
+  // Effect to initialize language from Firestore or browser settings
   useEffect(() => {
+    // Only proceed when the preference data has loaded
     if (!isPreferenceLoading) {
       const savedLanguage = preferenceData?.language;
-      const initialLang = savedLanguage || i18n.language.split('-')[0];
-      
-      if (initialLang !== i18n.language) {
-        i18n.changeLanguage(initialLang);
+      const browserLanguage = i18n.language.split('-')[0];
+      const initialLang = savedLanguage || browserLanguage;
+
+      // Only change language if it's different from the current state
+      if (initialLang !== language) {
+        i18n.changeLanguage(initialLang).then(() => {
+          setLanguageState(initialLang);
+        });
       }
-      setLanguageState(initialLang);
       setIsLoading(false);
     }
-  }, [isPreferenceLoading, preferenceData, i18n]);
+  }, [isPreferenceLoading, preferenceData, i18n, language]);
 
   const setLanguage = useCallback((lang: string) => {
+    if (lang === language) return; // Prevent updates if language is the same
+
     setIsLoading(true);
     i18n.changeLanguage(lang).then(() => {
       setLanguageState(lang);
       setIsLoading(false);
+      // Persist to Firestore if user is logged in
       if (user && firestore && preferenceRef) {
         setDocumentNonBlocking(preferenceRef, { language: lang }, { merge: true });
       }
     });
-  }, [i18n, user, firestore, preferenceRef]);
+  }, [i18n, user, firestore, preferenceRef, language]);
   
   const value = { language, setLanguage, isLoading };
 

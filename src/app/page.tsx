@@ -12,6 +12,9 @@ import { Loader2 } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { Navigation } from "@/app/components/navigation";
 import { Dashboard } from '@/app/components/dashboard';
+import { RightSidebar } from '@/app/components/right-sidebar';
+import { Feed } from '@/app/components/feed';
+
 
 function LoggedInView() {
   const { user } = useUser();
@@ -47,9 +50,14 @@ function LoggedInView() {
             <Sidebar>
               <Navigation />
             </Sidebar>
-            <SidebarInset>
-              <Dashboard />
-            </SidebarInset>
+            <main className="flex-1 grid grid-cols-12">
+                <div className="col-span-12 lg:col-span-8 xl:col-span-9 p-4">
+                    <Feed />
+                </div>
+                <div className="hidden lg:block lg:col-span-4 xl:col-span-3 border-l">
+                    <RightSidebar />
+                </div>
+            </main>
           </div>
         </div>
     </SidebarProvider>

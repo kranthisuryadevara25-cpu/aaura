@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';

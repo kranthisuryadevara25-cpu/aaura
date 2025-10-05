@@ -3,7 +3,7 @@
 import { useMemo } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, limit, where, orderBy } from 'firebase/firestore';
-import { Loader2, Youtube, Clapperboard, Sparkles } from 'lucide-react';
+import { Loader2, Youtube, Sparkles, Clapperboard } from 'lucide-react';
 import { VideoCard } from '@/components/cards/video-card';
 import { DeityCard } from '@/components/cards/deity-card';
 import { useLanguage } from '@/hooks/use-language';
@@ -53,18 +53,18 @@ export function Dashboard() {
     return (
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
             <div className="space-y-12">
-                {/* Videos Section - Single Column Feed */}
-                {videos && videos.length > 0 && (
-                     <div>
+                {/* Deities Section - Horizontal Cards */}
+                {deities && deities.length > 0 && (
+                    <div>
                         <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
-                           <Youtube className="text-primary" /> For You
+                           <Sparkles className="text-primary" /> Discover Deities
                         </h2>
-                        <div className="grid grid-cols-1 gap-y-8">
-                            {videos.map(video => <VideoCard key={video.id} video={video} />)}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            {deities.map(deity => <DeityCard key={deity.id} deity={deity as Deity & {id: string}} />)}
                         </div>
                     </div>
                 )}
-               
+                
                 {/* Shorts Section - Remains horizontal scroll */}
                 {shorts && shorts.length > 0 && (
                     <div>
@@ -77,14 +77,14 @@ export function Dashboard() {
                     </div>
                 )}
 
-                 {/* Deities Section - Horizontal Cards */}
-                {deities && deities.length > 0 && (
-                    <div>
+                {/* Videos Section - Single Column Feed */}
+                {videos && videos.length > 0 && (
+                     <div>
                         <h2 className="text-2xl font-bold tracking-tight text-foreground mb-4 flex items-center gap-2">
-                           <Sparkles className="text-primary" /> Discover Deities
+                           <Youtube className="text-primary" /> For You
                         </h2>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                            {deities.map(deity => <DeityCard key={deity.id} deity={deity as Deity & {id: string}} />)}
+                        <div className="grid grid-cols-1 gap-y-8">
+                            {videos.map(video => <VideoCard key={video.id} video={video} />)}
                         </div>
                     </div>
                 )}

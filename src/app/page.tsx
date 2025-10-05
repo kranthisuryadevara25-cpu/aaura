@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Sidebar } from "@/components/Sidebar";
 import { TopNav } from "@/components/TopNav";
 import { RightSidebar } from "@/app/components/right-sidebar";
-import { Feed } from "./components/feed";
+import { Dashboard } from "./components/dashboard";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -15,7 +15,7 @@ export default function Page() {
       <div className="flex">
         <Sidebar />
         <main className="flex-1">
-          <Feed searchQuery={searchQuery} />
+          <Dashboard />
         </main>
         <aside className="hidden xl:block w-80 border-l p-4 shrink-0">
             <RightSidebar />

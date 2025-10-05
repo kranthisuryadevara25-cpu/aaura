@@ -35,23 +35,25 @@ export function VideoCard({ video }: { video: any }) {
 
     return (
        <Link href={`/watch/${video.id}`} className="group block">
-            <div className="aspect-video relative mb-4 rounded-lg overflow-hidden">
-                <Image
-                    src={video.thumbnailUrl || 'https://picsum.photos/seed/video-placeholder/800/450'}
-                    alt={title}
-                    fill
-                    className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
-                />
-            </div>
-            <div className="flex gap-4">
-                 {video.userId && <AuthorInfo userId={video.userId} />}
+            <div className="flex flex-col sm:flex-row gap-4">
+                 <div className="w-full sm:w-80 sm:shrink-0">
+                    <div className="aspect-video relative rounded-lg overflow-hidden">
+                        <Image
+                            src={video.thumbnailUrl || 'https://picsum.photos/seed/video-placeholder/800/450'}
+                            alt={title}
+                            fill
+                            className="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105"
+                        />
+                    </div>
+                </div>
                  <div className="flex-1">
-                    <h3 className="text-lg font-bold leading-tight line-clamp-2 text-foreground mb-1">{title}</h3>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <h3 className="text-lg font-bold leading-tight line-clamp-2 text-foreground mb-2">{title}</h3>
+                    <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
                         <span>{views.toLocaleString()} views</span>
                         &bull;
                         <span>{createdAt ? formatDistanceToNow(createdAt, { addSuffix: true }) : 'New'}</span>
                     </div>
+                    {video.userId && <AuthorInfo userId={video.userId} />}
                  </div>
             </div>
        </Link>

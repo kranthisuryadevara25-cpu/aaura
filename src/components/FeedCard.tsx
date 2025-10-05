@@ -58,7 +58,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
       <div className="aspect-video relative mb-3">
         <Image src={item.thumbnail || "/placeholder.jpg"} className="w-full h-full object-cover rounded-lg" alt={getText(item.title)} fill />
         <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-          {item.meta?.duration ? `${Math.round(item.meta.duration / 60)}:${String(item.meta.duration % 60).padStart(2, '0')}` : item.kind.toUpperCase()}
+          {item.meta?.duration ? `${Math.floor(item.meta.duration / 60)}:${String(item.meta.duration % 60).padStart(2, '0')}` : item.kind.toUpperCase()}
         </span>
       </div>
 

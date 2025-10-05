@@ -12,8 +12,8 @@ import { useLanguage } from '@/hooks/use-language';
 export function DeityCard({ deity }: { deity: Deity & { id: string } }) {
   const { language, t } = useLanguage();
   
-  const name = deity.name[language] || deity.name.en;
-  const description = deity.description[language] || deity.description.en;
+  const name = (deity.name as any)[language] || deity.name.en;
+  const description = (deity.description as any)[language] || deity.description.en;
 
   return (
     <Card key={deity.id} className="flex flex-col overflow-hidden group bg-card border-border hover:border-primary/50 transition-colors duration-300">

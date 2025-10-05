@@ -1,19 +1,45 @@
+
 "use client";
 import React from "react";
 import { useLanguage } from "@/hooks/use-language";
+import Link from 'next/link';
+import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle } from 'lucide-react';
 
-const MENU = ["home","deities","stories","characters","temples","rituals","panchang","festivals","forum","channels","media","shop","upload","settings"];
+const MENU_ITEMS = [
+  { href: "/foryou", label: "home", icon: Home },
+  { href: "/deities", label: "deities", icon: Sparkles },
+  { href: "/stories", label: "stories", icon: ScrollText },
+  { href: "/characters", label: "characters", icon: UserSquare },
+  { href: "/temples", label: "temples", icon: Palmtree },
+  { href: "/rituals", label: "rituals", icon: BookHeart },
+  { href: "/panchang", label: "panchang", icon: CalendarDays },
+  { href: "/festivals", label: "festivals", icon: PartyPopper },
+  { href: "/forum", label: "forum", icon: MessageCircle },
+  { href: "/channels", label: "channels", icon: PlusCircle },
+  { href: "/media", label: "media", icon: Film },
+  { href: "/shop", label: "shop", icon: ShoppingCart },
+  { href: "/upload", label: "upload", icon: Upload },
+  { href: "/settings", label: "settings", icon: Settings },
+];
+
 
 export const Sidebar = () => {
   const { t } = useLanguage();
 
   return (
     <aside className="w-60 hidden md:block border-r p-4">
-      <nav className="space-y-2">
-        {MENU.map((m) => (
-          <div key={m} className="py-2 px-3 rounded hover:bg-secondary cursor-pointer">
-            {t.sidebar[m as keyof typeof t.sidebar] || m.charAt(0).toUpperCase() + m.slice(1)}
-          </div>
+      <nav className="space-y-1">
+        {MENU_ITEMS.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={label}
+            href={href}
+            className="flex items-center gap-3 py-2 px-3 rounded-md text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <Icon className="h-5 w-5" />
+            <span>
+              {t.sidebar[label as keyof typeof t.sidebar] || label.charAt(0).toUpperCase() + label.slice(1)}
+            </span>
+          </Link>
         ))}
       </nav>
     </aside>

@@ -2,7 +2,7 @@
 export const translations = {
   en: {
     sidebar: {
-      home: "Home",
+      home: "For You",
       deities: "Deities",
       stories: "Stories",
       characters: "Characters",
@@ -166,7 +166,7 @@ export const translations = {
   },
   te: {
     sidebar: {
-      home: "హోమ్",
+      home: "మీ కోసం",
       deities: "దేవతలు",
       stories: "కథలు",
       characters: "పాత్రలు",
@@ -330,7 +330,7 @@ export const translations = {
   },
   hi: {
     sidebar: {
-      home: "होम",
+      home: "आपके लिए",
       deities: "देवता",
       stories: "कहानियाँ",
       characters: "चरित्र",
@@ -494,7 +494,7 @@ export const translations = {
   },
   mr: {
     sidebar: {
-      home: "होम",
+      home: "तुमच्यासाठी",
       deities: "देवता",
       stories: "कथा",
       characters: "पात्रे",
@@ -653,7 +653,7 @@ export const translations = {
   },
   ta: {
     sidebar: {
-      home: "முகப்பு",
+      home: "உங்களுக்காக",
       deities: "தெய்வங்கள்",
       stories: "கதைகள்",
       characters: "பாத்திரங்கள்",
@@ -812,7 +812,7 @@ export const translations = {
   },
   kn: {
     sidebar: {
-      home: "ಮುಖಪುಟ",
+      home: "ನಿಮಗಾಗಿ",
       deities: "ದೇವತೆಗಳು",
       stories: "ಕಥೆಗಳು",
       characters: "ಪಾತ್ರಗಳು",
@@ -971,7 +971,7 @@ export const translations = {
   },
   bn: {
     sidebar: {
-      home: "হোম",
+      home: "আপনার জন্য",
       deities: "দেবদেবী",
       stories: "গল্প",
       characters: "চরিত্র",

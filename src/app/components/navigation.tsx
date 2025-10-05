@@ -7,7 +7,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
 } from '@/components/ui/sidebar';
-import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload } from 'lucide-react';
+import { Home, Video, Images, Sparkles, ShoppingBag, Settings, Upload, LibraryBig } from 'lucide-react';
 import Link from 'next/link';
 
 export function Navigation() {
@@ -19,6 +19,14 @@ export function Navigation() {
             <Link href="/">
               <Home />
               <span>Home</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+         <SidebarMenuItem>
+          <SidebarMenuButton asChild tooltip="Deities">
+            <Link href="/deities">
+              <LibraryBig />
+              <span>Deities</span>
             </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>

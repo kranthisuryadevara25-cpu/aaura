@@ -214,6 +214,62 @@
         "zodiacSign",
         "text"
       ]
+    },
+    "Deity": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Deity",
+      "type": "object",
+      "description": "Represents a deity in the Hindu pantheon.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the deity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the deity."
+        },
+        "description": {
+          "type": "string",
+          "description": "A brief description of the deity."
+        },
+        "images": {
+          "type": "array",
+          "description": "A list of image URLs for the deity.",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "mantras": {
+          "type": "array",
+          "description": "A list of mantras associated with the deity.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "sanskrit": {"type": "string"},
+              "translation": {"type": "string"}
+            }
+          }
+        },
+        "stotras": {
+          "type": "array",
+          "description": "A list of stotras (hymns) for the deity.",
+           "items": {
+            "type": "object",
+            "properties": {
+              "title": {"type": "string"},
+              "sanskrit": {"type": "string"},
+              "translation": {"type": "string"}
+            }
+          }
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description"
+      ]
     }
   },
   "auth": {
@@ -272,8 +328,18 @@
           },
           "description": "Stores horoscopes generated for users."
         }
+      },
+      {
+        "path": "/deities/{deityId}",
+        "definition": {
+          "entityName": "Deity",
+          "schema": {
+            "$ref": "#/backend/entities/Deity"
+          },
+          "description": "Stores information about Hindu deities."
+        }
       }
     ],
-    "reasoning": "The data model is designed for a content platform. Videos and Channels are in top-level collections for easy querying and discovery. User-specific data like subscriptions and horoscopes are nested under the user's document. This structure supports features like public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform. Videos, Channels and Deities are in top-level collections for easy querying and discovery. User-specific data like subscriptions and horoscopes are nested under the user's document. This structure supports features like public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
   }
 }

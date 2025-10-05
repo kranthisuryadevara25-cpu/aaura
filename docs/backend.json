@@ -66,6 +66,17 @@
         "email"
       ]
     },
+    "Preference": {
+      "title": "Preference",
+      "type": "object",
+      "description": "Stores user-specific preferences.",
+      "properties": {
+        "language": {
+          "type": "string",
+          "description": "The user's preferred language code (e.g., 'en', 'hi')."
+        }
+      }
+    },
     "Media": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Media",
@@ -602,6 +613,14 @@
         }
       },
       {
+        "path": "/users/{userId}/preferences/default",
+        "definition": {
+          "entityName": "Preference",
+          "schema": { "$ref": "#/entities/Preference" },
+          "description": "Stores user preferences, using a singleton document 'default'."
+        }
+      },
+      {
         "path": "/users/{userId}/bookmarks/{bookmarkId}",
         "definition": {
           "entityName": "Bookmark",
@@ -738,6 +757,6 @@
           }
       }
     ],
-    "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, preferences and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
   }
 }

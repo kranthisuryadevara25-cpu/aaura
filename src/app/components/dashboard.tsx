@@ -8,13 +8,33 @@ import { Loader2, Youtube, Clapperboard, Sparkles } from 'lucide-react';
 import { VideoCard } from './cards/video-card';
 import { ShortCard } from './cards/short-card';
 import { DeityCard } from './cards/deity-card';
+import { useLanguage } from '@/hooks/use-language';
 
 export function Dashboard() {
     const firestore = useFirestore();
     const { user } = useUser();
+    const { language } = useLanguage();
 
-    const videosQuery = useMemo(() => firestore ? query(collection(firestore, 'media'), where('mediaType', 'in', ['video', 'pravachan']), limit(8)) : null, [firestore]);
-    const shortsQuery = useMemo(() => firestore ? query(collection(firestore, 'media'), where('mediaType', '==', 'short'), limit(6)) : null, [firestore]);
+    const videosQuery = useMemo(() => {
+        if (!firestore) return null;
+        return query(
+            collection(firestore, 'media'), 
+            where('mediaType', 'in', ['video', 'pravachan']), 
+            where('language', '==', language),
+            limit(8)
+        )
+    }, [firestore, language]);
+    
+    const shortsQuery = useMemo(() => {
+        if (!firestore) return null;
+        return query(
+            collection(firestore, 'media'), 
+            where('mediaType', '==', 'short'), 
+            where('language', '==', language),
+            limit(6)
+        );
+    }, [firestore, language]);
+
     const deitiesQuery = useMemo(() => firestore ? query(collection(firestore, 'deities'), limit(4)) : null, [firestore]);
     
     const { data: videos, isLoading: videosLoading } = useCollection(videosQuery);

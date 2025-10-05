@@ -18,20 +18,18 @@ import { LogOut, Languages, Search, Bell } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/hooks/use-language";
 
 export function Header() {
   const { user } = useUser();
   const auth = useAuth();
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { setLanguage } = useLanguage();
 
   const handleSignOut = () => {
     if (auth) {
       auth.signOut();
     }
-  };
-
-  const changeLanguage = (lng: string) => {
-    i18n.changeLanguage(lng);
   };
   
   return (
@@ -70,8 +68,8 @@ export function Header() {
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>{t('header.select_language')}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => changeLanguage('en')}>English</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => changeLanguage('hi')}>हिन्दी (Hindi)</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage('en')}>English</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => setLanguage('hi')}>हिन्दी (Hindi)</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 

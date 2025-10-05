@@ -28,7 +28,7 @@ import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore, useUser, useDoc, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, useDoc, setDocumentNonBlocking, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/app/components/header';
@@ -37,6 +37,7 @@ import { zodiacSigns } from '@/lib/zodiac';
 import { useMemo, useTransition, useEffect } from 'react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '@/app/components/navigation';
+import { updateProfile } from 'firebase/auth';
 
 const formSchema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
@@ -72,6 +73,7 @@ const getZodiacSign = (date: Date): (typeof zodiacSigns)[number] => {
 export default function SettingsPage() {
   const { toast } = useToast();
   const firestore = useFirestore();
+  const auth = useAuth();
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
 
@@ -110,7 +112,7 @@ export default function SettingsPage() {
   }, [userData, user, form]);
   
   const onSubmit = (data: FormValues) => {
-    if (!user || !firestore) {
+    if (!user || !firestore || !auth?.currentUser) {
       toast({ variant: 'destructive', title: 'Error', description: 'User or database not available.' });
       return;
     }
@@ -119,6 +121,8 @@ export default function SettingsPage() {
       try {
         const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
         
+        await updateProfile(auth.currentUser, { displayName: data.fullName });
+
         const userProfileData = {
           ...data,
           birthDate: formattedBirthDate,

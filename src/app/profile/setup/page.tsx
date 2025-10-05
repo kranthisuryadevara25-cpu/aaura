@@ -21,13 +21,15 @@ import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
+import { useFirestore, useUser, setDocumentNonBlocking, useAuth } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Header } from '@/app/components/header';
 import { zodiacSigns } from '@/lib/zodiac';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
+import { updateProfile } from 'firebase/auth';
+import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope';
 
 const formSchema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
@@ -63,6 +65,7 @@ export default function ProfileSetupPage() {
   const { toast } = useToast();
   const router = useRouter();
   const firestore = useFirestore();
+  const auth = useAuth();
   const { user } = useUser();
   const [isPending, startTransition] = useTransition();
 
@@ -70,11 +73,15 @@ export default function ProfileSetupPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: user?.displayName || '',
+      placeOfBirth: '',
+      timeOfBirth: '',
+      fatherName: '',
+      motherName: '',
     },
   });
   
   const onSubmit = (data: FormValues) => {
-    if (!user || !firestore) {
+    if (!user || !firestore || !auth?.currentUser) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to complete your profile.' });
       return;
     }
@@ -84,15 +91,34 @@ export default function ProfileSetupPage() {
         const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
         const zodiacSign = getZodiacSign(data.birthDate);
         
+        await updateProfile(auth.currentUser, { displayName: data.fullName });
+        
         const userProfileData = {
-          ...data,
+          fullName: data.fullName,
           birthDate: formattedBirthDate,
+          timeOfBirth: data.timeOfBirth,
+          placeOfBirth: data.placeOfBirth,
+          fatherName: data.fatherName,
+          motherName: data.motherName,
           zodiacSign,
           profileComplete: true,
           email: user.email,
         };
         
         setDocumentNonBlocking(doc(firestore, `users/${user.uid}`), userProfileData, { merge: true });
+
+        const horoscopeResult = await generatePersonalizedHoroscope({
+          zodiacSign: zodiacSign,
+          birthDate: formattedBirthDate,
+        });
+        
+        const horoscopeData = {
+          userId: user.uid,
+          date: format(new Date(), 'yyyy-MM-dd'),
+          zodiacSign: zodiacSign,
+          text: horoscopeResult.horoscope,
+        };
+        setDocumentNonBlocking(doc(firestore, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
 
         toast({
           title: 'Profile Complete!',

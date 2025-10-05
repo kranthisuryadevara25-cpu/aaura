@@ -8,15 +8,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { useLanguage } from '@/hooks/use-language';
 
 export function StoryCard({ story }: { story: Story & { id: string } }) {
+    const { language, t } = useLanguage();
+    const title = story.title[language] || story.title.en;
+    const summary = story.summary[language] || story.summary.en;
+
     return (
         <Card className="w-full">
             <CardContent className="p-0">
                 <div className="aspect-video relative">
                     <Image
                         src={story.image.url}
-                        alt={story.title}
+                        alt={title}
                         data-ai-hint={story.image.hint}
                         fill
                         className="object-cover rounded-t-lg"
@@ -25,13 +30,13 @@ export function StoryCard({ story }: { story: Story & { id: string } }) {
             </CardContent>
             <CardHeader>
                 <Badge variant="secondary">Mythological Story</Badge>
-                <CardTitle className="text-xl mt-1">{story.title}</CardTitle>
-                <CardDescription className="line-clamp-2">{story.summary}</CardDescription>
+                <CardTitle className="text-xl mt-1">{title}</CardTitle>
+                <CardDescription className="line-clamp-2">{summary}</CardDescription>
             </CardHeader>
             <CardContent>
                  <Button asChild variant="outline" size="sm">
                     <Link href={`/stories/${story.slug}`}>
-                        Continue Reading <ArrowRight className="ml-2" />
+                        {t.feed.storyContinue} <ArrowRight className="ml-2" />
                     </Link>
                 </Button>
             </CardContent>

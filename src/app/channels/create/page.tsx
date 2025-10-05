@@ -89,7 +89,7 @@ export default function CreateChannelPage() {
           </Sidebar>
           <SidebarInset>
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
-              <Card className="w-full max-w-2xl">
+              <Card className="w-full max-w-2xl bg-card">
                 <CardHeader>
                   <CardTitle>Create Your Channel</CardTitle>
                   <CardDescription>Start sharing your spiritual content with the aaura community.</CardDescription>

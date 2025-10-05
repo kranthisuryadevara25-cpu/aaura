@@ -79,7 +79,7 @@ export default function DeityDetailPage() {
                     </div>
                   ) : dailyContent && (
                     <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto mb-8">
-                        <Card className="bg-transparent border-primary/20">
+                        <Card className="bg-card border-border">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-3 text-primary"><Sunrise /> Today's Relevance</CardTitle>
                             </CardHeader>
@@ -87,7 +87,7 @@ export default function DeityDetailPage() {
                                 <p className="text-foreground/90">{dailyContent.todaysRelevance}</p>
                             </CardContent>
                         </Card>
-                        <Card className="bg-transparent border-primary/20">
+                        <Card className="bg-card border-border">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-3 text-primary"><Sunset /> Tomorrow's Importance</CardTitle>
                             </CardHeader>
@@ -100,7 +100,7 @@ export default function DeityDetailPage() {
 
 
                   <div className="grid md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-                      <Card className="bg-transparent border-primary/20">
+                      <Card className="bg-card border-border">
                           <CardHeader>
                               <CardTitle className="flex items-center gap-3 text-primary"><Music /> Mantras</CardTitle>
                           </CardHeader>
@@ -114,7 +114,7 @@ export default function DeityDetailPage() {
                           </CardContent>
                       </Card>
 
-                      <Card className="bg-transparent border-primary/20">
+                      <Card className="bg-card border-border">
                           <CardHeader>
                               <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> Stotras</CardTitle>
                           </CardHeader>

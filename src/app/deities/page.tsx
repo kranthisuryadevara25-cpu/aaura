@@ -31,7 +31,7 @@ export default function DeitiesPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {deities.map((deity) => (
-                      <Card key={deity.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                      <Card key={deity.id} className="flex flex-col overflow-hidden group bg-card border-border hover:border-primary/50 transition-colors duration-300">
                       <CardContent className="p-0">
                           <div className="aspect-video relative">
                               <Image

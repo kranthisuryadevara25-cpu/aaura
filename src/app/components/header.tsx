@@ -40,7 +40,7 @@ export function Header() {
         <div className="flex items-center gap-2">
           { user && <SidebarTrigger /> }
           <Link href="/" className="flex items-center gap-3 group">
-            <Icons.logo className="h-8 w-8 text-accent transition-transform group-hover:rotate-12" />
+            <Icons.logo className="h-8 w-8 text-primary transition-transform group-hover:rotate-12" />
             <span className="hidden sm:inline-block text-2xl font-headline font-bold text-foreground">
               aaura
             </span>
@@ -104,7 +104,7 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button asChild variant="outline">
+            <Button asChild>
               <Link href="/login">Login</Link>
             </Button>
           )}

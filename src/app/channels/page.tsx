@@ -45,7 +45,7 @@ export default function ChannelsPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {channels.map((channel) => (
-                      <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-transparent border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                      <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-card border-border hover:border-primary/50 transition-colors duration-300">
                       <div className="relative mb-4">
                           <Image
                               src={channel.avatarUrl}

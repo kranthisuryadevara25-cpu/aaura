@@ -112,7 +112,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
-        <Card className="w-full max-w-md">
+        <Card className="w-full max-w-md bg-card">
           <CardHeader>
             <CardTitle>Welcome</CardTitle>
             <CardDescription>Sign in or create an account to continue</CardDescription>
@@ -158,7 +158,7 @@ export default function LoginPage() {
                   </Button>
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     className="w-full"
                     disabled={isSubmitting}
                     onClick={form.handleSubmit((data) => handleAuthAction('signUp', data))}

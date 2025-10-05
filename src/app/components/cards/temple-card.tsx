@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Temple } from '@/lib/temples';

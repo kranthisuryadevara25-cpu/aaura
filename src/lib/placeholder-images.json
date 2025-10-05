@@ -3,104 +3,86 @@
     {
       "id": "video-1",
       "description": "A person meditating at sunrise.",
-      "imageUrl": "https://images.unsplash.com/photo-1506126613408-4e7e9b780d0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageUrl": "https://images.unsplash.com/photo-1630406866460-6e528ec3ddce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxtZWRpdGF0aW9uJTIwc3VucmlzZXxlbnwwfHx8fDE3NTk2NTU1MDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "meditation sunrise"
     },
     {
       "id": "video-2",
       "description": "Yoga poses in a serene nature setting.",
-      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageUrl": "https://images.unsplash.com/photo-1627254331253-0e1ecd577f57?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHx5b2dhJTIwbmF0dXJlfGVufDB8fHx8MTc1OTU5MjQ5NHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "yoga nature"
     },
     {
       "id": "video-3",
       "description": "Close up of ancient scriptures.",
-      "imageUrl": "https://images.unsplash.com/photo-1520182203991-6c3f705c745d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageUrl": "https://images.unsplash.com/photo-1758728928971-8fcd380b3993?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxhbmNpZW50JTIwc2NyaXB0dXJlc3xlbnwwfHx8fDE3NTk2ODQ1Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "ancient scriptures"
     },
     {
       "id": "video-4",
       "description": "A traditional pooja ceremony.",
-      "imageUrl": "https://images.unsplash.com/photo-1621819543993-6a9a8c3d978a?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageUrl": "https://images.unsplash.com/photo-1680490964983-ca02f691960f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxwb29qYSUyMGNlcmVtb255fGVufDB8fHx8MTc1OTY1NTUwOHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "pooja ceremony"
     },
     {
       "id": "video-5",
-      "description": "A person meditating at sunrise.",
-      "imageUrl": "https://images.unsplash.com/photo-1506126613408-4e7e9b780d0c?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "meditation sunrise"
+      "description": "A sadhu by the ganges river.",
+      "imageUrl": "https://images.unsplash.com/photo-1595243463493-55235da19aec?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzYWRodSUyMGdhbmdlc3xlbnwwfHx8fDE3NTk2ODQ1Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sadhu ganges"
     },
     {
       "id": "video-6",
-      "description": "Yoga poses in a serene nature setting.",
-      "imageUrl": "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?q=80&w=2120&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "yoga nature"
+      "description": "A temple bell ringing.",
+      "imageUrl": "https://images.unsplash.com/photo-1680505303171-992ef799db43?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHx0ZW1wbGUlMjBiZWxsfGVufDB8fHx8MTc1OTU5MjAwOXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "temple bell"
     },
     {
       "id": "video-7",
-      "description": "Close up of ancient scriptures.",
-      "imageUrl": "https://images.unsplash.com/photo-1520182203991-6c3f705c745d?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "ancient scriptures"
+      "description": "A sitar player performing.",
+      "imageUrl": "https://images.unsplash.com/photo-1643098979608-1b22614abe88?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxzaXRhciUyMG11c2ljfGVufDB8fHx8MTc1OTU5Njk2NHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "sitar music"
     },
     {
       "id": "video-8",
-      "description": "A traditional pooja ceremony.",
-      "imageUrl": "https://images.unsplash.com/photo-1621819543993-6a9a8c3d978a?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "pooja ceremony"
+      "description": "A guru giving a discourse.",
+      "imageUrl": "https://images.unsplash.com/photo-1629875213730-3133a29289b3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxzcGlyaXR1YWwlMjB0ZWFjaGVyfGVufDB8fHx8MTc1OTY4NDUzN3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "spiritual teacher"
     },
     {
       "id": "short-1",
       "description": "A quick breathing exercise.",
-      "imageUrl": "https://images.unsplash.com/photo-1593811167563-09793192490b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+      "imageUrl": "https://images.unsplash.com/photo-1554244933-d876deb6b2ff?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw1fHxicmVhdGhpbmclMjBleGVyY2lzZXxlbnwwfHx8fDE3NTk2ODQ1Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "breathing exercise"
     },
     {
       "id": "short-2",
       "description": "A hand mudra for focus.",
-      "imageUrl": "https://images.unsplash.com/photo-1593279013690-b324fbdade5a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxoYW5kJTIwbXVkcmF8ZW58MHx8fHwxNzU5NjU1NTA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1691165174077-c4566ab5cdf6?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxoYW5kJTIwbXVkcmF8ZW58MHx8fHwxNzU5NjU1NTA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "hand mudra"
     },
     {
       "id": "short-3",
       "description": "A short, positive affirmation.",
-      "imageUrl": "https://images.unsplash.com/photo-1601859574742-9fab5c6a8b11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwb3NpdGl2ZSUyMGFmZmlybWF0aW9ufGVufDB8fHx8MTc1OTY1NTUwOHww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageUrl": "https://images.unsplash.com/photo-1759171908560-d98dd83bd13d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwb3NpdGl2ZSUyMGFmZmlybWF0aW9ufGVufDB8fHx8MTc1OTY1NTUwOHww&ixlib=rb-4.1.0&q=80&w=1080",
       "imageHint": "positive affirmation"
     },
     {
       "id": "short-4",
-      "description": "A quick breathing exercise.",
-      "imageUrl": "https://images.unsplash.com/photo-1593811167563-09793192490b?q=80&w=1887&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "breathing exercise"
+      "description": "Pouring water during a ritual.",
+      "imageUrl": "https://images.unsplash.com/photo-1665905488003-382560cd01ce?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyaXR1YWwlMjB3YXRlcnxlbnwwfHx8fDE3NTk2ODQ1Mzd8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "ritual water"
     },
     {
       "id": "short-5",
-      "description": "A hand mudra for focus.",
-      "imageUrl": "https://images.unsplash.com/photo-1593279013690-b324fbdade5a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxoYW5kJTIwbXVkcmF8ZW58MHx8fHwxNzU5NjU1NTA4fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "hand mudra"
+      "description": "Lighting a diya.",
+      "imageUrl": "https://images.unsplash.com/photo-1709993807048-77e0582ad8f5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHxkaXlhJTIwbGlnaHR8ZW58MHx8fHwxNzU5Njg0NTM3fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "diya light"
     },
     {
       "id": "short-6",
-      "description": "A short, positive affirmation.",
-      "imageUrl": "https://images.unsplash.com/photo-1601859574742-9fab5c6a8b11?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxwb3NpdGl2ZSUyMGFmZmlybWF0aW9ufGVufDB8fHx8MTc1OTY1NTUwOHww&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "positive affirmation"
-    },
-    {
-      "id": "story-1",
-      "description": "An ancient Indian epic manuscript.",
-      "imageUrl": "https://images.unsplash.com/photo-1631631623129-c764de2c59a9?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "epic manuscript"
-    },
-    {
-      "id": "story-2",
-      "description": "A depiction of a mythological battle.",
-      "imageUrl": "https://images.unsplash.com/photo-1597793005553-614a5135a246?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "mythological battle"
-    },
-    {
-      "id": "story-3",
-      "description": "A god surrounded by celestial light.",
-      "imageUrl": "https://images.unsplash.com/photo-1629814424282-35985d113f94?q=80&w=1932&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-      "imageHint": "celestial light"
+      "description": "A close up of rangoli.",
+      "imageUrl": "https://images.unsplash.com/photo-1716714620140-9ed26b67e900?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwzfHxyYW5nb2xpJTIwYXJ0fGVufDB8fHx8MTc1OTY1ODQzNnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "rangoli art"
     }
   ]
 }

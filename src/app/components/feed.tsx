@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { useFirestore, useCollection } from '@/firebase';
 import { collection, query, limit } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
@@ -21,7 +22,8 @@ function shuffle(array: any[]) {
 
 export function Feed() {
     const firestore = useFirestore();
-
+    const [feedItems, setFeedItems] = useState<any[]>([]);
+    
     const templesQuery = useMemo(() => firestore ? query(collection(firestore, 'temples'), limit(5)) : null, [firestore]);
     const storiesQuery = useMemo(() => firestore ? query(collection(firestore, 'stories'), limit(5)) : null, [firestore]);
     const deitiesQuery = useMemo(() => firestore ? query(collection(firestore, 'deities'), limit(5)) : null, [firestore]);
@@ -30,21 +32,23 @@ export function Feed() {
     const { data: stories, isLoading: storiesLoading } = useCollection(storiesQuery);
     const { data: deities, isLoading: deitiesLoading } = useCollection(deitiesQuery);
 
-    const feedItems = useMemo(() => {
-        if (templesLoading || storiesLoading || deitiesLoading) {
-            return [];
+    const isLoading = templesLoading || storiesLoading || deitiesLoading;
+    
+    useEffect(() => {
+        if (!isLoading) {
+            const allItems = [
+                ...(temples?.map(item => ({ ...item, type: 'temple' })) || []),
+                ...(stories?.map(item => ({ ...item, type: 'story' })) || []),
+                ...(deities?.map(item => ({ ...item, type: 'deity' })) || []),
+            ];
+            // Shuffle the items for a mixed feed experience. 
+            // In a real app, this would be handled by a recommendation engine.
+            setFeedItems(shuffle(allItems));
         }
-        const allItems = [
-            ...(temples?.map(item => ({ ...item, type: 'temple' })) || []),
-            ...(stories?.map(item => ({ ...item, type: 'story' })) || []),
-            ...(deities?.map(item => ({ ...item, type: 'deity' })) || []),
-        ];
-        // Shuffle the items for a mixed feed experience. 
-        // In a real app, this would be handled by a recommendation engine.
-        return shuffle(allItems);
-    }, [temples, stories, deities, templesLoading, storiesLoading, deitiesLoading]);
+    }, [temples, stories, deities, isLoading]);
 
-    if (templesLoading || storiesLoading || deitiesLoading) {
+
+    if (isLoading) {
         return (
             <div className="flex justify-center items-center h-96">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />

@@ -11,8 +11,7 @@ import Link from 'next/link';
 import { Loader2 } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from "@/components/ui/sidebar";
 import { Navigation } from "@/app/components/navigation";
-import { RightSidebar } from '@/app/components/right-sidebar';
-import { Feed } from '@/app/components/feed';
+import { Dashboard } from '@/app/components/dashboard';
 
 function LoggedInView() {
   const { user } = useUser();
@@ -48,14 +47,9 @@ function LoggedInView() {
             <Sidebar>
               <Navigation />
             </Sidebar>
-            <main className="flex-1 grid grid-cols-1 lg:grid-cols-[1fr_auto]">
-              <div className="py-6 px-4 sm:px-6 lg:px-8">
-                 <div className="max-w-2xl mx-auto">
-                    <Feed />
-                 </div>
-              </div>
-              <RightSidebar />
-            </main>
+            <SidebarInset>
+              <Dashboard />
+            </SidebarInset>
           </div>
         </div>
     </SidebarProvider>

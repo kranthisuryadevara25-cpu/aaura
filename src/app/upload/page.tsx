@@ -25,10 +25,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { moderateContent } from '@/ai/ai-content-moderation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useLanguage } from '@/hooks/use-language';
 
 const formSchema = z.object({
-  title: z.string().min(5, { message: 'Title must be at least 5 characters.' }),
-  description: z.string().min(10, { message: 'Description must be at least 10 characters.' }),
+  title_en: z.string().min(5, { message: 'English title must be at least 5 characters.' }),
+  title_hi: z.string().min(5, { message: 'Hindi title must be at least 5 characters.' }),
+  title_te: z.string().min(5, { message: 'Telugu title must be at least 5 characters.' }),
+  description_en: z.string().min(10, { message: 'English description must be at least 10 characters.' }),
+  description_hi: z.string().min(10, { message: 'Hindi description must be at least 10 characters.' }),
+  description_te: z.string().min(10, { message: 'Telugu description must be at least 10 characters.' }),
   media: z.instanceof(FileList).refine((files) => files?.length === 1, 'A media file is required.'),
   mediaType: z.enum(['video', 'short', 'bhajan', 'podcast', 'pravachan', 'audiobook']),
 });
@@ -40,6 +45,8 @@ export default function UploadPage() {
   const { toast } = useToast();
   const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
+  const { t } = useLanguage();
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -71,8 +78,8 @@ export default function UploadPage() {
         
         const moderationResult = await moderateContent({
           videoDataUri: mediaDataUri, 
-          title: data.title,
-          description: data.description,
+          title: data.title_en,
+          description: data.description_en,
         });
 
         if (!moderationResult.isAppropriate) {
@@ -91,14 +98,18 @@ export default function UploadPage() {
         const mediaCollection = collection(db, 'media');
         await addDoc(mediaCollection, {
           userId: user.uid,
-          title: data.title,
-          description: data.description,
+          title_en: data.title_en,
+          title_hi: data.title_hi,
+          title_te: data.title_te,
+          description_en: data.description_en,
+          description_hi: data.description_hi,
+          description_te: data.description_te,
           mediaUrl: placeholderMediaUrl,
           thumbnailUrl: placeholderThumbnailUrl,
           uploadDate: serverTimestamp(),
           mediaType: data.mediaType,
           duration: 0,
-          language: 'English',
+          language: 'en',
           tags: [data.mediaType],
           likes: 0,
           views: 0,
@@ -122,7 +133,7 @@ export default function UploadPage() {
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
-        <Card className="w-full max-w-2xl">
+        <Card className="w-full max-w-2xl bg-card">
         <CardHeader>
             <CardTitle>Upload Media</CardTitle>
             <CardDescription>Share your spiritual, religious, and wellness content with the community. All content must be positive and uplifting.</CardDescription>
@@ -132,10 +143,10 @@ export default function UploadPage() {
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
-                  name="title"
+                  name="title_en"
                   render={({ field }) => (
                       <FormItem>
-                      <FormLabel>Title</FormLabel>
+                      <FormLabel>Title (English)</FormLabel>
                       <FormControl>
                           <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
                       </FormControl>
@@ -143,14 +154,66 @@ export default function UploadPage() {
                       </FormItem>
                   )}
                 />
-                <FormField
+                 <FormField
                   control={form.control}
-                  name="description"
+                  name="title_hi"
                   render={({ field }) => (
                       <FormItem>
-                      <FormLabel>Description</FormLabel>
+                      <FormLabel>Title (Hindi)</FormLabel>
+                      <FormControl>
+                          <Input placeholder="उदा., सकारात्मक ऊर्जा के लिए सुबह का योग" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="title_te"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Title (Telugu)</FormLabel>
+                      <FormControl>
+                          <Input placeholder="ఉదా., సానుకూల శక్తి కోసం ఉదయం యోగా" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description_en"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Description (English)</FormLabel>
                       <FormControl>
                           <Textarea placeholder="A short summary of your media's positive message" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="description_hi"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Description (Hindi)</FormLabel>
+                      <FormControl>
+                          <Textarea placeholder="आपके मीडिया के सकारात्मक संदेश का संक्षिप्त सारांश" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                      </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="description_te"
+                  render={({ field }) => (
+                      <FormItem>
+                      <FormLabel>Description (Telugu)</FormLabel>
+                      <FormControl>
+                          <Textarea placeholder="మీ మీడియా యొక్క సానుకూల సందేశం యొక్క చిన్న సారాంశం" {...field} />
                       </FormControl>
                       <FormMessage />
                       </FormItem>

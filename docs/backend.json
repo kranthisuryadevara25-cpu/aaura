@@ -271,6 +271,34 @@
         "description"
       ]
     },
+    "Shop": {
+      "title": "Shop",
+      "type": "object",
+      "description": "Represents a vendor's shop in the marketplace.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the shop."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "ID of the user who owns the shop."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the shop."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the shop."
+        }
+      },
+      "required": [
+        "id",
+        "ownerId",
+        "name"
+      ]
+    },
     "Product": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Product",
@@ -280,6 +308,10 @@
         "id": {
           "type": "string",
           "description": "Unique identifier for the product."
+        },
+        "shopId": {
+            "type": "string",
+            "description": "ID of the shop that sells this product."
         },
         "name": {
           "type": "string",
@@ -305,6 +337,7 @@
       },
       "required": [
         "id",
+        "shopId",
         "name",
         "price",
         "imageUrl"
@@ -379,6 +412,16 @@
         }
       },
       {
+        "path": "/shops/{shopId}",
+        "definition": {
+            "entityName": "Shop",
+            "schema": {
+                "$ref": "#/backend/entities/Shop"
+            },
+            "description": "Stores all shops for the marketplace."
+        }
+      },
+      {
         "path": "/products/{productId}",
         "definition": {
           "entityName": "Product",
@@ -389,6 +432,6 @@
         }
       }
     ],
-    "reasoning": "The data model is designed for a content platform. Videos, Channels, Deities and Products are in top-level collections for easy querying and discovery. User-specific data like subscriptions and horoscopes are nested under the user's document. This structure supports features like public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce. Videos, Channels, Deities, Shops, and Products are in top-level collections for easy querying. User-specific data like subscriptions and horoscopes are nested under the user's document. Products are linked to Shops via a shopId. This structure supports a multi-vendor marketplace, public video feeds, dedicated channel pages, and personalized user content while keeping data organized."
   }
 }

@@ -5,9 +5,10 @@ import { Header } from '@/app/components/header';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, PlusCircle } from 'lucide-react';
 import { SidebarProvider, Sidebar, SidebarInset } from '@/components/ui/sidebar';
 import { Navigation } from '../navigation';
+import Link from 'next/link';
 
 const channels = [
     { id: '1', name: 'Yoga with Adriene', description: 'High-quality yoga and meditation videos for all levels.', avatarUrl: 'https://picsum.photos/seed/adriene/200/200', imageHint: 'woman yoga' },
@@ -27,7 +28,15 @@ export default function ChannelsPage() {
             <Header />
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                 <div className="text-center mb-12">
-                    <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">Creator Channels</h1>
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-4">
+                         <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight">Creator Channels</h1>
+                        <Button asChild>
+                            <Link href="/channels/create">
+                                <PlusCircle className="mr-2" />
+                                Create Channel
+                            </Link>
+                        </Button>
+                    </div>
                     <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
                         Follow your favorite spiritual guides and teachers.
                     </p>

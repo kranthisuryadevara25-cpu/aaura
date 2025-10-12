@@ -22,14 +22,14 @@ export default function StoryDetailPage() {
   const story = stories?.[0];
 
   const charactersQuery = query(collection(db, 'characters'), where('associatedStories', 'array-contains', slug));
-  const [relatedCharacters] = useCollectionData(charactersQuery);
+  const [relatedCharacters, charactersLoading] = useCollectionData(charactersQuery);
 
-  // This is inefficient. In a real app, you'd use a different data model or search.
-  const templesQuery = story ? query(collection(db, 'temples'), where('slug', 'in', story.relatedTemples || [])) : undefined;
-  const [relatedTemples] = useCollectionData(templesQuery);
+  const templesQuery = story ? query(collection(db, 'temples'), where('slug', 'in', story.relatedTemples && story.relatedTemples.length > 0 ? story.relatedTemples : ['non-existent'])) : undefined;
+  const [relatedTemples, templesLoading] = useCollectionData(templesQuery);
+  
+  const pageLoading = isLoading || charactersLoading || templesLoading;
 
-
-  if (isLoading) {
+  if (pageLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 

@@ -18,7 +18,7 @@ export default function DeityDetailPage() {
   const slug = params.slug as string;
   const { language, t } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingContent, setIsLoadingContent] = useState(true);
 
   const deitiesQuery = query(collection(db, 'deities'), where('slug', '==', slug));
   const [deities, isDeitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
@@ -26,19 +26,19 @@ export default function DeityDetailPage() {
   
   useEffect(() => {
     if (deity) {
-      setIsLoading(true);
+      setIsLoadingContent(true);
       getDeityDailyRelevance({ deityName: deity.name.en })
         .then(content => {
           setDailyContent(content);
         })
         .catch(console.error)
-        .finally(() => setIsLoading(false));
+        .finally(() => setIsLoadingContent(false));
     }
   }, [deity]);
   
-  const pageLoading = isDeitiesLoading || isLoading;
+  const pageLoading = isDeitiesLoading || (deity && isLoadingContent);
 
-  if (pageLoading && !deity) {
+  if (isDeitiesLoading) {
      return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 

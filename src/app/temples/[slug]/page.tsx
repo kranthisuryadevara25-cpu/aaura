@@ -31,7 +31,7 @@ export default function TempleDetailPage() {
   const { toast } = useToast();
 
   const templesQuery = query(collection(db, 'temples'), where('slug', '==', slug));
-  const [temples, loading] = useCollectionData(templesQuery);
+  const [temples, loading, error] = useCollectionData(templesQuery);
   const temple = temples?.[0];
 
   const bookmarkRef = user && temple ? doc(db, `users/${user.uid}/bookmarks`, temple.id) : undefined;

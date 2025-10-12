@@ -120,6 +120,8 @@ export default function ProfileSetupPage() {
           zodiacSign,
           profileComplete: true,
           creationTimestamp: serverTimestamp(),
+          followerCount: 0,
+          followingCount: 0,
         };
         
         await setDoc(doc(db, `users/${currentUser.uid}`), userProfileData, { merge: true });

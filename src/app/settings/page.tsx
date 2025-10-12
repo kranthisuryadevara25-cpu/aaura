@@ -127,6 +127,7 @@ export default function SettingsPage() {
         await updateProfile(auth.currentUser, { displayName: data.fullName });
 
         const userProfileData = {
+          ...userData, // Preserve existing fields like followerCount
           ...data,
           birthDate: formattedBirthDate,
           profileComplete: true,

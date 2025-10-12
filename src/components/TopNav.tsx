@@ -18,16 +18,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, Film, MessageSquare } from "lucide-react";
+import { LogOut, User, Upload, Film, MessageSquare, Settings } from "lucide-react";
 
 const UserStats = () => {
     const auth = useAuth();
     const db = useFirestore();
     const [user] = useAuthState(auth);
     const userRef = user ? doc(db, 'users', user.uid) : undefined;
-    const [userData] = useDocumentData(userRef);
+    const [userData, loading] = useDocumentData(userRef);
 
-    if (!userData) {
+    if (loading || !userData) {
         return null;
     }
 
@@ -62,30 +62,6 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
 
       <div className="flex items-center gap-3">
         {user && <UserStats />}
-        {user && (
-           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Upload className="h-5 w-5" />
-                <span className="sr-only">Create</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem asChild>
-                <Link href="/upload">
-                  <Film className="mr-2 h-4 w-4" />
-                  <span>Upload Media</span>
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link href="/forum">
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  <span>Create Post</span>
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
         <LanguageSwitcher />
         {user ? (
             <DropdownMenu>
@@ -109,10 +85,23 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                 <DropdownMenuItem asChild>
+                    <Link href="/upload">
+                        <Upload className="mr-2 h-4 w-4" />
+                        <span>Upload Content</span>
+                    </Link>
+                 </DropdownMenuItem>
+                 <DropdownMenuItem asChild>
+                    <Link href="/forum">
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        <span>Create Post</span>
+                    </Link>
+                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                    <Link href="/profile/setup">
-                        <User className="mr-2 h-4 w-4" />
-                        <span>Profile</span>
+                    <Link href="/settings">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Settings</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>

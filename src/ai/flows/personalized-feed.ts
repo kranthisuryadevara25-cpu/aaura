@@ -10,30 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, getDocs, orderBy, limit, doc, getDoc, type Firestore } from 'firebase/firestore';
-
-// Server-side Firebase initialization
-function getFirebaseServer() {
-    const firebaseConfig = {
-      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-    };
-
-    let app: FirebaseApp;
-    if (!getApps().some(app => app.name === 'genkit-server')) {
-      app = initializeApp(firebaseConfig, 'genkit-server');
-    } else {
-      app = getApp('genkit-server');
-    }
-    const db = getFirestore(app);
-    return { app, db };
-}
-
+import { getFirestore } from 'firebase-admin/firestore';
+import { getFirebaseServer } from '@/lib/firebase/server';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
@@ -162,11 +140,11 @@ const personalizedFeedFlow = ai.defineFlow(
 /**
  * Placeholder function to check if a user is new.
  */
-async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
+async function isUserNew(db: FirebaseFirestore.Firestore, userId: string): Promise<boolean> {
     try {
-        const userDoc = await getDoc(doc(db, 'users', userId));
+        const userDoc = await db.collection('users').doc(userId).get();
         // A user is new if they don't have a profile or haven't completed it.
-        return !userDoc.exists() || !userDoc.data()?.profileComplete;
+        return !userDoc.exists || !userDoc.data()?.profileComplete;
     } catch {
         return true;
     }
@@ -175,15 +153,15 @@ async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
 /**
  * Placeholder function to get globally trending content for new users.
  */
-async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
+async function getTrendingContent(db: FirebaseFirestore.Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
     // A real implementation would fetch pre-aggregated trending data.
     // For now, fetch latest media and posts.
-    const mediaQuery = query(collection(db, 'media'), orderBy('uploadDate', 'desc'), limit(10));
-    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(10));
+    const mediaQuery = db.collection('media').orderBy('uploadDate', 'desc').limit(10);
+    const postsQuery = db.collection('posts').orderBy('createdAt', 'desc').limit(10);
 
     const [mediaSnap, postsSnap] = await Promise.all([
-        getDocs(mediaQuery),
-        getDocs(postsQuery)
+        mediaQuery.get(),
+        postsQuery.get()
     ]);
     
     const mediaItems = mediaSnap.docs.map(d => ({
@@ -207,11 +185,10 @@ async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise
 /**
  * Placeholder to fetch user interactions (likes, bookmarks).
  */
-async function fetchUserInteractions(db: Firestore, userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
+async function fetchUserInteractions(db: FirebaseFirestore.Firestore, userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
     try {
-        // In Firestore: query(collection(db, 'users', userId, interactionType), orderBy('timestamp', 'desc'), limit(50))
-        const q = query(collection(db, 'users', userId, interactionType), limit(50));
-        const snap = await getDocs(q);
+        const q = db.collection('users').doc(userId).collection(interactionType).limit(50);
+        const snap = await q.get();
         // This is a simplified version; a real app might need content type info here
         return snap.docs.map(d => ({ contentId: d.id, contentType: 'unknown' }));
     } catch {
@@ -223,14 +200,14 @@ async function fetchUserInteractions(db: Firestore, userId: string, interactionT
  * Placeholder to fetch recent content from a collection.
  */
 async function fetchRecentContent(
-    db: Firestore,
+    db: FirebaseFirestore.Firestore,
     collectionName: 'media' | 'posts' | 'stories', 
     count: number
 ): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number}[]> {
     try {
         const dateField = collectionName === 'media' ? 'uploadDate' : 'createdAt';
-        const q = query(collection(db, collectionName), orderBy(dateField, 'desc'), limit(count));
-        const snap = await getDocs(q);
+        const q = db.collection(collectionName).orderBy(dateField, 'desc').limit(count);
+        const snap = await q.get();
 
         return snap.docs.map(d => {
             const data = d.data();

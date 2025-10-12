@@ -2,7 +2,6 @@
 "use client";
 import React, { useState, useMemo, useEffect } from "react";
 import { Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FeedCard } from "@/components/FeedCard";
 import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
 import { useAuthState } from "react-firebase-hooks/auth";
@@ -10,12 +9,12 @@ import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, DocumentData } from "firebase/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FileQuestion } from 'lucide-react';
-import { PostCard, CreatePost } from "@/app/forum/page";
+import { PostCard } from "@/app/forum/page";
 import sampleFeed from '@/lib/sample-feed.json';
 
 type FeedItem = {
     id: string;
-    type: 'media' | 'post' | 'story' | 'deity' | 'temple';
+    type: 'media' | 'post' | 'story' | 'deity' | 'temple' | 'video';
     data: DocumentData;
 };
 
@@ -33,7 +32,7 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
             const itemPromises = personalizedFeed.feed.map(async (item) => {
               const itemDoc = await getDoc(doc(db, item.contentType, item.contentId));
               if (itemDoc.exists()) {
-                return { id: itemDoc.id, type: item.contentType, data: itemDoc.data() };
+                return { id: itemDoc.id, type: item.contentType as FeedItem['type'], data: itemDoc.data() };
               }
               return null;
             });
@@ -86,16 +85,14 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-4 space-y-8">
-        {user && <CreatePost />}
-        
+    <>
         {filteredItems.length > 0 ? (
             filteredItems.map(({id, type, data}) => {
                 if (type === 'post') {
                     return <PostCard key={id} post={{...data, id: id}} authorId={data.authorId} />
                 }
                 // Use FeedCard for all other types, as it can handle them.
-                return <FeedCard key={id} item={{...data, id: id}} />
+                return <FeedCard key={id} item={{...data, id: id, type: type}} />
             })
         ) : (
              <div className="flex justify-center items-center h-96">
@@ -108,6 +105,6 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
                 </Alert>
             </div>
         )}
-    </div>
+    </>
   );
 }

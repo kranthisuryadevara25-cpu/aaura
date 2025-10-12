@@ -43,21 +43,19 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
   };
 
   const getHref = () => {
-    if (!item.type) { // It's a media item from the old structure
-        return `/watch/${item.id}`;
-    }
     switch (item.type) {
         case 'media':
         case 'video':
-            return `/watch/${item.id.replace('video-','')}`;
+            return `/watch/${item.id}`;
         case 'temple':
-            return `/temples/${item.cta.link.split('/').pop()}`;
+            return `/temples/${item.slug}`;
         case 'story':
-            return `/stories/${item.cta.link.split('/').pop()}`;
+            return `/stories/${item.slug}`;
         case 'deity':
-             return `/deities/${item.cta.link.split('/').pop()}`;
+             return `/deities/${item.slug}`;
         case 'forum':
-            return `/forum/${item.cta.link.split('/').pop()}`;
+        case 'post':
+            return `/forum/${item.id}`;
         default:
             return '#';
     }
@@ -68,7 +66,7 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
   const authorName = item.userId || item.author?.name;
   const thumbnail = item.thumbnailUrl || item.image?.url;
   
-  const createdAt = item.uploadDate?.toDate() || (item.createdAt ? new Date(item.createdAt) : null);
+  const createdAt = item.uploadDate?.toDate() || item.createdAt?.toDate() || null;
 
   return (
     <Card className="p-4 border-none shadow-none">

@@ -1,43 +1,69 @@
 
-import { notFound } from 'next/navigation';
-import { getTempleBySlug, temples } from '@/lib/temples';
+'use client';
+
+import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users } from 'lucide-react';
+import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users, Bookmark, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Bookmark } from 'lucide-react';
-import { translations } from '@/translations';
+import { useLanguage } from '@/hooks/use-language';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, where, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebase';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useToast } from '@/hooks/use-toast';
 
-// Generate static pages for all temples at build time
-export function generateStaticParams() {
-  return temples.map((temple) => ({
-    slug: temple.slug,
-  }));
-}
 
-// Helper to get text based on a "language" - for server components, we'd get lang from params or headers
-// For this static generation example, we will default to English ('en')
 const getText = (field: { [key: string]: string } | undefined, lang: string = 'en') => {
     if (!field) return "";
     return field[lang] || field.en || Object.values(field)[0] || "";
 };
 
-export default function TempleDetailPage({ params }: { params: { slug: string } }) {
-  const { slug } = params;
-  const temple = getTempleBySlug(slug);
+export default function TempleDetailPage() {
+  const params = useParams();
+  const slug = params.slug as string;
+  const { language, t } = useLanguage();
+  const [user] = useAuthState(auth);
+  const { toast } = useToast();
+
+  const templesQuery = query(collection(db, 'temples'), where('slug', '==', slug));
+  const [temples, loading] = useCollectionData(templesQuery);
+  const temple = temples?.[0];
+
+  const bookmarkRef = user && temple ? doc(db, `users/${user.uid}/bookmarks`, temple.id) : undefined;
+  const [bookmark, isBookmarkLoading] = useDocumentData(bookmarkRef);
+
+
+  const handleBookmark = async () => {
+    if (!user || !temple || !bookmarkRef) {
+        toast({ variant: 'destructive', title: 'You must be logged in to bookmark a temple.' });
+        return;
+    }
+    if (bookmark) {
+        await deleteDoc(bookmarkRef);
+        toast({ title: 'Bookmark removed.' });
+    } else {
+        await setDoc(bookmarkRef, {
+            templeId: temple.id,
+            timestamp: serverTimestamp(),
+        });
+        toast({ title: 'Temple bookmarked!' });
+    }
+  };
+
+
+  if (loading) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+  }
 
   if (!temple) {
     notFound();
   }
-
-  // We'll use 'en' as the default language for this server-rendered page.
-  // In a more dynamic app, this could come from user preference or headers.
-  const language = 'en';
-  const t = translations[language];
-
+  
   const name = getText(temple.name, language);
   const deityName = getText(temple.deity.name, language);
   const mythologicalImportance = getText(temple.importance.mythological, language);
@@ -56,7 +82,7 @@ export default function TempleDetailPage({ params }: { params: { slug: string } 
       '@type': 'TouristAttraction',
       name: name,
       description: mythologicalImportance,
-      image: temple.media.images.map(img => img.url),
+      image: temple.media.images.map((img: any) => img.url),
       address: {
         '@type': 'PostalAddress',
         streetAddress: temple.location.address,
@@ -80,7 +106,6 @@ export default function TempleDetailPage({ params }: { params: { slug: string } 
           dangerouslySetInnerHTML={{ __html: JSON.stringify(templeJsonLd) }}
         />
 
-        {/* Header Section */}
         <div className="text-center mb-8">
             <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
             <p className="mt-2 text-lg text-muted-foreground flex items-center justify-center gap-2">
@@ -89,16 +114,15 @@ export default function TempleDetailPage({ params }: { params: { slug: string } 
             <div className="mt-4 flex justify-center items-center gap-4">
                 <Badge variant="secondary">Pilgrimage</Badge>
                 <Badge variant="secondary">{deityName}</Badge>
-                  <Button variant="outline" size="sm">
-                    <Bookmark className="mr-2 h-4 w-4" /> {t.buttons.bookmark}
+                  <Button variant="outline" size="sm" onClick={handleBookmark} disabled={isBookmarkLoading}>
+                    <Bookmark className={`mr-2 h-4 w-4 ${bookmark ? 'fill-yellow-400 text-yellow-500' : ''}`} /> {t.buttons.bookmark}
                 </Button>
             </div>
         </div>
 
-        {/* Image Carousel */}
         <Carousel className="w-full max-w-5xl mx-auto mb-12">
             <CarouselContent>
-                {temple.media.images.map((image, index) => (
+                {temple.media.images.map((image: any, index: number) => (
                 <CarouselItem key={index}>
                     <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
                         <Image
@@ -106,7 +130,7 @@ export default function TempleDetailPage({ params }: { params: { slug: string } 
                             alt={`${name} image ${index + 1}`}
                             data-ai-hint={image.hint}
                             fill
-                            priority={index === 0} // Prioritize loading the first image
+                            priority={index === 0}
                             className="object-cover"
                         />
                     </div>
@@ -117,9 +141,7 @@ export default function TempleDetailPage({ params }: { params: { slug: string } 
             <CarouselNext />
         </Carousel>
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            {/* Left Column (Main Details) */}
             <div className="lg:col-span-2 space-y-8">
                 <Card className="bg-transparent border-primary/20">
                     <CardHeader>
@@ -148,7 +170,6 @@ export default function TempleDetailPage({ params }: { params: { slug: string } 
                 </Card>
             </div>
 
-            {/* Right Column (Visiting Info) */}
             <div className="space-y-6">
                 <Card className="bg-transparent border-primary/20">
                     <CardHeader>
@@ -186,7 +207,6 @@ export default function TempleDetailPage({ params }: { params: { slug: string } 
                 </Card>
             </div>
         </div>
-
     </main>
   );
 }

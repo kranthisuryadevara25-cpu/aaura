@@ -1,36 +1,33 @@
 
 'use client';
 
-import { useParams } from 'next/navigation';
-import { getDeityBySlug } from '@/lib/deities';
+import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
-import { notFound } from 'next/navigation';
 import { Music, BookOpen, Sunrise, Sunset, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getDeityDailyRelevance, type DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
 import { useLanguage } from '@/hooks/use-language';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function DeityDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const deity = getDeityBySlug(slug);
   const { language, t } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  if (!deity) {
-    notFound();
-  }
-
-  const name = (deity.name as any)[language] || deity.name.en;
-  const description = (deity.description as any)[language] || deity.description.en;
-
+  const deitiesQuery = query(collection(db, 'deities'), where('slug', '==', slug));
+  const [deities, isDeitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
+  const deity = deities?.[0];
+  
   useEffect(() => {
     if (deity) {
       setIsLoading(true);
-      getDeityDailyRelevance({ deityName: deity.name.en }) // AI flow works best with English name
+      getDeityDailyRelevance({ deityName: deity.name.en })
         .then(content => {
           setDailyContent(content);
         })
@@ -38,7 +35,19 @@ export default function DeityDetailPage() {
         .finally(() => setIsLoading(false));
     }
   }, [deity]);
+  
+  const pageLoading = isDeitiesLoading || isLoading;
 
+  if (pageLoading && !deity) {
+     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+  }
+
+  if (!deity) {
+    notFound();
+  }
+
+  const name = (deity.name as any)[language] || deity.name.en;
+  const description = (deity.description as any)[language] || deity.description.en;
 
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
@@ -49,7 +58,7 @@ export default function DeityDetailPage() {
 
         <Carousel className="w-full max-w-4xl mx-auto mb-12">
         <CarouselContent>
-            {deity.images.map((image, index) => (
+            {deity.images.map((image: any, index: number) => (
             <CarouselItem key={index}>
                 <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
                 <Image
@@ -67,7 +76,7 @@ export default function DeityDetailPage() {
         <CarouselNext />
         </Carousel>
 
-        {isLoading ? (
+        {pageLoading ? (
         <div className="flex justify-center items-center h-40">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
@@ -99,7 +108,7 @@ export default function DeityDetailPage() {
                     <CardTitle className="flex items-center gap-3 text-primary"><Music /> {t.deityDetail.mantras}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {deity.mantras.map((mantra, index) => {
+                    {deity.mantras.map((mantra: any, index: number) => {
                     const translationKey = `translation_${language}` as keyof typeof mantra;
                     const translation = (mantra as any)[translationKey] || mantra.translation_en;
                     return (
@@ -117,7 +126,7 @@ export default function DeityDetailPage() {
                     <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.deityDetail.stotras}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {deity.stotras.map((stotra, index) => {
+                    {deity.stotras.map((stotra: any, index: number) => {
                     const title = (stotra.title as any)[language] || stotra.title.en;
                     const translationKey = `translation_${language}` as keyof typeof stotra;
                     const translation = (stotra as any)[translationKey] || stotra.translation_en;

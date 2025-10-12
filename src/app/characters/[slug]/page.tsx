@@ -2,20 +2,32 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { getCharacterBySlug } from '@/lib/characters';
-import { getStoryBySlug } from '@/lib/stories';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, where, DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function CharacterDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const character = getCharacterBySlug(slug);
   const { language, t } = useLanguage();
+
+  const charactersQuery = query(collection(db, 'characters'), where('slug', '==', slug));
+  const [characters, isLoading] = useCollectionData(charactersQuery, { idField: 'id' });
+  const character = characters?.[0];
+
+  const storySlugs = character?.associatedStories || [];
+  const storiesQuery = query(collection(db, 'stories'), where('slug', 'in', storySlugs.length > 0 ? storySlugs : ['non-existent']));
+  const [associatedStories, storiesLoading] = useCollectionData(storiesQuery, { idField: 'id' });
+
+  if (isLoading || storiesLoading) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+  }
 
   if (!character) {
     notFound();
@@ -24,8 +36,7 @@ export default function CharacterDetailPage() {
   const name = character.name[language] || character.name.en;
   const description = character.description[language] || character.description.en;
   const role = character.role[language] || character.role.en;
-  const associatedStories = character.associatedStories.map(slug => getStoryBySlug(slug)).filter(Boolean);
-
+  
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -44,7 +55,7 @@ export default function CharacterDetailPage() {
                       <CardTitle className="text-4xl font-headline text-primary">{name}</CardTitle>
                       <div className="flex flex-wrap gap-2 pt-2">
                           <Badge variant="default">{role}</Badge>
-                          {character.attributes.map(attr => <Badge key={attr} variant="secondary">{attr}</Badge>)}
+                          {character.attributes.map((attr: string) => <Badge key={attr} variant="secondary">{attr}</Badge>)}
                       </div>
                   </CardHeader>
               </Card>
@@ -59,13 +70,13 @@ export default function CharacterDetailPage() {
                   </CardContent>
               </Card>
               
-              {associatedStories.length > 0 && (
+              {associatedStories && associatedStories.length > 0 && (
                   <Card className="bg-transparent border-primary/20">
                       <CardHeader>
                           <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.characterDetail.associatedStories}</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                          {associatedStories.map(story => story && (
+                          {associatedStories.map((story: DocumentData) => (
                               <Link key={story.id} href={`/stories/${story.slug}`} className="block p-4 rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                   <h4 className="font-semibold text-lg text-primary group-hover:underline">{story.title[language] || story.title.en}</h4>
                                   <p className="text-sm text-muted-foreground line-clamp-2">{story.summary[language] || story.summary.en}</p>

@@ -2,21 +2,36 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { getStoryBySlug } from '@/lib/stories';
-import { getCharacterBySlug } from '@/lib/characters';
-import { getTempleBySlug } from '@/lib/temples';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, BookOpen, Palmtree, UserSquare } from 'lucide-react';
+import { ArrowRight, BookOpen, Palmtree, UserSquare, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, where, DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function StoryDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const story = getStoryBySlug(slug);
   const { language, t } = useLanguage();
+
+  const storiesQuery = query(collection(db, 'stories'), where('slug', '==', slug));
+  const [stories, isLoading] = useCollectionData(storiesQuery, { idField: 'id' });
+  const story = stories?.[0];
+
+  const charactersQuery = query(collection(db, 'characters'), where('associatedStories', 'array-contains', slug));
+  const [relatedCharacters] = useCollectionData(charactersQuery);
+
+  // This is inefficient. In a real app, you'd use a different data model or search.
+  const templesQuery = story ? query(collection(db, 'temples'), where('slug', 'in', story.relatedTemples || [])) : undefined;
+  const [relatedTemples] = useCollectionData(templesQuery);
+
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+  }
 
   if (!story) {
     notFound();
@@ -26,16 +41,13 @@ export default function StoryDetailPage() {
   const summary = story.summary[language] || story.summary.en;
   const fullText = story.fullText[language] || story.fullText.en;
 
-  const relatedCharacters = story.relatedCharacters.map(slug => getCharacterBySlug(slug)).filter(Boolean);
-  const relatedTemples = story.relatedTemples.map(slug => getTempleBySlug(slug)).filter(Boolean);
-
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
         <article className="max-w-4xl mx-auto">
             <header className="text-center mb-8">
                 <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{title}</h1>
                 <div className="mt-4 flex justify-center flex-wrap gap-2">
-                    {story.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
+                    {story.tags.map((tag: string) => <Badge key={tag} variant="secondary">{tag}</Badge>)}
                 </div>
             </header>
 
@@ -68,13 +80,13 @@ export default function StoryDetailPage() {
                 </CardContent>
             </Card>
 
-            {relatedCharacters.length > 0 && (
+            {relatedCharacters && relatedCharacters.length > 0 && (
                 <Card className="bg-transparent border-primary/20 mb-8">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-primary"><UserSquare /> {t.storyDetail.keyCharacters}</CardTitle>
                     </CardHeader>
                     <CardContent className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        {relatedCharacters.map(character => character && (
+                        {relatedCharacters.map((character: DocumentData) => (
                             <Link key={character.id} href={`/characters/${character.slug}`} className="block p-4 text-center rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                 <div className="w-24 h-24 relative mx-auto rounded-full overflow-hidden mb-2 border-2 border-accent/20">
                                 <Image src={character.image.url} alt={character.name[language] || character.name.en} data-ai-hint={character.image.hint} fill className="object-cover" />
@@ -86,13 +98,13 @@ export default function StoryDetailPage() {
                 </Card>
             )}
 
-            {relatedTemples.length > 0 && (
+            {relatedTemples && relatedTemples.length > 0 && (
                 <Card className="bg-transparent border-primary/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-primary"><Palmtree /> {t.storyDetail.relatedTemples}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                        {relatedTemples.map(temple => temple && (
+                        {relatedTemples.map((temple: DocumentData) => (
                             <Link key={temple.id} href={`/temples/${temple.slug}`} className="flex items-center gap-4 p-4 rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                 <div className="w-20 h-20 relative rounded-lg overflow-hidden shrink-0">
                                 <Image src={temple.media.images[0].url} alt={temple.name[language] || temple.name.en} data-ai-hint={temple.media.images[0].hint} fill className="object-cover" />

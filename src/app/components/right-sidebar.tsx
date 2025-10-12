@@ -1,27 +1,33 @@
 
 'use client';
 import { useLanguage } from "@/hooks/use-language";
-import { festivals } from "@/lib/festivals";
-import { deities } from "@/lib/deities";
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, limit, query, DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { Loader2 } from "lucide-react";
+
 
 export function RightSidebar() {
   const { language, t } = useLanguage();
 
-  const upcomingFestivals = festivals.slice(0, 3);
-  const suggestedDeities = deities.slice(0, 3);
+  const festivalsQuery = query(collection(db, 'festivals'), limit(3));
+  const [upcomingFestivals, festivalsLoading] = useCollectionData(festivalsQuery, { idField: 'id' });
+
+  const deitiesQuery = query(collection(db, 'deities'), limit(3));
+  const [suggestedDeities, deitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
 
   return (
-    <div className="space-y-8 sticky top-4">
+    <div className="space-y-8 sticky top-24">
       <Card>
         <CardHeader>
           <CardTitle>{t.rightSidebar.trendingFestivals}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {upcomingFestivals.map(festival => (
+          {festivalsLoading ? <Loader2 className="mx-auto animate-spin" /> : upcomingFestivals?.map((festival: DocumentData) => (
             <Link href={`/festivals/${festival.slug}`} key={festival.id} className="block group">
               <div className="flex items-center gap-3">
                  <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
@@ -29,7 +35,7 @@ export function RightSidebar() {
                  </div>
                  <div>
                     <p className="font-semibold text-sm group-hover:text-primary">{festival.name[language] || festival.name.en}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(festival.date).toLocaleDateString(language, { month: 'long', day: 'numeric' })}</p>
+                    <p className="text-xs text-muted-foreground">{new Date(festival.date.toDate()).toLocaleDateString(language, { month: 'long', day: 'numeric' })}</p>
                  </div>
               </div>
             </Link>
@@ -45,7 +51,7 @@ export function RightSidebar() {
           <CardTitle>{t.rightSidebar.suggestedDeities}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {suggestedDeities.map(deity => (
+          {deitiesLoading ? <Loader2 className="mx-auto animate-spin" /> : suggestedDeities?.map((deity: DocumentData) => (
             <Link href={`/deities/${deity.slug}`} key={deity.id} className="block group">
                 <div className="flex items-center gap-3">
                     <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">

@@ -1,8 +1,9 @@
 
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, updateDoc, increment } from 'firebase/firestore';
+import { doc, updateDoc, increment, setDoc, deleteDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { Loader2, Heart, Share2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -24,28 +25,47 @@ import {
 import { Comments } from './comments';
 import { Separator } from './ui/separator';
 
-export function VideoPlayer({ contentId }: { contentId: string }) {
+export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVideoEnd: () => void }) {
   const { language, t } = useLanguage();
   const { toast } = useToast();
   const [user] = useAuthState(auth);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const mediaRef = doc(db, 'media', contentId);
   const [media, loadingMedia] = useDocumentData(mediaRef);
   
   const authorId = media?.userId;
   const [author, loadingAuthor] = useDocumentData(authorId ? doc(db, 'users', authorId) : undefined);
+  
+  const likeRef = user ? doc(db, `media/${contentId}/likes`, user.uid) : undefined;
+  const [like, loadingLike] = useDocumentData(likeRef);
+
+  const subscriptionRef = user && authorId ? doc(db, `users/${user.uid}/subscriptions`, authorId) : undefined;
+  const [subscription, loadingSubscription] = useDocumentData(subscriptionRef);
+
+
+  useEffect(() => {
+    const videoElement = videoRef.current;
+    if (videoElement) {
+      videoElement.addEventListener('ended', onVideoEnd);
+      return () => {
+        videoElement.removeEventListener('ended', onVideoEnd);
+      };
+    }
+  }, [onVideoEnd]);
 
   const handleLike = async () => {
-    if (!user) {
+    if (!user || !likeRef) {
       toast({ variant: 'destructive', title: "You must be logged in to like a video." });
       return;
     }
-    // In a real app, you'd check if the user has already liked it.
-    // For now, we'll just increment the count.
-    await updateDoc(mediaRef, {
-      likes: increment(1)
-    });
-    toast({ title: "Liked!" });
+    if (like) {
+      await deleteDoc(likeRef);
+      await updateDoc(mediaRef, { likes: increment(-1) });
+    } else {
+      await setDoc(likeRef, { userId: user.uid });
+      await updateDoc(mediaRef, { likes: increment(1) });
+    }
   };
   
   const handleShare = () => {
@@ -53,13 +73,21 @@ export function VideoPlayer({ contentId }: { contentId: string }) {
     toast({ title: "Link Copied!", description: "The video link has been copied to your clipboard." });
   }
 
-  const handleSubscribe = () => {
-    if (!user) {
+  const handleSubscribe = async () => {
+    if (!user || !subscriptionRef || !authorId) {
       toast({ variant: 'destructive', title: "You must be logged in to subscribe." });
       return;
     }
-     // Firestore logic to add to a 'subscriptions' subcollection would go here
-    toast({ title: "Subscribed!", description: `You are now subscribed to ${author?.displayName || 'this channel'}.` });
+    if (subscription) {
+      await deleteDoc(subscriptionRef);
+      toast({ title: "Unsubscribed", description: `You have unsubscribed from ${author?.displayName || 'this channel'}.` });
+    } else {
+       await setDoc(subscriptionRef, {
+          channelId: authorId,
+          subscriptionDate: serverTimestamp(),
+        });
+      toast({ title: "Subscribed!", description: `You are now subscribed to ${author?.displayName || 'this channel'}.` });
+    }
   }
 
   if (loadingMedia || loadingAuthor) {
@@ -81,6 +109,7 @@ export function VideoPlayer({ contentId }: { contentId: string }) {
     <div className="w-full">
       <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
         <video 
+          ref={videoRef}
           key={contentId}
           src={media.mediaUrl} 
           controls 
@@ -99,30 +128,33 @@ export function VideoPlayer({ contentId }: { contentId: string }) {
           </Avatar>
           <div>
             <p className="font-semibold">{author?.displayName || 'Creator'}</p>
-            {/* In a real app, this would be a dynamic value */}
-            <p className="text-sm text-muted-foreground">1.2M Subscribers</p> 
+            <p className="text-sm text-muted-foreground">{media.subscribers || '0'} Subscribers</p> 
           </div>
-          <AlertDialog>
+           <AlertDialog>
               <AlertDialogTrigger asChild>
-                  <Button variant="default">{t.buttons.subscribe}</Button>
+                  <Button variant="default" disabled={loadingSubscription} >
+                    {subscription ? t.buttons.subscribed : t.buttons.subscribe}
+                  </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                   <AlertDialogHeader>
-                      <AlertDialogTitle>Subscribe to {author?.displayName || 'this channel'}?</AlertDialogTitle>
+                      <AlertDialogTitle>
+                        {subscription ? "Unsubscribe from" : "Subscribe to"} {author?.displayName || 'this channel'}?
+                      </AlertDialogTitle>
                       <AlertDialogDescription>
-                          You'll be notified about new videos and updates from this creator.
+                          You can always change your mind later.
                       </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSubscribe}>Subscribe</AlertDialogAction>
+                      <AlertDialogAction onClick={handleSubscribe}>{subscription ? 'Unsubscribe' : 'Subscribe'}</AlertDialogAction>
                   </AlertDialogFooter>
               </AlertDialogContent>
           </AlertDialog>
         </div>
         <div className="flex items-center gap-2 mt-4 sm:mt-0">
-          <Button variant="outline" onClick={handleLike}>
-            <Heart className="mr-2" /> {media.likes || 0}
+          <Button variant="outline" onClick={handleLike} disabled={loadingLike}>
+            <Heart className={`mr-2 ${like ? 'text-red-500 fill-current' : ''}`} /> {media.likes || 0}
           </Button>
           <Button variant="outline" onClick={handleShare}>
             <Share2 className="mr-2" /> {t.buttons.share}

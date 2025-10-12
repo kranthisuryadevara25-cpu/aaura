@@ -3,20 +3,45 @@
 
 import { FeedSidebar } from "@/components/feed-sidebar";
 import { VideoPlayer } from "@/components/video-player";
+import { useFeed } from '@/hooks/use-feed';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
+import { useMemo } from "react";
 
 export default function WatchPage({ params }: { params: { id: string }}) {
   const { id } = params;
+  const router = useRouter();
+  const { allItems, loading } = useFeed(20);
+
+  const upNextItems = useMemo(() => {
+    return allItems.filter(item => item.id !== `video-${id}`);
+  }, [allItems, id]);
+
+  const handleVideoEnd = () => {
+    if (upNextItems.length > 0) {
+      const nextItem = upNextItems[0];
+      const nextHref = nextItem.kind === 'video' 
+          ? `/watch/${nextItem.id.replace('video-', '')}`
+          : `/${nextItem.kind}s/${nextItem.meta?.slug}`;
+      router.push(nextHref);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-background">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex w-full h-screen bg-background text-foreground">
-      {/* LEFT: main player and comments */}
       <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
-        <VideoPlayer contentId={id} />
+        <VideoPlayer contentId={id} onVideoEnd={handleVideoEnd} />
       </div>
-
-      {/* RIGHT: mixed Up Next feed */}
       <aside className="w-[400px] border-l border-border overflow-y-auto hidden lg:block">
-        <FeedSidebar currentId={id} />
+        <FeedSidebar items={upNextItems} />
       </aside>
     </div>
   );

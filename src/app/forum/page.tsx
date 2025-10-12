@@ -8,17 +8,18 @@ import * as z from 'zod';
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, serverTimestamp, query, orderBy, addDoc } from 'firebase/firestore';
+import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, deleteDoc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageCircle, Send } from 'lucide-react';
+import { Loader2, MessageCircle, Send, ThumbsUp } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(500, "Post must be less than 500 characters."),
@@ -28,6 +29,23 @@ type PostFormValues = z.infer<typeof postSchema>;
 
 function PostCard({ post, author }: { post: any; author: any }) {
   const { t } = useLanguage();
+  const [user] = useAuthState(auth);
+  const postRef = doc(db, 'posts', post.id);
+  
+  const likeRef = user ? doc(db, `posts/${post.id}/likes`, user.uid) : undefined;
+  const [like] = useDocumentData(likeRef);
+  
+  const handleLike = async () => {
+      if (!user || !likeRef) return;
+      if (like) {
+          await deleteDoc(likeRef);
+          await updateDoc(postRef, { likes: increment(-1) });
+      } else {
+          await setDoc(likeRef, { userId: user.uid });
+          await updateDoc(postRef, { likes: increment(1) });
+      }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-start gap-4 space-y-0">
@@ -48,7 +66,10 @@ function PostCard({ post, author }: { post: any; author: any }) {
       <CardContent>
         <p className="whitespace-pre-wrap">{post.content}</p>
       </CardContent>
-      <CardFooter className="flex justify-end">
+      <CardFooter className="flex justify-between">
+         <Button variant="ghost" onClick={handleLike} disabled={!user}>
+            <ThumbsUp className={`mr-2 h-4 w-4 ${like ? 'text-blue-500 fill-current' : ''}`} /> {post.likes || 0}
+        </Button>
         <Button variant="ghost" asChild>
           <Link href={`/forum/${post.id}`}>
             <MessageCircle className="mr-2 h-4 w-4" /> {t.forum.viewDiscussion}
@@ -118,7 +139,7 @@ export default function ForumPage() {
         {user && (
           <Card className="mb-8">
             <CardHeader>
-              <CardTitle>{t.forum.createPostTitle}</CardTitle>
+              <h2 className="text-lg font-semibold">{t.forum.createPostTitle}</h2>
             </CardHeader>
             <CardContent>
               <Form {...form}>

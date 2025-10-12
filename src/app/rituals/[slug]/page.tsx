@@ -2,18 +2,27 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { getRitualBySlug } from '@/lib/rituals';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, ShoppingBasket, Clock } from 'lucide-react';
+import { CheckSquare, ShoppingBasket, Clock, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function RitualDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
-  const ritual = getRitualBySlug(slug);
   const { language, t } = useLanguage();
+
+  const ritualsQuery = query(collection(db, 'rituals'), where('slug', '==', slug));
+  const [rituals, isLoading] = useCollectionData(ritualsQuery);
+  const ritual = rituals?.[0];
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+  }
 
   if (!ritual) {
     notFound();
@@ -53,7 +62,7 @@ export default function RitualDetailPage() {
                         </CardHeader>
                         <CardContent>
                             <ol className="list-decimal list-inside space-y-4 text-foreground/90">
-                                {procedure.map((step, index) => (
+                                {procedure.map((step: string, index: number) => (
                                     <li key={index}>{step}</li>
                                 ))}
                             </ol>
@@ -67,7 +76,7 @@ export default function RitualDetailPage() {
                         </CardHeader>
                         <CardContent>
                             <ul className="list-disc list-inside space-y-2 text-foreground/90">
-                                {itemsRequired.map((item, index) => (
+                                {itemsRequired.map((item: string, index: number) => (
                                     <li key={index}>{item}</li>
                                 ))}
                             </ul>

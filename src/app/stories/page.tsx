@@ -1,16 +1,19 @@
 
 'use client';
 
-import { stories } from '@/lib/stories';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, ScrollText } from 'lucide-react';
+import { ArrowRight, ScrollText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 export default function StoriesPage() {
   const { language, t } = useLanguage();
+  const [stories, isLoading] = useCollectionData(collection(db, 'stories'), { idField: 'id' });
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -23,39 +26,45 @@ export default function StoriesPage() {
             </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {stories.map((story) => {
-          const title = story.title[language] || story.title.en;
-          const summary = story.summary[language] || story.summary.en;
+        {isLoading ? (
+             <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {stories?.map((story: any) => {
+            const title = story.title[language] || story.title.en;
+            const summary = story.summary[language] || story.summary.en;
 
-          return (
-            <Card key={story.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
-                <CardContent className="p-0">
-                    <div className="aspect-video relative">
-                        <Image
-                            src={story.image.url}
-                            alt={title}
-                            data-ai-hint={story.image.hint}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
-                    </div>
-                </CardContent>
-                <CardHeader>
-                    <CardTitle className="text-primary">{title}</CardTitle>
-                    <CardDescription className="line-clamp-3">{summary}</CardDescription>
-                </CardHeader>
-                <CardContent className="mt-auto">
-                    <Button asChild className="w-full">
-                        <Link href={`/stories/${story.slug}`}>
-                            {t.buttons.readStory} <ArrowRight className="ml-2" />
-                        </Link>
-                    </Button>
-                </CardContent>
-            </Card>
-          );
-        })}
-        </div>
+            return (
+                <Card key={story.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
+                    <CardContent className="p-0">
+                        <div className="aspect-video relative">
+                            <Image
+                                src={story.image.url}
+                                alt={title}
+                                data-ai-hint={story.image.hint}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                        </div>
+                    </CardContent>
+                    <CardHeader>
+                        <CardTitle className="text-primary">{title}</CardTitle>
+                        <CardDescription className="line-clamp-3">{summary}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="mt-auto">
+                        <Button asChild className="w-full">
+                            <Link href={`/stories/${story.slug}`}>
+                                {t.buttons.readStory} <ArrowRight className="ml-2" />
+                            </Link>
+                        </Button>
+                    </CardContent>
+                </Card>
+            );
+            })}
+            </div>
+        )}
     </main>
   );
 }

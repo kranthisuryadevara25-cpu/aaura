@@ -1,13 +1,10 @@
 
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { collection, getDocs, limit, orderBy, query } from "firebase/firestore";
+import { collection, getDocs, limit, orderBy, query, DocumentData } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
-import { temples } from "@/lib/temples";
-import { stories } from "@/lib/stories";
-import { deities } from "@/lib/deities";
 
 function shuffle<T>(arr: T[]) {
   const a = arr.slice();
@@ -24,6 +21,54 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
     return field[lang] || field["en"] || "";
 };
 
+const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity'): FeedItem => {
+    const data = doc.data();
+    switch(kind) {
+        case 'video':
+             return {
+                id: `video-${doc.id}`,
+                kind: "video",
+                title: data.title_en ? { en: data.title_en, hi: data.title_hi, te: data.title_te } : data.title,
+                description: data.description_en ? { en: data.description_en, hi: data.description_hi, te: data.description_te } : data.description,
+                thumbnail: data.thumbnailUrl || "",
+                mediaUrl: data.mediaUrl,
+                meta: { duration: data.duration, views: data.views, userId: data.userId, channelName: data.channelName },
+                createdAt: data.uploadDate?.toDate(),
+            };
+        case 'temple':
+             return {
+                id: `temple-${doc.id}`,
+                kind: "temple",
+                title: data.name,
+                description: data.importance.mythological,
+                thumbnail: data.media?.images?.[0].url,
+                meta: { location: data.location, slug: data.slug, imageHint: data.media?.images?.[0]?.hint },
+                createdAt: new Date(),
+            };
+        case 'story':
+            return {
+                id: `story-${doc.id}`,
+                kind: "story",
+                title: data.title,
+                description: data.summary,
+                thumbnail: data.image?.url,
+                meta: { slug: data.slug, imageHint: data.image?.hint },
+                createdAt: data.createdAt?.toDate(),
+            };
+        case 'deity':
+             return {
+                id: `deity-${doc.id}`,
+                kind: "deity",
+                title: data.name,
+                description: data.description,
+                thumbnail: data.images?.[0].url,
+                meta: { slug: data.slug, imageHint: data.images?.[0]?.hint },
+                createdAt: new Date(),
+            };
+    }
+}
+
+
 export const useFeed = (pageSize = 20) => {
   const { language } = useLanguage();
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
@@ -35,82 +80,24 @@ export const useFeed = (pageSize = 20) => {
       setLoading(true);
 
       const mediaQuery = query(collection(db, "media"), orderBy("uploadDate", "desc"), limit(pageSize));
+      const templesQuery = query(collection(db, "temples"), limit(pageSize));
+      const storiesQuery = query(collection(db, "stories"), orderBy("createdAt", "desc"), limit(pageSize));
+      const deitiesQuery = query(collection(db, "deities"), limit(pageSize));
       
-      const [mediaSnap] = await Promise.all([
+      const [mediaSnap, templesSnap, storiesSnap, deitiesSnap] = await Promise.all([
         getDocs(mediaQuery),
+        getDocs(templesQuery),
+        getDocs(storiesQuery),
+        getDocs(deitiesQuery),
       ]);
 
       if (canceled) return;
 
-      const videos: FeedItem[] = mediaSnap.docs.map((d) => {
-        const data = d.data() as any;
-        
-        const title: Record<string, string> = {};
-        if (data.title_en) title.en = data.title_en;
-        if (data.title_hi) title.hi = data.title_hi;
-        if (data.title_te) title.te = data.title_te;
-        if (data.title_mr) title.mr = data.title_mr;
-        if (data.title_ta) title.ta = data.title_ta;
-        if (data.title_kn) title.kn = data.title_kn;
-        if (data.title_bn) title.bn = data.title_bn;
-        if (data.title) title.en = data.title;
-
-
-        const description: Record<string, string> = {};
-        if (data.description_en) description.en = data.description_en;
-        if (data.description_hi) description.hi = data.description_hi;
-        if (data.description_te) description.te = data.description_te;
-        if (data.description_mr) description.mr = data.description_mr;
-        if (data.description_ta) description.ta = data.description_ta;
-        if (data.description_kn) description.kn = data.description_kn;
-        if (data.description_bn) description.bn = data.description_bn;
-        if (data.description) description.en = data.description;
-
-        return {
-          id: `video-${d.id}`,
-          kind: "video",
-          title: title,
-          description: description,
-          thumbnail: data.thumbnailUrl || "",
-          mediaUrl: data.mediaUrl,
-          meta: { duration: data.duration, views: data.views, userId: data.userId, uploadDate: data.uploadDate },
-          createdAt: data.uploadDate?.toDate(),
-        } as FeedItem;
-      });
-
-      const templeItems: FeedItem[] = temples.map((data) => ({
-            id: `temple-${data.id}`,
-            kind: "temple",
-            title: data.name,
-            description: data.importance.mythological,
-            thumbnail: data.media?.images?.[0].url,
-            meta: { location: data.location, slug: data.slug, imageHint: data.media?.images?.[0]?.hint },
-            createdAt: new Date(),
-        }
-      ));
-
-      const storyItems: FeedItem[] = stories.map((data) => ({
-            id: `story-${data.id}`,
-            kind: "story",
-            title: data.title,
-            description: data.summary,
-            thumbnail: data.image?.url,
-            meta: { slug: data.slug, imageHint: data.image?.hint },
-            createdAt: new Date(), // Replace with actual createdAt field if available
-        }
-      ));
-
-      const deityItems: FeedItem[] = deities.map((data) => ({
-            id: `deity-${data.id}`,
-            kind: "deity",
-            title: data.name,
-            description: data.description,
-            thumbnail: data.images?.[0].url,
-            meta: { slug: data.slug, imageHint: data.images?.[0]?.hint },
-            createdAt: new Date(),
-        }
-      ));
-
+      const videos: FeedItem[] = mediaSnap.docs.map(d => mapToFeedItem(d, 'video'));
+      const templeItems: FeedItem[] = templesSnap.docs.map((d) => mapToFeedItem(d, 'temple'));
+      const storyItems: FeedItem[] = storiesSnap.docs.map((d) => mapToFeedItem(d, 'story'));
+      const deityItems: FeedItem[] = deitiesSnap.docs.map((d) => mapToFeedItem(d, 'deity'));
+      
       const combined = shuffle([...videos, ...templeItems, ...storyItems, ...deityItems]);
       
       setAllItems(combined);

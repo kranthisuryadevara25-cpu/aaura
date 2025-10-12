@@ -1,17 +1,42 @@
 
 'use client';
 
-import { getTodaysPanchang } from '@/lib/panchang';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { CalendarDays, Sunrise, Sunset, Moon, Star, AlertTriangle, PartyPopper } from 'lucide-react';
+import { CalendarDays, Sunrise, Sunset, Moon, Star, AlertTriangle, PartyPopper, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { getFestivalBySlug } from '@/lib/festivals';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc, collection, query, where } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { format } from 'date-fns';
 
 export default function PanchangPage() {
     const { t, language } = useLanguage();
-    const panchang = getTodaysPanchang();
+    const todayStr = format(new Date(), 'yyyy-MM-dd');
+    
+    const [panchang, isLoading] = useDocumentData(doc(db, 'panchang', todayStr));
+    
+    const festivalSlugs = panchang?.festival_en?.map((f: string) => f.toLowerCase().replace(/ /g, '-')) || [];
+    const festivalsQuery = query(collection(db, 'festivals'), where('slug', 'in', festivalSlugs.length > 0 ? festivalSlugs : ['non-existent']));
+    const [festivals, festivalsLoading] = useCollectionData(festivalsQuery, { idField: 'id' });
+
+    if (isLoading || festivalsLoading) {
+      return (
+        <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </main>
+      )
+    }
+
+    if (!panchang) {
+       return (
+          <main className="flex-grow container mx-auto px-4 py-8 md:py-16 text-center">
+            <h1 className="text-2xl font-semibold">Panchang data for today not available.</h1>
+          </main>
+       )
+    }
 
     const panchangItems = [
         { icon: Star, label: "Tithi", value: panchang.tithi },
@@ -40,12 +65,12 @@ export default function PanchangPage() {
                 <CalendarDays className="h-10 w-10" /> {t.panchang.title}
             </h1>
             <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                {panchang.date}
+                {new Date(todayStr).toLocaleDateString(language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
         </div>
         
         <div className="max-w-6xl mx-auto space-y-8">
-        {panchang.festivals.length > 0 && (
+        {festivals && festivals.length > 0 && (
             <Card className="bg-primary/10 border-primary/20">
                 <CardHeader>
                       <div className="flex items-center gap-4">
@@ -53,16 +78,15 @@ export default function PanchangPage() {
                         <div>
                             <CardTitle className="text-primary">{t.panchang.todaysFestivals}</CardTitle>
                             <div className="flex flex-wrap gap-2 mt-1">
-                                {panchang.festivals.map(festivalSlug => {
-                                    const festival = getFestivalBySlug(festivalSlug.toLowerCase().replace(/ /g, '-'));
+                                {festivals.map((festival: any) => {
                                     if (festival) {
                                         return (
                                             <Link key={festival.id} href={`/festivals/${festival.slug}`} passHref>
-                                                <Badge variant="default" className="cursor-pointer hover:bg-primary/80">{festival.name[language] || festival.name.en}</Badge>
+                                                <Badge variant="default" className="cursor-pointer hover:bg-primary/80">{(festival.name as any)[language] || festival.name.en}</Badge>
                                             </Link>
                                         );
                                     }
-                                    return <Badge key={festivalSlug} variant="secondary">{festivalSlug}</Badge>;
+                                    return null;
                                 })}
                             </div>
                         </div>

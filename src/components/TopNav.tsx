@@ -16,7 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Upload, Film, MessageSquare } from "lucide-react";
 
 export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) => {
   const [user] = useAuthState(auth);
@@ -33,6 +33,30 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
       </div>
 
       <div className="flex items-center gap-3">
+        {user && (
+           <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Upload className="h-5 w-5" />
+                <span className="sr-only">Create</span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem asChild>
+                <Link href="/upload">
+                  <Film className="mr-2 h-4 w-4" />
+                  <span>Upload Media</span>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/forum">
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  <span>Create Post</span>
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         <LanguageSwitcher />
         {user ? (
             <DropdownMenu>

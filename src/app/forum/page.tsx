@@ -20,12 +20,87 @@ import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 
-
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(500, "Post must be less than 500 characters."),
 });
 
 type PostFormValues = z.infer<typeof postSchema>;
+
+export function CreatePost() {
+  const [user] = useAuthState(auth);
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const { t } = useLanguage();
+
+  const form = useForm<PostFormValues>({
+    resolver: zodResolver(postSchema),
+    defaultValues: { content: '' },
+  });
+
+  const onSubmit = (data: PostFormValues) => {
+    if (!user) {
+      toast({ variant: 'destructive', title: 'You must be logged in to post.' });
+      return;
+    }
+    startTransition(async () => {
+      try {
+        const postsCollection = collection(db, 'posts');
+        await addDoc(postsCollection, {
+          authorId: user.uid,
+          content: data.content,
+          createdAt: serverTimestamp(),
+          likes: 0,
+          commentsCount: 0,
+        });
+        form.reset();
+        toast({ title: 'Post created successfully!' });
+      } catch (error) {
+        console.error("Error creating post:", error);
+        toast({ variant: 'destructive', title: 'Failed to create post.' });
+      }
+    });
+  };
+
+  if (!user) {
+    return null; // Don't show the create post form if user is not logged in.
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <h2 className="text-lg font-semibold">{t.forum.createPostTitle}</h2>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Textarea
+                      placeholder={t.forum.createPostPlaceholder}
+                      className="resize-none"
+                      rows={4}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={isPending}>
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+              {t.buttons.post}
+            </Button>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export function PostCard({ post, authorId }: { post: any; authorId: string }) {
   const { t } = useLanguage();
@@ -59,7 +134,7 @@ export function PostCard({ post, authorId }: { post: any; authorId: string }) {
           <div className="flex items-center justify-between">
             <p className="font-semibold">{author?.displayName || 'Anonymous'}</p>
             <p className="text-xs text-muted-foreground">
-              {post.createdAt ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+              {post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
             </p>
           </div>
           <p className="text-sm text-muted-foreground">@{author?.email}</p>
@@ -83,42 +158,9 @@ export function PostCard({ post, authorId }: { post: any; authorId: string }) {
 }
 
 export default function ForumPage() {
-  const [user] = useAuthState(auth);
-  const { toast } = useToast();
-  const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
-
   const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
   const [posts, postsLoading] = useCollectionData(postsQuery, { idField: 'id' });
-
-  const form = useForm<PostFormValues>({
-    resolver: zodResolver(postSchema),
-    defaultValues: { content: '' },
-  });
-
-  const onSubmit = (data: PostFormValues) => {
-    if (!user) {
-      toast({ variant: 'destructive', title: 'You must be logged in to post.' });
-      return;
-    }
-    startTransition(async () => {
-      try {
-        const postsCollection = collection(db, 'posts');
-        await addDoc(postsCollection, {
-          authorId: user.uid,
-          content: data.content,
-          createdAt: serverTimestamp(),
-          likes: 0,
-          commentsCount: 0,
-        });
-        form.reset();
-        toast({ title: 'Post created successfully!' });
-      } catch (error) {
-        console.error("Error creating post:", error);
-        toast({ variant: 'destructive', title: 'Failed to create post.' });
-      }
-    });
-  };
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -132,40 +174,9 @@ export default function ForumPage() {
           </p>
         </div>
 
-        {user && (
-          <Card className="mb-8">
-            <CardHeader>
-              <h2 className="text-lg font-semibold">{t.forum.createPostTitle}</h2>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="content"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormControl>
-                          <Textarea
-                            placeholder={t.forum.createPostPlaceholder}
-                            className="resize-none"
-                            rows={4}
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" disabled={isPending}>
-                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    {t.buttons.post}
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
-        )}
+        <div className="mb-8">
+            <CreatePost />
+        </div>
 
         <div className="space-y-6">
           {postsLoading ? (

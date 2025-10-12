@@ -4,14 +4,14 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FeedCard } from "@/components/FeedCard";
-import { useLanguage } from "@/hooks/use-language";
 import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebase";
 import { doc, getDoc, DocumentData } from "firebase/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FileQuestion } from 'lucide-react';
-import { PostCard } from "@/app/forum/page";
+import { PostCard, CreatePost } from "@/app/forum/page";
+import sampleFeed from '@/lib/sample-feed.json';
 
 type FeedItem = {
     id: string;
@@ -21,7 +21,6 @@ type FeedItem = {
 
 export function Feed({ searchQuery }: { searchQuery: string }) {
   const [user] = useAuthState(auth);
-  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
 
@@ -30,15 +29,34 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
       setLoading(true);
       try {
         const personalizedFeed = await getPersonalizedFeed({ userId: user?.uid });
-        const itemPromises = personalizedFeed.feed.map(async (item) => {
-          const itemDoc = await getDoc(doc(db, item.contentType, item.contentId));
-          if (itemDoc.exists()) {
-            return { id: itemDoc.id, type: item.contentType, data: itemDoc.data() };
-          }
-          return null;
-        });
-        const items = (await Promise.all(itemPromises)).filter(Boolean) as FeedItem[];
-        setFeedItems(items);
+        if (personalizedFeed.feed.length > 0) {
+            const itemPromises = personalizedFeed.feed.map(async (item) => {
+              const itemDoc = await getDoc(doc(db, item.contentType, item.contentId));
+              if (itemDoc.exists()) {
+                return { id: itemDoc.id, type: item.contentType, data: itemDoc.data() };
+              }
+              return null;
+            });
+            const items = (await Promise.all(itemPromises)).filter(Boolean) as FeedItem[];
+            setFeedItems(items);
+        } else {
+            // Fallback to dummy data if feed is empty
+            const dummyItems = sampleFeed.feed.map(item => ({
+                id: item.id,
+                type: item.type as any,
+                data: {
+                    title_en: item.title,
+                    description_en: (item as any).summary || (item as any).location,
+                    thumbnailUrl: item.image?.url,
+                    views: item.engagement?.views,
+                    likes: item.engagement?.likes,
+                    commentsCount: item.engagement?.comments,
+                    userId: (item as any).author?.name, // Not ideal, but for visual representation
+                    ...item
+                }
+            }));
+            setFeedItems(dummyItems as FeedItem[]);
+        }
       } catch (error) {
         console.error("Failed to fetch personalized feed:", error);
       } finally {
@@ -67,32 +85,29 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
     );
   }
 
-  if (filteredItems.length === 0) {
-    return (
-        <div className="flex justify-center items-center h-96">
-            <Alert className="max-w-md text-center">
-              <FileQuestion className="h-4 w-4" />
-              <AlertTitle>No Content Found</AlertTitle>
-              <AlertDescription>
-                We couldn't find any content for your feed right now. Try uploading media or exploring other sections!
-              </AlertDescription>
-            </Alert>
-        </div>
-    );
-  }
-
   return (
     <div className="max-w-3xl mx-auto px-4 py-4 space-y-8">
-        {filteredItems.map(({id, type, data}) => {
-            if (type === 'media') {
-                 return <FeedCard key={id} item={{...data, id: id}} />
-            }
-            if (type === 'post') {
-                return <PostCard key={id} post={{...data, id: id}} authorId={data.authorId} />
-            }
-            // Add renderers for other types like story, deity etc. if needed
-            return null;
-        })}
+        {user && <CreatePost />}
+        
+        {filteredItems.length > 0 ? (
+            filteredItems.map(({id, type, data}) => {
+                if (type === 'post') {
+                    return <PostCard key={id} post={{...data, id: id}} authorId={data.authorId} />
+                }
+                // Use FeedCard for all other types, as it can handle them.
+                return <FeedCard key={id} item={{...data, id: id}} />
+            })
+        ) : (
+             <div className="flex justify-center items-center h-96">
+                <Alert className="max-w-md text-center">
+                  <FileQuestion className="h-4 w-4" />
+                  <AlertTitle>No Content Found</AlertTitle>
+                  <AlertDescription>
+                    We couldn't find any content for your feed right now. Why not create a post?
+                  </AlertDescription>
+                </Alert>
+            </div>
+        )}
     </div>
   );
 }

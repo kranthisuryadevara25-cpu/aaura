@@ -2,7 +2,7 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -10,13 +10,13 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
-import { useLanguage } from '@/hooks/use-language';
 import { Comments } from '@/components/comments';
 
 
 export default function PostDetailPage() {
   const params = useParams();
   const postId = params.postId as string;
+  const db = useFirestore();
 
   const postRef = doc(db, 'posts', postId);
   const [post, postLoading] = useDocumentData(postRef);

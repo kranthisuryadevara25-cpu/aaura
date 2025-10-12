@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { auth, db } from '@/lib/firebase';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
@@ -26,6 +27,7 @@ const commentSchema = z.object({
 type CommentFormValues = z.infer<typeof commentSchema>;
 
 function CommentCard({ comment }: { comment: any; }) {
+  const db = useFirestore();
   const [author] = useDocumentData(comment.authorId ? doc(db, 'users', comment.authorId) : undefined);
   return (
     <div className="flex items-start gap-4">
@@ -52,6 +54,8 @@ interface CommentsProps {
 }
 
 export function Comments({ contentId, contentType }: CommentsProps) {
+  const auth = useAuth();
+  const db = useFirestore();
   const [user] = useAuthState(auth);
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();

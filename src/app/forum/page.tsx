@@ -1,10 +1,11 @@
+
 'use client';
 
 import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { auth, db } from '@/lib/firebase';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, deleteDoc, setDoc } from 'firebase/firestore';
@@ -26,10 +27,11 @@ const postSchema = z.object({
 type PostFormValues = z.infer<typeof postSchema>;
 
 export function CreatePost() {
-  const [user] = useAuthState(auth);
+  const [user] = useAuthState(useAuth());
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
+  const db = useFirestore();
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
@@ -104,6 +106,8 @@ export function CreatePost() {
 export function PostCard({ post }: { post: any; }) {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const auth = useAuth();
+  const db = useFirestore();
   const [user] = useAuthState(auth);
   
   const authorRef = doc(db, 'users', post.authorId);
@@ -177,6 +181,7 @@ export function PostCard({ post }: { post: any; }) {
 
 export default function ForumPage() {
   const { t } = useLanguage();
+  const db = useFirestore();
   const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
   const [posts, postsLoading] = useCollectionData(postsQuery, { idField: 'id' });
 

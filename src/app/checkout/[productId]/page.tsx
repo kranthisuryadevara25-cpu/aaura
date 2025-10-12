@@ -3,7 +3,7 @@
 import { useParams } from 'next/navigation';
 import { useEffect, useState, useTransition } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/lib/firebase/provider';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +29,7 @@ export default function CheckoutPage() {
     const productId = params.productId as string;
     const product = products.find(p => p.id === productId);
 
+    const auth = useAuth();
     const [user] = useAuthState(auth);
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();

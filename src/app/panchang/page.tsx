@@ -8,13 +8,14 @@ import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc, collection, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { format } from 'date-fns';
 
 export default function PanchangPage() {
     const { t, language } = useLanguage();
     const todayStr = format(new Date(), 'yyyy-MM-dd');
+    const db = useFirestore();
     
     const [panchang, isLoading] = useDocumentData(doc(db, 'panchang', todayStr));
     

@@ -2,7 +2,7 @@
 "use client";
 import { useEffect, useState, useCallback } from "react";
 import { collection, getDoc, doc, DocumentData } from "firebase/firestore";
-import { db, auth } from "@/lib/firebase";
+import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
@@ -73,6 +73,8 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
 
 export const useFeed = (pageSize = 20) => {
   const { language } = useLanguage();
+  const auth = useAuth();
+  const db = useFirestore();
   const [user] = useAuthState(auth);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -111,7 +113,7 @@ export const useFeed = (pageSize = 20) => {
     return () => {
       canceled = true;
     };
-  }, [user, pageSize]); 
+  }, [user, pageSize, db]); 
 
   const filterItems = useCallback((searchQuery: string): FeedItem[] => {
     if (!searchQuery) {

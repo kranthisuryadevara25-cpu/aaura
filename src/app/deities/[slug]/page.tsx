@@ -11,7 +11,7 @@ import { getDeityDailyRelevance, type DeityDailyRelevanceOutput } from '@/ai/flo
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function DeityDetailPage() {
   const params = useParams();
@@ -19,6 +19,7 @@ export default function DeityDetailPage() {
   const { language, t } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
   const [isLoadingContent, setIsLoadingContent] = useState(true);
+  const db = useFirestore();
 
   const deitiesQuery = query(collection(db, 'deities'), where('slug', '==', slug));
   const [deities, isDeitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });

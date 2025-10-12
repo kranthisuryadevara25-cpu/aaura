@@ -11,12 +11,13 @@ import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where, DocumentData } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function FestivalDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
+  const db = useFirestore();
 
   const festivalsQuery = query(collection(db, 'festivals'), where('slug', '==', slug));
   const [festivals, isLoading] = useCollectionData(festivalsQuery, { idField: 'id' });

@@ -7,10 +7,11 @@ import { RightSidebar } from "@/app/components/right-sidebar";
 import { Feed } from "./components/feed";
 import { CreateContent } from "./components/CreateContent";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase";
+import { useAuth } from "@/lib/firebase/provider";
 
 export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');
+  const auth = useAuth();
   const [user] = useAuthState(auth);
 
   return (

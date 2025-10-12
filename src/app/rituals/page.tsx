@@ -10,10 +10,11 @@ import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function RitualsPage() {
   const { language, t } = useLanguage();
+  const db = useFirestore();
   const [rituals, isLoading] = useCollectionData(collection(db, 'rituals'), { idField: 'id' });
 
   return (

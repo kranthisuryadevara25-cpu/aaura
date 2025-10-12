@@ -3,7 +3,7 @@
 
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where, doc, updateDoc, DocumentData } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 import { Loader2, CheckCircle, XCircle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ interface MediaItem extends DocumentData {
 export default function AdminReviewPage() {
   const { t } = useLanguage();
   const { toast } = useToast();
+  const db = useFirestore();
 
   const pendingMediaQuery = query(collection(db, 'media'), where('status', '==', 'pending'));
   const [pendingMedia, isLoading] = useCollectionData(pendingMediaQuery, { idField: 'id' });

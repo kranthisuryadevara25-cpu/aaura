@@ -1,9 +1,11 @@
+
 // This is a minimal root layout.
 // The main page layout is now in src/app/page.tsx.
 
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/hooks/use-language";
+import { FirebaseProvider } from "@/lib/firebase/provider";
 
 export default function RootLayout({
   children,
@@ -24,7 +26,9 @@ export default function RootLayout({
       </head>
       <body className="font-body antialiased bg-background">
           <LanguageProvider>
-            {children}
+            <FirebaseProvider>
+                {children}
+            </FirebaseProvider>
           </LanguageProvider>
         <Toaster />
       </body>

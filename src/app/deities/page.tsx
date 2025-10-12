@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function DeitiesPage() {
   const { language, t } = useLanguage();
+  const db = useFirestore();
   const [deities, isLoading] = useCollectionData(collection(db, 'deities'), { idField: 'id' });
 
 

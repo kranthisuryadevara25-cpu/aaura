@@ -7,12 +7,13 @@ import Image from "next/image";
 import { formatDistanceToNow } from 'date-fns';
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import { doc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { useFirestore } from "@/lib/firebase/provider";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Heart, MessageCircle } from "lucide-react";
 import { Card } from "./ui/card";
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {
+  const db = useFirestore();
   const [author, loading] = useDocumentData(userId ? doc(db, 'users', userId) : undefined);
 
   if (loading || !author) {

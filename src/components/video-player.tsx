@@ -1,9 +1,10 @@
+
 'use client';
 
 import { useEffect, useRef } from 'react';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc, updateDoc, increment, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { Loader2, Heart, Share2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -27,6 +28,8 @@ import { Separator } from './ui/separator';
 export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVideoEnd: () => void }) {
   const { language, t } = useLanguage();
   const { toast } = useToast();
+  const auth = useAuth();
+  const db = useFirestore();
   const [user] = useAuthState(auth);
   const videoRef = useRef<HTMLVideoElement>(null);
 

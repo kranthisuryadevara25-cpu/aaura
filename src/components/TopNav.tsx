@@ -5,7 +5,7 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SearchBar, type SearchBarProps } from "@/components/SearchBar";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { auth, db } from "@/lib/firebase";
+import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
@@ -21,6 +21,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Upload, Film, MessageSquare } from "lucide-react";
 
 const UserStats = () => {
+    const auth = useAuth();
+    const db = useFirestore();
     const [user] = useAuthState(auth);
     const userRef = user ? doc(db, 'users', user.uid) : undefined;
     const [userData] = useDocumentData(userRef);
@@ -44,6 +46,7 @@ const UserStats = () => {
 }
 
 export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) => {
+  const auth = useAuth();
   const [user] = useAuthState(auth);
 
   const handleSignOut = () => {

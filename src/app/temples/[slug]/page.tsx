@@ -12,7 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -27,6 +27,8 @@ export default function TempleDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
+  const auth = useAuth();
+  const db = useFirestore();
   const [user] = useAuthState(auth);
   const { toast } = useToast();
 

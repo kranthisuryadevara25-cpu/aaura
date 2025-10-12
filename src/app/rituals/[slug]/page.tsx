@@ -9,12 +9,13 @@ import { CheckSquare, ShoppingBasket, Clock, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function RitualDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
+  const db = useFirestore();
 
   const ritualsQuery = query(collection(db, 'rituals'), where('slug', '==', slug));
   const [rituals, isLoading] = useCollectionData(ritualsQuery);

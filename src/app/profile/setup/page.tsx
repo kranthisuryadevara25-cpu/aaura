@@ -21,7 +21,7 @@ import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parse, isValid } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { auth, db } from '@/lib/firebase';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
@@ -64,6 +64,8 @@ const getZodiacSign = (date: Date): (typeof zodiacSigns)[number] => {
 export default function ProfileSetupPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const auth = useAuth();
+  const db = useFirestore();
   const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
 

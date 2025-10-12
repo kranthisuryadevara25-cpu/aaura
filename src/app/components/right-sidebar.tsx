@@ -7,12 +7,13 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, limit, query, DocumentData } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 import { Loader2 } from "lucide-react";
 
 
 export function RightSidebar() {
   const { language, t } = useLanguage();
+  const db = useFirestore();
 
   const festivalsQuery = query(collection(db, 'festivals'), limit(3));
   const [upcomingFestivals, festivalsLoading] = useCollectionData(festivalsQuery, { idField: 'id' });

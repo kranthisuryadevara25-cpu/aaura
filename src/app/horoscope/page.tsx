@@ -1,7 +1,7 @@
 
 'use client';
 
-import { auth, db } from '@/lib/firebase';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
@@ -13,6 +13,8 @@ import { useLanguage } from '@/hooks/use-language';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function HoroscopePage() {
+  const auth = useAuth();
+  const db = useFirestore();
   const [user, authLoading] = useAuthState(auth);
   const { t } = useLanguage();
 

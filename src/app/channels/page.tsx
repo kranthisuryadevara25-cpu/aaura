@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, DocumentData } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
@@ -21,6 +21,7 @@ interface Channel extends DocumentData {
 
 export default function ChannelsPage() {
   const { language, t } = useLanguage();
+  const db = useFirestore();
   const channelsQuery = query(collection(db, 'channels'));
   const [channels, isLoading] = useCollectionData(channelsQuery, {
     idField: 'id',

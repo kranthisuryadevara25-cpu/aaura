@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { FeedCard } from "@/components/FeedCard";
 import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth, db } from "@/lib/firebase";
+import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { doc, getDoc, DocumentData } from "firebase/firestore";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { FileQuestion } from 'lucide-react';
@@ -19,6 +19,8 @@ type FeedItem = {
 };
 
 export function Feed({ searchQuery }: { searchQuery: string }) {
+  const auth = useAuth();
+  const db = useFirestore();
   const [user, authLoading] = useAuthState(auth);
   const [loading, setLoading] = useState(true);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
@@ -106,7 +108,7 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
         fetchFeed();
     }
 
-  }, [user, authLoading]);
+  }, [user, authLoading, db]);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery) return feedItems;

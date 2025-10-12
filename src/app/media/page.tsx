@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Film, Music, Mic } from 'lucide-react';
 import { placeholderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/hooks/use-language';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 const getIconForType = (type: string) => {
     switch (type) {
@@ -28,10 +28,11 @@ const getIconForType = (type: string) => {
 
 export default function MediaPage() {
   const { language, t } = useLanguage();
+  const db = useFirestore();
 
   const mediaQuery = useMemo(() => {
     return query(collection(db, 'media'), where('status', '==', 'approved'));
-  }, []);
+  }, [db]);
 
   const [media, isLoading] = useCollectionData(mediaQuery, { idField: 'id' });
   

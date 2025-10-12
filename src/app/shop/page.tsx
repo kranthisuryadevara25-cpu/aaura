@@ -9,10 +9,11 @@ import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function ShopPage() {
   const { t, language } = useLanguage();
+  const db = useFirestore();
   const [products, isLoading] = useCollectionData(collection(db, 'products'), { idField: 'id' });
 
   return (

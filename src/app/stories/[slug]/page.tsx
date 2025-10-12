@@ -10,12 +10,13 @@ import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where, DocumentData } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function StoryDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
+  const db = useFirestore();
 
   const storiesQuery = query(collection(db, 'stories'), where('slug', '==', slug));
   const [stories, isLoading] = useCollectionData(storiesQuery, { idField: 'id' });

@@ -2,7 +2,7 @@
 'use client';
 
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import { useAuth } from '@/lib/firebase/provider';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { MessageSquare, Video } from 'lucide-react';
 import Link from 'next/link';
 
 export function CreateContent() {
+  const auth = useAuth();
   const [user] = useAuthState(auth);
 
   if (!user) {

@@ -10,8 +10,42 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getFirebaseAdmin } from '@/lib/firebase/server';
-import type { Firestore } from 'firebase-admin/firestore';
+import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import dotenv from 'dotenv';
+
+// --- Server-Side Firebase Admin Initialization ---
+let adminApp: App;
+let db: Firestore;
+
+function initializeFirebaseAdmin() {
+  if (getApps().some(app => app.name === 'firebase-admin-personalized-feed')) {
+    adminApp = getApps().find(app => app.name === 'firebase-admin-personalized-feed')!;
+  } else {
+    try {
+      // Load environment variables from .env file
+      dotenv.config();
+      
+      const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+      if (!serviceAccountString) {
+        throw new Error('The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.');
+      }
+      
+      const serviceAccount = JSON.parse(serviceAccountString);
+
+      adminApp = initializeApp(
+        {
+          credential: cert(serviceAccount),
+        },
+        'firebase-admin-personalized-feed' // Use a unique name for this instance
+      );
+    } catch (error: any) {
+      console.error('🔥 Firebase Admin SDK initialization failed:', error);
+      throw new Error(`Firebase Admin SDK could not be initialized: ${error.message}`);
+    }
+  }
+  db = getFirestore(adminApp);
+}
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
@@ -65,7 +99,7 @@ const personalizedFeedFlow = ai.defineFlow(
     outputSchema: PersonalizedFeedOutputSchema,
   },
   async (input) => {
-    const { db } = getFirebaseAdmin();
+    initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
     
     const { userId, pageSize } = input;
     

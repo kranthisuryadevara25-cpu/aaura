@@ -1,8 +1,11 @@
-'use server';
 
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
+
+// Since this file is only ever imported on the server, we can directly require the JSON.
+// This is more robust in some bundler environments.
+const serviceAccount = require('./secrets/serviceAccountKey.json');
 
 let adminApp: App;
 let db: Firestore;
@@ -10,15 +13,13 @@ let auth: Auth;
 
 /**
  * Initializes (or reuses) the Firebase Admin SDK app instance.
- * Uses FIREBASE_SERVICE_ACCOUNT_KEY from environment variables.
+ * Uses a directly required service account key.
  */
 export function getFirebaseAdmin() {
   if (getApps().some(app => app.name === 'firebase-admin')) {
     adminApp = getApps().find(app => app.name === 'firebase-admin')!;
   } else {
     try {
-      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
-
       adminApp = initializeApp(
         {
           credential: cert(serviceAccount),

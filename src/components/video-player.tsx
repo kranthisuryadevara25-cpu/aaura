@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -36,9 +37,10 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
   const [media, loadingMedia] = useDocumentData(mediaRef);
   
   const authorId = media?.userId;
-  const [author, loadingAuthor] = useDocumentData(authorId ? doc(db, 'users', authorId) : undefined);
+  const authorRef = authorId ? doc(db, 'users', authorId) : undefined;
+  const [author, loadingAuthor] = useDocumentData(authorRef);
   
-  const likeRef = user ? doc(db, `media/${contentId}/likes`, user.uid) : undefined;
+  const likeRef = user ? doc(db, `media/${contentId}/likes/${user.uid}`) : undefined;
   const [like, loadingLike] = useDocumentData(likeRef);
 
   const subscriptionRef = user && authorId ? doc(db, `users/${user.uid}/subscriptions`, authorId) : undefined;
@@ -49,10 +51,12 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
     const videoElement = videoRef.current;
     const handleViewCount = () => {
       // Increment view count only once per session
-      const viewed = sessionStorage.getItem(`viewed-${contentId}`);
-      if (!viewed) {
-        updateDoc(mediaRef, { views: increment(1) });
-        sessionStorage.setItem(`viewed-${contentId}`, 'true');
+      if (typeof window !== 'undefined') {
+        const viewed = sessionStorage.getItem(`viewed-${contentId}`);
+        if (!viewed) {
+          updateDoc(mediaRef, { views: increment(1) });
+          sessionStorage.setItem(`viewed-${contentId}`, 'true');
+        }
       }
     };
 
@@ -76,7 +80,7 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
             await deleteDoc(likeRef);
             await updateDoc(mediaRef, { likes: increment(-1) });
         } else {
-            await setDoc(likeRef, { userId: user.uid });
+            await setDoc(likeRef, { userId: user.uid, createdAt: serverTimestamp() });
             await updateDoc(mediaRef, { likes: increment(1) });
         }
     } catch(e) {
@@ -86,18 +90,19 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
   };
   
   const handleShare = () => {
-    navigator.clipboard.writeText(window.location.href);
-    toast({ title: "Link Copied!", description: "The video link has been copied to your clipboard." });
+    if (typeof window !== 'undefined') {
+        navigator.clipboard.writeText(window.location.href);
+        toast({ title: "Link Copied!", description: "The video link has been copied to your clipboard." });
+    }
   }
 
   const handleSubscribe = async () => {
-    if (!user || !subscriptionRef || !authorId) {
+    if (!user || !subscriptionRef || !authorId || !authorRef) {
       toast({ variant: 'destructive', title: "You must be logged in to subscribe." });
       return;
     }
     
     const userRef = doc(db, 'users', user.uid);
-    const authorRef = doc(db, 'users', authorId);
 
     try {
         if (subscription) {

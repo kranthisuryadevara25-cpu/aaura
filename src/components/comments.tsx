@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useTransition } from 'react';
@@ -6,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -17,7 +18,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
 
 const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long."),
@@ -27,7 +27,8 @@ type CommentFormValues = z.infer<typeof commentSchema>;
 
 function CommentCard({ comment }: { comment: any; }) {
   const db = useFirestore();
-  const [author] = useDocumentData(comment.authorId ? doc(db, 'users', comment.authorId) : undefined);
+  const authorRef = comment.authorId ? doc(db, 'users', comment.authorId) : undefined;
+  const [author] = useDocumentData(authorRef);
   return (
     <div className="flex items-start gap-4">
       <Avatar className="h-9 w-9">
@@ -128,7 +129,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
               )}
             />
             <Button type="submit" disabled={isPending}>
-              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
               {t.buttons.comment}
             </Button>
           </form>

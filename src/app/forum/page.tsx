@@ -110,7 +110,7 @@ export function PostCard({ post }: { post: any; }) {
   const db = useFirestore();
   const [user] = useAuthState(auth);
   
-  const authorRef = doc(db, 'users', post.authorId);
+  const authorRef = post.authorId ? doc(db, 'users', post.authorId) : undefined;
   const [author] = useDocumentData(authorRef);
   
   const postRef = doc(db, 'posts', post.id);
@@ -137,6 +137,7 @@ export function PostCard({ post }: { post: any; }) {
   };
   
   const handleShare = () => {
+    if (typeof window === 'undefined') return;
     const postUrl = `${window.location.origin}/forum/${post.id}`;
     navigator.clipboard.writeText(postUrl);
     toast({ title: "Link Copied!", description: "The post link has been copied to your clipboard." });
@@ -156,7 +157,7 @@ export function PostCard({ post }: { post: any; }) {
               {post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
             </p>
           </div>
-          <p className="text-sm text-muted-foreground">@{author?.email}</p>
+          <p className="text-sm text-muted-foreground">@{author?.email || 'user'}</p>
         </div>
       </CardHeader>
       <CardContent>

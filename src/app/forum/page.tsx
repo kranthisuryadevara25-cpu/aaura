@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, deleteDoc, setDoc } from 'firebase/firestore';
+import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, deleteDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -122,14 +122,18 @@ export function PostCard({ post }: { post: any; }) {
         toast({ variant: 'destructive', title: "You must be logged in to like a post." });
         return;
       }
+      
+      const batch = writeBatch(db);
+
       try {
         if (like) {
-            await deleteDoc(likeRef);
-            await updateDoc(postRef, { likes: increment(-1) });
+            batch.delete(likeRef);
+            batch.update(postRef, { likes: increment(-1) });
         } else {
-            await setDoc(likeRef, { userId: user.uid });
-            await updateDoc(postRef, { likes: increment(1) });
+            batch.set(likeRef, { userId: user.uid });
+            batch.update(postRef, { likes: increment(1) });
         }
+        await batch.commit();
       } catch (error) {
         console.error("Error liking post: ", error)
         toast({ variant: 'destructive', title: 'Something went wrong.' });

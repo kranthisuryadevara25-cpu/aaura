@@ -3,7 +3,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, updateDoc, increment, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, updateDoc, increment, setDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { Loader2, Heart, Share2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -75,14 +75,16 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
       toast({ variant: 'destructive', title: "You must be logged in to like a video." });
       return;
     }
+    const batch = writeBatch(db);
     try {
         if (like) {
-            await deleteDoc(likeRef);
-            await updateDoc(mediaRef, { likes: increment(-1) });
+            batch.delete(likeRef);
+            batch.update(mediaRef, { likes: increment(-1) });
         } else {
-            await setDoc(likeRef, { userId: user.uid, createdAt: serverTimestamp() });
-            await updateDoc(mediaRef, { likes: increment(1) });
+            batch.set(likeRef, { userId: user.uid, createdAt: serverTimestamp() });
+            batch.update(mediaRef, { likes: increment(1) });
         }
+        await batch.commit();
     } catch(e) {
         console.error("Error liking video: ", e);
         toast({ variant: 'destructive', title: 'Something went wrong.'});
@@ -103,28 +105,28 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
     }
     
     const userRef = doc(db, 'users', user.uid);
+    const batch = writeBatch(db);
 
     try {
         if (subscription) {
             // Unsubscribe
-            await deleteDoc(subscriptionRef);
-            // Decrement counts
-            await updateDoc(userRef, { followingCount: increment(-1) });
-            await updateDoc(authorRef, { followerCount: increment(-1) });
+            batch.delete(subscriptionRef);
+            batch.update(userRef, { followingCount: increment(-1) });
+            batch.update(authorRef, { followerCount: increment(-1) });
 
             toast({ title: "Unsubscribed", description: `You have unsubscribed from ${author?.displayName || 'this channel'}.` });
         } else {
            // Subscribe
-           await setDoc(subscriptionRef, {
+           batch.set(subscriptionRef, {
               channelId: authorId,
               subscriptionDate: serverTimestamp(),
             });
-            // Increment counts
-            await updateDoc(userRef, { followingCount: increment(1) });
-            await updateDoc(authorRef, { followerCount: increment(1) });
+            batch.update(userRef, { followingCount: increment(1) });
+            batch.update(authorRef, { followerCount: increment(1) });
 
           toast({ title: "Subscribed!", description: `You are now subscribed to ${author?.displayName || 'this channel'}.` });
         }
+        await batch.commit();
     } catch (e) {
         console.error("Error subscribing: ", e);
         toast({ variant: 'destructive', title: 'Something went wrong.'});

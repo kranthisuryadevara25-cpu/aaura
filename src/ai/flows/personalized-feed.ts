@@ -11,25 +11,28 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
-import { getFirestore, collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import { getFirestore, collection, query, getDocs, orderBy, limit, doc, getDoc, type Firestore } from 'firebase/firestore';
 
 // Server-side Firebase initialization
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
+function getFirebaseServer() {
+    const firebaseConfig = {
+      apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+      authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+      projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+      storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+      appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+    };
 
-let app: FirebaseApp;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp();
+    let app: FirebaseApp;
+    if (!getApps().some(app => app.name === 'genkit-server')) {
+      app = initializeApp(firebaseConfig, 'genkit-server');
+    } else {
+      app = getApp('genkit-server');
+    }
+    const db = getFirestore(app);
+    return { app, db };
 }
-const db = getFirestore(app);
 
 
 // ---------------------------------------------------
@@ -86,24 +89,25 @@ const personalizedFeedFlow = ai.defineFlow(
   async (input) => {
     
     const { userId, pageSize } = input;
+    const { db } = getFirebaseServer();
 
-    if (!userId || await isUserNew(userId)) {
+    if (!userId || await isUserNew(db, userId)) {
         // --- Fallback for New Users / Logged-out users ---
         // For new users, we can't personalize yet. So, we return recent and trending content.
         console.log(`New or logged-out user detected. Returning trending content.`);
-        return getTrendingContent(pageSize);
+        return getTrendingContent(db, pageSize);
     }
 
     // --- Algorithm for Existing Users ---
     
     // 1. Fetch User Interaction Data (e.g., last 50 interactions)
-    const userLikes = await fetchUserInteractions(userId, 'likes'); 
-    const userBookmarks = await fetchUserInteractions(userId, 'bookmarks');
+    const userLikes = await fetchUserInteractions(db, userId, 'likes'); 
+    const userBookmarks = await fetchUserInteractions(db, userId, 'bookmarks');
 
     // 2. Fetch Candidate Content
-    const recentMedia = await fetchRecentContent('media', 50);
-    const recentPosts = await fetchRecentContent('posts', 50);
-    const recentStories = await fetchRecentContent('stories', 50);
+    const recentMedia = await fetchRecentContent(db, 'media', 50);
+    const recentPosts = await fetchRecentContent(db, 'posts', 50);
+    const recentStories = await fetchRecentContent(db, 'stories', 50);
     const allCandidates = [...recentMedia, ...recentPosts, ...recentStories];
 
     // 3. Score Content
@@ -158,7 +162,7 @@ const personalizedFeedFlow = ai.defineFlow(
 /**
  * Placeholder function to check if a user is new.
  */
-async function isUserNew(userId: string): Promise<boolean> {
+async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
     try {
         const userDoc = await getDoc(doc(db, 'users', userId));
         // A user is new if they don't have a profile or haven't completed it.
@@ -171,7 +175,7 @@ async function isUserNew(userId: string): Promise<boolean> {
 /**
  * Placeholder function to get globally trending content for new users.
  */
-async function getTrendingContent(pageSize: number = 20): Promise<PersonalizedFeedOutput> {
+async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
     // A real implementation would fetch pre-aggregated trending data.
     // For now, fetch latest media and posts.
     const mediaQuery = query(collection(db, 'media'), orderBy('uploadDate', 'desc'), limit(10));
@@ -203,7 +207,7 @@ async function getTrendingContent(pageSize: number = 20): Promise<PersonalizedFe
 /**
  * Placeholder to fetch user interactions (likes, bookmarks).
  */
-async function fetchUserInteractions(userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
+async function fetchUserInteractions(db: Firestore, userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
     try {
         // In Firestore: query(collection(db, 'users', userId, interactionType), orderBy('timestamp', 'desc'), limit(50))
         const q = query(collection(db, 'users', userId, interactionType), limit(50));
@@ -219,6 +223,7 @@ async function fetchUserInteractions(userId: string, interactionType: 'likes' | 
  * Placeholder to fetch recent content from a collection.
  */
 async function fetchRecentContent(
+    db: Firestore,
     collectionName: 'media' | 'posts' | 'stories', 
     count: number
 ): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number}[]> {
@@ -230,10 +235,14 @@ async function fetchRecentContent(
         return snap.docs.map(d => {
             const data = d.data();
             const popularity = (data.likes || 0) + (data.views || 0) / 10;
+            const createdAtTimestamp = data[dateField];
+            // Ensure createdAt is a Date object, handling Firestore Timestamps
+            const createdAt = createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date();
+
             return {
                 contentId: d.id,
                 contentType: collectionName,
-                createdAt: (data[dateField])?.toDate() || new Date(),
+                createdAt: createdAt,
                 popularityScore: popularity
             };
         });

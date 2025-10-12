@@ -1,8 +1,8 @@
+'use server';
 
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
-import serviceAccount from '../../../serviceAccountKey.json';
 
 let adminApp: App;
 let db: Firestore;
@@ -10,13 +10,15 @@ let auth: Auth;
 
 /**
  * Initializes (or reuses) the Firebase Admin SDK app instance.
- * Uses a directly imported service account key.
+ * Uses FIREBASE_SERVICE_ACCOUNT_KEY from environment variables.
  */
 export function getFirebaseAdmin() {
   if (getApps().some(app => app.name === 'firebase-admin')) {
     adminApp = getApps().find(app => app.name === 'firebase-admin')!;
   } else {
     try {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
+
       adminApp = initializeApp(
         {
           credential: cert(serviceAccount),

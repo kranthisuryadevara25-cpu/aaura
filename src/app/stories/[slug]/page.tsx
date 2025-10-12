@@ -22,18 +22,24 @@ export default function StoryDetailPage() {
   const [stories, isLoading] = useCollectionData(storiesQuery, { idField: 'id' });
   const story = stories?.[0];
 
-  const charactersQuery = query(collection(db, 'characters'), where('associatedStories', 'array-contains', slug));
+  const charactersQuery = story ? query(collection(db, 'characters'), where('associatedStories', 'array-contains', slug)) : undefined;
   const [relatedCharacters, charactersLoading] = useCollectionData(charactersQuery);
 
   const templesQuery = story ? query(collection(db, 'temples'), where('slug', 'in', story.relatedTemples && story.relatedTemples.length > 0 ? story.relatedTemples : ['non-existent'])) : undefined;
   const [relatedTemples, templesLoading] = useCollectionData(templesQuery);
   
-  if (isLoading || charactersLoading || templesLoading) {
+  const pageLoading = isLoading || charactersLoading || templesLoading;
+
+  if (pageLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  if (!story) {
+  if (!pageLoading && !story) {
     notFound();
+  }
+
+  if (!story) {
+     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
 
   const title = story.title[language] || story.title.en;
@@ -123,3 +129,5 @@ export default function StoryDetailPage() {
     </main>
   );
 }
+
+    

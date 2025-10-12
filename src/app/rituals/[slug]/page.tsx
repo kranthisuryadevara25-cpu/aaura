@@ -25,8 +25,12 @@ export default function RitualDetailPage() {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  if (!ritual) {
+  if (!isLoading && !ritual) {
     notFound();
+  }
+
+  if (!ritual) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
   
   const name = ritual.name[language] || ritual.name.en;
@@ -97,3 +101,5 @@ export default function RitualDetailPage() {
     </main>
   );
 }
+
+    

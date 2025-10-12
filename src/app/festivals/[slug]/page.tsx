@@ -24,15 +24,21 @@ export default function FestivalDetailPage() {
   const festival = festivals?.[0];
   
   const deitySlugs = festival?.associatedDeities || [];
-  const deitiesQuery = query(collection(db, 'deities'), where('slug', 'in', deitySlugs.length > 0 ? deitySlugs : ['non-existent']));
+  const deitiesQuery = deitySlugs.length > 0 ? query(collection(db, 'deities'), where('slug', 'in', deitySlugs)) : undefined;
   const [associatedDeities, deitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
   
-  if (isLoading || deitiesLoading) {
+  const pageLoading = isLoading || deitiesLoading;
+
+  if (pageLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  if (!festival) {
+  if (!pageLoading && !festival) {
     notFound();
+  }
+  
+  if (!festival) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
 
   const name = festival.name[language] || festival.name.en;
@@ -110,3 +116,5 @@ export default function FestivalDetailPage() {
     </main>
   );
 }
+
+    

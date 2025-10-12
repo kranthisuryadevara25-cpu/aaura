@@ -62,8 +62,15 @@ export default function TempleDetailPage() {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  if (!temple) {
+  // Only call notFound if loading is complete and temple is still not found.
+  if (!loading && !temple) {
     notFound();
+  }
+
+  // If temple is not yet available but still loading, return null or a loader, 
+  // otherwise we might get a build error on the server or a flash of not-found page.
+  if (!temple) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
   
   const name = getText(temple.name, language);
@@ -212,3 +219,5 @@ export default function TempleDetailPage() {
     </main>
   );
 }
+
+    

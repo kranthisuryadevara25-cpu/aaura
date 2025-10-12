@@ -23,15 +23,21 @@ export default function CharacterDetailPage() {
   const character = characters?.[0];
 
   const storySlugs = character?.associatedStories || [];
-  const storiesQuery = query(collection(db, 'stories'), where('slug', 'in', storySlugs.length > 0 ? storySlugs : ['non-existent']));
+  const storiesQuery = storySlugs.length > 0 ? query(collection(db, 'stories'), where('slug', 'in', storySlugs)) : undefined;
   const [associatedStories, storiesLoading] = useCollectionData(storiesQuery, { idField: 'id' });
+  
+  const pageLoading = isLoading || storiesLoading;
 
-  if (isLoading || storiesLoading) {
+  if (pageLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  if (!character) {
+  if (!pageLoading && !character) {
     notFound();
+  }
+
+  if (!character) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
   
   const name = character.name[language] || character.name.en;
@@ -91,3 +97,5 @@ export default function CharacterDetailPage() {
     </main>
   );
 }
+
+    

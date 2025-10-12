@@ -32,8 +32,16 @@ export default function PostDetailPage() {
     );
   }
 
-  if (!post) {
+  if (!postLoading && !post) {
     notFound();
+  }
+
+  if (!post) {
+      return (
+      <div className="flex justify-center items-center min-h-screen bg-background">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
@@ -65,3 +73,5 @@ export default function PostDetailPage() {
     </main>
   );
 }
+
+    

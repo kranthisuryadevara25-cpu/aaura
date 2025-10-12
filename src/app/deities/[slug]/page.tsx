@@ -41,8 +41,12 @@ export default function DeityDetailPage() {
      return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  if (!deity) {
+  if (!isDeitiesLoading && !deity) {
     notFound();
+  }
+  
+  if (!deity) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
 
   const name = (deity.name as any)[language] || deity.name.en;
@@ -143,3 +147,5 @@ export default function DeityDetailPage() {
     </main>
   );
 }
+
+    

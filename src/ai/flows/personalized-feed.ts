@@ -12,7 +12,6 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
-import dotenv from 'dotenv';
 
 // --- Server-Side Firebase Admin Initialization ---
 let adminApp: App;
@@ -23,12 +22,8 @@ function initializeFirebaseAdmin() {
     adminApp = getApps().find(app => app.name === 'firebase-admin-personalized-feed')!;
   } else {
     try {
-      const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-      if (!serviceAccountString) {
-        throw new Error('The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.');
-      }
-      
-      const serviceAccount = JSON.parse(serviceAccountString);
+      // Use require for robust loading in server environments.
+      const serviceAccount = require('../../../serviceAccountKey.json');
 
       adminApp = initializeApp(
         {

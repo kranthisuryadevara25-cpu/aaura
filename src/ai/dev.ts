@@ -1,9 +1,6 @@
 
 'use server';
 
-import dotenv from 'dotenv';
-dotenv.config();
-
 // Note: dotenv config is now handled in src/lib/firebase/server.ts
 // to ensure it's loaded before any server-side Firebase logic.
 

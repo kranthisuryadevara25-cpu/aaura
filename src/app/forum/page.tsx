@@ -14,7 +14,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageCircle, Send, ThumbsUp } from 'lucide-react';
+import { Loader2, MessageCircle, Send, ThumbsUp, Share2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
@@ -104,16 +104,20 @@ export function CreatePost() {
 
 export function PostCard({ post, authorId }: { post: any; authorId: string }) {
   const { t } = useLanguage();
+  const { toast } = useToast();
   const [user] = useAuthState(auth);
   const postRef = doc(db, 'posts', post.id);
   
   const [author] = useDocumentData(authorId ? doc(db, 'users', authorId) : undefined);
   
   const likeRef = user ? doc(db, `posts/${post.id}/likes`, user.uid) : undefined;
-  const [like] = useDocumentData(likeRef);
+  const [like, isLikeLoading] = useDocumentData(likeRef);
   
   const handleLike = async () => {
-      if (!user || !likeRef) return;
+      if (!user || !likeRef) {
+        toast({ variant: 'destructive', title: "You must be logged in to like a post." });
+        return;
+      }
       if (like) {
           await deleteDoc(likeRef);
           await updateDoc(postRef, { likes: increment(-1) });
@@ -122,6 +126,12 @@ export function PostCard({ post, authorId }: { post: any; authorId: string }) {
           await updateDoc(postRef, { likes: increment(1) });
       }
   };
+  
+  const handleShare = () => {
+    const postUrl = `${window.location.origin}/forum/${post.id}`;
+    navigator.clipboard.writeText(postUrl);
+    toast({ title: "Link Copied!", description: "The post link has been copied to your clipboard." });
+  }
 
   return (
     <Card className="w-full">
@@ -143,14 +153,17 @@ export function PostCard({ post, authorId }: { post: any; authorId: string }) {
       <CardContent>
         <p className="whitespace-pre-wrap">{post.content}</p>
       </CardContent>
-      <CardFooter className="flex justify-between">
-         <Button variant="ghost" onClick={handleLike} disabled={!user}>
+      <CardFooter className="flex justify-between border-t pt-4">
+         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user || isLikeLoading}>
             <ThumbsUp className={`mr-2 h-4 w-4 ${like ? 'text-blue-500 fill-current' : ''}`} /> {post.likes || 0}
         </Button>
-        <Button variant="ghost" asChild>
+        <Button variant="ghost" size="sm" asChild>
           <Link href={`/forum/${post.id}`}>
-            <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} {t.forum.viewDiscussion}
+            <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0}
           </Link>
+        </Button>
+        <Button variant="ghost" size="sm" onClick={handleShare}>
+            <Share2 className="mr-2 h-4 w-4" /> {t.buttons.share}
         </Button>
       </CardFooter>
     </Card>

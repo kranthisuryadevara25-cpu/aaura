@@ -65,9 +65,7 @@ const personalizedFeedFlow = ai.defineFlow(
     outputSchema: PersonalizedFeedOutputSchema,
   },
   async (input) => {
-    // In a production app, you would connect to Firestore here to fetch real data.
-    // For this blueprint, we'll use placeholder logic and mock data.
-
+    
     const { userId, pageSize } = input;
 
     if (!userId || await isUserNew(userId)) {

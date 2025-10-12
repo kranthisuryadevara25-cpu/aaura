@@ -24,9 +24,7 @@ export default function PostDetailPage() {
   const authorRef = post ? doc(db, 'users', post.authorId) : undefined;
   const [author, authorLoading] = useDocumentData(authorRef);
   
-  const isLoading = postLoading || authorLoading;
-
-  if (isLoading) {
+  if (postLoading || authorLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

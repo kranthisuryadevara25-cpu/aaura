@@ -25,9 +25,7 @@ export default function CharacterDetailPage() {
   const storiesQuery = query(collection(db, 'stories'), where('slug', 'in', storySlugs.length > 0 ? storySlugs : ['non-existent']));
   const [associatedStories, storiesLoading] = useCollectionData(storiesQuery, { idField: 'id' });
 
-  const pageLoading = isLoading || storiesLoading;
-
-  if (pageLoading) {
+  if (isLoading || storiesLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 

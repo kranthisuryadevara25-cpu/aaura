@@ -27,9 +27,7 @@ export default function StoryDetailPage() {
   const templesQuery = story ? query(collection(db, 'temples'), where('slug', 'in', story.relatedTemples && story.relatedTemples.length > 0 ? story.relatedTemples : ['non-existent'])) : undefined;
   const [relatedTemples, templesLoading] = useCollectionData(templesQuery);
   
-  const pageLoading = isLoading || charactersLoading || templesLoading;
-
-  if (pageLoading) {
+  if (isLoading || charactersLoading || templesLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 

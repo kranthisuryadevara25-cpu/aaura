@@ -1,9 +1,8 @@
-
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
+import { getFirestore, type Firestore } from "firebase/firestore";
+import { getAuth, type Auth } from "firebase/auth";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,8 +13,35 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
+type FirebaseServices = {
+    app: FirebaseApp;
+    db: Firestore;
+    auth: Auth;
+    storage: FirebaseStorage;
+}
 
-export const db = getFirestore(app);
-export const auth = getAuth(app);
-export const storage = getStorage(app);
+let firebaseApp: FirebaseApp;
+let firestore: Firestore;
+let auth: Auth;
+let storage: FirebaseStorage;
+
+function initializeFirebase(): FirebaseServices {
+    if (!getApps().length) {
+        firebaseApp = initializeApp(firebaseConfig);
+    } else {
+        firebaseApp = getApp();
+    }
+    
+    firestore = getFirestore(firebaseApp);
+    auth = getAuth(firebaseApp);
+    storage = getStorage(firebaseApp);
+
+    return { app: firebaseApp, db: firestore, auth, storage };
+}
+
+// Initialize and export.
+// In a client component, you can import this directly.
+// In a server component, this will ensure services are initialized once per request.
+const { app, db, auth: authInstance, storage: storageInstance } = initializeFirebase();
+
+export { app, db, authInstance as auth, storageInstance as storage };

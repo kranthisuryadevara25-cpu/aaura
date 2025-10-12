@@ -36,8 +36,6 @@ export default function DeityDetailPage() {
     }
   }, [deity]);
   
-  const pageLoading = isDeitiesLoading || (deity && isLoadingContent);
-
   if (isDeitiesLoading) {
      return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
@@ -76,7 +74,7 @@ export default function DeityDetailPage() {
         <CarouselNext />
         </Carousel>
 
-        {pageLoading ? (
+        {isLoadingContent ? (
         <div className="flex justify-center items-center h-40">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>

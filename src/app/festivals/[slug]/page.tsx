@@ -26,9 +26,7 @@ export default function FestivalDetailPage() {
   const deitiesQuery = query(collection(db, 'deities'), where('slug', 'in', deitySlugs.length > 0 ? deitySlugs : ['non-existent']));
   const [associatedDeities, deitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
   
-  const pageLoading = isLoading || deitiesLoading;
-
-  if (pageLoading) {
+  if (isLoading || deitiesLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 

@@ -26,7 +26,7 @@ export type PersonalizedFeedInput = z.infer<typeof PersonalizedFeedInputSchema>;
 
 const FeedItemSchema = z.object({
     contentId: z.string().describe("The document ID of the content item."),
-    contentType: z.enum(['temple', 'deity', 'story', 'media', 'post', 'product']).describe("The type of content, corresponding to a Firestore collection."),
+    contentType: z.enum(['media', 'post', 'story', 'deity', 'temple', 'product']).describe("The type of content, corresponding to a Firestore collection."),
     score: z.number().describe("The relevance score for this item."),
     reason: z.string().describe("A brief explanation for the recommendation."),
 });

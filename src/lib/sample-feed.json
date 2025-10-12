@@ -112,14 +112,10 @@
       }
     },
     {
-      "type": "forum",
+      "type": "post",
       "id": "post-1",
-      "title": "What is the best way to start a daily meditation practice?",
-      "author": {
-        "name": "AnxiousSeeker23",
-        "avatarUrl": null
-      },
-      "summary": "I've been trying to meditate for a few weeks now but can't seem to make it a consistent habit. I get distracted easily and then feel discouraged. Any tips for a beginner?",
+      "content": "What is the best way to start a daily meditation practice?",
+      "authorId": "AnxiousSeeker23",
       "engagement": {
         "comments": 15,
         "likes": 42

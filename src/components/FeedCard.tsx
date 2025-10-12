@@ -72,7 +72,7 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
     <Card className="p-4 border-none shadow-none">
         <Link href={getHref()} className="group">
             <div className="aspect-video relative rounded-lg overflow-hidden mb-4">
-                <Image src={thumbnail || "/placeholder.jpg"} className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" alt={title} fill />
+                <Image src={thumbnail || "https://picsum.photos/seed/placeholder/800/450"} className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" alt={title} fill />
                 {item.duration > 0 && <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
                 {`${Math.floor(item.duration / 60)}:${String(item.duration % 60).padStart(2, '0')}`}
                 </span>}

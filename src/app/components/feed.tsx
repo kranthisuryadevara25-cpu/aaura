@@ -19,7 +19,7 @@ type FeedItem = {
 };
 
 export function Feed({ searchQuery }: { searchQuery: string }) {
-  const [user] = useAuthState(auth);
+  const [user, authLoading] = useAuthState(auth);
   const [loading, setLoading] = useState(true);
   const [feedItems, setFeedItems] = useState<FeedItem[]>([]);
 
@@ -27,6 +27,28 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
     const fetchFeed = async () => {
       setLoading(true);
       try {
+        // If user is not logged in, use sample data to avoid Firestore permission errors
+        if (!user) {
+            console.log("No user logged in. Falling back to sample feed.");
+            const dummyItems = sampleFeed.feed.map(item => ({
+                id: item.id,
+                type: item.type as any,
+                data: {
+                    title_en: item.title,
+                    description_en: (item as any).summary || (item as any).location,
+                    thumbnailUrl: item.image?.url,
+                    views: item.engagement?.views,
+                    likes: item.engagement?.likes,
+                    commentsCount: item.engagement?.comments,
+                    userId: (item as any).author?.name,
+                    ...item
+                }
+            }));
+            setFeedItems(dummyItems as FeedItem[]);
+            setLoading(false);
+            return;
+        }
+
         const personalizedFeed = await getPersonalizedFeed({ userId: user?.uid });
         if (personalizedFeed.feed.length > 0) {
             const itemPromises = personalizedFeed.feed.map(async (item) => {
@@ -58,13 +80,33 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
         }
       } catch (error) {
         console.error("Failed to fetch personalized feed:", error);
+        // Fallback to sample data on error
+         const dummyItems = sampleFeed.feed.map(item => ({
+            id: item.id,
+            type: item.type as any,
+            data: {
+                title_en: item.title,
+                description_en: (item as any).summary || (item as any).location,
+                thumbnailUrl: item.image?.url,
+                views: item.engagement?.views,
+                likes: item.engagement?.likes,
+                commentsCount: item.engagement?.comments,
+                userId: (item as any).author?.name,
+                ...item
+            }
+        }));
+        setFeedItems(dummyItems as FeedItem[]);
       } finally {
         setLoading(false);
       }
     };
+    
+    // Do not fetch feed until auth state is determined
+    if (!authLoading) {
+        fetchFeed();
+    }
 
-    fetchFeed();
-  }, [user]);
+  }, [user, authLoading]);
 
   const filteredItems = useMemo(() => {
     if (!searchQuery) return feedItems;
@@ -76,7 +118,7 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
     });
   }, [searchQuery, feedItems]);
   
-  if (loading) {
+  if (loading || authLoading) {
     return (
         <div className="flex justify-center items-center h-96">
             <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -89,7 +131,16 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
         {filteredItems.length > 0 ? (
             filteredItems.map(({id, type, data}) => {
                 if (type === 'post') {
-                    return <PostCard key={id} post={{...data, id: id}} authorId={data.authorId} />
+                    // This uses a different structure, so we pass the whole object
+                    const postObject = {
+                        id: id,
+                        authorId: data.authorId,
+                        content: data.content,
+                        createdAt: data.createdAt,
+                        likes: data.likes,
+                        commentsCount: data.commentsCount,
+                    };
+                    return <PostCard key={id} post={postObject} />
                 }
                 // Use FeedCard for all other types, as it can handle them.
                 return <FeedCard key={id} item={{...data, id: id, type: type}} />

@@ -10,8 +10,43 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getFirestore } from 'firebase-admin/firestore';
-import { getFirebaseServer } from '@/lib/firebase/server';
+import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
+import { getFirestore, type Firestore } from 'firebase-admin/firestore';
+import { config } from 'dotenv';
+
+config(); // Ensure environment variables are loaded
+
+// --- Server-Side Firebase Admin Initialization ---
+let adminApp: App;
+let db: Firestore;
+
+function getFirebaseAdmin() {
+    if (getApps().some(app => app.name === 'admin-feed-flow')) {
+        adminApp = getApps().find(app => app.name === 'admin-feed-flow')!;
+        db = getFirestore(adminApp);
+    } else {
+        try {
+            const credentialsString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+            if (!credentialsString) {
+                throw new Error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set. Please check your .env file.");
+            }
+            const serviceAccount = JSON.parse(credentialsString);
+
+            adminApp = initializeApp({
+                credential: cert(serviceAccount)
+            }, 'admin-feed-flow');
+            db = getFirestore(adminApp);
+             console.log("Personalized Feed Flow: Firebase Admin SDK initialized successfully.");
+        } catch (error: any) {
+            console.error("Personalized Feed Flow: Firebase Admin SDK initialization failed:", error.message);
+            // Throw an error to prevent the flow from running with a broken config
+            throw new Error(`Firebase Admin SDK could not be initialized: ${error.message}`);
+        }
+    }
+    return { adminApp, db };
+}
+// ---------------------------------------------------
+
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
@@ -65,10 +100,10 @@ const personalizedFeedFlow = ai.defineFlow(
     outputSchema: PersonalizedFeedOutputSchema,
   },
   async (input) => {
+    const { db } = getFirebaseAdmin();
     
     const { userId, pageSize } = input;
-    const { db } = getFirebaseServer();
-
+    
     if (!userId || await isUserNew(db, userId)) {
         // --- Fallback for New Users / Logged-out users ---
         // For new users, we can't personalize yet. So, we return recent and trending content.
@@ -140,7 +175,7 @@ const personalizedFeedFlow = ai.defineFlow(
 /**
  * Placeholder function to check if a user is new.
  */
-async function isUserNew(db: FirebaseFirestore.Firestore, userId: string): Promise<boolean> {
+async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
     try {
         const userDoc = await db.collection('users').doc(userId).get();
         // A user is new if they don't have a profile or haven't completed it.
@@ -153,7 +188,7 @@ async function isUserNew(db: FirebaseFirestore.Firestore, userId: string): Promi
 /**
  * Placeholder function to get globally trending content for new users.
  */
-async function getTrendingContent(db: FirebaseFirestore.Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
+async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
     // A real implementation would fetch pre-aggregated trending data.
     // For now, fetch latest media and posts.
     const mediaQuery = db.collection('media').orderBy('uploadDate', 'desc').limit(10);
@@ -185,7 +220,7 @@ async function getTrendingContent(db: FirebaseFirestore.Firestore, pageSize: num
 /**
  * Placeholder to fetch user interactions (likes, bookmarks).
  */
-async function fetchUserInteractions(db: FirebaseFirestore.Firestore, userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
+async function fetchUserInteractions(db: Firestore, userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
     try {
         const q = db.collection('users').doc(userId).collection(interactionType).limit(50);
         const snap = await q.get();
@@ -200,7 +235,7 @@ async function fetchUserInteractions(db: FirebaseFirestore.Firestore, userId: st
  * Placeholder to fetch recent content from a collection.
  */
 async function fetchRecentContent(
-    db: FirebaseFirestore.Firestore,
+    db: Firestore,
     collectionName: 'media' | 'posts' | 'stories', 
     count: number
 ): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number}[]> {

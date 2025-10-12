@@ -3,7 +3,7 @@
 
 import { useEffect, useRef } from 'react';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, updateDoc, increment, setDoc, deleteDoc, serverTimestamp, collection, addDoc } from 'firebase/firestore';
+import { doc, updateDoc, increment, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
 import { Loader2, Heart, Share2 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -46,25 +46,41 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
 
   useEffect(() => {
     const videoElement = videoRef.current;
+    const handleViewCount = () => {
+      // Increment view count only once per session
+      const viewed = sessionStorage.getItem(`viewed-${contentId}`);
+      if (!viewed) {
+        updateDoc(mediaRef, { views: increment(1) });
+        sessionStorage.setItem(`viewed-${contentId}`, 'true');
+      }
+    };
+
     if (videoElement) {
       videoElement.addEventListener('ended', onVideoEnd);
+      videoElement.addEventListener('play', handleViewCount, { once: true });
       return () => {
         videoElement.removeEventListener('ended', onVideoEnd);
+        videoElement.removeEventListener('play', handleViewCount);
       };
     }
-  }, [onVideoEnd]);
+  }, [contentId, onVideoEnd, mediaRef]);
 
   const handleLike = async () => {
     if (!user || !likeRef) {
       toast({ variant: 'destructive', title: "You must be logged in to like a video." });
       return;
     }
-    if (like) {
-      await deleteDoc(likeRef);
-      await updateDoc(mediaRef, { likes: increment(-1) });
-    } else {
-      await setDoc(likeRef, { userId: user.uid });
-      await updateDoc(mediaRef, { likes: increment(1) });
+    try {
+        if (like) {
+            await deleteDoc(likeRef);
+            await updateDoc(mediaRef, { likes: increment(-1) });
+        } else {
+            await setDoc(likeRef, { userId: user.uid });
+            await updateDoc(mediaRef, { likes: increment(1) });
+        }
+    } catch(e) {
+        console.error("Error liking video: ", e);
+        toast({ variant: 'destructive', title: 'Something went wrong.'});
     }
   };
   
@@ -78,15 +94,20 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
       toast({ variant: 'destructive', title: "You must be logged in to subscribe." });
       return;
     }
-    if (subscription) {
-      await deleteDoc(subscriptionRef);
-      toast({ title: "Unsubscribed", description: `You have unsubscribed from ${author?.displayName || 'this channel'}.` });
-    } else {
-       await setDoc(subscriptionRef, {
-          channelId: authorId,
-          subscriptionDate: serverTimestamp(),
-        });
-      toast({ title: "Subscribed!", description: `You are now subscribed to ${author?.displayName || 'this channel'}.` });
+    try {
+        if (subscription) {
+            await deleteDoc(subscriptionRef);
+            toast({ title: "Unsubscribed", description: `You have unsubscribed from ${author?.displayName || 'this channel'}.` });
+        } else {
+           await setDoc(subscriptionRef, {
+              channelId: authorId,
+              subscriptionDate: serverTimestamp(),
+            });
+          toast({ title: "Subscribed!", description: `You are now subscribed to ${author?.displayName || 'this channel'}.` });
+        }
+    } catch (e) {
+        console.error("Error subscribing: ", e);
+        toast({ variant: 'destructive', title: 'Something went wrong.'});
     }
   }
 
@@ -128,11 +149,11 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
           </Avatar>
           <div>
             <p className="font-semibold">{author?.displayName || 'Creator'}</p>
-            <p className="text-sm text-muted-foreground">{media.subscribers || '0'} Subscribers</p> 
+            <p className="text-sm text-muted-foreground">{media.views || 0} views</p> 
           </div>
            <AlertDialog>
               <AlertDialogTrigger asChild>
-                  <Button variant="default" disabled={loadingSubscription} >
+                  <Button variant="default" disabled={loadingSubscription || !user} >
                     {subscription ? t.buttons.subscribed : t.buttons.subscribe}
                   </Button>
               </AlertDialogTrigger>
@@ -153,11 +174,11 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
           </AlertDialog>
         </div>
         <div className="flex items-center gap-2 mt-4 sm:mt-0">
-          <Button variant="outline" onClick={handleLike} disabled={loadingLike}>
-            <Heart className={`mr-2 ${like ? 'text-red-500 fill-current' : ''}`} /> {media.likes || 0}
+          <Button variant="outline" onClick={handleLike} disabled={loadingLike || !user}>
+            <Heart className={`mr-2 h-4 w-4 ${like ? 'text-red-500 fill-current' : ''}`} /> {media.likes || 0}
           </Button>
           <Button variant="outline" onClick={handleShare}>
-            <Share2 className="mr-2" /> {t.buttons.share}
+            <Share2 className="mr-2 h-4 w-4" /> {t.buttons.share}
           </Button>
         </div>
       </div>

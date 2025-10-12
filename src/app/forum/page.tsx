@@ -118,12 +118,17 @@ export function PostCard({ post, authorId }: { post: any; authorId: string }) {
         toast({ variant: 'destructive', title: "You must be logged in to like a post." });
         return;
       }
-      if (like) {
-          await deleteDoc(likeRef);
-          await updateDoc(postRef, { likes: increment(-1) });
-      } else {
-          await setDoc(likeRef, { userId: user.uid });
-          await updateDoc(postRef, { likes: increment(1) });
+      try {
+        if (like) {
+            await deleteDoc(likeRef);
+            await updateDoc(postRef, { likes: increment(-1) });
+        } else {
+            await setDoc(likeRef, { userId: user.uid });
+            await updateDoc(postRef, { likes: increment(1) });
+        }
+      } catch (error) {
+        console.error("Error liking post: ", error)
+        toast({ variant: 'destructive', title: 'Something went wrong.' });
       }
   };
   

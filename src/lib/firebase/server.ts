@@ -1,19 +1,28 @@
 
 // This is a server-side only file.
-import { initializeApp, getApp, getApps, type App } from 'firebase-admin/app';
+import { initializeApp, getApp, getApps, type App, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { getAuth } from 'firebase-admin/auth';
 
 let app: App;
 
-// The Firebase Admin SDK will automatically use the GOOGLE_APPLICATION_CREDENTIALS
-// environment variable if it's available. This is the standard and secure way
-// to provide credentials in a Google Cloud environment.
 if (!getApps().length) {
     try {
-        app = initializeApp();
+        // Explicitly initialize with credentials from the environment variable.
+        // This is the most robust method for this environment.
+        const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+        if (!serviceAccountString) {
+            throw new Error("The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set. The server cannot authenticate with Firebase.");
+        }
+        const serviceAccount = JSON.parse(serviceAccountString);
+        
+        app = initializeApp({
+            credential: cert(serviceAccount)
+        });
+
     } catch (e: any) {
-        console.error("!!! CRITICAL: Failed to initialize Firebase Admin SDK. This is likely because the GOOGLE_APPLICATION_CREDENTIALS environment variable is not set correctly. Error:", e.message);
+        // Provide a clearer error message if initialization fails.
+        console.error("!!! CRITICAL: Failed to initialize Firebase Admin SDK. This might be due to missing or invalid GOOGLE_APPLICATION_CREDENTIALS. Error:", e.message);
         // Set app to undefined to ensure getFirebaseServer throws a clear error.
         app = undefined as any; 
     }

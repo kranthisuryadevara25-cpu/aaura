@@ -94,15 +94,29 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
       toast({ variant: 'destructive', title: "You must be logged in to subscribe." });
       return;
     }
+    
+    const userRef = doc(db, 'users', user.uid);
+    const authorRef = doc(db, 'users', authorId);
+
     try {
         if (subscription) {
+            // Unsubscribe
             await deleteDoc(subscriptionRef);
+            // Decrement counts
+            await updateDoc(userRef, { followingCount: increment(-1) });
+            await updateDoc(authorRef, { followerCount: increment(-1) });
+
             toast({ title: "Unsubscribed", description: `You have unsubscribed from ${author?.displayName || 'this channel'}.` });
         } else {
+           // Subscribe
            await setDoc(subscriptionRef, {
               channelId: authorId,
               subscriptionDate: serverTimestamp(),
             });
+            // Increment counts
+            await updateDoc(userRef, { followingCount: increment(1) });
+            await updateDoc(authorRef, { followerCount: increment(1) });
+
           toast({ title: "Subscribed!", description: `You are now subscribed to ${author?.displayName || 'this channel'}.` });
         }
     } catch (e) {

@@ -5,8 +5,10 @@ import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SearchBar, type SearchBarProps } from "@/components/SearchBar";
 import Link from "next/link";
 import { Button } from "./ui/button";
-import { auth } from "@/lib/firebase";
+import { auth, db } from "@/lib/firebase";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,7 +18,30 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, Film, MessageSquare } from "lucide-react";
+import { LogOut, User, Upload, Film, MessageSquare, Users } from "lucide-react";
+
+const UserStats = () => {
+    const [user] = useAuthState(auth);
+    const userRef = user ? doc(db, 'users', user.uid) : undefined;
+    const [userData] = useDocumentData(userRef);
+
+    if (!userData) {
+        return null;
+    }
+
+    return (
+        <div className="flex items-center gap-4 text-sm">
+            <div className="text-center">
+                <p className="font-bold">{userData.followerCount || 0}</p>
+                <p className="text-xs text-muted-foreground">Followers</p>
+            </div>
+            <div className="text-center">
+                <p className="font-bold">{userData.followingCount || 0}</p>
+                <p className="text-xs text-muted-foreground">Following</p>
+            </div>
+        </div>
+    )
+}
 
 export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) => {
   const [user] = useAuthState(auth);
@@ -33,6 +58,7 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
       </div>
 
       <div className="flex items-center gap-3">
+        {user && <UserStats />}
         {user && (
            <DropdownMenu>
             <DropdownMenuTrigger asChild>

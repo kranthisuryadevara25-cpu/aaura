@@ -102,15 +102,16 @@ export function CreatePost() {
 }
 
 
-export function PostCard({ post, authorId }: { post: any; authorId: string }) {
+export function PostCard({ post }: { post: any; }) {
   const { t } = useLanguage();
   const { toast } = useToast();
   const [user] = useAuthState(auth);
+  
+  const authorRef = doc(db, 'users', post.authorId);
+  const [author] = useDocumentData(authorRef);
+  
   const postRef = doc(db, 'posts', post.id);
-  
-  const [author] = useDocumentData(authorId ? doc(db, 'users', authorId) : undefined);
-  
-  const likeRef = user ? doc(db, `posts/${post.id}/likes`, user.uid) : undefined;
+  const likeRef = user ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined;
   const [like, isLikeLoading] = useDocumentData(likeRef);
   
   const handleLike = async () => {
@@ -201,7 +202,7 @@ export default function ForumPage() {
             <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
           ) : posts && posts.length > 0 ? (
             posts.map(post => (
-              <PostCard key={post.id} post={post} authorId={post.authorId} />
+              <PostCard key={post.id} post={post} />
             ))
           ) : (
             <div className="text-center py-10">

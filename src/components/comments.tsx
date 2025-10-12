@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, serverTimestamp, query, orderBy, addDoc } from 'firebase/firestore';
+import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -18,6 +18,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
 
 const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long."),
@@ -25,7 +26,8 @@ const commentSchema = z.object({
 
 type CommentFormValues = z.infer<typeof commentSchema>;
 
-function CommentCard({ comment, author }: { comment: any; author: any }) {
+function CommentCard({ comment }: { comment: any; }) {
+  const [author] = useDocumentData(comment.authorId ? doc(db, 'users', comment.authorId) : undefined);
   return (
     <div className="flex items-start gap-4">
       <Avatar className="h-9 w-9">
@@ -58,13 +60,6 @@ export function Comments({ contentId, contentType }: CommentsProps) {
 
   const commentsQuery = query(collection(db, contentType, contentId, 'comments'), orderBy('createdAt', 'desc'));
   const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
-  
-  // This fetches all users, which is not ideal for performance but works for this stage.
-  // A better approach would be to fetch only the users who have commented.
-  const usersQuery = collection(db, 'users');
-  const [usersData, usersLoading] = useCollectionData(usersQuery, { idField: 'id' });
-
-  const usersMap = new Map(usersData?.map(u => [u.id, u]));
 
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
@@ -86,6 +81,13 @@ export function Comments({ contentId, contentType }: CommentsProps) {
           text: data.text,
           createdAt: serverTimestamp(),
         });
+        
+        // Increment commentsCount on the parent document
+        const contentRef = doc(db, contentType, contentId);
+        await updateDoc(contentRef, {
+            commentsCount: increment(1)
+        });
+
         form.reset();
         toast({ title: 'Comment posted!' });
       } catch (error) {
@@ -94,8 +96,6 @@ export function Comments({ contentId, contentType }: CommentsProps) {
       }
     });
   };
-
-  const isLoading = commentsLoading || usersLoading;
 
   return (
     <div className="max-w-4xl">
@@ -138,7 +138,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
       )}
 
 
-      {isLoading ? (
+      {commentsLoading ? (
         <div className="flex justify-center items-center h-24">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
@@ -146,7 +146,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
         <div className="space-y-6">
             {comments && comments.length > 0 ? (
                 comments.map(comment => (
-                <CommentCard key={comment.id} comment={comment} author={usersMap.get(comment.authorId)} />
+                <CommentCard key={comment.id} comment={comment} />
                 ))
             ) : (
                 <p className="text-muted-foreground text-sm text-center py-4">{t.forum.noComments}</p>

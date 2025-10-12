@@ -1,19 +1,13 @@
 
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { collection, getDocs, limit, orderBy, query, DocumentData } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { collection, getDoc, doc, DocumentData } from "firebase/firestore";
+import { db, auth } from "@/lib/firebase";
+import { useAuthState } from "react-firebase-hooks/auth";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
+import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
 
-function shuffle<T>(arr: T[]) {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-}
 
 const getTextFromField = (field: Record<string, string> | string | undefined, lang: string): string => {
     if (!field) return "";
@@ -21,7 +15,7 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
     return field[lang] || field["en"] || "";
 };
 
-const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity'): FeedItem => {
+const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity' | 'post'): FeedItem => {
     const data = doc.data();
     switch(kind) {
         case 'video':
@@ -32,7 +26,7 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
                 description: data.description_en ? { en: data.description_en, hi: data.description_hi, te: data.description_te } : data.description,
                 thumbnail: data.thumbnailUrl || "",
                 mediaUrl: data.mediaUrl,
-                meta: { duration: data.duration, views: data.views, userId: data.userId, channelName: data.channelName },
+                meta: { duration: data.duration, views: data.views, userId: data.userId, channelName: data.channelName, likes: data.likes },
                 createdAt: data.uploadDate?.toDate(),
             };
         case 'temple':
@@ -65,12 +59,21 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
                 meta: { slug: data.slug, imageHint: data.images?.[0]?.hint },
                 createdAt: new Date(),
             };
+        case 'post':
+            return {
+                id: `post-${doc.id}`,
+                kind: 'post',
+                description: { en: data.content },
+                createdAt: data.createdAt?.toDate(),
+                meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount },
+            }
     }
 }
 
 
 export const useFeed = (pageSize = 20) => {
   const { language } = useLanguage();
+  const [user] = useAuthState(auth);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -79,28 +82,28 @@ export const useFeed = (pageSize = 20) => {
     async function load() {
       setLoading(true);
 
-      const mediaQuery = query(collection(db, "media"), orderBy("uploadDate", "desc"), limit(pageSize));
-      const templesQuery = query(collection(db, "temples"), limit(pageSize));
-      const storiesQuery = query(collection(db, "stories"), orderBy("createdAt", "desc"), limit(pageSize));
-      const deitiesQuery = query(collection(db, "deities"), limit(pageSize));
+      const feedResponse = await getPersonalizedFeed({ userId: user?.uid, pageSize });
       
-      const [mediaSnap, templesSnap, storiesSnap, deitiesSnap] = await Promise.all([
-        getDocs(mediaQuery),
-        getDocs(templesQuery),
-        getDocs(storiesQuery),
-        getDocs(deitiesQuery),
-      ]);
-
       if (canceled) return;
 
-      const videos: FeedItem[] = mediaSnap.docs.map(d => mapToFeedItem(d, 'video'));
-      const templeItems: FeedItem[] = templesSnap.docs.map((d) => mapToFeedItem(d, 'temple'));
-      const storyItems: FeedItem[] = storiesSnap.docs.map((d) => mapToFeedItem(d, 'story'));
-      const deityItems: FeedItem[] = deitiesSnap.docs.map((d) => mapToFeedItem(d, 'deity'));
+      const feedDocs = await Promise.all(
+          feedResponse.feed.map(item => getDoc(doc(db, item.contentType, item.contentId)))
+      );
       
-      const combined = shuffle([...videos, ...templeItems, ...storyItems, ...deityItems]);
-      
-      setAllItems(combined);
+      if (canceled) return;
+
+      const mappedItems = feedDocs
+        .map((doc, i) => {
+            if (!doc.exists()) return null;
+            const contentType = feedResponse.feed[i].contentType;
+            if (contentType === 'temple' || contentType === 'deity' || contentType === 'story' || contentType === 'media' || contentType === 'post') {
+                 return mapToFeedItem(doc, contentType as 'temple' | 'deity' | 'story' | 'media' | 'post');
+            }
+            return null;
+        })
+        .filter((item): item is FeedItem => item !== null);
+
+      setAllItems(mappedItems);
       setLoading(false);
     }
 
@@ -108,7 +111,7 @@ export const useFeed = (pageSize = 20) => {
     return () => {
       canceled = true;
     };
-  }, [pageSize]); 
+  }, [user, pageSize]); 
 
   const filterItems = useCallback((searchQuery: string): FeedItem[] => {
     if (!searchQuery) {

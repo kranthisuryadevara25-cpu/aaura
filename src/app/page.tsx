@@ -14,7 +14,7 @@ export default function Page() {
       <TopNav onSearch={setSearchQuery} />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 lg:p-6">
           <Feed searchQuery={searchQuery} />
         </main>
         <aside className="hidden xl:block w-80 border-l p-4 shrink-0">

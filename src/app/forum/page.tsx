@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { auth, db } from '@/lib/firebase';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, deleteDoc, setDoc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -19,7 +19,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
+
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(500, "Post must be less than 500 characters."),
@@ -27,10 +27,12 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-function PostCard({ post, author }: { post: any; author: any }) {
+export function PostCard({ post, authorId }: { post: any; authorId: string }) {
   const { t } = useLanguage();
   const [user] = useAuthState(auth);
   const postRef = doc(db, 'posts', post.id);
+  
+  const [author] = useDocumentData(authorId ? doc(db, 'users', authorId) : undefined);
   
   const likeRef = user ? doc(db, `posts/${post.id}/likes`, user.uid) : undefined;
   const [like] = useDocumentData(likeRef);
@@ -72,7 +74,7 @@ function PostCard({ post, author }: { post: any; author: any }) {
         </Button>
         <Button variant="ghost" asChild>
           <Link href={`/forum/${post.id}`}>
-            <MessageCircle className="mr-2 h-4 w-4" /> {t.forum.viewDiscussion}
+            <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} {t.forum.viewDiscussion}
           </Link>
         </Button>
       </CardFooter>
@@ -88,11 +90,6 @@ export default function ForumPage() {
 
   const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
   const [posts, postsLoading] = useCollectionData(postsQuery, { idField: 'id' });
-
-  const usersQuery = collection(db, 'users');
-  const [usersData, usersLoading] = useCollectionData(usersQuery, { idField: 'id' });
-
-  const usersMap = new Map(usersData?.map(u => [u.id, u]));
 
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
@@ -112,6 +109,7 @@ export default function ForumPage() {
           content: data.content,
           createdAt: serverTimestamp(),
           likes: 0,
+          commentsCount: 0,
         });
         form.reset();
         toast({ title: 'Post created successfully!' });
@@ -121,8 +119,6 @@ export default function ForumPage() {
       }
     });
   };
-
-  const isLoading = postsLoading || usersLoading;
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -172,11 +168,11 @@ export default function ForumPage() {
         )}
 
         <div className="space-y-6">
-          {isLoading ? (
+          {postsLoading ? (
             <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
           ) : posts && posts.length > 0 ? (
             posts.map(post => (
-              <PostCard key={post.id} post={post} author={usersMap.get(post.authorId)} />
+              <PostCard key={post.id} post={post} authorId={post.authorId} />
             ))
           ) : (
             <div className="text-center py-10">

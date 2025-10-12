@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -9,13 +10,15 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
+import { collection, query, getDocs, orderBy, limit, doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
 // ---------------------------------------------------
 
 const PersonalizedFeedInputSchema = z.object({
-  userId: z.string().describe('The UID of the user for whom to generate the feed.'),
+  userId: z.string().optional().describe('The UID of the user for whom to generate the feed. If not provided, a generic trending feed is returned.'),
   pageSize: z.number().optional().default(20).describe('The number of items to return.'),
   lastCursor: z.string().optional().describe('The cursor for pagination (not implemented in this version).'),
 });
@@ -66,28 +69,25 @@ const personalizedFeedFlow = ai.defineFlow(
     // For this blueprint, we'll use placeholder logic and mock data.
 
     const { userId, pageSize } = input;
-    const isNewUser = await isUserNew(userId);
 
-    if (isNewUser) {
-        // --- Fallback for New Users ---
+    if (!userId || await isUserNew(userId)) {
+        // --- Fallback for New Users / Logged-out users ---
         // For new users, we can't personalize yet. So, we return recent and trending content.
-        console.log(`New user detected (${userId}). Returning trending content.`);
+        console.log(`New or logged-out user detected. Returning trending content.`);
         return getTrendingContent(pageSize);
     }
 
     // --- Algorithm for Existing Users ---
     
     // 1. Fetch User Interaction Data (e.g., last 50 interactions)
-    //    - In a real app, query subcollections like /users/{userId}/likes, /users/{userId}/bookmarks
-    const userLikes = await fetchUserInteractions(userId, 'likes'); // e.g., returns [{contentId: 'ram-mandir', contentType: 'temple'}, ...]
+    const userLikes = await fetchUserInteractions(userId, 'likes'); 
     const userBookmarks = await fetchUserInteractions(userId, 'bookmarks');
 
     // 2. Fetch Candidate Content
-    //    - Get the latest N items from various collections.
-    const recentTemples = await fetchRecentContent('temples', 50);
-    const recentStories = await fetchRecentContent('stories', 50);
     const recentMedia = await fetchRecentContent('media', 50);
-    const allCandidates = [...recentTemples, ...recentStories, ...recentMedia];
+    const recentPosts = await fetchRecentContent('posts', 50);
+    const recentStories = await fetchRecentContent('stories', 50);
+    const allCandidates = [...recentMedia, ...recentPosts, ...recentStories];
 
     // 3. Score Content
     const scoredContent: z.infer<typeof FeedItemSchema>[] = allCandidates.map(item => {
@@ -101,12 +101,16 @@ const personalizedFeedFlow = ai.defineFlow(
         // Engagement Score
         if (userLikes.some(l => l.contentId === item.contentId)) {
             score += 20;
-            reason = "You previously liked this.";
+            reason = "You previously liked content like this.";
         }
         if (userBookmarks.some(b => b.contentId === item.contentId)) {
             score += 25;
-            reason = "You previously bookmarked this.";
+            reason = "From your bookmarks.";
         }
+        
+        // Content Type preference
+        if(item.contentType === 'media') score += 15; // Prioritize videos
+        if(item.contentType === 'post') score += 10; // Then Q&A
 
         // Popularity/Trending Score (placeholder)
         // In a real app, this would come from an aggregation (e.g., total likes/views in last 24h)
@@ -123,7 +127,7 @@ const personalizedFeedFlow = ai.defineFlow(
     // 4. Sort and Paginate
     const finalFeed = scoredContent
         .sort((a, b) => b.score - a.score) // Sort descending by score
-        .slice(0, pageSize); // Take the top N items
+        .filter((_, index) => index < (pageSize || 20)); // Take the top N items
 
     return { feed: finalFeed };
   }
@@ -136,48 +140,88 @@ const personalizedFeedFlow = ai.defineFlow(
 
 /**
  * Placeholder function to check if a user is new.
- * In a real app, this would check their creation date or interaction count.
  */
 async function isUserNew(userId: string): Promise<boolean> {
-    // A real implementation would query Firestore:
-    // const userDoc = await getDoc(doc(db, 'users', userId));
-    // return !userDoc.exists() || userDoc.data().interactionCount < 5;
-    return userId === 'new-user'; // Simulate for demonstration
+    try {
+        const userDoc = await getDoc(doc(db, 'users', userId));
+        // A user is new if they don't have a profile or haven't completed it.
+        return !userDoc.exists() || !userDoc.data()?.profileComplete;
+    } catch {
+        return true;
+    }
 }
 
 /**
  * Placeholder function to get globally trending content for new users.
  */
-async function getTrendingContent(pageSize: number): Promise<PersonalizedFeedOutput> {
+async function getTrendingContent(pageSize: number = 20): Promise<PersonalizedFeedOutput> {
     // A real implementation would fetch pre-aggregated trending data.
-    const trendingItems = [
-        { contentId: 'ram-mandir-ayodhya', contentType: 'temple', score: 100, reason: "Trending in your region." },
-        { contentId: 'diwali', contentType: 'festival', score: 95, reason: "Upcoming festival." },
-        { contentId: 'ramayana-summary', contentType: 'story', score: 90, reason: "Popular story." },
-    ].slice(0, pageSize) as z.infer<typeof FeedItemSchema>[];
+    // For now, fetch latest media and posts.
+    const mediaQuery = query(collection(db, 'media'), orderBy('uploadDate', 'desc'), limit(10));
+    const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(10));
+
+    const [mediaSnap, postsSnap] = await Promise.all([
+        getDocs(mediaQuery),
+        getDocs(postsQuery)
+    ]);
     
-    return { feed: trendingItems };
+    const mediaItems = mediaSnap.docs.map(d => ({
+        contentId: d.id,
+        contentType: 'media' as const,
+        score: 100,
+        reason: "Trending on Aaura"
+    }));
+
+    const postItems = postsSnap.docs.map(d => ({
+        contentId: d.id,
+        contentType: 'post' as const,
+        score: 90,
+        reason: "Popular in the community"
+    }));
+    
+    const feedItems = [...mediaItems, ...postItems].slice(0, pageSize);
+    return { feed: feedItems };
 }
 
 /**
  * Placeholder to fetch user interactions (likes, bookmarks).
  */
 async function fetchUserInteractions(userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
-    // In Firestore: query(collection(db, 'users', userId, interactionType), orderBy('timestamp', 'desc'), limit(50))
-    if (interactionType === 'likes') {
-        return [{ contentId: 'ram-mandir-ayodhya', contentType: 'temple' }];
+    try {
+        // In Firestore: query(collection(db, 'users', userId, interactionType), orderBy('timestamp', 'desc'), limit(50))
+        const q = query(collection(db, 'users', userId, interactionType), limit(50));
+        const snap = await getDocs(q);
+        // This is a simplified version; a real app might need content type info here
+        return snap.docs.map(d => ({ contentId: d.id, contentType: 'unknown' }));
+    } catch {
+        return [];
     }
-    return [];
 }
 
 /**
  * Placeholder to fetch recent content from a collection.
  */
-async function fetchRecentContent(collectionName: z.infer<typeof FeedItemSchema>["contentType"], limit: number): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number}[]> {
-    // In Firestore: query(collection(db, collectionName), orderBy('createdAt', 'desc'), limit(limit))
-    return [
-        { contentId: `ram-mandir-ayodhya`, contentType: 'temple', createdAt: new Date(), popularityScore: 15 },
-        { contentId: `story-123`, contentType: 'story', createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000), popularityScore: 5 },
-        { contentId: `media-456`, contentType: 'media', createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), popularityScore: 8 },
-    ];
+async function fetchRecentContent(
+    collectionName: 'media' | 'posts' | 'stories', 
+    count: number
+): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number}[]> {
+    try {
+        const dateField = collectionName === 'media' ? 'uploadDate' : 'createdAt';
+        const q = query(collection(db, collectionName), orderBy(dateField, 'desc'), limit(count));
+        const snap = await getDocs(q);
+
+        return snap.docs.map(d => {
+            const data = d.data();
+            const popularity = (data.likes || 0) + (data.views || 0) / 10;
+            return {
+                contentId: d.id,
+                contentType: collectionName,
+                createdAt: (data[dateField])?.toDate() || new Date(),
+                popularityScore: popularity
+            };
+        });
+    } catch (e) {
+        console.error(`Failed to fetch recent content from ${collectionName}:`, e);
+        return [];
+    }
 }

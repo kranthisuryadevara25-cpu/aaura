@@ -1,5 +1,5 @@
 
-export type FeedKind = "video" | "temple" | "story" | "deity";
+export type FeedKind = "video" | "temple" | "story" | "deity" | "post";
 
 export type FeedItem = {
   id: string;

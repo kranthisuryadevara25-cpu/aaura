@@ -1,7 +1,6 @@
 
 "use client";
 import React from "react";
-import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
 import Link from "next/link";
 import Image from "next/image";
@@ -10,6 +9,8 @@ import { useDocumentData } from "react-firebase-hooks/firestore";
 import { doc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Heart, MessageCircle } from "lucide-react";
+import { Card } from "./ui/card";
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {
   const [author, loading] = useDocumentData(userId ? doc(db, 'users', userId) : undefined);
@@ -32,7 +33,7 @@ const AuthorAvatar = ({ userId }: { userId: string }) => {
   )
 }
 
-export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
+export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
   const { language } = useLanguage();
 
   const getText = (field?: Record<string,string> | string) => {
@@ -42,43 +43,47 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   };
 
   const getHref = () => {
-    if (item.kind === 'video' && item.id) {
-        return `/watch/${item.id.replace('video-', '')}`;
-    }
-    if (item.kind === 'temple' && item.meta?.slug) {
-        return `/temples/${item.meta.slug}`;
-    }
-    if (item.kind === 'story' && item.meta?.slug) {
-        return `/stories/${item.meta.slug}`;
-    }
-     if (item.kind === 'deity' && item.meta?.slug) {
-        return `/deities/${item.meta.slug}`;
+    if (item.id) {
+        return `/watch/${item.id}`;
     }
     return "#";
   }
 
+  const title = getText(item.title_en ? { en: item.title_en, hi: item.title_hi, te: item.title_te } : item.title);
+  const description = getText(item.description_en ? { en: item.description_en, hi: item.description_hi, te: item.description_te } : item.description);
+
   return (
-    <Link href={getHref()} className="group">
-        <div className="flex flex-col sm:flex-row gap-4">
-            <div className="w-full sm:w-80 sm:shrink-0">
-                <div className="aspect-video relative rounded-lg overflow-hidden">
-                    <Image src={item.thumbnail || "/placeholder.jpg"} className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" alt={getText(item.title)} fill />
-                    <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                    {item.meta?.duration ? `${Math.floor(item.meta.duration / 60)}:${String(item.meta.duration % 60).padStart(2, '0')}` : item.kind.toUpperCase()}
+    <Card className="p-4 border-none shadow-none">
+        <Link href={getHref()} className="group">
+            <div className="aspect-video relative rounded-lg overflow-hidden mb-4">
+                <Image src={item.thumbnailUrl || "/placeholder.jpg"} className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" alt={title} fill />
+                {item.duration > 0 && <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                {`${Math.floor(item.duration / 60)}:${String(item.duration % 60).padStart(2, '0')}`}
+                </span>}
+            </div>
+        </Link>
+        <div className="flex gap-3">
+             {item.userId && <AuthorAvatar userId={item.userId} />}
+             <div className="flex-1">
+                <Link href={getHref()} className="group">
+                  <h3 className="text-lg font-bold leading-tight line-clamp-2 text-foreground mb-1 group-hover:text-primary">{title}</h3>
+                </Link>
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <span>{item.views ? `${item.views.toLocaleString()} views` : "New"}</span>
+                    &bull;
+                    <span>{item.uploadDate ? formatDistanceToNow(item.uploadDate.toDate(), { addSuffix: true }) : ''}</span>
+                </div>
+                <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
+                 <div className="flex items-center gap-4 mt-2 text-muted-foreground">
+                    <span className="flex items-center gap-1 text-xs">
+                        <Heart className="w-4 h-4" /> {item.likes || 0}
+                    </span>
+                    <span className="flex items-center gap-1 text-xs">
+                        <MessageCircle className="w-4 h-4" /> {item.commentsCount || 0}
                     </span>
                 </div>
-            </div>
-
-            <div className="flex-1">
-                <h3 className="text-lg font-bold leading-tight line-clamp-2 text-foreground mb-2 group-hover:text-primary">{getText(item.title)}</h3>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                    <span>{item.meta?.views ? `${item.meta.views.toLocaleString()} views` : "New"}</span>
-                    &bull;
-                    <span>{item.createdAt ? formatDistanceToNow(item.createdAt, { addSuffix: true }) : ''}</span>
-                </div>
-                {item.meta?.userId && <AuthorAvatar userId={item.meta.userId} />}
-            </div>
+             </div>
         </div>
-    </Link>
+    </Card>
   );
 };

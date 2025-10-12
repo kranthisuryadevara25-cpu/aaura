@@ -10,43 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
-import { getFirestore, type Firestore } from 'firebase-admin/firestore';
-import { config } from 'dotenv';
-
-config(); // Ensure environment variables are loaded
-
-// --- Server-Side Firebase Admin Initialization ---
-let adminApp: App;
-let db: Firestore;
-
-function getFirebaseAdmin() {
-    if (getApps().some(app => app.name === 'admin-feed-flow')) {
-        adminApp = getApps().find(app => app.name === 'admin-feed-flow')!;
-        db = getFirestore(adminApp);
-    } else {
-        try {
-            const credentialsString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-            if (!credentialsString) {
-                throw new Error("GOOGLE_APPLICATION_CREDENTIALS environment variable is not set. Please check your .env file.");
-            }
-            const serviceAccount = JSON.parse(credentialsString);
-
-            adminApp = initializeApp({
-                credential: cert(serviceAccount)
-            }, 'admin-feed-flow');
-            db = getFirestore(adminApp);
-             console.log("Personalized Feed Flow: Firebase Admin SDK initialized successfully.");
-        } catch (error: any) {
-            console.error("Personalized Feed Flow: Firebase Admin SDK initialization failed:", error.message);
-            // Throw an error to prevent the flow from running with a broken config
-            throw new Error(`Firebase Admin SDK could not be initialized: ${error.message}`);
-        }
-    }
-    return { adminApp, db };
-}
-// ---------------------------------------------------
-
+import { getFirebaseAdmin } from '@/lib/firebase/server';
+import type { Firestore } from 'firebase-admin/firestore';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition

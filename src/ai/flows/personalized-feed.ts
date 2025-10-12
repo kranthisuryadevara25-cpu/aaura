@@ -23,9 +23,6 @@ function initializeFirebaseAdmin() {
     adminApp = getApps().find(app => app.name === 'firebase-admin-personalized-feed')!;
   } else {
     try {
-      // Load environment variables from .env file
-      dotenv.config();
-      
       const serviceAccountString = process.env.GOOGLE_APPLICATION_CREDENTIALS;
       if (!serviceAccountString) {
         throw new Error('The GOOGLE_APPLICATION_CREDENTIALS environment variable is not set.');

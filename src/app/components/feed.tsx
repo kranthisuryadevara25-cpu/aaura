@@ -3,7 +3,6 @@
 import React, { useMemo } from "react";
 import { Loader2, FileQuestion } from "lucide-react";
 import { FeedCard } from "@/components/FeedCard";
-import { PostCard } from "@/app/forum/page";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import sampleFeed from '@/lib/sample-feed.json';
 
@@ -44,19 +43,6 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
     <>
         {filteredItems.length > 0 ? (
             filteredItems.map((item, index) => {
-                if (item.type === 'post') {
-                    // Adapt mock data to fit PostCard's expected structure
-                    const postData = {
-                        id: item.id,
-                        content: item.content,
-                        likes: item.engagement?.likes || 0,
-                        commentsCount: item.engagement?.comments || 0,
-                        authorId: item.authorId,
-                        createdAt: new Date(), // Mock date
-                    };
-                    return <PostCard key={`${item.id}-${index}`} post={postData} />
-                }
-                // Use FeedCard for all other types
                 return <FeedCard key={`${item.id}-${index}`} item={item} />
             })
         ) : (

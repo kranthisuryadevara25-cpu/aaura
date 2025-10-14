@@ -51,9 +51,10 @@ function CommentCard({ comment }: { comment: any; }) {
 interface CommentsProps {
   contentId: string;
   contentType: 'media' | 'post';
+  parentCollectionPath: string; // e.g. "posts" or "groups/xyz/posts"
 }
 
-export function Comments({ contentId, contentType }: CommentsProps) {
+export function Comments({ contentId, contentType, parentCollectionPath }: CommentsProps) {
   const auth = useAuth();
   const db = useFirestore();
   const [user] = useAuthState(auth);
@@ -61,7 +62,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
 
-  const commentsQuery = query(collection(db, contentType, contentId, 'comments'), orderBy('createdAt', 'desc'));
+  const commentsQuery = query(collection(db, parentCollectionPath, contentId, 'comments'), orderBy('createdAt', 'desc'));
   const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
 
   const form = useForm<CommentFormValues>({
@@ -76,17 +77,14 @@ export function Comments({ contentId, contentType }: CommentsProps) {
     }
     startTransition(async () => {
       try {
-        const commentsCollection = collection(db, contentType, contentId, 'comments');
+        const commentsCollection = collection(db, parentCollectionPath, contentId, 'comments');
         await addDoc(commentsCollection, {
-          contentId: contentId,
-          contentType: contentType,
           authorId: user.uid,
           text: data.text,
           createdAt: serverTimestamp(),
         });
         
-        // Increment commentsCount on the parent document
-        const contentRef = doc(db, contentType, contentId);
+        const contentRef = doc(db, parentCollectionPath, contentId);
         await updateDoc(contentRef, {
             commentsCount: increment(1)
         });

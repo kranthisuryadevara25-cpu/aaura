@@ -713,12 +713,29 @@
       },
       "required": ["id", "name_en", "description_en", "date", "significance_en"]
     },
-    "Post": {
-      "title": "Post",
-      "description": "Represents a post in the community forum.",
+    "Group": {
+      "title": "Group",
+      "description": "Represents a community group.",
       "type": "object",
       "properties": {
         "id": { "type": "string" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "coverImageUrl": { "type": "string", "format": "uri" },
+        "topicType": { "type": "string", "description": "e.g., 'deity', 'temple', 'general'" },
+        "topicId": { "type": "string", "description": "Slug of the related topic" },
+        "memberCount": { "type": "number" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "createdAt"]
+    },
+    "Post": {
+      "title": "Post",
+      "description": "Represents a post in a community group.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "groupId": { "type": "string" },
         "authorId": { "type": "string" },
         "content": { "type": "string" },
         "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
@@ -727,7 +744,7 @@
         "likes": { "type": "number" },
         "commentsCount": { "type": "number" }
       },
-      "required": ["authorId", "content", "createdAt"]
+      "required": ["groupId", "authorId", "content", "createdAt"]
     },
     "Comment": {
       "title": "Comment",
@@ -967,26 +984,41 @@
         }
       },
       {
-        "path": "/posts/{postId}",
+        "path": "/groups/{groupId}",
         "definition": {
-            "entityName": "Post",
-            "schema": { "$ref": "#/entities/Post" },
-            "description": "Stores forum posts."
+            "entityName": "Group",
+            "schema": { "$ref": "#/entities/Group" },
+            "description": "Stores community groups."
         }
       },
       {
-          "path": "/posts/{postId}/comments/{commentId}",
+        "path": "/groups/{groupId}/members/{userId}",
+        "definition": {
+            "schema": { "type": "object", "properties": { "joinedAt": { "type": "string", "format": "date-time" } } },
+            "description": "Subcollection to track members of a group."
+        }
+      },
+      {
+        "path": "/groups/{groupId}/posts/{postId}",
+        "definition": {
+            "entityName": "Post",
+            "schema": { "$ref": "#/entities/Post" },
+            "description": "Stores posts within a specific group."
+        }
+      },
+      {
+          "path": "/groups/{groupId}/posts/{postId}/comments/{commentId}",
           "definition": {
               "entityName": "Comment",
               "schema": { "$ref": "#/entities/Comment" },
-              "description": "Stores comments for a specific post."
+              "description": "Stores comments for a specific post within a group."
           }
       },
       {
-        "path": "/posts/{postId}/likes/{userId}",
+        "path": "/groups/{groupId}/posts/{postId}/likes/{userId}",
         "definition": {
             "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
-            "description": "Stores likes for a specific forum post. Document ID is the user's UID."
+            "description": "Stores likes for a specific forum post within a group. Document ID is the user's UID."
         }
        },
        {

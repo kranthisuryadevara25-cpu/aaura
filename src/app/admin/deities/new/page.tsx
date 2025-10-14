@@ -1,3 +1,4 @@
+
 import { DeityForm } from '../DeityForm';
 
 export default function NewDeityPage() {

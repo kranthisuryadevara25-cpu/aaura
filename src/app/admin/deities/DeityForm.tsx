@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm, useFieldArray } from 'react-hook-form';
@@ -16,8 +17,6 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, addDoc, collection } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
@@ -68,7 +67,6 @@ interface DeityFormProps {
 export function DeityForm({ deity }: DeityFormProps) {
   const { toast } = useToast();
   const router = useRouter();
-  const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -102,16 +100,15 @@ export function DeityForm({ deity }: DeityFormProps) {
     startTransition(async () => {
       try {
         if (deity) {
-          // Update existing deity
-          const deityRef = doc(db, 'deities', deity.id);
-          await setDoc(deityRef, data, { merge: true });
-           toast({ title: 'Deity Updated!', description: 'The deity has been successfully updated.' });
+          // Mock update
+          console.log("Updating deity (mock):", { id: deity.id, ...data });
+          toast({ title: 'Deity Updated! (Mock)', description: 'The deity has been successfully updated.' });
         } else {
-          // Create new deity
-          await addDoc(collection(db, 'deities'), data);
-          toast({ title: 'Deity Created!', description: 'The new deity has been added to the database.' });
+          // Mock create
+          console.log("Creating new deity (mock):", data);
+          toast({ title: 'Deity Created! (Mock)', description: 'The new deity has been added.' });
         }
-        router.push('/admin/deities');
+        router.push('/admin/content');
       } catch (error) {
         console.error('Failed to save deity:', error);
         toast({

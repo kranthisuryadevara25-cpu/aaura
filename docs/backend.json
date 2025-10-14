@@ -599,7 +599,7 @@
         "description": "Represents a user's interaction in the virtual pooja room.",
         "properties": {
             "userId": { "type": "string" },
-            "interaction": { "type": "string", "enum": ["ring-bell", "offer-flower", "light-diya"] },
+            "interaction": { "type": "string", "enum": ["ring-bell", "offer-flower", "light-diya", "offer-aarti"] },
             "timestamp": { "type": "string", "format": "date-time" }
         },
         "required": ["userId", "interaction", "timestamp"]

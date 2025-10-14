@@ -15,7 +15,6 @@ import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { deities, type Deity } from '@/lib/deities'; 
 
-// Component for the falling flower animation
 const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
   <Flower
     key={id}
@@ -29,7 +28,6 @@ const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
   />
 );
 
-
 export default function VirtualPoojaPage() {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -41,8 +39,9 @@ export default function VirtualPoojaPage() {
   const [bellRinging, setBellRinging] = useState(false);
   const [flowers, setFlowers] = useState<number[]>([]);
   const [diyaLit, setDiyaLit] = useState(false);
+  const [showAarti, setShowAarti] = useState(false);
 
-  const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya') => {
+  const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya' | 'offer-aarti') => {
     if (!user) {
       toast({
         variant: 'destructive',
@@ -72,17 +71,21 @@ export default function VirtualPoojaPage() {
            const newFlowerId = Date.now();
            const newFlowers = Array.from({ length: 5 }, (_, i) => newFlowerId + i);
            setFlowers(prev => [...prev, ...newFlowers]);
-           newFlowers.forEach(id => {
-                setTimeout(() => {
-                    setFlowers(prev => prev.filter(flowerId => flowerId !== id));
-                }, 7000);
-           })
-          toast({ title: 'You offered flowers to the divine.' });
+           setTimeout(() => {
+                setFlowers(prev => prev.filter(f => !newFlowers.includes(f)));
+            }, 7000);
+           toast({ title: 'You offered flowers to the divine.' });
           break;
         case 'light-diya':
           setDiyaLit(!diyaLit);
           toast({ title: diyaLit ? 'You extinguished the lamp.' : 'You lit the lamp, spreading light.' });
           break;
+        case 'offer-aarti':
+            setShowAarti(true);
+            new Audio('https://cdn.pixabay.com/audio/2022/02/11/audio_a7a22c50fd.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
+            setTimeout(() => setShowAarti(false), 5000); // Animation duration
+            toast({ title: 'You performed the Aarti.' });
+            break;
       }
     } catch (error) {
       console.error("Failed to record interaction:", error);
@@ -126,6 +129,14 @@ export default function VirtualPoojaPage() {
           <FallingFlower key={id} id={id} delay={index * 0.1} />
         ))}
       </div>
+      
+       {showAarti && (
+        <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+            <div className="animate-aarti-path">
+                <Flame className="w-12 h-12 text-orange-400" style={{ filter: 'drop-shadow(0 0 10px #ffc107) drop-shadow(0 0 20px #ff9800)' }} />
+            </div>
+        </div>
+      )}
 
       <Image
         src={selectedDeity.images[0].url}
@@ -156,8 +167,7 @@ export default function VirtualPoojaPage() {
         </Button>
       </div>
 
-      <div className="relative z-20 grid grid-cols-3 gap-4 md:gap-8 w-full max-w-4xl">
-        {/* Ring Bell */}
+      <div className="relative z-20 grid grid-cols-4 gap-4 md:gap-8 w-full max-w-5xl">
         <div className="flex flex-col items-center justify-center p-4">
            <button onClick={() => handleInteraction('ring-bell')} className="group">
              <div className={cn("relative transition-transform group-hover:scale-110", bellRinging ? 'animate-swing' : '')}>
@@ -167,7 +177,6 @@ export default function VirtualPoojaPage() {
            <p className="text-amber-200 mt-2 font-semibold">Ring Bell</p>
         </div>
 
-        {/* Offer Flowers */}
         <div className="relative flex flex-col items-center justify-center p-4">
            <button onClick={() => handleInteraction('offer-flower')} className="group">
             <div className="relative group-hover:scale-110 transition-transform">
@@ -177,7 +186,6 @@ export default function VirtualPoojaPage() {
             <p className="text-pink-200 mt-2 font-semibold">Offer Flowers</p>
         </div>
 
-        {/* Light Diya */}
         <div className="flex flex-col items-center justify-center p-4">
            <button onClick={() => handleInteraction('light-diya')} className="group">
              <div className="relative group-hover:scale-110 transition-transform w-24 h-24 flex items-center justify-center">
@@ -194,6 +202,15 @@ export default function VirtualPoojaPage() {
            <p className={cn("mt-2 font-semibold transition-colors", diyaLit ? "text-orange-200" : "text-gray-300")}>
               {diyaLit ? 'Extinguish' : 'Light Diya'}
            </p>
+        </div>
+
+        <div className="flex flex-col items-center justify-center p-4">
+           <button onClick={() => handleInteraction('offer-aarti')} className="group">
+             <div className="relative transition-transform group-hover:scale-110 w-24 h-24 flex items-center justify-center">
+                <Flame className="w-16 h-16 md:w-24 md:h-24 text-orange-400 drop-shadow-lg" />
+            </div>
+           </button>
+           <p className="text-orange-300 mt-2 font-semibold">Offer Aarti</p>
         </div>
       </div>
 
@@ -227,7 +244,6 @@ export default function VirtualPoojaPage() {
         .animate-flicker {
             animation: flicker 1.5s ease-in-out infinite;
         }
-
         @keyframes pulse-glow {
             0%, 100% { opacity: 0.3; transform: scale(1); }
             50% { opacity: 0.5; transform: scale(1.05); }
@@ -235,7 +251,18 @@ export default function VirtualPoojaPage() {
         .animate-pulse-glow {
             animation: pulse-glow 3s ease-in-out infinite;
         }
+        @keyframes aarti-path {
+            0% { transform: translate(0, 0) rotate(0deg) scale(0.5); opacity: 0; }
+            25% { transform: translate(100px, 50px) rotate(90deg) scale(1); opacity: 1; }
+            50% { transform: translate(0px, 150px) rotate(180deg) scale(1); }
+            75% { transform: translate(-100px, 50px) rotate(270deg) scale(1); }
+            100% { transform: translate(0, 0) rotate(360deg) scale(0.5); opacity: 0; }
+        }
+        .animate-aarti-path {
+            animation: aarti-path 5s ease-in-out forwards;
+        }
       `}</style>
     </main>
   );
 }
+

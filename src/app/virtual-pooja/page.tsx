@@ -22,7 +22,7 @@ export default function VirtualPoojaPage() {
   const [user] = useAuthState(auth);
 
   const [bellRinging, setBellRinging] = useState(false);
-  const [flowersOffered, setFlowersOffered] = useState(false);
+  const [flowersOffered, setFlowersOffered] = useState(0);
   const [diyaLit, setDiyaLit] = useState(false);
 
   const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya') => {
@@ -46,23 +46,22 @@ export default function VirtualPoojaPage() {
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          // Use a reliable, publicly hosted sound file to prevent loading errors.
           new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_29b243dc2f.mp3').play().catch(e => console.error("Error playing audio:", e));
           setTimeout(() => setBellRinging(false), 500);
           toast({ title: 'You rang the divine bell.' });
           break;
         case 'offer-flower':
-          setFlowersOffered(true);
+          setFlowersOffered(prev => prev + 1); // Increment key to re-trigger animation
           toast({ title: 'You offered flowers to the divine.' });
           break;
         case 'light-diya':
-          setDiyaLit(true);
-          toast({ title: 'You lit the lamp, spreading light.' });
+          setDiyaLit(!diyaLit); // Toggle the light
+          toast({ title: diyaLit ? 'You extinguished the lamp.' : 'You lit the lamp, spreading light.' });
           break;
       }
     } catch (error) {
       console.error("Failed to record interaction:", error);
-      toast({ variant: 'destructive', title: 'Something went wrong.' });
+      toast({ variant: 'destructive', title: 'Something went wrong.', description: "Your interaction could not be saved." });
     }
   };
 
@@ -108,8 +107,8 @@ export default function VirtualPoojaPage() {
         <Card className="bg-black/50 border-amber-200/20 text-white flex flex-col items-center justify-center p-4 aspect-square">
           <CardContent className="flex flex-col items-center justify-center p-0">
             <div className="relative">
-                <Flower className={cn("w-16 h-16 md:w-24 md:h-24 text-pink-300 transition-all duration-500", flowersOffered ? 'opacity-100 scale-110' : 'opacity-70')} />
-                {flowersOffered && <Flower className="absolute top-0 left-0 w-16 h-16 md:w-24 md:h-24 text-pink-400 animate-ping opacity-50" />}
+                <Flower className={cn("w-16 h-16 md:w-24 md:h-24 text-pink-300 transition-all duration-500", flowersOffered > 0 ? 'opacity-100 scale-110' : 'opacity-70')} />
+                {flowersOffered > 0 && <Flower key={flowersOffered} className="absolute top-0 left-0 w-16 h-16 md:w-24 md:h-24 text-pink-400 animate-ping opacity-50" />}
             </div>
             <Button variant="outline" className="mt-4 bg-transparent border-pink-300 text-pink-300 hover:bg-pink-300/10 hover:text-pink-200" onClick={() => handleInteraction('offer-flower')}>
               Offer Flowers
@@ -121,11 +120,11 @@ export default function VirtualPoojaPage() {
         <Card className="bg-black/50 border-amber-200/20 text-white flex flex-col items-center justify-center p-4 aspect-square">
           <CardContent className="flex flex-col items-center justify-center p-0">
              <div className="relative">
-                <Flame className={cn("w-16 h-16 md:w-24 md-h-24 text-orange-300 transition-all duration-1000", diyaLit ? 'text-orange-400' : 'text-gray-400')} />
+                <Flame className={cn("w-16 h-16 md:w-24 md:h-24 transition-all duration-1000", diyaLit ? 'text-orange-400' : 'text-gray-400')} />
                  {diyaLit && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-orange-400 rounded-full blur-2xl opacity-50" />}
             </div>
             <Button variant="outline" className="mt-4 bg-transparent border-orange-300 text-orange-300 hover:bg-orange-300/10 hover:text-orange-200" onClick={() => handleInteraction('light-diya')}>
-              Light Diya
+              {diyaLit ? 'Extinguish' : 'Light Diya'}
             </Button>
           </CardContent>
         </Card>

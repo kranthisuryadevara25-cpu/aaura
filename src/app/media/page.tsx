@@ -7,9 +7,8 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Film, Music, Mic } from 'lucide-react';
-import { placeholderImages } from '@/lib/placeholder-images';
 import { useLanguage } from '@/hooks/use-language';
-import sampleFeed from '@/lib/sample-feed.json';
+import { media as mockMedia } from '@/lib/media';
 
 const getIconForType = (type: string) => {
     switch (type) {
@@ -28,7 +27,7 @@ const getIconForType = (type: string) => {
 export default function MediaPage() {
   const { language, t } = useLanguage();
   
-  const media = useMemo(() => sampleFeed.feed.filter(item => item.type === 'media'), []);
+  const media = mockMedia.filter(item => item.status === 'approved');
   const isLoading = false;
   
   return (
@@ -49,23 +48,23 @@ export default function MediaPage() {
       ) : media && media.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {media.map((item: any) => {
-            const title = item.title;
-            const description = item.author.name;
+            const title = item[`title_${language}`] || item.title_en;
+            const description = item.userId; // Placeholder for author name
             return (
-            <Link href="#" key={item.id} className="group">
+            <Link href={`/watch/${item.id}`} key={item.id} className="group">
               <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300">
                 <CardContent className="p-0 mb-3">
                   <div className="aspect-video relative rounded-t-lg overflow-hidden">
                     <Image
-                      src={item.media.thumbnailUrl}
+                      src={item.thumbnailUrl}
                       alt={title}
-                      data-ai-hint={item.media.hint}
+                      data-ai-hint={item.imageHint}
                       fill
                       className="object-cover transform transition-transform duration-300 group-hover:scale-105"
                     />
                       <div className="absolute top-2 right-2 bg-background/80 text-foreground px-2 py-1 rounded-full text-xs font-semibold flex items-center">
-                        {getIconForType(item.media.type)}
-                        <span>{item.media.type.replace('_', ' ')}</span>
+                        {getIconForType(item.mediaType)}
+                        <span>{item.mediaType.replace('_', ' ')}</span>
                     </div>
                   </div>
                 </CardContent>

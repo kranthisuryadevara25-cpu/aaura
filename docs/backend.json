@@ -523,6 +523,17 @@
       },
       "required": ["id", "userId", "templeId", "timestamp"]
     },
+    "VirtualOffering": {
+        "title": "Virtual Offering",
+        "type": "object",
+        "description": "Represents a user's interaction in the virtual pooja room.",
+        "properties": {
+            "userId": { "type": "string" },
+            "interaction": { "type": "string", "enum": ["ring-bell", "offer-flower", "light-diya"] },
+            "timestamp": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "interaction", "timestamp"]
+    },
     "Story": {
       "title": "Story",
       "type": "object",
@@ -702,6 +713,14 @@
           "entityName": "Bookmark",
           "schema": { "$ref": "#/entities/Bookmark" },
           "description": "Stores user bookmarks for temples."
+        }
+      },
+       {
+        "path": "/users/{userId}/virtualOfferings/{offeringId}",
+        "definition": {
+          "entityName": "VirtualOffering",
+          "schema": { "$ref": "#/entities/VirtualOffering" },
+          "description": "Stores a user's interactions in the virtual pooja room."
         }
       },
       {

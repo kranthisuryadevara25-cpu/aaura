@@ -3,6 +3,7 @@ export const translations = {
   en: {
     sidebar: {
       home: "For You",
+      virtualPooja: "Virtual Pooja",
       deities: "Deities",
       stories: "Stories",
       characters: "Characters",
@@ -189,6 +190,7 @@ export const translations = {
   te: {
     sidebar: {
       home: "మీ కోసం",
+      virtualPooja: "వర్చువల్ పూజ",
       deities: "దేవతలు",
       stories: "కథలు",
       characters: "పాత్రలు",
@@ -375,6 +377,7 @@ export const translations = {
   hi: {
     sidebar: {
       home: "आपके लिए",
+      virtualPooja: "वर्चुअल पूजा",
       deities: "देवता",
       stories: "कहानियाँ",
       characters: "चरित्र",
@@ -561,6 +564,7 @@ export const translations = {
   mr: {
     sidebar: {
       home: "तुमच्यासाठी",
+      virtualPooja: "आभासी पूजा",
       deities: "देवता",
       stories: "कथा",
       characters: "पात्रे",
@@ -742,6 +746,7 @@ export const translations = {
   ta: {
     sidebar: {
       home: "உங்களுக்காக",
+      virtualPooja: "மெய்நிகர் பூஜை",
       deities: "தெய்வங்கள்",
       stories: "கதைகள்",
       characters: "பாத்திரங்கள்",
@@ -923,6 +928,7 @@ export const translations = {
   kn: {
     sidebar: {
       home: "ನಿಮಗಾಗಿ",
+      virtualPooja: "ವರ್ಚುವಲ್ ಪೂಜೆ",
       deities: "ದೇವತೆಗಳು",
       stories: "ಕಥೆಗಳು",
       characters: "ಪಾತ್ರಗಳು",
@@ -1104,6 +1110,7 @@ export const translations = {
   bn: {
     sidebar: {
       home: "আপনার জন্য",
+      virtualPooja: "ভার্চুয়াল পূজা",
       deities: "দেবদেবী",
       stories: "গল্প",
       characters: "চরিত্র",

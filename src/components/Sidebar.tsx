@@ -3,10 +3,11 @@
 import React from "react";
 import { useLanguage } from "@/hooks/use-language";
 import Link from 'next/link';
-import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star, ShieldCheck } from 'lucide-react';
+import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star, ShieldCheck, HandHeart } from 'lucide-react';
 
 const MENU_ITEMS = [
   { href: "/", label: "home", icon: Home },
+  { href: "/virtual-pooja", label: "virtualPooja", icon: HandHeart },
   { href: "/deities", label: "deities", icon: Sparkles },
   { href: "/stories", label: "stories", icon: ScrollText },
   { href: "/characters", label: "characters", icon: UserSquare },
@@ -48,5 +49,3 @@ export const Sidebar = () => {
     </aside>
   );
 };
-
-    

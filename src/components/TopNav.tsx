@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Upload, Film, MessageSquare, Settings } from "lucide-react";
+import { Skeleton } from "./ui/skeleton";
 
 const UserStats = () => {
     const auth = useAuth();
@@ -27,7 +28,16 @@ const UserStats = () => {
     const userRef = user ? doc(db, 'users', user.uid) : undefined;
     const [userData, loading] = useDocumentData(userRef);
 
-    if (loading || !userData) {
+    if (loading) {
+        return (
+            <div className="flex items-center gap-4">
+                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-16" />
+            </div>
+        )
+    }
+
+    if (!userData) {
         return null;
     }
 
@@ -119,3 +129,5 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
     </header>
   );
 };
+
+    

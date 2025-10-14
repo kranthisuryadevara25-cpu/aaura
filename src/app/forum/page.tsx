@@ -8,7 +8,7 @@ import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, deleteDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, deleteDoc, writeBatch } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -223,3 +223,5 @@ export default function ForumPage() {
     </main>
   );
 }
+
+    

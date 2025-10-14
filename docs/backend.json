@@ -54,11 +54,11 @@
         },
         "followerCount": {
           "type": "number",
-          "description": "The number of users following this user's channel."
+          "description": "The number of users following this user."
         },
         "followingCount": {
           "type": "number",
-          "description": "The number of channels this user is following."
+          "description": "The number of users this user is following."
         },
         "welcomeMessage": {
             "type": "string",
@@ -69,6 +69,16 @@
         "id",
         "email"
       ]
+    },
+    "Follow": {
+        "title": "Follow",
+        "type": "object",
+        "description": "Represents a follow relationship between two users. The document ID is the ID of the user being followed/follower.",
+        "properties": {
+            "userId": { "type": "string", "description": "ID of the user." },
+            "followedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the follow occurred." }
+        },
+        "required": ["userId", "followedAt"]
     },
     "Preference": {
       "title": "Preference",
@@ -206,37 +216,6 @@
         "userId",
         "name",
         "creationDate"
-      ]
-    },
-    "Subscription": {
-      "$schema": "http://json-schema.org/draft-07/schema#",
-      "title": "Subscription",
-      "type": "object",
-      "description": "Represents a user's subscription to a channel.",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "Unique identifier for the subscription."
-        },
-        "userId": {
-          "type": "string",
-          "description": "ID of the user who is subscribing."
-        },
-        "channelId": {
-          "type": "string",
-          "description": "ID of the channel being subscribed to."
-        },
-        "subscriptionDate": {
-          "type": "string",
-          "description": "Date of subscription.",
-          "format": "date-time"
-        }
-      },
-      "required": [
-        "id",
-        "userId",
-        "channelId",
-        "subscriptionDate"
       ]
     },
     "Horoscope": {
@@ -646,7 +625,8 @@
         "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
         "tags": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" },
-        "likes": { "type": "number" }
+        "likes": { "type": "number" },
+        "commentsCount": { "type": "number" }
       },
       "required": ["authorId", "content", "createdAt"]
     },
@@ -678,6 +658,22 @@
           "entityName": "User",
           "schema": { "$ref": "#/entities/User" },
           "description": "Stores user profiles."
+        }
+      },
+      {
+        "path": "/users/{userId}/followers/{followerId}",
+        "definition": {
+            "entityName": "Follow",
+            "schema": { "$ref": "#/entities/Follow" },
+            "description": "A subcollection storing the users who are following this user. The document ID is the UID of the follower."
+        }
+      },
+      {
+        "path": "/users/{userId}/following/{followedId}",
+        "definition": {
+            "entityName": "Follow",
+            "schema": { "$ref": "#/entities/Follow" },
+            "description": "A subcollection storing the users this user is following. The document ID is the UID of the user being followed."
         }
       },
       {
@@ -736,20 +732,19 @@
           "description": "Stores comments for a specific media item."
         }
       },
+       {
+        "path": "/media/{mediaId}/likes/{userId}",
+        "definition": {
+            "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
+            "description": "Stores likes for a specific media item. Document ID is the user's UID."
+        }
+       },
       {
         "path": "/channels/{channelId}",
         "definition": {
           "entityName": "Channel",
           "schema": { "$ref": "#/entities/Channel" },
           "description": "Stores all channels on the platform."
-        }
-      },
-      {
-        "path": "/users/{userId}/subscriptions/{channelId}",
-        "definition": {
-            "entityName": "Subscription",
-            "schema": { "$ref": "#/entities/Subscription" },
-            "description": "Stores user subscriptions within a sub-collection of the user's document."
         }
       },
       {
@@ -855,8 +850,17 @@
               "schema": { "$ref": "#/entities/Comment" },
               "description": "Stores comments for a specific post."
           }
-      }
+      },
+      {
+        "path": "/posts/{postId}/likes/{userId}",
+        "definition": {
+            "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
+            "description": "Stores likes for a specific forum post. Document ID is the user's UID."
+        }
+       }
     ],
-    "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, preferences, badges, carts, orders and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions."
   }
 }
+
+    

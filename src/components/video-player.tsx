@@ -43,8 +43,8 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
   const likeRef = user ? doc(db, `media/${contentId}/likes/${user.uid}`) : undefined;
   const [like, loadingLike] = useDocumentData(likeRef);
 
-  const subscriptionRef = user && authorId ? doc(db, `users/${user.uid}/subscriptions`, authorId) : undefined;
-  const [subscription, loadingSubscription] = useDocumentData(subscriptionRef);
+  const followingRef = user && authorId ? doc(db, `users/${user.uid}/following`, authorId) : undefined;
+  const [following, loadingFollowing] = useDocumentData(followingRef);
 
 
   useEffect(() => {
@@ -98,37 +98,45 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
     }
   }
 
-  const handleSubscribe = async () => {
-    if (!user || !subscriptionRef || !authorId || !authorRef) {
-      toast({ variant: 'destructive', title: "You must be logged in to subscribe." });
+  const handleFollow = async () => {
+    if (!user || !followingRef || !authorId || !authorRef) {
+      toast({ variant: 'destructive', title: "You must be logged in to follow a user." });
       return;
     }
     
-    const userRef = doc(db, 'users', user.uid);
+    const currentUserRef = doc(db, 'users', user.uid);
+    const targetUserRef = doc(db, 'users', authorId);
+    const userFollowersRef = doc(db, `users/${authorId}/followers`, user.uid);
+
     const batch = writeBatch(db);
 
     try {
-        if (subscription) {
-            // Unsubscribe
-            batch.delete(subscriptionRef);
-            batch.update(userRef, { followingCount: increment(-1) });
-            batch.update(authorRef, { followerCount: increment(-1) });
+        if (following) {
+            // Unfollow
+            batch.delete(followingRef);
+            batch.delete(userFollowersRef);
+            batch.update(currentUserRef, { followingCount: increment(-1) });
+            batch.update(targetUserRef, { followerCount: increment(-1) });
 
-            toast({ title: "Unsubscribed", description: `You have unsubscribed from ${author?.displayName || 'this channel'}.` });
+            toast({ title: "Unfollowed", description: `You have unfollowed ${author?.displayName || 'this creator'}.` });
         } else {
-           // Subscribe
-           batch.set(subscriptionRef, {
-              channelId: authorId,
-              subscriptionDate: serverTimestamp(),
+           // Follow
+           batch.set(followingRef, {
+              userId: authorId,
+              followedAt: serverTimestamp(),
             });
-            batch.update(userRef, { followingCount: increment(1) });
-            batch.update(authorRef, { followerCount: increment(1) });
+           batch.set(userFollowersRef, {
+              userId: user.uid,
+              followedAt: serverTimestamp(),
+           });
+            batch.update(currentUserRef, { followingCount: increment(1) });
+            batch.update(targetUserRef, { followerCount: increment(1) });
 
-          toast({ title: "Subscribed!", description: `You are now subscribed to ${author?.displayName || 'this channel'}.` });
+          toast({ title: "Followed!", description: `You are now following ${author?.displayName || 'this creator'}.` });
         }
         await batch.commit();
     } catch (e) {
-        console.error("Error subscribing: ", e);
+        console.error("Error following user: ", e);
         toast({ variant: 'destructive', title: 'Something went wrong.'});
     }
   }
@@ -147,6 +155,7 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
 
   const title = media[`title_${language}`] || media.title_en;
   const description = media[`description_${language}`] || media.description_en;
+  const isFollowing = !!following;
 
   return (
     <div className="w-full">
@@ -171,29 +180,31 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
           </Avatar>
           <div>
             <p className="font-semibold">{author?.displayName || 'Creator'}</p>
-            <p className="text-sm text-muted-foreground">{media.views || 0} views</p> 
+            <p className="text-sm text-muted-foreground">{author?.followerCount || 0} followers</p> 
           </div>
-           <AlertDialog>
-              <AlertDialogTrigger asChild>
-                  <Button variant="default" disabled={loadingSubscription || !user} >
-                    {subscription ? t.buttons.subscribed : t.buttons.subscribe}
-                  </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                  <AlertDialogHeader>
-                      <AlertDialogTitle>
-                        {subscription ? "Unsubscribe from" : "Subscribe to"} {author?.displayName || 'this channel'}?
-                      </AlertDialogTitle>
-                      <AlertDialogDescription>
-                          You can always change your mind later.
-                      </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleSubscribe}>{subscription ? 'Unsubscribe' : 'Subscribe'}</AlertDialogAction>
-                  </AlertDialogFooter>
-              </AlertDialogContent>
-          </AlertDialog>
+           {user && user.uid !== authorId && (
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="default" disabled={loadingFollowing} >
+                        {isFollowing ? t.buttons.subscribed : t.buttons.subscribe}
+                    </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {isFollowing ? "Unfollow" : "Follow"} {author?.displayName || 'this creator'}?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            You can always change your mind later.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleFollow}>{isFollowing ? 'Unfollow' : 'Follow'}</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+           )}
         </div>
         <div className="flex items-center gap-2 mt-4 sm:mt-0">
           <Button variant="outline" onClick={handleLike} disabled={loadingLike || !user}>
@@ -215,3 +226,5 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
     </div>
   );
 }
+
+    

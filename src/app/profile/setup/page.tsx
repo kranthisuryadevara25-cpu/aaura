@@ -23,7 +23,7 @@ import { format, parse, isValid } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
+import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useTransition, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -386,3 +386,5 @@ export default function ProfileSetupPage() {
     </main>
   );
 }
+
+    

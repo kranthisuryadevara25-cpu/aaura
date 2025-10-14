@@ -4,11 +4,10 @@
 import { useParams, notFound } from 'next/navigation';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, collection, query, orderBy, serverTimestamp, addDoc, updateDoc, increment } from 'firebase/firestore';
+import { doc, collection, query, orderBy, serverTimestamp, addDoc, updateDoc, increment, deleteDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageCircle, ThumbsUp, Send, Users, CheckCircle, PlusCircle } from 'lucide-react';
-import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { Comments } from '@/components/comments';
@@ -19,8 +18,12 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { getGroupById } from '@/lib/groups';
+import { getPostsByGroupId, type Post } from '@/lib/posts';
+import { getCommentsByPostId, type Comment } from '@/lib/comments';
+
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(1000, "Post must be less than 1000 characters."),
@@ -28,12 +31,11 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-function CreatePost({ groupId }: { groupId: string }) {
+function CreatePost({ groupId, onPostCreated }: { groupId: string, onPostCreated: (newPost: any) => void }) {
   const [user] = useAuthState(useAuth());
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
-  const db = useFirestore();
-
+  
   const form = useForm<PostFormValues>({
     resolver: zodResolver(postSchema),
     defaultValues: { content: '' },
@@ -45,22 +47,19 @@ function CreatePost({ groupId }: { groupId: string }) {
       return;
     }
     startTransition(async () => {
-      try {
-        const postsCollection = collection(db, 'groups', groupId, 'posts');
-        await addDoc(postsCollection, {
-          authorId: user.uid,
-          content: data.content,
-          createdAt: serverTimestamp(),
-          likes: 0,
-          commentsCount: 0,
-          groupId: groupId,
-        });
+        // Mock post creation
+        const newPost = {
+            id: `post-${Date.now()}`,
+            authorId: user.uid,
+            content: data.content,
+            createdAt: new Date(),
+            likes: 0,
+            commentsCount: 0,
+            groupId: groupId,
+        };
+        onPostCreated(newPost);
         form.reset();
-        toast({ title: 'Post created successfully!' });
-      } catch (error) {
-        console.error("Error creating post:", error);
-        toast({ variant: 'destructive', title: 'Failed to create post.' });
-      }
+        toast({ title: 'Post created successfully! (Mock)' });
     });
   };
 
@@ -108,39 +107,26 @@ function CreatePost({ groupId }: { groupId: string }) {
 function PostCard({ post }: { post: any; }) {
   const { toast } = useToast();
   const auth = useAuth();
-  const db = useFirestore();
   const [user] = useAuthState(auth);
-
-  if (!post || !post.id) {
-    return null;
-  }
+  // MOCK: In a real app, this would fetch the author details
+  const author = { displayName: 'User ' + post.authorId.slice(0, 4), photoURL: `https://picsum.photos/seed/${post.authorId}/100/100` };
+  const authorIsLoading = false;
   
-  const authorRef = post.authorId ? doc(db, 'users', post.authorId) : undefined;
-  const [author, authorIsLoading] = useDocumentData(authorRef);
+  // MOCK: Like state is local
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.likes || 0);
   
-  // Note: Firestore security rules should handle authorization
-  const postRef = doc(db, 'groups', post.groupId, 'posts', post.id);
-  const likeRef = user ? doc(db, `groups/${post.groupId}/posts/${post.id}/likes/${user.uid}`) : undefined;
-  const [like, isLikeLoading] = useDocumentData(likeRef);
-  
-  const handleLike = async () => {
-    if (!user || !likeRef) {
+  const handleLike = () => {
+    if (!user) {
       toast({ variant: 'destructive', title: "You must be logged in to like a post." });
       return;
     }
-
-    try {
-      if (like) {
-        await deleteDoc(likeRef);
-        await updateDoc(postRef, { likes: increment(-1) });
-      } else {
-        await setDoc(likeRef, { userId: user.uid });
-        await updateDoc(postRef, { likes: increment(1) });
-      }
-    } catch (error) {
-      console.error("Error liking post: ", error)
-      toast({ variant: 'destructive', title: 'Something went wrong.' });
+    if (isLiked) {
+        setLikeCount(prev => prev - 1);
+    } else {
+        setLikeCount(prev => prev + 1);
     }
+    setIsLiked(prev => !prev);
   };
 
   return (
@@ -156,7 +142,7 @@ function PostCard({ post }: { post: any; }) {
           <div className="flex items-center justify-between">
             <p className="font-semibold">{author?.displayName || 'Anonymous'}</p>
             <p className="text-xs text-muted-foreground">
-              {post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+              {post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : 'Just now'}
             </p>
           </div>
         </div>
@@ -165,8 +151,8 @@ function PostCard({ post }: { post: any; }) {
         <p className="whitespace-pre-wrap">{post.content}</p>
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-4">
-         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user || isLikeLoading}>
-            <ThumbsUp className={`mr-2 h-4 w-4 ${like ? 'text-blue-500 fill-current' : ''}`} /> {post.likes || 0}
+         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user}>
+            <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> {likeCount}
         </Button>
         <div className="flex items-center text-sm text-muted-foreground">
             <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} comments
@@ -174,7 +160,7 @@ function PostCard({ post }: { post: any; }) {
       </CardFooter>
       <CardContent>
           <Separator className="my-4" />
-          <Comments contentId={post.id} contentType="post" parentCollectionPath={`groups/${post.groupId}/posts`} />
+          <Comments contentId={post.id} contentType="post" />
       </CardContent>
     </Card>
   );
@@ -183,32 +169,16 @@ function PostCard({ post }: { post: any; }) {
 export default function GroupDetailPage() {
   const params = useParams();
   const groupId = params.postId as string; // Route uses [postId] but it's the groupId
-  const db = useFirestore();
-
-  const groupRef = doc(db, 'groups', groupId);
-  const [group, groupLoading] = useDocumentData(groupRef);
-
-  const postsQuery = query(collection(db, 'groups', groupId, 'posts'), orderBy('createdAt', 'desc'));
-  const [posts, postsLoading] = useCollectionData(postsQuery, { idField: 'id' });
   
-  if (groupLoading || postsLoading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
-  }
+  const group = getGroupById(groupId);
+  const [posts, setPosts] = useState<Post[]>(getPostsByGroupId(groupId));
 
-  if (!groupLoading && !group) {
-    notFound();
+  const handlePostCreated = (newPost: Post) => {
+    setPosts(prevPosts => [newPost, ...prevPosts]);
   }
-
+  
   if (!group) {
-      return (
-      <div className="flex justify-center items-center min-h-screen bg-background">
-        <Loader2 className="h-16 w-16 animate-spin text-primary" />
-      </div>
-    );
+    notFound();
   }
 
   return (
@@ -223,7 +193,7 @@ export default function GroupDetailPage() {
         </div>
         
         <div className="mb-8">
-          <CreatePost groupId={groupId} />
+          <CreatePost groupId={groupId} onPostCreated={handlePostCreated} />
         </div>
 
         <div className="space-y-6">

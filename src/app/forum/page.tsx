@@ -12,50 +12,52 @@ import { useLanguage } from '@/hooks/use-language';
 import Image from 'next/image';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useToast } from '@/hooks/use-toast';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useState, useEffect } from 'react';
+import { groups as mockGroups } from '@/lib/groups';
+
 
 function GroupCard({ group }: { group: any }) {
     const { t } = useLanguage();
     const auth = useAuth();
-    const db = useFirestore();
     const [user] = useAuthState(auth);
     const { toast } = useToast();
+    
+    // MOCK: Membership state is local
+    const [isMember, setIsMember] = useState(false);
+    const [memberCount, setMemberCount] = useState(group.memberCount);
+    const [loadingMembership, setLoadingMembership] = useState(false);
 
-    const memberRef = user ? doc(db, `groups/${group.id}/members/${user.uid}`) : undefined;
-    const [membership, loadingMembership] = useDocumentData(memberRef);
+    useEffect(() => {
+        // Mock initial membership state, e.g., user is member of first two groups
+        if (user && (group.id === '1' || group.id === '2')) {
+            setIsMember(true);
+        }
+    }, [user, group.id])
 
     const handleJoinLeave = async (e: React.MouseEvent) => {
         e.preventDefault();
         e.stopPropagation();
 
-        if (!user || !memberRef) {
+        if (!user) {
             toast({ variant: 'destructive', title: 'You must be logged in to join a group.' });
             return;
         }
         
-        const groupRef = doc(db, 'groups', group.id);
-        const batch = writeBatch(db);
-
-        try {
-            if (membership) {
+        setLoadingMembership(true);
+        setTimeout(() => { // Simulate API call
+            if (isMember) {
                 // Leave group
-                batch.delete(memberRef);
-                batch.update(groupRef, { memberCount: increment(-1) });
+                setMemberCount((prev: number) => prev - 1);
                 toast({ title: `You have left the "${group.name}" group.` });
             } else {
                 // Join group
-                batch.set(memberRef, { joinedAt: new Date() });
-                batch.update(groupRef, { memberCount: increment(1) });
+                setMemberCount((prev: number) => prev + 1);
                 toast({ title: `Welcome to the "${group.name}" group!` });
             }
-            await batch.commit();
-        } catch (error) {
-            console.error("Error joining/leaving group:", error);
-            toast({ variant: 'destructive', title: 'An error occurred.' });
-        }
+            setIsMember(prev => !prev);
+            setLoadingMembership(false);
+        }, 500);
     };
-
-    const isMember = !!membership;
 
     return (
         <Link href={`/forum/${group.id}`} className="group block">
@@ -74,7 +76,7 @@ function GroupCard({ group }: { group: any }) {
                 <CardFooter className="mt-auto flex justify-between items-center">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Users className="h-4 w-4" />
-                        <span>{group.memberCount || 0} Members</span>
+                        <span>{memberCount || 0} Members</span>
                     </div>
                     {user && (
                          <Button variant={isMember ? 'secondary' : 'default'} size="sm" onClick={handleJoinLeave} disabled={loadingMembership}>
@@ -92,10 +94,8 @@ function GroupCard({ group }: { group: any }) {
 
 export default function ForumPage() {
     const { t } = useLanguage();
-    const db = useFirestore();
-
-    const groupsQuery = query(collection(db, 'groups'));
-    const [groups, isLoading] = useCollectionData(groupsQuery, { idField: 'id' });
+    const groups = mockGroups;
+    const isLoading = false;
 
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16">

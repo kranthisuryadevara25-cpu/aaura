@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -18,6 +18,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
+import { getCommentsByPostId, type Comment } from '@/lib/comments';
 
 const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long."),
@@ -26,9 +27,9 @@ const commentSchema = z.object({
 type CommentFormValues = z.infer<typeof commentSchema>;
 
 function CommentCard({ comment }: { comment: any; }) {
-  const db = useFirestore();
-  const authorRef = comment.authorId ? doc(db, 'users', comment.authorId) : undefined;
-  const [author] = useDocumentData(authorRef);
+  // MOCK: This would fetch real author data
+  const author = { displayName: 'User ' + comment.authorId.slice(0, 4), photoURL: `https://picsum.photos/seed/${comment.authorId}/100/100` };
+
   return (
     <div className="flex items-start gap-4">
       <Avatar className="h-9 w-9">
@@ -39,7 +40,7 @@ function CommentCard({ comment }: { comment: any; }) {
         <div className="flex items-center gap-2">
           <p className="font-semibold text-sm">{author?.displayName || 'Anonymous'}</p>
           <p className="text-xs text-muted-foreground">
-            {comment.createdAt ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+            {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) : 'Just now'}
           </p>
         </div>
         <p className="text-sm mt-1 text-foreground/90">{comment.text}</p>
@@ -51,19 +52,16 @@ function CommentCard({ comment }: { comment: any; }) {
 interface CommentsProps {
   contentId: string;
   contentType: 'media' | 'post';
-  parentCollectionPath: string; // e.g. "posts" or "groups/xyz/posts"
 }
 
-export function Comments({ contentId, contentType, parentCollectionPath }: CommentsProps) {
-  const auth = useAuth();
-  const db = useFirestore();
-  const [user] = useAuthState(auth);
+export function Comments({ contentId, contentType }: CommentsProps) {
+  const [user] = useAuthState(useAuth());
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
 
-  const commentsQuery = query(collection(db, parentCollectionPath, contentId, 'comments'), orderBy('createdAt', 'desc'));
-  const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
+  const [comments, setComments] = useState<Comment[]>(getCommentsByPostId(contentId));
+  const commentsLoading = false;
 
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
@@ -76,25 +74,18 @@ export function Comments({ contentId, contentType, parentCollectionPath }: Comme
       return;
     }
     startTransition(async () => {
-      try {
-        const commentsCollection = collection(db, parentCollectionPath, contentId, 'comments');
-        await addDoc(commentsCollection, {
+      // Mock comment creation
+      const newComment = {
+          id: `comment-${Date.now()}`,
+          contentId: contentId,
+          contentType: contentType,
           authorId: user.uid,
           text: data.text,
-          createdAt: serverTimestamp(),
-        });
-        
-        const contentRef = doc(db, parentCollectionPath, contentId);
-        await updateDoc(contentRef, {
-            commentsCount: increment(1)
-        });
-
-        form.reset();
-        toast({ title: 'Comment posted!' });
-      } catch (error) {
-        console.error("Error creating comment:", error);
-        toast({ variant: 'destructive', title: 'Failed to post comment.' });
-      }
+          createdAt: new Date().toISOString(),
+      };
+      setComments(prev => [newComment, ...prev]);
+      form.reset();
+      toast({ title: 'Comment posted! (Mock)' });
     });
   };
 

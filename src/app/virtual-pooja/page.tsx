@@ -5,7 +5,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Bell, Flower, Flame } from 'lucide-react';
+import { Bell, Flower, Flame, Sparkle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -49,11 +49,9 @@ export default function VirtualPoojaPage() {
       return;
     }
     
-    // Set active state for UI feedback
     setActiveInteraction(interaction);
     setTimeout(() => setActiveInteraction(null), 500);
 
-    // Perform UI actions immediately
     switch (interaction) {
       case 'ring-bell':
         new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_200821584b.mp3').play().catch(e => console.error("Error playing bell audio:", e));
@@ -70,16 +68,17 @@ export default function VirtualPoojaPage() {
         setDiyaLit(!diyaLit);
         break;
       case 'offer-aarti':
-          if (showAarti) return; // Prevent re-triggering while active
+          if (showAarti) return;
           setShowAarti(true);
           new Audio('https://cdn.pixabay.com/audio/2022/02/11/audio_a7a22c50fd.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
-          setTimeout(() => setShowAarti(false), 5000); // Animation duration
+          setTimeout(() => setShowAarti(false), 5000);
           break;
     }
     
-    toast({ title: `You performed: ${interaction.replace('-', ' ')}` });
+    if (interaction !== 'light-diya') { // Don't toast for just lighting the diya
+        toast({ title: `You performed: ${interaction.replace('-', ' ')}` });
+    }
 
-    // Save interaction to Firestore if logged in
     if (user) {
         try {
           const offeringsCollection = collection(db, `users/${user.uid}/virtualOfferings`);
@@ -127,23 +126,20 @@ export default function VirtualPoojaPage() {
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4">
-      {/* Falling Flowers Container */}
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
         {flowers.map((id, index) => (
           <FallingFlower key={id} id={id} delay={index * 0.1} />
         ))}
       </div>
       
-       {/* Aarti Animation Container */}
        {showAarti && (
         <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
             <div className="animate-aarti-path">
-                 <Flame className="w-16 h-16 text-orange-400" style={{ filter: 'drop-shadow(0 0 10px #ffc107) drop-shadow(0 0 20px #ff9800)' }} />
+                 <Sparkle className="w-16 h-16 text-orange-400" style={{ filter: 'drop-shadow(0 0 10px #ffc107) drop-shadow(0 0 20px #ff9800)' }} />
             </div>
         </div>
       )}
 
-      {/* Background Image */}
       <Image
         src={selectedDeity.images[0].url}
         alt={selectedDeity.name.en}
@@ -153,7 +149,6 @@ export default function VirtualPoojaPage() {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60 z-10" />
 
-      {/* Header Text */}
       <div className="relative z-20 text-center text-white mb-auto pt-20">
         <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">
           Virtual Pooja
@@ -168,14 +163,12 @@ export default function VirtualPoojaPage() {
         )}
       </div>
       
-      {/* Change Deity Button */}
        <div className="absolute z-40 top-4 left-4">
         <Button variant="ghost" onClick={() => setSelectedDeity(null)} className="text-white hover:bg-white/10 hover:text-white">
             Change Deity
         </Button>
       </div>
 
-      {/* Controls at the bottom */}
       <div className="relative z-20 grid grid-cols-4 gap-4 md:gap-8 w-full max-w-lg mb-8 mt-auto">
         <button onClick={() => handleInteraction('ring-bell')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'ring-bell' && 'bg-white/20')}>
             <Bell className="w-12 h-12 md:w-16 md:h-16 text-amber-300 drop-shadow-lg" />
@@ -189,13 +182,14 @@ export default function VirtualPoojaPage() {
 
         <button onClick={() => handleInteraction('light-diya')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'light-diya' && 'bg-white/20')}>
              <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
-                <Flame className={cn("w-full h-full transition-all duration-1000 drop-shadow-lg", diyaLit ? 'text-transparent' : 'text-gray-400')} />
-                 {diyaLit && (
+                 {diyaLit ? (
                     <>
                         <div className="absolute bottom-2 md:bottom-4 w-8 h-3 bg-yellow-900/50 rounded-full" />
                         <div className="absolute bottom-3 md:bottom-5 w-4 h-4 animate-flicker" style={{ background: 'radial-gradient(circle, rgba(255,230,150,1) 0%, rgba(255,165,0,0.8) 40%, rgba(255,100,0,0.3) 80%, rgba(255,100,0,0) 100%)' }} />
                         <div className="absolute w-32 h-32 bg-orange-400 rounded-full blur-3xl animate-pulse-glow opacity-30" />
                     </>
+                 ) : (
+                    <Flame className="w-full h-full text-gray-400 transition-colors duration-1000 drop-shadow-lg" />
                  )}
             </div>
             <p className={cn("mt-2 font-semibold transition-colors text-xs md:text-sm", diyaLit ? "text-orange-200" : "text-gray-300")}>
@@ -204,7 +198,7 @@ export default function VirtualPoojaPage() {
         </button>
 
         <button onClick={() => handleInteraction('offer-aarti')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'offer-aarti' && 'bg-white/20')}>
-            <Flame className="w-12 h-12 md:w-16 md:h-16 text-orange-400 drop-shadow-lg" />
+            <Sparkle className="w-12 h-12 md:w-16 md:h-16 text-orange-400 drop-shadow-lg" />
             <p className="text-orange-300 mt-2 font-semibold text-xs md:text-sm">Offer Aarti</p>
         </button>
       </div>
@@ -239,11 +233,11 @@ export default function VirtualPoojaPage() {
             animation: pulse-glow 3s ease-in-out infinite;
         }
         @keyframes aarti-path {
-            0% { transform: translate(-50px, 50px) scale(0.8); opacity: 0.7; }
-            25% { transform: translate(50px, -50px) scale(1); opacity: 1; }
-            50% { transform: translate(150px, 50px) scale(0.8); opacity: 0.7; }
-            75% { transform: translate(50px, 150px) scale(0.6); opacity: 0.5; }
-            100% { transform: translate(-50px, 50px) scale(0.8); opacity: 0.7; }
+            0% { transform: translate(-50px, 50px) scale(0.8) rotate(0deg); opacity: 0.7; }
+            25% { transform: translate(50px, -50px) scale(1) rotate(90deg); opacity: 1; }
+            50% { transform: translate(150px, 50px) scale(0.8) rotate(180deg); opacity: 0.7; }
+            75% { transform: translate(50px, 150px) scale(0.6) rotate(270deg); opacity: 0.5; }
+            100% { transform: translate(-50px, 50px) scale(0.8) rotate(360deg); opacity: 0.7; }
         }
         .animate-aarti-path {
             animation: aarti-path 5s ease-in-out forwards;

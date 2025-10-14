@@ -11,7 +11,6 @@ import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { deities, type Deity } from '@/lib/deities'; 
 
@@ -29,67 +28,71 @@ const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
 );
 
 export default function VirtualPoojaPage() {
-  const { t } = useLanguage();
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
   const [user] = useAuthState(auth);
 
   const [selectedDeity, setSelectedDeity] = useState<Deity | null>(null);
-  const [bellRinging, setBellRinging] = useState(false);
+  const [activeInteraction, setActiveInteraction] = useState<string | null>(null);
   const [flowers, setFlowers] = useState<number[]>([]);
   const [diyaLit, setDiyaLit] = useState(false);
   const [showAarti, setShowAarti] = useState(false);
 
   const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya' | 'offer-aarti') => {
-    if (!user) {
+    if (!user && interaction !== 'ring-bell') { // Allow bell ring without login
       toast({
         variant: 'destructive',
         title: 'Please log in',
-        description: 'You must be logged in to perform virtual pooja.',
+        description: 'You must be logged in to perform most virtual pooja actions.',
       });
       return;
     }
+    
+    // Set active state for UI feedback
+    setActiveInteraction(interaction);
+    setTimeout(() => setActiveInteraction(null), 500);
 
-    try {
-      const offeringsCollection = collection(db, `users/${user.uid}/virtualOfferings`);
-      await addDoc(offeringsCollection, {
-        userId: user.uid,
-        interaction: interaction,
-        deity: selectedDeity?.slug || 'general',
-        timestamp: serverTimestamp(),
-      });
+    // Perform UI actions immediately
+    switch (interaction) {
+      case 'ring-bell':
+        new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_200821584b.mp3').play().catch(e => console.error("Error playing bell audio:", e));
+        break;
+      case 'offer-flower':
+         const newFlowerId = Date.now();
+         const newFlowers = Array.from({ length: 5 }, (_, i) => newFlowerId + i);
+         setFlowers(prev => [...prev, ...newFlowers]);
+         setTimeout(() => {
+              setFlowers(prev => prev.filter(f => !newFlowers.includes(f)));
+          }, 7000); // Animation duration + buffer
+         break;
+      case 'light-diya':
+        setDiyaLit(!diyaLit);
+        break;
+      case 'offer-aarti':
+          if (showAarti) return; // Prevent re-triggering while active
+          setShowAarti(true);
+          new Audio('https://cdn.pixabay.com/audio/2022/02/11/audio_a7a22c50fd.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
+          setTimeout(() => setShowAarti(false), 5000); // Animation duration
+          break;
+    }
+    
+    toast({ title: `You performed: ${interaction.replace('-', ' ')}` });
 
-      switch (interaction) {
-        case 'ring-bell':
-          setBellRinging(true);
-          new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_200821584b.mp3').play().catch(e => console.error("Error playing audio:", e));
-          setTimeout(() => setBellRinging(false), 800);
-          toast({ title: 'You rang the divine bell.' });
-          break;
-        case 'offer-flower':
-           const newFlowerId = Date.now();
-           const newFlowers = Array.from({ length: 5 }, (_, i) => newFlowerId + i);
-           setFlowers(prev => [...prev, ...newFlowers]);
-           setTimeout(() => {
-                setFlowers(prev => prev.filter(f => !newFlowers.includes(f)));
-            }, 7000);
-           toast({ title: 'You offered flowers to the divine.' });
-          break;
-        case 'light-diya':
-          setDiyaLit(!diyaLit);
-          toast({ title: diyaLit ? 'You extinguished the lamp.' : 'You lit the lamp, spreading light.' });
-          break;
-        case 'offer-aarti':
-            setShowAarti(true);
-            new Audio('https://cdn.pixabay.com/audio/2022/02/11/audio_a7a22c50fd.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
-            setTimeout(() => setShowAarti(false), 5000); // Animation duration
-            toast({ title: 'You performed the Aarti.' });
-            break;
-      }
-    } catch (error) {
-      console.error("Failed to record interaction:", error);
-      toast({ variant: "destructive", title: 'Something went wrong.', description: "Your interaction could not be saved." });
+    // Save interaction to Firestore if logged in
+    if (user) {
+        try {
+          const offeringsCollection = collection(db, `users/${user.uid}/virtualOfferings`);
+          await addDoc(offeringsCollection, {
+            userId: user.uid,
+            interaction: interaction,
+            deity: selectedDeity?.slug || 'general',
+            timestamp: serverTimestamp(),
+          });
+        } catch (error) {
+          console.error("Failed to record interaction:", error);
+          toast({ variant: "destructive", title: 'Something went wrong.', description: "Your interaction could not be saved." });
+        }
     }
   };
   
@@ -124,20 +127,23 @@ export default function VirtualPoojaPage() {
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4">
+      {/* Falling Flowers Container */}
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
         {flowers.map((id, index) => (
           <FallingFlower key={id} id={id} delay={index * 0.1} />
         ))}
       </div>
       
+       {/* Aarti Animation Container */}
        {showAarti && (
         <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
             <div className="animate-aarti-path">
-                <Flame className="w-12 h-12 text-orange-400" style={{ filter: 'drop-shadow(0 0 10px #ffc107) drop-shadow(0 0 20px #ff9800)' }} />
+                 <Flame className="w-16 h-16 text-orange-400" style={{ filter: 'drop-shadow(0 0 10px #ffc107) drop-shadow(0 0 20px #ff9800)' }} />
             </div>
         </div>
       )}
 
+      {/* Background Image */}
       <Image
         src={selectedDeity.images[0].url}
         alt={selectedDeity.name.en}
@@ -147,7 +153,8 @@ export default function VirtualPoojaPage() {
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60 z-10" />
 
-      <div className="relative z-20 text-center text-white mb-8">
+      {/* Header Text */}
+      <div className="relative z-20 text-center text-white mb-auto pt-20">
         <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">
           Virtual Pooja
         </h1>
@@ -161,68 +168,48 @@ export default function VirtualPoojaPage() {
         )}
       </div>
       
+      {/* Change Deity Button */}
        <div className="absolute z-40 top-4 left-4">
         <Button variant="ghost" onClick={() => setSelectedDeity(null)} className="text-white hover:bg-white/10 hover:text-white">
             Change Deity
         </Button>
       </div>
 
-      <div className="relative z-20 grid grid-cols-4 gap-4 md:gap-8 w-full max-w-5xl">
-        <div className="flex flex-col items-center justify-center p-4">
-           <button onClick={() => handleInteraction('ring-bell')} className="group">
-             <div className={cn("relative transition-transform group-hover:scale-110", bellRinging ? 'animate-swing' : '')}>
-                <Bell className="w-16 h-16 md:w-24 md:h-24 text-amber-300 drop-shadow-lg" />
-            </div>
-           </button>
-           <p className="text-amber-200 mt-2 font-semibold">Ring Bell</p>
-        </div>
+      {/* Controls at the bottom */}
+      <div className="relative z-20 grid grid-cols-4 gap-4 md:gap-8 w-full max-w-lg mb-8 mt-auto">
+        <button onClick={() => handleInteraction('ring-bell')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'ring-bell' && 'bg-white/20')}>
+            <Bell className="w-12 h-12 md:w-16 md:h-16 text-amber-300 drop-shadow-lg" />
+            <p className="text-amber-200 mt-2 font-semibold text-xs md:text-sm">Ring Bell</p>
+        </button>
 
-        <div className="relative flex flex-col items-center justify-center p-4">
-           <button onClick={() => handleInteraction('offer-flower')} className="group">
-            <div className="relative group-hover:scale-110 transition-transform">
-                <Flower className="w-16 h-16 md:w-24 md:h-24 text-pink-300 drop-shadow-lg" />
-            </div>
-           </button>
-            <p className="text-pink-200 mt-2 font-semibold">Offer Flowers</p>
-        </div>
+        <button onClick={() => handleInteraction('offer-flower')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'offer-flower' && 'bg-white/20')}>
+            <Flower className="w-12 h-12 md:w-16 md:h-16 text-pink-300 drop-shadow-lg" />
+            <p className="text-pink-200 mt-2 font-semibold text-xs md:text-sm">Offer Flowers</p>
+        </button>
 
-        <div className="flex flex-col items-center justify-center p-4">
-           <button onClick={() => handleInteraction('light-diya')} className="group">
-             <div className="relative group-hover:scale-110 transition-transform w-24 h-24 flex items-center justify-center">
-                <Flame className={cn("w-16 h-16 md:w-24 md:h-24 transition-all duration-1000 drop-shadow-lg", diyaLit ? 'text-transparent' : 'text-gray-400')} />
+        <button onClick={() => handleInteraction('light-diya')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'light-diya' && 'bg-white/20')}>
+             <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
+                <Flame className={cn("w-full h-full transition-all duration-1000 drop-shadow-lg", diyaLit ? 'text-transparent' : 'text-gray-400')} />
                  {diyaLit && (
                     <>
-                        <div className="absolute bottom-4 w-12 h-4 bg-yellow-900/50 rounded-full" />
-                        <div className="absolute bottom-5 w-6 h-6 animate-flicker" style={{ background: 'radial-gradient(circle, rgba(255,230,150,1) 0%, rgba(255,165,0,0.8) 40%, rgba(255,100,0,0.3) 80%, rgba(255,100,0,0) 100%)' }} />
-                        <div className="absolute bottom-0 w-48 h-48 bg-orange-400 rounded-full blur-3xl animate-pulse-glow opacity-30" />
+                        <div className="absolute bottom-2 md:bottom-4 w-8 h-3 bg-yellow-900/50 rounded-full" />
+                        <div className="absolute bottom-3 md:bottom-5 w-4 h-4 animate-flicker" style={{ background: 'radial-gradient(circle, rgba(255,230,150,1) 0%, rgba(255,165,0,0.8) 40%, rgba(255,100,0,0.3) 80%, rgba(255,100,0,0) 100%)' }} />
+                        <div className="absolute w-32 h-32 bg-orange-400 rounded-full blur-3xl animate-pulse-glow opacity-30" />
                     </>
                  )}
             </div>
-           </button>
-           <p className={cn("mt-2 font-semibold transition-colors", diyaLit ? "text-orange-200" : "text-gray-300")}>
-              {diyaLit ? 'Extinguish' : 'Light Diya'}
-           </p>
-        </div>
+            <p className={cn("mt-2 font-semibold transition-colors text-xs md:text-sm", diyaLit ? "text-orange-200" : "text-gray-300")}>
+              {diyaLit ? 'Diya is Lit' : 'Light Diya'}
+            </p>
+        </button>
 
-        <div className="flex flex-col items-center justify-center p-4">
-           <button onClick={() => handleInteraction('offer-aarti')} className="group">
-             <div className="relative transition-transform group-hover:scale-110 w-24 h-24 flex items-center justify-center">
-                <Flame className="w-16 h-16 md:w-24 md:h-24 text-orange-400 drop-shadow-lg" />
-            </div>
-           </button>
-           <p className="text-orange-300 mt-2 font-semibold">Offer Aarti</p>
-        </div>
+        <button onClick={() => handleInteraction('offer-aarti')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'offer-aarti' && 'bg-white/20')}>
+            <Flame className="w-12 h-12 md:w-16 md:h-16 text-orange-400 drop-shadow-lg" />
+            <p className="text-orange-300 mt-2 font-semibold text-xs md:text-sm">Offer Aarti</p>
+        </button>
       </div>
 
        <style jsx>{`
-        @keyframes swing {
-          0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(20deg); }
-          75% { transform: rotate(-20deg); }
-        }
-        .animate-swing {
-          animation: swing 0.8s ease-in-out;
-        }
         @keyframes fall {
           from {
             transform: translateY(-10vh) rotate(0deg);
@@ -252,11 +239,11 @@ export default function VirtualPoojaPage() {
             animation: pulse-glow 3s ease-in-out infinite;
         }
         @keyframes aarti-path {
-            0% { transform: translate(0, 0) rotate(0deg) scale(0.5); opacity: 0; }
-            25% { transform: translate(100px, 50px) rotate(90deg) scale(1); opacity: 1; }
-            50% { transform: translate(0px, 150px) rotate(180deg) scale(1); }
-            75% { transform: translate(-100px, 50px) rotate(270deg) scale(1); }
-            100% { transform: translate(0, 0) rotate(360deg) scale(0.5); opacity: 0; }
+            0% { transform: translate(-50px, 50px) scale(0.8); opacity: 0.7; }
+            25% { transform: translate(50px, -50px) scale(1); opacity: 1; }
+            50% { transform: translate(150px, 50px) scale(0.8); opacity: 0.7; }
+            75% { transform: translate(50px, 150px) scale(0.6); opacity: 0.5; }
+            100% { transform: translate(-50px, 50px) scale(0.8); opacity: 0.7; }
         }
         .animate-aarti-path {
             animation: aarti-path 5s ease-in-out forwards;
@@ -265,4 +252,3 @@ export default function VirtualPoojaPage() {
     </main>
   );
 }
-

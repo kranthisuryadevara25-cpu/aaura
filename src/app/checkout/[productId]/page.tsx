@@ -5,7 +5,7 @@ import { useEffect, useTransition } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
-import { doc } from 'firebase/firestore';
+import { doc, collection, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -75,13 +75,31 @@ export default function CheckoutPage() {
                     description: `Payment for ${product[`name_${language}`] || product.name_en}`,
                     image: 'https://picsum.photos/seed/logo/128/128', // Replace with your app logo
                     order_id: order.id,
-                    handler: function (response: any) {
+                    handler: async function (response: any) {
+                        const batch = writeBatch(db);
+                        const orderRef = doc(collection(db, 'users', user.uid, 'orders'));
+                        batch.set(orderRef, {
+                            id: order.id,
+                            userId: user.uid,
+                            items: [{
+                                productId,
+                                quantity: 1,
+                                price: product.price,
+                                name_en: product.name_en,
+                                imageUrl: product.imageUrl,
+                            }],
+                            totalAmount: product.price,
+                            status: 'paid',
+                            createdAt: serverTimestamp(),
+                            paymentDetails: response,
+                        });
+                        
+                        await batch.commit();
+
                         toast({
                             title: 'Payment Successful!',
                             description: `Payment ID: ${response.razorpay_payment_id}`,
                         });
-                        // Here you would typically verify the payment signature on your backend
-                        // and then update the order status in Firestore.
                         router.push('/shop');
                     },
                     prefill: {

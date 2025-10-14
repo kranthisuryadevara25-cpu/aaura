@@ -7,8 +7,8 @@ import Link from "next/link";
 import { Button } from "./ui/button";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc } from 'firebase/firestore';
+import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
+import { doc, collection } from 'firebase/firestore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +18,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, Film, MessageSquare, Settings } from "lucide-react";
+import { LogOut, User, Upload, Film, MessageSquare, Settings, ShoppingCart } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
+import { Badge } from "./ui/badge";
 
 const UserStats = () => {
     const auth = useAuth();
@@ -55,6 +56,26 @@ const UserStats = () => {
     )
 }
 
+const CartButton = () => {
+    const auth = useAuth();
+    const db = useFirestore();
+    const [user] = useAuthState(auth);
+    const cartRef = user ? collection(db, 'users', user.uid, 'cart') : undefined;
+    const [cartItems] = useCollectionData(cartRef);
+    const itemCount = cartItems?.length || 0;
+
+    return (
+        <Button asChild variant="ghost" size="icon">
+            <Link href="/cart" className="relative">
+                <ShoppingCart className="h-5 w-5" />
+                {itemCount > 0 && (
+                    <Badge variant="destructive" className="absolute -top-1 -right-1 h-5 w-5 justify-center p-0">{itemCount}</Badge>
+                )}
+            </Link>
+        </Button>
+    )
+}
+
 export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) => {
   const auth = useAuth();
   const [user] = useAuthState(auth);
@@ -73,6 +94,7 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
       <div className="flex items-center gap-3">
         {user && <UserStats />}
         <LanguageSwitcher />
+        {user && <CartButton />}
         {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -129,5 +151,3 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
     </header>
   );
 };
-
-    

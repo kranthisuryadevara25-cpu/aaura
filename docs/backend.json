@@ -384,11 +384,12 @@
       "properties": {
         "productId": { "type": "string", "description": "The ID of the product." },
         "quantity": { "type": "number", "description": "The number of units of this product." },
+        "addedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the item was added." },
         "price": { "type": "number", "description": "The price per unit at the time of adding to cart." },
         "name_en": { "type": "string", "description": "The English name of the product." },
         "imageUrl": { "type": "string", "format": "uri", "description": "The image URL of the product." }
       },
-      "required": ["productId", "quantity", "price", "name_en", "imageUrl"]
+      "required": ["productId", "quantity", "price", "name_en", "imageUrl", "addedAt"]
     },
     "Order": {
         "title": "Order",

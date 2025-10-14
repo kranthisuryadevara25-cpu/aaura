@@ -8,11 +8,12 @@ import { ShoppingCart, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useTransition } from 'react';
 
 export default function ShopPage() {
   const { t, language } = useLanguage();
@@ -21,16 +22,52 @@ export default function ShopPage() {
   const [user] = useAuthState(auth);
   const { toast } = useToast();
   const [products, isLoading] = useCollectionData(collection(db, 'products'), { idField: 'id' });
+  const [isAdding, startTransition] = useTransition();
 
-  const handleAddToCart = (e: React.MouseEvent, productId: string) => {
+
+  const handleAddToCart = (productId: string, name: string) => {
     if (!user) {
-      e.preventDefault();
       toast({
         variant: 'destructive',
         title: "Login Required",
         description: "You must be logged in to add items to your cart.",
       });
+      return;
     }
+
+    startTransition(async () => {
+        try {
+            const cartRef = doc(db, 'users', user.uid, 'cart', productId);
+            const productRef = doc(db, 'products', productId);
+
+            const productSnap = await getDoc(productRef);
+            if (!productSnap.exists()) {
+                throw new Error("Product not found");
+            }
+            const productData = productSnap.data();
+
+            await setDoc(cartRef, {
+                productId: productId,
+                quantity: 1,
+                addedAt: serverTimestamp(),
+                price: productData.price,
+                name_en: productData.name_en,
+                imageUrl: productData.imageUrl,
+            }, { merge: true });
+
+            toast({
+                title: "Added to Cart",
+                description: `${name} has been added to your shopping cart.`,
+            });
+        } catch (error) {
+             console.error("Error adding to cart: ", error);
+             toast({
+                variant: "destructive",
+                title: "Failed to Add",
+                description: "Could not add the item to your cart. Please try again.",
+             });
+        }
+    });
   };
 
   return (
@@ -54,13 +91,15 @@ export default function ShopPage() {
                 <Card key={product.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
                 <CardContent className="p-0">
                     <div className="aspect-square relative">
-                        <Image
-                            src={product.imageUrl}
-                            alt={name}
-                            data-ai-hint={product.imageHint || "product image"}
-                            fill
-                            className="object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
+                       <Link href={`/shop/${product.id}`}>
+                            <Image
+                                src={product.imageUrl}
+                                alt={name}
+                                data-ai-hint={product.imageHint || "product image"}
+                                fill
+                                className="object-cover transition-transform duration-300 group-hover:scale-105"
+                            />
+                        </Link>
                     </div>
                 </CardContent>
                 <CardHeader>
@@ -68,11 +107,9 @@ export default function ShopPage() {
                     <CardDescription className="text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</CardDescription>
                 </CardHeader>
                 <CardContent className="mt-auto flex flex-col gap-2">
-                    <Button asChild className="w-full">
-                      <Link href={`/checkout/${product.id}`} onClick={(e) => handleAddToCart(e, product.id)}>
-                        <ShoppingCart className="mr-2 h-4 w-4" />
-                        {t.buttons.addToCart}
-                      </Link>
+                    <Button onClick={() => handleAddToCart(product.id, name)} disabled={isAdding}>
+                      {isAdding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
+                      {t.buttons.addToCart}
                     </Button>
                 </CardContent>
                 </Card>

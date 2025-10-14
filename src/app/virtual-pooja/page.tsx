@@ -14,6 +14,15 @@ import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 
+// Component for the floating flower animation
+const FloatingFlower = ({ id }: { id: number }) => (
+  <Flower
+    key={id}
+    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 text-pink-400 animate-float-up"
+    style={{ animationDelay: `${id * 0.1}s` }}
+  />
+);
+
 export default function VirtualPoojaPage() {
   const { t } = useLanguage();
   const { toast } = useToast();
@@ -22,7 +31,7 @@ export default function VirtualPoojaPage() {
   const [user] = useAuthState(auth);
 
   const [bellRinging, setBellRinging] = useState(false);
-  const [flowersOffered, setFlowersOffered] = useState(0);
+  const [flowers, setFlowers] = useState<number[]>([]);
   const [diyaLit, setDiyaLit] = useState(false);
 
   const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya') => {
@@ -46,16 +55,17 @@ export default function VirtualPoojaPage() {
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          new Audio('https://actions.google.com/sounds/v1/emergency/beeper_emergency_call.ogg').play().catch(e => console.error("Error playing audio:", e));
+          // Using a reliable, publicly available sound file
+          new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_28b1b172f3.mp3').play().catch(e => console.error("Error playing audio:", e));
           setTimeout(() => setBellRinging(false), 500);
           toast({ title: 'You rang the divine bell.' });
           break;
         case 'offer-flower':
-          setFlowersOffered(prev => prev + 1); // Increment key to re-trigger animation
+          setFlowers(prev => [...prev, Date.now()]);
           toast({ title: 'You offered flowers to the divine.' });
           break;
         case 'light-diya':
-          setDiyaLit(!diyaLit); // Toggle the light
+          setDiyaLit(!diyaLit);
           toast({ title: diyaLit ? 'You extinguished the lamp.' : 'You lit the lamp, spreading light.' });
           break;
       }
@@ -104,11 +114,13 @@ export default function VirtualPoojaPage() {
         </Card>
 
         {/* Offer Flowers */}
-        <Card className="bg-black/50 border-amber-200/20 text-white flex flex-col items-center justify-center p-4 aspect-square">
+        <Card className="relative bg-black/50 border-amber-200/20 text-white flex flex-col items-center justify-center p-4 aspect-square overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center p-0">
             <div className="relative">
-                <Flower className={cn("w-16 h-16 md:w-24 md:h-24 text-pink-300 transition-all duration-500", flowersOffered > 0 ? 'opacity-100 scale-110' : 'opacity-70')} />
-                {flowersOffered > 0 && <Flower key={flowersOffered} className="absolute top-0 left-0 w-16 h-16 md:w-24 md:h-24 text-pink-400 animate-ping opacity-50" />}
+                <Flower className="w-16 h-16 md:w-24 md:h-24 text-pink-300 transition-all duration-500" />
+                 {flowers.map((id) => (
+                  <FloatingFlower key={id} id={id} />
+                ))}
             </div>
             <Button variant="outline" className="mt-4 bg-transparent border-pink-300 text-pink-300 hover:bg-pink-300/10 hover:text-pink-200" onClick={() => handleInteraction('offer-flower')}>
               Offer Flowers
@@ -138,6 +150,19 @@ export default function VirtualPoojaPage() {
         }
         .animate-swing {
           animation: swing 0.5s ease-in-out;
+        }
+        @keyframes float-up {
+          from {
+            transform: translateY(0) scale(1);
+            opacity: 1;
+          }
+          to {
+            transform: translateY(-150px) scale(0.5);
+            opacity: 0;
+          }
+        }
+        .animate-float-up {
+          animation: float-up 2s ease-out forwards;
         }
       `}</style>
     </main>

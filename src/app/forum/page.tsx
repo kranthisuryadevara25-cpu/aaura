@@ -109,6 +109,11 @@ export function PostCard({ post }: { post: any; }) {
   const auth = useAuth();
   const db = useFirestore();
   const [user] = useAuthState(auth);
+
+  // Guard clause to prevent rendering if post is invalid
+  if (!post || !post.id) {
+    return null;
+  }
   
   const authorRef = post.authorId ? doc(db, 'users', post.authorId) : undefined;
   const [author] = useDocumentData(authorRef);

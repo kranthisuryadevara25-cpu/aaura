@@ -40,7 +40,7 @@ export default function VirtualPoojaPage() {
   const [showAarti, setShowAarti] = useState(false);
 
   const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya' | 'offer-aarti') => {
-    if (!user && interaction !== 'ring-bell') { // Allow bell ring without login
+    if (!user && interaction !== 'ring-bell') {
       toast({
         variant: 'destructive',
         title: 'Please log in',
@@ -62,7 +62,7 @@ export default function VirtualPoojaPage() {
          setFlowers(prev => [...prev, ...newFlowers]);
          setTimeout(() => {
               setFlowers(prev => prev.filter(f => !newFlowers.includes(f)));
-          }, 7000); // Animation duration + buffer
+          }, 7000); 
          break;
       case 'light-diya':
         setDiyaLit(!diyaLit);
@@ -75,7 +75,7 @@ export default function VirtualPoojaPage() {
           break;
     }
     
-    if (interaction !== 'light-diya') { // Don't toast for just lighting the diya
+    if (interaction !== 'light-diya') { 
         toast({ title: `You performed: ${interaction.replace('-', ' ')}` });
     }
 

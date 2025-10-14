@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Music, BookOpen, Sunrise, Sunset, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { getDeityDailyRelevance, type DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
+import type { DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
 import { useLanguage } from '@/hooks/use-language';
 import { getDeityBySlug } from '@/lib/deities';
 
@@ -16,20 +16,18 @@ export default function DeityDetailPage() {
   const slug = params.slug as string;
   const { language, t } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
-  const [isLoadingContent, setIsLoadingContent] = useState(true);
+  const [isLoadingContent, setIsLoadingContent] = useState(false);
 
   const deity = getDeityBySlug(slug);
   const isDeitiesLoading = false;
   
   useEffect(() => {
     if (deity) {
-      setIsLoadingContent(true);
-      getDeityDailyRelevance({ deityName: deity.name.en })
-        .then(content => {
-          setDailyContent(content);
-        })
-        .catch(console.error)
-        .finally(() => setIsLoadingContent(false));
+      // MOCK DATA: Using static content to avoid API rate limits during development.
+      setDailyContent({
+          todaysRelevance: `Today is a powerful day to connect with the energy of ${deity.name.en}. Focus on their core attributes, such as overcoming obstacles, to navigate your day with wisdom and strength.`,
+          tomorrowsImportance: `Tomorrow, carry the blessings of ${deity.name.en} with you. It is an auspicious time to start new projects, knowing that divine guidance is supporting your endeavors.`
+      });
     }
   }, [deity]);
   

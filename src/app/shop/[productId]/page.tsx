@@ -5,13 +5,13 @@ import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2 } from 'lucide-react';
+import { ShoppingCart, Loader2, Plus, Minus } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, runTransaction, increment, serverTimestamp } from 'firebase/firestore';
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { getProductById } from '@/lib/products';
 import { Badge } from '@/components/ui/badge';
 
@@ -24,6 +24,7 @@ export default function ProductDetailPage() {
   const db = useFirestore();
   const [user] = useAuthState(auth);
   const [isAdding, startTransition] = useTransition();
+  const [quantity, setQuantity] = useState(1);
 
   const product = getProductById(productId);
 
@@ -45,11 +46,11 @@ export default function ProductDetailPage() {
             await runTransaction(db, async (transaction) => {
                 const cartDoc = await transaction.get(cartRef);
                 if (cartDoc.exists()) {
-                    transaction.update(cartRef, { quantity: increment(1) });
+                    transaction.update(cartRef, { quantity: increment(quantity) });
                 } else {
                      transaction.set(cartRef, {
                         productId: product.id,
-                        quantity: 1,
+                        quantity: quantity,
                         addedAt: serverTimestamp(),
                         price: product.price,
                         name_en: product.name_en,
@@ -60,7 +61,7 @@ export default function ProductDetailPage() {
 
             toast({
                 title: "Added to Cart",
-                description: `${name} has been added to your shopping cart.`,
+                description: `${quantity} x ${name} has been added to your shopping cart.`,
             });
         } catch (error) {
              console.error("Error adding to cart: ", error);
@@ -120,10 +121,23 @@ export default function ProductDetailPage() {
                 <p className="text-muted-foreground">{description}</p>
             </CardContent>
           </Card>
-          <Button size="lg" className="mt-8 w-full" onClick={handleAddToCart} disabled={isAdding}>
-             {isAdding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
-             {t.buttons.addToCart}
-          </Button>
+          
+          <div className="flex items-center gap-4 mt-8">
+            <div className="flex items-center gap-2 rounded-md border p-2">
+                <Button variant="ghost" size="icon" onClick={() => setQuantity(q => Math.max(1, q - 1))} disabled={quantity <= 1}>
+                    <Minus className="h-4 w-4" />
+                </Button>
+                <span className="font-bold w-10 text-center">{quantity}</span>
+                 <Button variant="ghost" size="icon" onClick={() => setQuantity(q => q + 1)}>
+                    <Plus className="h-4 w-4" />
+                </Button>
+            </div>
+            <Button size="lg" className="flex-1" onClick={handleAddToCart} disabled={isAdding}>
+                {isAdding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
+                {t.buttons.addToCart}
+            </Button>
+          </div>
+
         </div>
       </div>
     </main>

@@ -1,6 +1,6 @@
 
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { SearchBar, type SearchBarProps } from "@/components/SearchBar";
 import Link from "next/link";
@@ -28,6 +28,16 @@ const UserStats = () => {
     const [user] = useAuthState(auth);
     const userRef = user ? doc(db, 'users', user.uid) : undefined;
     const [userData, loading] = useDocumentData(userRef);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    if (!isClient || !user) {
+        // Render nothing on the server or initial client render
+        return null; 
+    }
 
     if (loading) {
         return (

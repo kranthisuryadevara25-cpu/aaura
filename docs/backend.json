@@ -617,7 +617,7 @@
         "fullText_en": { "type": "string" },
         "fullText_hi": { "type": "string" },
         "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
-        "audioGuide": { "type": "string", "format": "uri" },
+        "audioUrl": { "type": "string", "format": "uri" },
         "videoLink": { "type": "string", "format": "uri" },
         "tags": { "type": "array", "items": { "type": "string" } },
         "relatedCharacters": { "type": "array", "items": { "type": "string" } },

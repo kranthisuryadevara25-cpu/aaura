@@ -21,16 +21,17 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { deities as mockDeities } from '@/lib/deities';
+import { stories as mockStories } from '@/lib/stories';
+import { characters as mockCharacters } from '@/lib/characters';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function DeitiesTabContent() {
   const { toast } = useToast();
   const [deities, setDeities] = useState(mockDeities);
   const { language } = useLanguage();
-  const isLoading = false; // Using mock data
+  const isLoading = false; 
 
   const handleDelete = async (id: string) => {
-    // This is a mock delete. In a real app, this would interact with a database.
     setDeities(prevDeities => prevDeities.filter(d => d.id !== id));
     toast({
       title: 'Deity Deleted (Mock)',
@@ -61,7 +62,7 @@ function DeitiesTabContent() {
                 <CardTitle>{deity.name[language] || deity.name.en}</CardTitle>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/admin/deities/edit/${deity.id}`}>
+                        <Link href={`/admin/deities/edit/${deity.slug}`}>
                             <Edit className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -75,8 +76,7 @@ function DeitiesTabContent() {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure you want to delete {deity.name.en}?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the deity
-                              and remove its data from our servers.
+                              This action cannot be undone. This will permanently delete the deity.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
@@ -106,16 +106,167 @@ function DeitiesTabContent() {
   )
 }
 
-function PlaceholderTabContent({ title, description }: { title: string, description: string }) {
-    return (
-        <div className="text-center py-16 border-2 border-dashed rounded-lg">
-          <h2 className="mt-6 text-2xl font-semibold text-foreground">{title}</h2>
-          <p className="mt-2 text-muted-foreground">{description}</p>
-          <Button className="mt-4" disabled>Coming Soon</Button>
+function StoriesTabContent() {
+  const { toast } = useToast();
+  const [stories, setStories] = useState(mockStories);
+  const { language } = useLanguage();
+  const isLoading = false;
+
+  const handleDelete = async (id: string) => {
+    setStories(prevStories => prevStories.filter(s => s.id !== id));
+    toast({
+      title: 'Story Deleted (Mock)',
+      description: 'The story has been removed from the view.',
+    });
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-muted-foreground">Manage the episodic stories in the app.</p>
+        <Button asChild>
+          <Link href="/admin/stories/new">
+            <PlusCircle className="mr-2" />
+            Add New Story
+          </Link>
+        </Button>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
         </div>
-    )
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {stories?.map((story) => (
+            <Card key={story.id}>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>{story.title[language] || story.title.en}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin/stories/edit/${story.slug}`}>
+                      <Edit className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this story?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the story.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(story.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative aspect-video rounded-md overflow-hidden">
+                  <Image
+                    src={story.image.url}
+                    alt={story.title.en}
+                    data-ai-hint={story.image.hint}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
+function CharactersTabContent() {
+  const { toast } = useToast();
+  const [characters, setCharacters] = useState(mockCharacters);
+  const { language } = useLanguage();
+  const isLoading = false;
+
+  const handleDelete = async (id: string) => {
+    setCharacters(prev => prev.filter(c => c.id !== id));
+    toast({
+      title: 'Character Deleted (Mock)',
+      description: 'The character has been removed from the view.',
+    });
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-muted-foreground">Manage the mythological characters in the app.</p>
+        <Button asChild>
+          <Link href="/admin/characters/new">
+            <PlusCircle className="mr-2" />
+            Add New Character
+          </Link>
+        </Button>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {characters?.map((character) => (
+            <Card key={character.id}>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>{character.name[language] || character.name.en}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin/characters/edit/${character.slug}`}>
+                      <Edit className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this character?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the character.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(character.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative aspect-video rounded-md overflow-hidden">
+                  <Image
+                    src={character.image.url}
+                    alt={character.name.en}
+                    data-ai-hint={character.image.hint}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function ContentManagementPage() {
   return (
@@ -139,10 +290,10 @@ export default function ContentManagementPage() {
             <DeitiesTabContent />
         </TabsContent>
         <TabsContent value="stories" className="mt-6">
-            <PlaceholderTabContent title="Manage Stories" description="Functionality to add, edit, and manage episodic stories is coming soon." />
+            <StoriesTabContent />
         </TabsContent>
         <TabsContent value="characters" className="mt-6">
-            <PlaceholderTabContent title="Manage Characters" description="Functionality to add, edit, and manage mythological characters is coming soon." />
+            <CharactersTabContent />
         </TabsContent>
         </Tabs>
       

@@ -2,16 +2,15 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { DeityForm } from '../../DeityForm';
+import { CharacterForm } from '../../CharacterForm';
 import { Loader2 } from 'lucide-react';
-import { getDeityBySlug } from '@/lib/deities';
+import { getCharacterBySlug } from '@/lib/characters';
 
-export default function EditDeityPage() {
+export default function EditCharacterPage() {
   const params = useParams();
   const id = params.id as string;
 
-  // In a real app, you'd fetch the deity by ID. Here we find it by slug from mock data.
-  const deity = getDeityBySlug(id); 
+  const character = getCharacterBySlug(id);
   const isLoading = false;
 
   if (isLoading) {
@@ -24,7 +23,7 @@ export default function EditDeityPage() {
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <DeityForm deity={deity} />
+        <CharacterForm character={character} />
     </main>
   );
 }

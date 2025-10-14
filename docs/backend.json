@@ -426,7 +426,11 @@
         "description_hi": { "type": "string", "description": "Description of the product in Hindi." },
         "price": {
           "type": "number",
-          "description": "Price of the product."
+          "description": "The final price of the product after any discounts."
+        },
+        "originalPrice": {
+          "type": "number",
+          "description": "The original price of the product, before any discounts."
         },
         "imageUrl": {
           "type": "string",

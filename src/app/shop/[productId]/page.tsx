@@ -13,6 +13,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, runTransaction, increment, serverTimestamp } from 'firebase/firestore';
 import { useTransition } from 'react';
 import { getProductById } from '@/lib/products';
+import { Badge } from '@/components/ui/badge';
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -78,6 +79,8 @@ export default function ProductDetailPage() {
 
   const name = product[`name_${language}` as keyof typeof product] || product.name_en;
   const description = product[`description_${language}` as keyof typeof product] || product.description_en;
+  const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+  const discountPercent = hasDiscount ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
 
 
   return (
@@ -93,12 +96,22 @@ export default function ProductDetailPage() {
                     fill
                     className="object-cover"
                 />
+                 {hasDiscount && (
+                    <Badge className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-lg">
+                        {discountPercent}% OFF
+                    </Badge>
+                )}
              </div>
            </Card>
         </div>
         <div className="flex flex-col justify-center">
           <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-primary">{name}</h1>
-          <p className="mt-4 text-3xl font-semibold">₹{product.price.toFixed(2)}</p>
+            <div className="flex items-baseline gap-4 mt-4">
+              <p className="text-3xl font-semibold">₹{product.price.toFixed(2)}</p>
+               {hasDiscount && (
+                  <p className="text-xl text-muted-foreground line-through">₹{product.originalPrice.toFixed(2)}</p>
+              )}
+          </div>
           <Card className="mt-6 bg-transparent border-primary/20">
             <CardHeader>
                 <CardTitle>Description</CardTitle>

@@ -14,6 +14,7 @@ import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useTransition } from 'react';
 import { products as mockProducts } from '@/lib/products';
+import { Badge } from '@/components/ui/badge';
 
 export default function ShopPage() {
   const { t, language } = useLanguage();
@@ -23,7 +24,6 @@ export default function ShopPage() {
   const { toast } = useToast();
   const [isAdding, startTransition] = useTransition();
 
-  // Use mock data instead of Firestore hook
   const products = mockProducts;
   const isLoading = false;
 
@@ -97,6 +97,9 @@ export default function ShopPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             {products?.map((product: any) => {
                 const name = product[`name_${language}`] || product.name_en;
+                const hasDiscount = product.originalPrice && product.originalPrice > product.price;
+                const discountPercent = hasDiscount ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+
                 return (
                 <Card key={product.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
                 <CardContent className="p-0">
@@ -110,11 +113,21 @@ export default function ShopPage() {
                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
                         </Link>
+                        {hasDiscount && (
+                            <Badge className="absolute top-2 right-2 bg-destructive text-destructive-foreground">
+                                {discountPercent}% OFF
+                            </Badge>
+                        )}
                     </div>
                 </CardContent>
                 <CardHeader>
                     <CardTitle className="text-foreground">{name}</CardTitle>
-                    <CardDescription className="text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</CardDescription>
+                    <div className="flex items-baseline gap-2">
+                        <p className="text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</p>
+                        {hasDiscount && (
+                             <p className="text-sm text-muted-foreground line-through">₹{product.originalPrice.toFixed(2)}</p>
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="mt-auto flex flex-col gap-2">
                     <Button onClick={() => handleAddToCart(product.id, name)} disabled={isAdding}>

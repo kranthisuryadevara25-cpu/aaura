@@ -7,6 +7,7 @@ export type Product = {
     description_en: string;
     description_hi: string;
     price: number;
+    originalPrice?: number;
     imageUrl: string;
     category: string;
     imageHint?: string;
@@ -20,6 +21,7 @@ export type Product = {
       name_hi: "हस्तनिर्मित गणेश मूर्ति",
       description_en: "A beautiful, eco-friendly Ganesha idol made from clay. Perfect for your home altar or as a gift.",
       description_hi: "मिट्टी से बनी एक सुंदर, पर्यावरण-अनुकूल गणेश मूर्ति। आपके घर के मंदिर या उपहार के रूप में बिल्कुल सही।",
+      originalPrice: 1599.00,
       price: 1299.00,
       imageUrl: "https://picsum.photos/seed/ganesha-idol/600/600",
       category: "Idols",
@@ -56,6 +58,7 @@ export type Product = {
       name_hi: "पीतल की पूजा थाली सेट",
       description_en: "A complete pooja thali set made of pure brass, including a diya, bell, and incense holder.",
       description_hi: "शुद्ध पीतल से बना एक संपूर्ण पूजा थाली सेट, जिसमें एक दीया, घंटी और अगरबत्ती होल्डर शामिल है।",
+      originalPrice: 2999.00,
       price: 2499.00,
       imageUrl: "https://picsum.photos/seed/pooja-thali/600/600",
       category: "Pooja Items",
@@ -92,6 +95,7 @@ export type Product = {
       name_hi: "तांबे की पानी की बोतल",
       description_en: "Leak-proof copper bottle for Ayurvedic health benefits. Enjoy Tamra Jal (copper-infused water).",
       description_hi: "आयुर्वेदिक स्वास्थ्य लाभों के लिए लीक-प्रूफ तांबे की बोतल। ताम्र जल (तांबा-युक्त पानी) का आनंद लें।",
+      originalPrice: 999.00,
       price: 899.00,
       imageUrl: "https://picsum.photos/seed/copper-bottle/600/600",
       category: "Wellness",

@@ -25,6 +25,7 @@ const MENU_ITEMS = [
   { href: "/upload", label: "upload", icon: Upload },
   { href: "/settings", label: "settings", icon: Settings },
   { href: "/admin/review", label: "admin", icon: ShieldCheck, admin: true },
+  { href: "/admin/deities", label: "adminDeities", icon: ShieldCheck, admin: true },
 ];
 
 

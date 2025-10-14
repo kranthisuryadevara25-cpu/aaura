@@ -21,6 +21,7 @@ export const translations = {
       upload: "Upload",
       settings: "Settings",
       admin: "Admin Review",
+      adminDeities: "Manage Deities",
     },
     topnav: {
       searchPlaceholder: "Search temples, stories, rituals...",
@@ -210,6 +211,7 @@ export const translations = {
       upload: "అప్‌లోడ్",
       settings: "సెట్టింగ్స్",
       admin: "అడ్మిన్ సమీక్ష",
+      adminDeities: "దేవతలను నిర్వహించండి",
     },
     topnav: {
       searchPlaceholder: "దేవాలయాలు, కథలు, పూజలు శోధించండి...",
@@ -399,6 +401,7 @@ export const translations = {
       upload: "अपलोड",
       settings: "सेटिंग्स",
       admin: "एडमिन समीक्षा",
+      adminDeities: "देवताओं का प्रबंधन करें",
     },
     topnav: {
       searchPlaceholder: "मंदिर, देवता, कहानियाँ, अनुष्ठान खोजें...",
@@ -588,6 +591,7 @@ export const translations = {
       upload: "अपलोड करा",
       settings: "सेटिंग्ज",
       admin: "प्रशासक पुनरावलोकन",
+      adminDeities: "देवता व्यवस्थापित करा",
     },
     topnav: { searchPlaceholder: "मंदिरे, कथा, विधी शोधा..." },
     buttons: {
@@ -772,6 +776,7 @@ export const translations = {
       upload: "பதிவேற்று",
       settings: "அமைப்புகள்",
       admin: "நிர்வாகி ஆய்வு",
+      adminDeities: "தெய்வங்களை நிர்வகிக்கவும்",
     },
     topnav: { searchPlaceholder: "கோயில்கள், கதைகள், சடங்குகளைத் தேடுங்கள்..." },
     buttons: {
@@ -956,6 +961,7 @@ export const translations = {
       upload: "ಅಪ್‌ಲೋಡ್ ಮಾಡಿ",
       settings: "ಸೆಟ್ಟಿಂಗ್‌ಗಳು",
       admin: "ನಿರ್ವಾಹಕ ವಿಮರ್ಶೆ",
+      adminDeities: "ದೇವತೆಗಳನ್ನು ನಿರ್ವಹಿಸಿ",
     },
     topnav: { searchPlaceholder: "ದೇವಾಲಯಗಳು, ಕಥೆಗಳು, ಆಚರಣೆಗಳನ್ನು ಹುಡುಕಿ..." },
     buttons: {
@@ -1140,6 +1146,7 @@ export const translations = {
       upload: "আপলোড করুন",
       settings: "সেটিংস",
       admin: "অ্যাডমিন পর্যালোচনা",
+      adminDeities: "দেবদেবীদের পরিচালনা করুন",
     },
     topnav: { searchPlaceholder: "মন্দির, গল্প, আচার-অনুষ্ঠান অনুসন্ধান করুন..." },
     buttons: {

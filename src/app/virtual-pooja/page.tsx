@@ -19,11 +19,12 @@ import { deities, type Deity } from '@/lib/deities'; // Import deities data
 const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
   <Flower
     key={id}
-    className="absolute top-[-50px] w-10 h-10 text-yellow-500 animate-fall"
+    className="absolute top-[-50px] w-8 h-8 text-yellow-500 animate-fall"
     style={{ 
         left: `${Math.random() * 90 + 5}%`,
         animationDelay: `${delay}s`,
-        animationDuration: `${Math.random() * 3 + 4}s`
+        animationDuration: `${Math.random() * 3 + 4}s`,
+        filter: 'drop-shadow(0 0 5px rgba(255, 255, 255, 0.5))'
     }}
   />
 );
@@ -63,16 +64,20 @@ export default function VirtualPoojaPage() {
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          new Audio('https://www.myinstants.com/media/sounds/temple-bell-sri-lanka.mp3').play().catch(e => console.error("Error playing audio:", e));
+          new Audio('https://www.myinstants.com/media/sounds/indian-temple-bell-sound-effect-2.mp3').play().catch(e => console.error("Error playing audio:", e));
           setTimeout(() => setBellRinging(false), 800); // Animation duration
           toast({ title: 'You rang the divine bell.' });
           break;
         case 'offer-flower':
-          const newFlowerId = Date.now();
-          setFlowers(prev => [...prev, newFlowerId]);
-          setTimeout(() => {
-              setFlowers(prev => prev.filter(id => id !== newFlowerId));
-          }, 7000); // Remove flower after animation (must be > animation duration)
+           const newFlowerId = Date.now();
+           // Add a small burst of flowers at once
+           const newFlowers = Array.from({ length: 5 }, (_, i) => newFlowerId + i);
+           setFlowers(prev => [...prev, ...newFlowers]);
+           newFlowers.forEach(id => {
+                setTimeout(() => {
+                    setFlowers(prev => prev.filter(flowerId => flowerId !== id));
+                }, 7000); // Remove flower after animation
+           })
           toast({ title: 'You offered flowers to the divine.' });
           break;
         case 'light-diya':
@@ -82,7 +87,7 @@ export default function VirtualPoojaPage() {
       }
     } catch (error) {
       console.error("Failed to record interaction:", error);
-      toast({ variant: 'destructive', title: 'Something went wrong.', description: "Your interaction could not be saved." });
+      toast({ variant: "destructive", title: 'Something went wrong.', description: "Your interaction could not be saved." });
     }
   };
   
@@ -177,9 +182,15 @@ export default function VirtualPoojaPage() {
         {/* Light Diya */}
         <div className="flex flex-col items-center justify-center p-4">
            <button onClick={() => handleInteraction('light-diya')} className="group">
-             <div className="relative group-hover:scale-110 transition-transform">
-                <Flame className={cn("w-16 h-16 md:w-24 md:h-24 transition-all duration-1000 drop-shadow-lg", diyaLit ? 'text-orange-400' : 'text-gray-400')} />
-                 {diyaLit && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-orange-400 rounded-full blur-2xl opacity-50" />}
+             <div className="relative group-hover:scale-110 transition-transform w-24 h-24 flex items-center justify-center">
+                <Flame className={cn("w-16 h-16 md:w-24 md:h-24 transition-all duration-1000 drop-shadow-lg", diyaLit ? 'text-transparent' : 'text-gray-400')} />
+                 {diyaLit && (
+                    <>
+                        <div className="absolute bottom-4 w-12 h-4 bg-yellow-900/50 rounded-full" />
+                        <div className="absolute bottom-5 w-6 h-6 animate-flicker" style={{ background: 'radial-gradient(circle, rgba(255,230,150,1) 0%, rgba(255,165,0,0.8) 40%, rgba(255,100,0,0.3) 80%, rgba(255,100,0,0) 100%)' }} />
+                        <div className="absolute bottom-0 w-48 h-48 bg-orange-400 rounded-full blur-3xl animate-pulse-glow opacity-30" />
+                    </>
+                 )}
             </div>
            </button>
            <p className={cn("mt-2 font-semibold transition-colors", diyaLit ? "text-orange-200" : "text-gray-300")}>
@@ -210,6 +221,21 @@ export default function VirtualPoojaPage() {
         .animate-fall {
           animation-name: fall;
           animation-timing-function: linear;
+        }
+        @keyframes flicker {
+          0%, 100% { transform: scale(1, 1); opacity: 1; }
+          50% { transform: scale(0.95, 1.05); opacity: 0.85; }
+        }
+        .animate-flicker {
+            animation: flicker 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.05); }
+        }
+        .animate-pulse-glow {
+            animation: pulse-glow 3s ease-in-out infinite;
         }
       `}</style>
     </main>

@@ -22,10 +22,13 @@ const MENU_ITEMS = [
   { href: "/channels", label: "channels", icon: PlusCircle },
   { href: "/media", label: "media", icon: Film },
   { href: "/shop", label: "shop", icon: ShoppingCart },
+];
+
+const ADMIN_MENU_ITEMS = [
   { href: "/upload", label: "upload", icon: Upload },
+  { href: "/admin/content", label: "adminContent", icon: ShieldCheck },
+  { href: "/admin/review", label: "adminReview", icon: ShieldCheck },
   { href: "/settings", label: "settings", icon: Settings },
-  { href: "/admin/content", label: "adminContent", icon: ShieldCheck, admin: true },
-  { href: "/admin/review", label: "adminReview", icon: ShieldCheck, admin: true },
 ];
 
 
@@ -35,7 +38,8 @@ export const Sidebar = () => {
   return (
     <aside className="w-60 hidden md:block border-r p-4">
       <nav className="space-y-1">
-        {MENU_ITEMS.map(({ href, label, icon: Icon, admin }) => (
+        <h3 className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Discover</h3>
+        {MENU_ITEMS.map(({ href, label, icon: Icon }) => (
           <Link
             key={label}
             href={href}
@@ -45,7 +49,19 @@ export const Sidebar = () => {
             <span>
               {t.sidebar[label as keyof typeof t.sidebar] || label.charAt(0).toUpperCase() + label.slice(1)}
             </span>
-            {admin && <span className="ml-auto text-xs bg-accent text-accent-foreground px-2 rounded-full">Admin</span>}
+          </Link>
+        ))}
+        <h3 className="px-3 pt-4 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Manage</h3>
+         {ADMIN_MENU_ITEMS.map(({ href, label, icon: Icon }) => (
+          <Link
+            key={label}
+            href={href}
+            className="flex items-center gap-3 py-2 px-3 rounded-md text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <Icon className="h-5 w-5" />
+            <span>
+              {t.sidebar[label as keyof typeof t.sidebar] || label.charAt(0).toUpperCase() + label.slice(1)}
+            </span>
           </Link>
         ))}
       </nav>

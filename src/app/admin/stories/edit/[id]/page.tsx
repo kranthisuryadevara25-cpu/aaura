@@ -1,13 +1,15 @@
 
 'use client';
 
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { StoryForm } from '../../StoryForm';
-import { Loader2 } from 'lucide-react';
+import { Loader2, ArrowLeft } from 'lucide-react';
 import { getStoryBySlug } from '@/lib/stories';
+import { Button } from '@/components/ui/button';
 
 export default function EditStoryPage() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
 
   const story = getStoryBySlug(id);
@@ -23,6 +25,10 @@ export default function EditStoryPage() {
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+        <Button variant="outline" onClick={() => router.back()} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Content
+        </Button>
         <StoryForm story={story} />
     </main>
   );

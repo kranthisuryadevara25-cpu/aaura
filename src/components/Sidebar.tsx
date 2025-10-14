@@ -24,8 +24,8 @@ const MENU_ITEMS = [
   { href: "/shop", label: "shop", icon: ShoppingCart },
   { href: "/upload", label: "upload", icon: Upload },
   { href: "/settings", label: "settings", icon: Settings },
-  { href: "/admin/review", label: "admin", icon: ShieldCheck, admin: true },
-  { href: "/admin/deities", label: "adminDeities", icon: ShieldCheck, admin: true },
+  { href: "/admin/content", label: "adminContent", icon: ShieldCheck, admin: true },
+  { href: "/admin/review", label: "adminReview", icon: ShieldCheck, admin: true },
 ];
 
 

@@ -3,8 +3,8 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, PlusCircle, Trash2, Edit, Sparkles } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -21,8 +21,9 @@ import {
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { deities as mockDeities } from '@/lib/deities';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function ManageDeitiesPage() {
+function DeitiesTabContent() {
   const { toast } = useToast();
   const [deities, setDeities] = useState(mockDeities);
   const { language } = useLanguage();
@@ -38,25 +39,17 @@ export default function ManageDeitiesPage() {
   };
 
   return (
-    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-      <div className="flex justify-between items-center mb-8">
-        <div className="text-left">
-            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center gap-3">
-                <Sparkles className="h-10 w-10" /> Manage Deities
-            </h1>
-            <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-                Add, edit, or remove deities from the database.
-            </p>
+    <div>
+        <div className="flex justify-between items-center mb-6">
+            <p className="text-muted-foreground">Manage the gods and goddesses in the app.</p>
+            <Button asChild>
+              <Link href="/admin/deities/new">
+                <PlusCircle className="mr-2" />
+                Add New Deity
+              </Link>
+            </Button>
         </div>
-        <Button asChild>
-          <Link href="/admin/deities/new">
-            <PlusCircle className="mr-2" />
-            Add New Deity
-          </Link>
-        </Button>
-      </div>
-
-      {isLoading ? (
+         {isLoading ? (
         <div className="flex justify-center items-center h-64">
           <Loader2 className="h-16 w-16 animate-spin text-primary" />
         </div>
@@ -109,6 +102,50 @@ export default function ManageDeitiesPage() {
           ))}
         </div>
       )}
+    </div>
+  )
+}
+
+function PlaceholderTabContent({ title, description }: { title: string, description: string }) {
+    return (
+        <div className="text-center py-16 border-2 border-dashed rounded-lg">
+          <h2 className="mt-6 text-2xl font-semibold text-foreground">{title}</h2>
+          <p className="mt-2 text-muted-foreground">{description}</p>
+          <Button className="mt-4" disabled>Coming Soon</Button>
+        </div>
+    )
+}
+
+
+export default function ContentManagementPage() {
+  return (
+    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+      <div className="text-left mb-8">
+          <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center gap-3">
+              Content Management
+          </h1>
+          <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
+              Add, edit, and manage all the core content of the Aaura application.
+          </p>
+      </div>
+
+       <Tabs defaultValue="deities" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="deities"><Sparkles className="mr-2 h-4 w-4" />Deities</TabsTrigger>
+            <TabsTrigger value="stories"><BookOpen className="mr-2 h-4 w-4" />Stories</TabsTrigger>
+            <TabsTrigger value="characters"><UserSquare className="mr-2 h-4 w-4" />Characters</TabsTrigger>
+        </TabsList>
+        <TabsContent value="deities" className="mt-6">
+            <DeitiesTabContent />
+        </TabsContent>
+        <TabsContent value="stories" className="mt-6">
+            <PlaceholderTabContent title="Manage Stories" description="Functionality to add, edit, and manage episodic stories is coming soon." />
+        </TabsContent>
+        <TabsContent value="characters" className="mt-6">
+            <PlaceholderTabContent title="Manage Characters" description="Functionality to add, edit, and manage mythological characters is coming soon." />
+        </TabsContent>
+        </Tabs>
+      
     </main>
   );
 }

@@ -13,6 +13,7 @@ export const translations = {
       festivals: "Festivals & Events",
       horoscope: "Horoscope",
       playlists: "Playlists",
+      challenges: "Challenges",
       forum: "Forum & Q&A",
       channels: "Channels",
       media: "Media",
@@ -201,6 +202,7 @@ export const translations = {
       festivals: "పండుగలు & కార్యక్రమాలు",
       horoscope: "జాతకం",
       playlists: "ప్లేలిస్టులు",
+      challenges: "సవాళ్లు",
       forum: "ఫోరం & ప్రశ్నలు",
       channels: "ఛానెల్స్",
       media: "మీడియా",
@@ -389,6 +391,7 @@ export const translations = {
       festivals: "त्योहार और कार्यक्रम",
       horoscope: "कुंडली",
       playlists: "प्लेलिस्ट",
+      challenges: "चुनौतियां",
       forum: "फ़ोरम और प्रश्नोत्तरी",
       channels: "चैनल",
       media: "मीडिया",
@@ -577,6 +580,7 @@ export const translations = {
       festivals: "सण आणि कार्यक्रम",
       horoscope: "राशीभविष्य",
       playlists: "प्लेलिस्ट",
+      challenges: "आव्हाने",
       forum: "פורום आणि प्रश्नोत्तर",
       channels: "चॅनेल",
       media: "मीडिया",
@@ -760,6 +764,7 @@ export const translations = {
       festivals: "திருவிழாக்கள் மற்றும் நிகழ்வுகள்",
       horoscope: "ஜாதகம்",
       playlists: "பிளேலிஸ்ட்கள்",
+      challenges: "சவால்கள்",
       forum: "மன்றம் மற்றும் கேள்வி-பதில்",
       channels: "சேனல்கள்",
       media: "ஊடகம்",
@@ -943,6 +948,7 @@ export const translations = {
       festivals: "ಹಬ್ಬಗಳು ಮತ್ತು ಕಾರ್ಯಕ್ರಮಗಳು",
       horoscope: "ಜಾತಕ",
       playlists: "ಪ್ಲೇಲಿಸ್ಟ್‌ಗಳು",
+      challenges: "ಸವಾಲುಗಳು",
       forum: "ವೇದಿಕೆ ಮತ್ತು ಪ್ರಶ್ನೋತ್ತರ",
       channels: "ಚಾನೆಲ್‌ಗಳು",
       media: "ಮಾಧ್ಯಮ",
@@ -1126,6 +1132,7 @@ export const translations = {
       festivals: "উৎসব ও অনুষ্ঠান",
       horoscope: "রাশিফল",
       playlists: "প্লেলিস্ট",
+      challenges: "চ্যালেঞ্জ",
       forum: "ফোরাম এবং প্রশ্নোত্তর",
       channels: "চ্যানেল",
       media: "মিডিয়া",
@@ -1298,5 +1305,3 @@ export const translations = {
     }
   },
 };
-
-    

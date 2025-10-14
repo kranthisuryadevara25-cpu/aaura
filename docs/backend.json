@@ -108,6 +108,46 @@
         },
         "required": ["id", "name", "awardedAt"]
     },
+    "Challenge": {
+        "title": "Challenge",
+        "type": "object",
+        "description": "Represents a community challenge.",
+        "properties": {
+            "id": { "type": "string" },
+            "title_en": { "type": "string" },
+            "title_hi": { "type": "string" },
+            "description_en": { "type": "string" },
+            "description_hi": { "type": "string" },
+            "durationDays": { "type": "number" },
+            "badgeId": { "type": "string", "description": "ID of the badge awarded upon completion." },
+            "tasks": {
+                "type": "array",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "day": { "type": "number" },
+                        "title": { "type": "string" },
+                        "taskType": { "type": "string", "enum": ["read-story", "watch-media", "recite-mantra"] },
+                        "contentId": { "type": "string", "description": "ID of the story, media, or mantra." }
+                    }
+                }
+            }
+        },
+        "required": ["id", "title_en", "durationDays"]
+    },
+    "UserChallengeProgress": {
+        "title": "User Challenge Progress",
+        "type": "object",
+        "description": "Tracks a user's progress in a challenge.",
+        "properties": {
+            "challengeId": { "type": "string" },
+            "startedAt": { "type": "string", "format": "date-time" },
+            "completedTasks": { "type": "array", "items": { "type": "number" }, "description": "Array of completed day numbers." },
+            "isCompleted": { "type": "boolean" },
+            "completedAt": { "type": "string", "format": "date-time" }
+        },
+        "required": ["challengeId", "startedAt", "isCompleted"]
+    },
     "Media": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Media",
@@ -776,6 +816,14 @@
           "description": "Reference to playlists created by the user."
         }
       },
+       {
+        "path": "/users/{userId}/challenges/{challengeId}",
+        "definition": {
+            "entityName": "UserChallengeProgress",
+            "schema": { "$ref": "#/entities/UserChallengeProgress" },
+            "description": "Tracks user progress in community challenges."
+        }
+      },
       {
         "path": "/media/{mediaId}",
         "definition": {
@@ -878,6 +926,7 @@
           "schema": { "$ref": "#/entities/Character" },
           "description": "Stores mythological characters."
         }
+
       },
       {
         "path": "/rituals/{ritualId}",
@@ -925,7 +974,15 @@
             "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
             "description": "Stores likes for a specific forum post. Document ID is the user's UID."
         }
-       }
+       },
+       {
+        "path": "/challenges/{challengeId}",
+        "definition": {
+          "entityName": "Challenge",
+          "schema": { "$ref": "#/entities/Challenge" },
+          "description": "Stores community challenges."
+        }
+      }
     ],
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions."
   }

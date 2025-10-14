@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -45,7 +46,8 @@ export default function VirtualPoojaPage() {
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          new Audio('/sounds/temple-bell.mp3').play();
+          // Use a reliable, publicly hosted sound file to prevent loading errors.
+          new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_29b243dc2f.mp3').play();
           setTimeout(() => setBellRinging(false), 500);
           toast({ title: 'You rang the divine bell.' });
           break;

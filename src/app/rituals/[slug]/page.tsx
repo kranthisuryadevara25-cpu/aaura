@@ -7,19 +7,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckSquare, ShoppingBasket, Clock, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { getRitualBySlug } from '@/lib/rituals';
 
 export default function RitualDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
-  const db = useFirestore();
-
-  const ritualsQuery = query(collection(db, 'rituals'), where('slug', '==', slug));
-  const [rituals, isLoading] = useCollectionData(ritualsQuery);
-  const ritual = rituals?.[0];
+  
+  const ritual = getRitualBySlug(slug);
+  const isLoading = false;
 
   if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
@@ -101,5 +97,3 @@ export default function RitualDetailPage() {
     </main>
   );
 }
-
-    

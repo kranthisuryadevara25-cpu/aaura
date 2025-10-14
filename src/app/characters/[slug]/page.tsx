@@ -8,25 +8,22 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, DocumentData } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { getCharacterBySlug } from '@/lib/characters';
+import { stories as allStories } from '@/lib/stories';
+import type { DocumentData } from 'firebase/firestore';
+
 
 export default function CharacterDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
-  const db = useFirestore();
-
-  const charactersQuery = query(collection(db, 'characters'), where('slug', '==', slug));
-  const [characters, isLoading] = useCollectionData(charactersQuery, { idField: 'id' });
-  const character = characters?.[0];
-
-  const storySlugs = character?.associatedStories || [];
-  const storiesQuery = storySlugs.length > 0 ? query(collection(db, 'stories'), where('slug', 'in', storySlugs)) : undefined;
-  const [associatedStories, storiesLoading] = useCollectionData(storiesQuery, { idField: 'id' });
   
-  const pageLoading = isLoading || storiesLoading;
+  const character = getCharacterBySlug(slug);
+  const isLoading = false;
+
+  const associatedStories = character ? allStories.filter(story => character.associatedStories.includes(story.slug)) : [];
+  
+  const pageLoading = isLoading;
 
   if (pageLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
@@ -83,7 +80,7 @@ export default function CharacterDetailPage() {
                           <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.characterDetail.associatedStories}</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
-                          {associatedStories.map((story: DocumentData) => (
+                          {associatedStories.map((story) => (
                               <Link key={story.id} href={`/stories/${story.slug}`} className="block p-4 rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                   <h4 className="font-semibold text-lg text-primary group-hover:underline">{story.title[language] || story.title.en}</h4>
                                   <p className="text-sm text-muted-foreground line-clamp-2">{story.summary[language] || story.summary.en}</p>
@@ -97,5 +94,3 @@ export default function CharacterDetailPage() {
     </main>
   );
 }
-
-    

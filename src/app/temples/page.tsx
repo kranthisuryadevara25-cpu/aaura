@@ -7,14 +7,12 @@ import Link from 'next/link';
 import { ArrowRight, Palmtree, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { temples as mockTemples } from '@/lib/temples';
 
 export default function TemplesPage() {
   const { language, t } = useLanguage();
-  const db = useFirestore();
-  const [temples, isLoading] = useCollectionData(collection(db, 'temples'), { idField: 'id' });
+  const temples = mockTemples;
+  const isLoading = false;
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">

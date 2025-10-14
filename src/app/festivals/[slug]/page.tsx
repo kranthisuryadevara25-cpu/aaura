@@ -9,23 +9,20 @@ import { Calendar, CheckSquare, Sparkles, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, DocumentData } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { getFestivalBySlug } from '@/lib/festivals';
+import { deities as allDeities } from '@/lib/deities';
+import type { DocumentData } from 'firebase/firestore';
 
 export default function FestivalDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
-  const db = useFirestore();
 
-  const festivalsQuery = query(collection(db, 'festivals'), where('slug', '==', slug));
-  const [festivals, isLoading] = useCollectionData(festivalsQuery, { idField: 'id' });
-  const festival = festivals?.[0];
+  const festival = getFestivalBySlug(slug);
+  const isLoading = false;
   
-  const deitySlugs = festival?.associatedDeities || [];
-  const deitiesQuery = deitySlugs.length > 0 ? query(collection(db, 'deities'), where('slug', 'in', deitySlugs)) : undefined;
-  const [associatedDeities, deitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
+  const associatedDeities = festival ? allDeities.filter(d => festival.associatedDeities.includes(d.slug)) : [];
+  const deitiesLoading = false;
   
   const pageLoading = isLoading || deitiesLoading;
 
@@ -51,7 +48,7 @@ export default function FestivalDetailPage() {
         <article className="max-w-4xl mx-auto">
             <header className="text-center mb-8">
                 <Badge variant="default" className="text-lg mb-2">
-                    <Calendar className="mr-2" /> {format(festival.date.toDate(), 'MMMM do, yyyy')}
+                    <Calendar className="mr-2" /> {format(festival.date, 'MMMM do, yyyy')}
                 </Badge>
                 <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{description}</p>
@@ -97,7 +94,7 @@ export default function FestivalDetailPage() {
                             <CardTitle>{t.festivalDetail.associatedDeities}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {associatedDeities.map((deity: DocumentData) => (
+                            {associatedDeities.map((deity) => (
                                 <Link key={deity.id} href={`/deities/${deity.slug}`} className="group flex items-center gap-3 p-2 rounded-md hover:bg-primary/10">
                                     <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
                                         <Image src={deity.images[0].url} alt={deity.name[language] || deity.name.en} data-ai-hint={deity.images[0].hint} fill className="object-cover" />
@@ -116,5 +113,3 @@ export default function FestivalDetailPage() {
     </main>
   );
 }
-
-    

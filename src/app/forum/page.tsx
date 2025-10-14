@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(500, "Post must be less than 500 characters."),
@@ -110,13 +111,12 @@ export function PostCard({ post }: { post: any; }) {
   const db = useFirestore();
   const [user] = useAuthState(auth);
 
-  // Guard clause to prevent rendering if post is invalid
   if (!post || !post.id) {
     return null;
   }
   
   const authorRef = post.authorId ? doc(db, 'users', post.authorId) : undefined;
-  const [author] = useDocumentData(authorRef);
+  const [author, authorIsLoading] = useDocumentData(authorRef);
   
   const postRef = doc(db, 'posts', post.id);
   const likeRef = user ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined;
@@ -155,10 +155,12 @@ export function PostCard({ post }: { post: any; }) {
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-        <Avatar>
-          <AvatarImage src={author?.photoURL} />
-          <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
-        </Avatar>
+        {authorIsLoading ? <Skeleton className="h-10 w-10 rounded-full" /> : (
+            <Avatar>
+            <AvatarImage src={author?.photoURL} />
+            <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
+            </Avatar>
+        )}
         <div className="w-full">
           <div className="flex items-center justify-between">
             <p className="font-semibold">{author?.displayName || 'Anonymous'}</p>
@@ -215,8 +217,8 @@ export default function ForumPage() {
           {postsLoading ? (
             <div className="flex justify-center py-10"><Loader2 className="h-8 w-8 animate-spin" /></div>
           ) : posts && posts.length > 0 ? (
-            posts.map((post, index) => (
-              <PostCard key={`${post.id}-${index}`} post={post} />
+            posts.map((post) => (
+              <PostCard key={post.id} post={post} />
             ))
           ) : (
             <div className="text-center py-10">
@@ -228,5 +230,3 @@ export default function ForumPage() {
     </main>
   );
 }
-
-    

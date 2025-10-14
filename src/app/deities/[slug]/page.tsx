@@ -9,9 +9,7 @@ import { Music, BookOpen, Sunrise, Sunset, Loader2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { getDeityDailyRelevance, type DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { getDeityBySlug } from '@/lib/deities';
 
 export default function DeityDetailPage() {
   const params = useParams();
@@ -19,11 +17,9 @@ export default function DeityDetailPage() {
   const { language, t } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
   const [isLoadingContent, setIsLoadingContent] = useState(true);
-  const db = useFirestore();
 
-  const deitiesQuery = query(collection(db, 'deities'), where('slug', '==', slug));
-  const [deities, isDeitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
-  const deity = deities?.[0];
+  const deity = getDeityBySlug(slug);
+  const isDeitiesLoading = false;
   
   useEffect(() => {
     if (deity) {
@@ -147,5 +143,3 @@ export default function DeityDetailPage() {
     </main>
   );
 }
-
-    

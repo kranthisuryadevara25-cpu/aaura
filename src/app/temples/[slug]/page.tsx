@@ -10,12 +10,10 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users, Bookmark, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, doc, setDoc, serverTimestamp, deleteDoc } from 'firebase/firestore';
-import { useAuth, useFirestore } from '@/lib/firebase/provider';
+import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { getTempleBySlug } from '@/lib/temples';
 
 
 const getText = (field: { [key: string]: string } | undefined, lang: string = 'en') => {
@@ -28,33 +26,20 @@ export default function TempleDetailPage() {
   const slug = params.slug as string;
   const { language, t } = useLanguage();
   const auth = useAuth();
-  const db = useFirestore();
   const [user] = useAuthState(auth);
   const { toast } = useToast();
 
-  const templesQuery = query(collection(db, 'temples'), where('slug', '==', slug));
-  const [temples, loading, error] = useCollectionData(templesQuery, { idField: 'id' });
-  const temple = temples?.[0];
-
-  const bookmarkRef = user && temple ? doc(db, `users/${user.uid}/bookmarks`, temple.id) : undefined;
-  const [bookmark, isBookmarkLoading] = useDocumentData(bookmarkRef);
-
+  const temple = getTempleBySlug(slug);
+  const loading = false;
+  const bookmark = false; // Mock data
+  const isBookmarkLoading = false; // Mock data
 
   const handleBookmark = async () => {
-    if (!user || !temple || !bookmarkRef) {
+    if (!user || !temple) {
         toast({ variant: 'destructive', title: 'You must be logged in to bookmark a temple.' });
         return;
     }
-    if (bookmark) {
-        await deleteDoc(bookmarkRef);
-        toast({ title: 'Bookmark removed.' });
-    } else {
-        await setDoc(bookmarkRef, {
-            templeId: temple.id,
-            timestamp: serverTimestamp(),
-        });
-        toast({ title: 'Temple bookmarked!' });
-    }
+    toast({ title: 'Bookmark functionality is currently mocked.' });
   };
 
 
@@ -62,13 +47,10 @@ export default function TempleDetailPage() {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  // Only call notFound if loading is complete and temple is still not found.
   if (!loading && !temple) {
     notFound();
   }
 
-  // If temple is not yet available but still loading, return null or a loader, 
-  // otherwise we might get a build error on the server or a flash of not-found page.
   if (!temple) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
@@ -219,5 +201,3 @@ export default function TempleDetailPage() {
     </main>
   );
 }
-
-    

@@ -3,55 +3,34 @@
 import React, { useMemo } from "react";
 import { Loader2, FileQuestion } from "lucide-react";
 import { FeedCard } from "@/components/FeedCard";
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, orderBy, limit, where, DocumentData } from 'firebase/firestore';
-import { useFirestore } from "@/lib/firebase/provider";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { PostCard } from "@/app/forum/page";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import sampleFeed from '@/lib/sample-feed.json';
 
 type FeedItem = {
+    type: string;
     id: string;
-    type: 'media' | 'post' | 'story' | 'deity' | 'temple' | 'video';
-    data: DocumentData;
+    [key: string]: any;
 };
 
 export function Feed({ searchQuery }: { searchQuery: string }) {
-  const db = useFirestore();
   
-  const mediaQuery = query(collection(db, 'media'), where('status', '==', 'approved'), orderBy('uploadDate', 'desc'), limit(15));
-  const postsQuery = query(collection(db, 'posts'), orderBy('createdAt', 'desc'), limit(10));
-
-  const [mediaItems, mediaLoading] = useCollectionData(mediaQuery, { idField: 'id' });
-  const [postItems, postsLoading] = useCollectionData(postsQuery, { idField: 'id' });
-  
-  const combinedFeed = useMemo(() => {
-    const media = (mediaItems || []).map(item => ({...item, type: 'media'}));
-    const posts = (postItems || []).map(item => ({...item, type: 'post'}));
-
-    // Simple combination and sorting by date. A more complex algorithm could be used here.
-    const allItems = [...media, ...posts];
-    allItems.sort((a, b) => {
-        const dateA = a.uploadDate?.toDate() || a.createdAt?.toDate();
-        const dateB = b.uploadDate?.toDate() || b.createdAt?.toDate();
-        return dateB - dateA;
-    });
-
-    return allItems;
-  }, [mediaItems, postItems]);
-
+  const combinedFeed: FeedItem[] = sampleFeed.feed;
+  const isLoading = false;
 
   const filteredItems = useMemo(() => {
     if (!searchQuery) return combinedFeed;
     const lowercasedQuery = searchQuery.toLowerCase();
 
     return combinedFeed.filter(item => {
-        const title = item.title_en || item.content || '';
-        const description = item.description_en || '';
-        return title.toLowerCase().includes(lowercasedQuery) || description.toLowerCase().includes(lowercasedQuery);
+        const title = item.title || '';
+        const summary = item.summary || '';
+        const content = item.content || '';
+        return title.toLowerCase().includes(lowercasedQuery) || 
+               summary.toLowerCase().includes(lowercasedQuery) ||
+               content.toLowerCase().includes(lowercasedQuery);
     });
   }, [searchQuery, combinedFeed]);
-  
-  const isLoading = mediaLoading || postsLoading;
 
   if (isLoading) {
     return (
@@ -66,10 +45,18 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
         {filteredItems.length > 0 ? (
             filteredItems.map((item, index) => {
                 if (item.type === 'post') {
-                    // This uses a different structure, so we pass the whole object
-                    return <PostCard key={`${item.id}-${index}`} post={item} />
+                    // Adapt mock data to fit PostCard's expected structure
+                    const postData = {
+                        id: item.id,
+                        content: item.content,
+                        likes: item.engagement?.likes || 0,
+                        commentsCount: item.engagement?.comments || 0,
+                        authorId: item.authorId,
+                        createdAt: new Date(), // Mock date
+                    };
+                    return <PostCard key={`${item.id}-${index}`} post={postData} />
                 }
-                // Use FeedCard for all other types, as it can handle them.
+                // Use FeedCard for all other types
                 return <FeedCard key={`${item.id}-${index}`} item={item} />
             })
         ) : (

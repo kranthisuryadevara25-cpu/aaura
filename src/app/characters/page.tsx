@@ -8,14 +8,12 @@ import { ArrowRight, UserSquare, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { characters as mockCharacters } from '@/lib/characters';
 
 export default function CharactersPage() {
   const { language, t } = useLanguage();
-  const db = useFirestore();
-  const [characters, isLoading] = useCollectionData(collection(db, 'characters'), { idField: 'id' });
+  const characters = mockCharacters;
+  const isLoading = false;
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">

@@ -9,14 +9,12 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { festivals as mockFestivals } from '@/lib/festivals';
 
 export default function FestivalsPage() {
   const { language, t } = useLanguage();
-  const db = useFirestore();
-  const [festivals, isLoading] = useCollectionData(collection(db, 'festivals'), { idField: 'id' });
+  const festivals = mockFestivals;
+  const isLoading = false;
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -53,7 +51,7 @@ export default function FestivalsPage() {
                     </CardContent>
                     <CardHeader>
                         <CardTitle className="text-primary">{name}</CardTitle>
-                        <Badge variant="secondary" className="w-fit">{format(festival.date.toDate(), 'MMMM do')}</Badge>
+                        <Badge variant="secondary" className="w-fit">{format(festival.date, 'MMMM do')}</Badge>
                         <CardDescription className="line-clamp-3 pt-2">{description}</CardDescription>
                     </CardHeader>
                     <CardContent className="mt-auto">

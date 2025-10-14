@@ -8,17 +8,15 @@ import Link from 'next/link';
 import { ArrowRight, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, DocumentData } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
 import { Input } from '@/components/ui/input';
+import { deities as mockDeities } from '@/lib/deities';
 
 export default function DeitiesPage() {
   const { language, t } = useLanguage();
-  const db = useFirestore();
-  const [deities, isLoading] = useCollectionData(collection(db, 'deities'), { idField: 'id' });
+  const [deities, setDeities] = useState(mockDeities);
+  const isLoading = false; // Using mock data
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredDeities, setFilteredDeities] = useState<DocumentData[] | undefined>([]);
+  const [filteredDeities, setFilteredDeities] = useState(deities);
 
   useEffect(() => {
     if (deities) {

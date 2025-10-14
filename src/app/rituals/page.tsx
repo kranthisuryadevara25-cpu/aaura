@@ -8,14 +8,12 @@ import { ArrowRight, BookHeart, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { rituals as mockRituals } from '@/lib/rituals';
 
 export default function RitualsPage() {
   const { language, t } = useLanguage();
-  const db = useFirestore();
-  const [rituals, isLoading] = useCollectionData(collection(db, 'rituals'), { idField: 'id' });
+  const rituals = mockRituals;
+  const isLoading = false;
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">

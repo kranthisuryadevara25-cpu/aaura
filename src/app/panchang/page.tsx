@@ -6,22 +6,22 @@ import { CalendarDays, Sunrise, Sunset, Moon, Star, AlertTriangle, PartyPopper, 
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, collection, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { format } from 'date-fns';
+import { getTodaysPanchang } from '@/lib/panchang';
+import { festivals as allFestivals } from '@/lib/festivals';
 
 export default function PanchangPage() {
     const { t, language } = useLanguage();
-    const todayStr = format(new Date(), 'yyyy-MM-dd');
-    const db = useFirestore();
     
-    const [panchang, isLoading] = useDocumentData(doc(db, 'panchang', todayStr));
-    
-    const festivalSlugs = panchang?.festival_en?.map((f: string) => f.toLowerCase().replace(/ /g, '-')) || [];
-    const festivalsQuery = query(collection(db, 'festivals'), where('slug', 'in', festivalSlugs.length > 0 ? festivalSlugs : ['non-existent']));
-    const [festivals, festivalsLoading] = useCollectionData(festivalsQuery, { idField: 'id' });
+    const panchang = getTodaysPanchang();
+    const isLoading = false;
+
+    // The logic in getTodaysPanchang already finds today's festival by name
+    const festivalNames = panchang?.festivals || [];
+    const festivals = festivalNames.length > 0 
+        ? allFestivals.filter(f => festivalNames.includes(f.name.en))
+        : [];
+    const festivalsLoading = false;
+
 
     if (isLoading || festivalsLoading) {
       return (
@@ -66,7 +66,7 @@ export default function PanchangPage() {
                 <CalendarDays className="h-10 w-10" /> {t.panchang.title}
             </h1>
             <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                {new Date(todayStr).toLocaleDateString(language, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                {panchang.date}
             </p>
         </div>
         

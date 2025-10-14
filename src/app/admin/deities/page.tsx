@@ -1,8 +1,7 @@
+
 'use client';
 
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, PlusCircle, Trash2, Edit, Sparkles } from 'lucide-react';
@@ -20,30 +19,22 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { doc, deleteDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { deities as mockDeities } from '@/lib/deities';
 
 export default function ManageDeitiesPage() {
-  const db = useFirestore();
   const { toast } = useToast();
-  const [deities, isLoading] = useCollectionData(collection(db, 'deities'), { idField: 'id' });
-  const { language, t } = useLanguage();
+  const [deities, setDeities] = useState(mockDeities);
+  const { language } = useLanguage();
+  const isLoading = false; // Using mock data
 
   const handleDelete = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'deities', id));
-      toast({
-        title: 'Deity Deleted',
-        description: 'The deity has been successfully removed from the database.',
-      });
-    } catch (error) {
-      console.error('Error deleting deity: ', error);
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Failed to delete the deity. Please try again.',
-      });
-    }
+    // This is a mock delete. In a real app, this would interact with a database.
+    setDeities(prevDeities => prevDeities.filter(d => d.id !== id));
+    toast({
+      title: 'Deity Deleted (Mock)',
+      description: 'The deity has been removed from the view.',
+    });
   };
 
   return (

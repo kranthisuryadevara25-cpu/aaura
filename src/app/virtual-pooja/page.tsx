@@ -70,7 +70,7 @@ export default function VirtualPoojaPage() {
       case 'offer-aarti':
           if (showAarti) return;
           setShowAarti(true);
-          new Audio('https://cdn.pixabay.com/audio/2022/02/11/audio_a7a22c50fd.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
+          new Audio('https://cdn.pixabay.com/audio/2022/11/17/audio_85d13f5139.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
           setTimeout(() => setShowAarti(false), 5000);
           break;
     }

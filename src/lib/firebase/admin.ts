@@ -15,7 +15,7 @@ let auth: Auth;
  * Initializes (or reuses) the Firebase Admin SDK app instance.
  * Uses a directly required service account key.
  */
-export function getFirebaseAdmin() {
+function initializeFirebaseAdmin() {
   if (getApps().some(app => app.name === 'firebase-admin')) {
     adminApp = getApps().find(app => app.name === 'firebase-admin')!;
   } else {
@@ -34,6 +34,10 @@ export function getFirebaseAdmin() {
 
   db = getFirestore(adminApp);
   auth = getAuth(adminApp);
-
-  return { adminApp, db, auth };
 }
+
+// Initialize on module load
+initializeFirebaseAdmin();
+
+
+export { adminApp, db, auth };

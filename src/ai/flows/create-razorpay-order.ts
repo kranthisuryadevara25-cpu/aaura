@@ -13,7 +13,7 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import Razorpay from 'razorpay';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase/server';
+import { db } from '@/lib/firebase/admin';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition

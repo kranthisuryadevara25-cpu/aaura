@@ -4,7 +4,7 @@ import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 
 // Since this file is only ever imported on the server, we can directly require the JSON.
-const serviceAccount = require('./secrets/serviceAccountKey.json');
+const serviceAccount = require('../../../serviceAccountKey.json');
 
 let adminApp: App;
 let db: Firestore;

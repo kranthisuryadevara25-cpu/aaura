@@ -10,7 +10,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { db } from '@/lib/firebase/server'; 
+import { db } from '@/lib/firebase/admin'; 
 import type { Firestore } from 'firebase-admin/firestore';
 
 // ---------------------------------------------------

@@ -6,6 +6,80 @@
       "queryScope": "COLLECTION",
       "fields": [
         {
+          "fieldPath": "rating",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "deities",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "stories",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "festivals",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "date",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "media",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "uploadDate",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "inventory",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "popularity",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "temples",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
           "fieldPath": "location.state",
           "order": "ASCENDING"
         },
@@ -32,102 +106,6 @@
       ]
     },
     {
-      "collectionGroup": "media",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_te", "order": "ASCENDING" },
-        { "fieldPath": "uploadDate", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "media",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_hi", "order": "ASCENDING" },
-        { "fieldPath": "uploadDate", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "media",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_mr", "order": "ASCENDING" },
-        { "fieldPath": "uploadDate", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "media",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_ta", "order": "ASCENDING" },
-        { "fieldPath": "uploadDate", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "media",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_kn", "order": "ASCENDING" },
-        { "fieldPath": "uploadDate", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "media",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_bn", "order": "ASCENDING" },
-        { "fieldPath": "uploadDate", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "stories",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_te", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "stories",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "title_hi", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "temples",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "name_te", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "temples",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "name_hi", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "deities",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "name_te", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "deities",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "name_hi", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "comments",
       "queryScope": "COLLECTION",
       "fields": [
@@ -144,14 +122,6 @@
       ]
     },
     {
-      "collectionGroup": "userUploads",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "uploadedBy", "order": "ASCENDING" },
-        { "fieldPath": "uploadedAt", "order": "DESCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "likes",
       "queryScope": "COLLECTION",
       "fields": [
@@ -165,13 +135,6 @@
       "fields": [
         { "fieldPath": "userId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "posts",
-      "queryScope": "COLLECTION",
-      "fields": [
-          { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     }
   ],

@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, doc, setDoc, serverTimestamp, getDoc, runTransaction, increment } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, runTransaction, increment } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useTransition } from 'react';
+import { products as mockProducts } from '@/lib/products';
 
 export default function ShopPage() {
   const { t, language } = useLanguage();
@@ -21,8 +21,11 @@ export default function ShopPage() {
   const auth = useAuth();
   const [user] = useAuthState(auth);
   const { toast } = useToast();
-  const [products, isLoading] = useCollectionData(collection(db, 'products'), { idField: 'id' });
   const [isAdding, startTransition] = useTransition();
+
+  // Use mock data instead of Firestore hook
+  const products = mockProducts;
+  const isLoading = false;
 
 
   const handleAddToCart = (productId: string, name: string) => {
@@ -41,13 +44,12 @@ export default function ShopPage() {
 
             await runTransaction(db, async (transaction) => {
                 const cartDoc = await transaction.get(cartRef);
-                const productRef = doc(db, 'products', productId);
-                const productSnap = await transaction.get(productRef);
+                const productFromMock = products.find(p => p.id === productId);
 
-                if (!productSnap.exists()) {
+                if (!productFromMock) {
                     throw "Product not found";
                 }
-                const productData = productSnap.data();
+                const productData = productFromMock;
 
                 if (cartDoc.exists()) {
                     transaction.update(cartRef, { quantity: increment(1) });

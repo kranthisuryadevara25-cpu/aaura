@@ -46,7 +46,7 @@ export default function VirtualPoojaPage() {
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_29b243dc2f.mp3').play().catch(e => console.error("Error playing audio:", e));
+          new Audio('https://actions.google.com/sounds/v1/emergency/beeper_emergency_call.ogg').play().catch(e => console.error("Error playing audio:", e));
           setTimeout(() => setBellRinging(false), 500);
           toast({ title: 'You rang the divine bell.' });
           break;

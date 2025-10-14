@@ -189,6 +189,35 @@
         "status"
       ]
     },
+    "Playlist": {
+      "title": "Playlist",
+      "type": "object",
+      "description": "A playlist of spiritual content.",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "creatorId": { "type": "string", "description": "Reference to the User who created the playlist." },
+        "category": { "type": "string", "enum": ["Deities", "Stories", "Rituals", "Festivals", "Peace", "Devotion"] },
+        "isPublic": { "type": "boolean" },
+        "items": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "contentType": { "type": "string", "description": "e.g., 'mantra', 'story', 'ritual'" },
+              "contentId": { "type": "string" },
+              "order": { "type": "number" }
+            },
+            "required": ["contentType", "contentId", "order"]
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "likesCount": { "type": "number" },
+        "viewCount": { "type": "number" }
+      },
+      "required": ["title", "creatorId", "category", "isPublic", "items", "createdAt", "updatedAt"]
+    },
     "Channel": {
       "$schema": "http://json-schema.org/draft-07/schema#",
       "title": "Channel",
@@ -741,6 +770,13 @@
           }
       },
       {
+        "path": "/users/{userId}/playlists/{playlistId}",
+        "definition": {
+          "schema": { "type": "object", "properties": { "playlistId": { "type": "string" }, "createdAt": { "type": "string", "format": "date-time" } } },
+          "description": "Reference to playlists created by the user."
+        }
+      },
+      {
         "path": "/media/{mediaId}",
         "definition": {
           "entityName": "Media",
@@ -769,6 +805,14 @@
           "entityName": "Channel",
           "schema": { "$ref": "#/entities/Channel" },
           "description": "Stores all channels on the platform."
+        }
+      },
+      {
+        "path": "/playlists/{playlistId}",
+        "definition": {
+          "entityName": "Playlist",
+          "schema": { "$ref": "#/entities/Playlist" },
+          "description": "Stores all public or user-created playlists."
         }
       },
       {
@@ -886,3 +930,5 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions."
   }
 }
+
+    

@@ -3,7 +3,7 @@
 import React from "react";
 import { useLanguage } from "@/hooks/use-language";
 import Link from 'next/link';
-import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star, ShieldCheck, HandHeart } from 'lucide-react';
+import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star, ShieldCheck, HandHeart, ListMusic } from 'lucide-react';
 
 const MENU_ITEMS = [
   { href: "/", label: "home", icon: Home },
@@ -16,6 +16,7 @@ const MENU_ITEMS = [
   { href: "/panchang", label: "panchang", icon: CalendarDays },
   { href: "/festivals", label: "festivals", icon: PartyPopper },
   { href: "/horoscope", label: "horoscope", icon: Star },
+  { href: "/playlists", label: "playlists", icon: ListMusic },
   { href: "/forum", label: "forum", icon: MessageCircle },
   { href: "/channels", label: "channels", icon: PlusCircle },
   { href: "/media", label: "media", icon: Film },
@@ -49,3 +50,5 @@ export const Sidebar = () => {
     </aside>
   );
 };
+
+    

@@ -12,6 +12,7 @@ export const translations = {
       panchang: "Daily Panchang",
       festivals: "Festivals & Events",
       horoscope: "Horoscope",
+      playlists: "Playlists",
       forum: "Forum & Q&A",
       channels: "Channels",
       media: "Media",
@@ -199,6 +200,7 @@ export const translations = {
       panchang: "రోజువారీ పంచాంగం",
       festivals: "పండుగలు & కార్యక్రమాలు",
       horoscope: "జాతకం",
+      playlists: "ప్లేలిస్టులు",
       forum: "ఫోరం & ప్రశ్నలు",
       channels: "ఛానెల్స్",
       media: "మీడియా",
@@ -386,6 +388,7 @@ export const translations = {
       panchang: "दैनिक पंचांग",
       festivals: "त्योहार और कार्यक्रम",
       horoscope: "कुंडली",
+      playlists: "प्लेलिस्ट",
       forum: "फ़ोरम और प्रश्नोत्तरी",
       channels: "चैनल",
       media: "मीडिया",
@@ -573,6 +576,7 @@ export const translations = {
       panchang: "दैनिक पंचांग",
       festivals: "सण आणि कार्यक्रम",
       horoscope: "राशीभविष्य",
+      playlists: "प्लेलिस्ट",
       forum: "פורום आणि प्रश्नोत्तर",
       channels: "चॅनेल",
       media: "मीडिया",
@@ -755,6 +759,7 @@ export const translations = {
       panchang: "தினசரி பஞ்சாங்கம்",
       festivals: "திருவிழாக்கள் மற்றும் நிகழ்வுகள்",
       horoscope: "ஜாதகம்",
+      playlists: "பிளேலிஸ்ட்கள்",
       forum: "மன்றம் மற்றும் கேள்வி-பதில்",
       channels: "சேனல்கள்",
       media: "ஊடகம்",
@@ -937,6 +942,7 @@ export const translations = {
       panchang: "ದೈನಂದಿನ ಪಂಚಾಂಗ",
       festivals: "ಹಬ್ಬಗಳು ಮತ್ತು ಕಾರ್ಯಕ್ರಮಗಳು",
       horoscope: "ಜಾತಕ",
+      playlists: "ಪ್ಲೇಲಿಸ್ಟ್‌ಗಳು",
       forum: "ವೇದಿಕೆ ಮತ್ತು ಪ್ರಶ್ನೋತ್ತರ",
       channels: "ಚಾನೆಲ್‌ಗಳು",
       media: "ಮಾಧ್ಯಮ",
@@ -1119,6 +1125,7 @@ export const translations = {
       panchang: "দৈনিক পঞ্জিকা",
       festivals: "উৎসব ও অনুষ্ঠান",
       horoscope: "রাশিফল",
+      playlists: "প্লেলিস্ট",
       forum: "ফোরাম এবং প্রশ্নোত্তর",
       channels: "চ্যানেল",
       media: "মিডিয়া",
@@ -1291,3 +1298,5 @@ export const translations = {
     }
   },
 };
+
+    

@@ -19,11 +19,11 @@ import { deities, type Deity } from '@/lib/deities'; // Import deities data
 const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
   <Flower
     key={id}
-    className="absolute top-[-50px] w-10 h-10 text-orange-400 animate-fall"
+    className="absolute top-[-50px] w-10 h-10 text-yellow-500 animate-fall"
     style={{ 
         left: `${Math.random() * 90 + 5}%`,
         animationDelay: `${delay}s`,
-        animationDuration: `${Math.random() * 2 + 3}s`
+        animationDuration: `${Math.random() * 3 + 4}s`
     }}
   />
 );
@@ -63,8 +63,7 @@ export default function VirtualPoojaPage() {
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          // Using a reliable, publicly available Indian temple bell sound file.
-          new Audio('https://www.fesliyanstudios.com/play-mp3/3459').play().catch(e => console.error("Error playing audio:", e));
+          new Audio('https://www.myinstants.com/media/sounds/temple-bell-sri-lanka.mp3').play().catch(e => console.error("Error playing audio:", e));
           setTimeout(() => setBellRinging(false), 800); // Animation duration
           toast({ title: 'You rang the divine bell.' });
           break;
@@ -73,7 +72,7 @@ export default function VirtualPoojaPage() {
           setFlowers(prev => [...prev, newFlowerId]);
           setTimeout(() => {
               setFlowers(prev => prev.filter(id => id !== newFlowerId));
-          }, 5000); // Remove flower after animation
+          }, 7000); // Remove flower after animation (must be > animation duration)
           toast({ title: 'You offered flowers to the divine.' });
           break;
         case 'light-diya':
@@ -118,6 +117,13 @@ export default function VirtualPoojaPage() {
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4">
+      {/* This container is for the falling flowers */}
+      <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
+        {flowers.map((id, index) => (
+          <FallingFlower key={id} id={id} delay={index * 0.1} />
+        ))}
+      </div>
+
       <Image
         src={selectedDeity.images[0].url}
         alt={selectedDeity.name.en}
@@ -141,7 +147,7 @@ export default function VirtualPoojaPage() {
         )}
       </div>
       
-       <div className="absolute z-30 top-4 left-4">
+       <div className="absolute z-40 top-4 left-4">
         <Button variant="ghost" onClick={() => setSelectedDeity(null)} className="text-white hover:bg-white/10 hover:text-white">
             Change Deity
         </Button>
@@ -159,10 +165,7 @@ export default function VirtualPoojaPage() {
         </div>
 
         {/* Offer Flowers */}
-        <div className="relative flex flex-col items-center justify-center p-4 overflow-hidden">
-            {flowers.map((id, index) => (
-              <FallingFlower key={id} id={id} delay={index * 0.1} />
-            ))}
+        <div className="relative flex flex-col items-center justify-center p-4">
            <button onClick={() => handleInteraction('offer-flower')} className="group">
             <div className="relative group-hover:scale-110 transition-transform">
                 <Flower className="w-16 h-16 md:w-24 md:h-24 text-pink-300 drop-shadow-lg" />
@@ -196,11 +199,11 @@ export default function VirtualPoojaPage() {
         }
         @keyframes fall {
           from {
-            transform: translateY(-50px) rotate(0deg);
+            transform: translateY(-10vh) rotate(0deg);
             opacity: 1;
           }
           to {
-            transform: translateY(30vh) rotate(360deg);
+            transform: translateY(110vh) rotate(360deg);
             opacity: 0;
           }
         }

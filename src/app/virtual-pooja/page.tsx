@@ -64,7 +64,7 @@ export default function VirtualPoojaPage() {
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          new Audio('https://www.myinstants.com/media/sounds/indian-temple-bell-sound-effect-2.mp3').play().catch(e => console.error("Error playing audio:", e));
+          new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_200821584b.mp3').play().catch(e => console.error("Error playing audio:", e));
           setTimeout(() => setBellRinging(false), 800); // Animation duration
           toast({ title: 'You rang the divine bell.' });
           break;

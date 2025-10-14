@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, Flower, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
@@ -13,15 +13,21 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
+import { deities, type Deity } from '@/lib/deities'; // Import deities data
 
-// Component for the floating flower animation
-const FloatingFlower = ({ id }: { id: number }) => (
+// Component for the falling flower animation
+const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
   <Flower
     key={id}
-    className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-12 text-pink-400 animate-float-up"
-    style={{ animationDelay: `${id * 0.1}s` }}
+    className="absolute top-[-50px] w-10 h-10 text-orange-400 animate-fall"
+    style={{ 
+        left: `${Math.random() * 90 + 5}%`,
+        animationDelay: `${delay}s`,
+        animationDuration: `${Math.random() * 2 + 3}s`
+    }}
   />
 );
+
 
 export default function VirtualPoojaPage() {
   const { t } = useLanguage();
@@ -30,6 +36,7 @@ export default function VirtualPoojaPage() {
   const db = useFirestore();
   const [user] = useAuthState(auth);
 
+  const [selectedDeity, setSelectedDeity] = useState<Deity | null>(null);
   const [bellRinging, setBellRinging] = useState(false);
   const [flowers, setFlowers] = useState<number[]>([]);
   const [diyaLit, setDiyaLit] = useState(false);
@@ -49,19 +56,24 @@ export default function VirtualPoojaPage() {
       await addDoc(offeringsCollection, {
         userId: user.uid,
         interaction: interaction,
+        deity: selectedDeity?.slug || 'general',
         timestamp: serverTimestamp(),
       });
 
       switch (interaction) {
         case 'ring-bell':
           setBellRinging(true);
-          // Using a reliable, publicly available sound file.
-          new Audio('https://www.soundjay.com/buttons/sounds/button-7.mp3').play().catch(e => console.error("Error playing audio:", e));
-          setTimeout(() => setBellRinging(false), 500);
+          // Using a reliable, publicly available Indian temple bell sound file.
+          new Audio('https://www.fesliyanstudios.com/play-mp3/3459').play().catch(e => console.error("Error playing audio:", e));
+          setTimeout(() => setBellRinging(false), 800); // Animation duration
           toast({ title: 'You rang the divine bell.' });
           break;
         case 'offer-flower':
-          setFlowers(prev => [...prev, Date.now()]);
+          const newFlowerId = Date.now();
+          setFlowers(prev => [...prev, newFlowerId]);
+          setTimeout(() => {
+              setFlowers(prev => prev.filter(id => id !== newFlowerId));
+          }, 5000); // Remove flower after animation
           toast({ title: 'You offered flowers to the divine.' });
           break;
         case 'light-diya':
@@ -74,24 +86,53 @@ export default function VirtualPoojaPage() {
       toast({ variant: 'destructive', title: 'Something went wrong.', description: "Your interaction could not be saved." });
     }
   };
+  
+  if (!selectedDeity) {
+      return (
+        <main className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+             <div className="text-center mb-8">
+                <h1 className="text-3xl md:text-5xl font-headline font-bold tracking-tight text-primary">
+                    Select a Deity for Pooja
+                </h1>
+                <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">
+                    Choose a deity to begin your virtual worship.
+                </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                {deities.map(deity => (
+                    <Card key={deity.id} onClick={() => setSelectedDeity(deity)} className="cursor-pointer group overflow-hidden border-primary/20 hover:border-primary/50 hover:shadow-lg transition-all duration-300">
+                        <div className="aspect-square relative">
+                            <Image src={deity.images[0].url} alt={deity.name.en} fill className="object-cover group-hover:scale-105 transition-transform duration-300" />
+                        </div>
+                        <CardHeader className="p-3">
+                            <CardTitle className="text-center text-md md:text-lg group-hover:text-primary transition-colors">
+                                {deity.name.en}
+                            </CardTitle>
+                        </CardHeader>
+                    </Card>
+                ))}
+            </div>
+        </main>
+      )
+  }
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4">
       <Image
-        src="https://picsum.photos/seed/temple-interior/1920/1080"
-        alt="Temple Interior"
-        data-ai-hint="temple interior"
+        src={selectedDeity.images[0].url}
+        alt={selectedDeity.name.en}
+        data-ai-hint={selectedDeity.images[0].hint}
         fill
         className="object-cover absolute inset-0 z-0 opacity-30"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-black/50 z-10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60 z-10" />
 
       <div className="relative z-20 text-center text-white mb-8">
         <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">
           Virtual Pooja
         </h1>
         <p className="mt-4 max-w-2xl mx-auto text-lg text-amber-50">
-          Take a moment to connect with the divine. Perform a digital offering.
+          Offering prayers to {selectedDeity.name.en}
         </p>
          {!user && (
           <Button asChild className="mt-4">
@@ -100,69 +141,72 @@ export default function VirtualPoojaPage() {
         )}
       </div>
       
+       <div className="absolute z-30 top-4 left-4">
+        <Button variant="ghost" onClick={() => setSelectedDeity(null)} className="text-white hover:bg-white/10 hover:text-white">
+            Change Deity
+        </Button>
+      </div>
+
       <div className="relative z-20 grid grid-cols-3 gap-4 md:gap-8 w-full max-w-4xl">
         {/* Ring Bell */}
-        <Card className="bg-black/50 border-amber-200/20 text-white flex flex-col items-center justify-center p-4 aspect-square">
-          <CardContent className="flex flex-col items-center justify-center p-0">
-             <div className={cn("relative transition-transform", bellRinging ? 'animate-swing' : '')}>
-                <Bell className="w-16 h-16 md:w-24 md:h-24 text-amber-300" />
+        <div className="flex flex-col items-center justify-center p-4">
+           <button onClick={() => handleInteraction('ring-bell')} className="group">
+             <div className={cn("relative transition-transform group-hover:scale-110", bellRinging ? 'animate-swing' : '')}>
+                <Bell className="w-16 h-16 md:w-24 md:h-24 text-amber-300 drop-shadow-lg" />
             </div>
-            <Button variant="outline" className="mt-4 bg-transparent border-amber-300 text-amber-300 hover:bg-amber-300/10 hover:text-amber-200" onClick={() => handleInteraction('ring-bell')}>
-              Ring Bell
-            </Button>
-          </CardContent>
-        </Card>
+           </button>
+           <p className="text-amber-200 mt-2 font-semibold">Ring Bell</p>
+        </div>
 
         {/* Offer Flowers */}
-        <Card className="relative bg-black/50 border-amber-200/20 text-white flex flex-col items-center justify-center p-4 aspect-square overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center p-0">
-            <div className="relative">
-                <Flower className="w-16 h-16 md:w-24 md:h-24 text-pink-300 transition-all duration-500" />
-                 {flowers.map((id) => (
-                  <FloatingFlower key={id} id={id} />
-                ))}
+        <div className="relative flex flex-col items-center justify-center p-4 overflow-hidden">
+            {flowers.map((id, index) => (
+              <FallingFlower key={id} id={id} delay={index * 0.1} />
+            ))}
+           <button onClick={() => handleInteraction('offer-flower')} className="group">
+            <div className="relative group-hover:scale-110 transition-transform">
+                <Flower className="w-16 h-16 md:w-24 md:h-24 text-pink-300 drop-shadow-lg" />
             </div>
-            <Button variant="outline" className="mt-4 bg-transparent border-pink-300 text-pink-300 hover:bg-pink-300/10 hover:text-pink-200" onClick={() => handleInteraction('offer-flower')}>
-              Offer Flowers
-            </Button>
-          </CardContent>
-        </Card>
+           </button>
+            <p className="text-pink-200 mt-2 font-semibold">Offer Flowers</p>
+        </div>
 
         {/* Light Diya */}
-        <Card className="bg-black/50 border-amber-200/20 text-white flex flex-col items-center justify-center p-4 aspect-square">
-          <CardContent className="flex flex-col items-center justify-center p-0">
-             <div className="relative">
-                <Flame className={cn("w-16 h-16 md:w-24 md:h-24 transition-all duration-1000", diyaLit ? 'text-orange-400' : 'text-gray-400')} />
+        <div className="flex flex-col items-center justify-center p-4">
+           <button onClick={() => handleInteraction('light-diya')} className="group">
+             <div className="relative group-hover:scale-110 transition-transform">
+                <Flame className={cn("w-16 h-16 md:w-24 md:h-24 transition-all duration-1000 drop-shadow-lg", diyaLit ? 'text-orange-400' : 'text-gray-400')} />
                  {diyaLit && <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-orange-400 rounded-full blur-2xl opacity-50" />}
             </div>
-            <Button variant="outline" className="mt-4 bg-transparent border-orange-300 text-orange-300 hover:bg-orange-300/10 hover:text-orange-200" onClick={() => handleInteraction('light-diya')}>
+           </button>
+           <p className={cn("mt-2 font-semibold transition-colors", diyaLit ? "text-orange-200" : "text-gray-300")}>
               {diyaLit ? 'Extinguish' : 'Light Diya'}
-            </Button>
-          </CardContent>
-        </Card>
+           </p>
+        </div>
       </div>
 
        <style jsx>{`
         @keyframes swing {
           0%, 100% { transform: rotate(0deg); }
-          25% { transform: rotate(15deg); }
-          75% { transform: rotate(-15deg); }
+          25% { transform: rotate(20deg); }
+          75% { transform: rotate(-20deg); }
         }
         .animate-swing {
-          animation: swing 0.5s ease-in-out;
+          animation: swing 0.8s ease-in-out;
         }
-        @keyframes float-up {
+        @keyframes fall {
           from {
-            transform: translateY(0) scale(1);
+            transform: translateY(-50px) rotate(0deg);
             opacity: 1;
           }
           to {
-            transform: translateY(-150px) scale(0.5);
+            transform: translateY(30vh) rotate(360deg);
             opacity: 0;
           }
         }
-        .animate-float-up {
-          animation: float-up 2s ease-out forwards;
+        .animate-fall {
+          animation-name: fall;
+          animation-timing-function: linear;
         }
       `}</style>
     </main>

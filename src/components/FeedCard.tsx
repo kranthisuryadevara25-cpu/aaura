@@ -71,8 +71,24 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
   const thumbnail = item.image?.url || item.media?.thumbnailUrl || "https://picsum.photos/seed/placeholder/800/450";
   const hint = item.image?.hint || item.media?.hint || "image";
 
-  // Mock createdAt for items that don't have it
-  const createdAt = item.createdAt ? new Date(item.createdAt) : new Date(Date.now() - Math.random() * 1000 * 3600 * 24 * 7);
+  // Use a deterministic method to generate a "random" date for mock data to prevent hydration errors.
+  const getDeterministicDate = (id: string): Date => {
+      // Simple hash function from string to number
+      let hash = 0;
+      for (let i = 0; i < id.length; i++) {
+          const char = id.charCodeAt(i);
+          hash = ((hash << 5) - hash) + char;
+          hash = hash & hash; // Convert to 32bit integer
+      }
+      // Use the hash to get a consistent offset within the last 7 days
+      const daysAgo = Math.abs(hash) % 7;
+      const date = new Date();
+      date.setDate(date.getDate() - daysAgo);
+      return date;
+  }
+  
+  const createdAt = item.createdAt ? new Date(item.createdAt) : getDeterministicDate(item.id);
+
 
   return (
     <Card className="p-4 border-none shadow-none">

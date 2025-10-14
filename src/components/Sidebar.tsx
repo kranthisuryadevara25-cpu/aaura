@@ -1,69 +1,146 @@
 
-"use client";
-import React from "react";
-import { useLanguage } from "@/hooks/use-language";
+'use client';
+import React from 'react';
+import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
-import { Home, Sparkles, ScrollText, UserSquare, Palmtree, BookHeart, CalendarDays, PartyPopper, MessageCircle, Film, ShoppingCart, Upload, Settings, PlusCircle, Star, ShieldCheck, HandHeart, ListMusic, Trophy } from 'lucide-react';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import {
+  Home,
+  Sparkles,
+  ScrollText,
+  UserSquare,
+  Palmtree,
+  BookHeart,
+  CalendarDays,
+  PartyPopper,
+  MessageCircle,
+  Film,
+  ShoppingCart,
+  Upload,
+  Settings,
+  PlusCircle,
+  Star,
+  ShieldCheck,
+  HandHeart,
+  ListMusic,
+  Trophy,
+  ChevronRight,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { usePathname } from 'next/navigation';
 
-const MENU_ITEMS = [
-  { href: "/", label: "home", icon: Home },
-  { href: "/virtual-pooja", label: "virtualPooja", icon: HandHeart },
-  { href: "/deities", label: "deities", icon: Sparkles },
-  { href: "/stories", label: "stories", icon: ScrollText },
-  { href: "/characters", label: "characters", icon: UserSquare },
-  { href: "/temples", label: "temples", icon: Palmtree },
-  { href: "/rituals", label: "rituals", icon: BookHeart },
-  { href: "/panchang", label: "panchang", icon: CalendarDays },
-  { href: "/festivals", label: "festivals", icon: PartyPopper },
-  { href: "/horoscope", label: "horoscope", icon: Star },
-  { href: "/playlists", label: "playlists", icon: ListMusic },
-  { href: "/challenges", label: "challenges", icon: Trophy },
-  { href: "/forum", label: "forum", icon: MessageCircle },
-  { href: "/channels", label: "channels", icon: PlusCircle },
-  { href: "/media", label: "media", icon: Film },
-  { href: "/shop", label: "shop", icon: ShoppingCart },
+const mainNav = [
+  { href: '/', label: 'home', icon: Home, exact: true },
+  { href: '/virtual-pooja', label: 'virtualPooja', icon: HandHeart },
 ];
 
-const ADMIN_MENU_ITEMS = [
-  { href: "/upload", label: "upload", icon: Upload },
-  { href: "/admin/content", label: "adminContent", icon: ShieldCheck },
-  { href: "/admin/review", label: "adminReview", icon: ShieldCheck },
-  { href: "/settings", label: "settings", icon: Settings },
+const libraryNav = [
+  { href: '/deities', label: 'deities', icon: Sparkles },
+  { href: '/stories', label: 'stories', icon: ScrollText },
+  { href: '/characters', label: 'characters', icon: UserSquare },
+  { href: '/temples', label: 'temples', icon: Palmtree },
+  { href: '/rituals', label: 'rituals', icon: BookHeart },
+  { href: '/festivals', label: 'festivals', icon: PartyPopper },
 ];
 
+const communityNav = [
+  { href: '/forum', label: 'forum', icon: MessageCircle },
+  { href: '/channels', label: 'channels', icon: PlusCircle },
+  { href: '/media', label: 'media', icon: Film },
+];
 
-export const Sidebar = () => {
+const personalNav = [
+  { href: '/panchang', label: 'panchang', icon: CalendarDays },
+  { href: '/horoscope', label: 'horoscope', icon: Star },
+  { href: '/playlists', label: 'playlists', icon: ListMusic },
+  { href: '/challenges', label: 'challenges', icon: Trophy },
+];
+
+const marketplaceNav = [{ href: '/shop', label: 'shop', icon: ShoppingCart }];
+
+const adminNav = [
+  { href: '/upload', label: 'upload', icon: Upload },
+  { href: '/admin/content', label: 'adminContent', icon: ShieldCheck },
+  { href: '/admin/review', label: 'adminReview', icon: ShieldCheck },
+  { href: '/settings', label: 'settings', icon: Settings },
+];
+
+interface NavLinkProps {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  exact?: boolean;
+}
+
+const NavLink = ({ href, label, icon: Icon, exact = false }: NavLinkProps) => {
   const { t } = useLanguage();
+  const pathname = usePathname();
+  const isActive = exact ? pathname === href : pathname.startsWith(href);
 
   return (
-    <aside className="w-60 hidden md:block border-r p-4">
-      <nav className="space-y-1">
-        <h3 className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Discover</h3>
-        {MENU_ITEMS.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={label}
-            href={href}
-            className="flex items-center gap-3 py-2 px-3 rounded-md text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
-          >
-            <Icon className="h-5 w-5" />
-            <span>
-              {t.sidebar[label as keyof typeof t.sidebar] || label.charAt(0).toUpperCase() + label.slice(1)}
-            </span>
-          </Link>
+    <Link
+      href={href}
+      className={cn(
+        'flex items-center gap-3 py-2 px-3 rounded-md text-sm transition-colors',
+        isActive
+          ? 'bg-primary/10 text-primary font-semibold'
+          : 'text-foreground/70 hover:bg-secondary hover:text-foreground'
+      )}
+    >
+      <Icon className="h-5 w-5" />
+      <span>
+        {t.sidebar[label as keyof typeof t.sidebar] ||
+          label.charAt(0).toUpperCase() + label.slice(1)}
+      </span>
+    </Link>
+  );
+};
+
+interface CollapsibleNavSectionProps {
+  title: string;
+  items: NavLinkProps[];
+}
+
+const CollapsibleNavSection = ({
+  title,
+  items,
+}: CollapsibleNavSectionProps) => {
+    const pathname = usePathname();
+    const isSectionActive = items.some(item => pathname.startsWith(item.href) && item.href !== '/');
+
+  return (
+    <Collapsible defaultOpen={isSectionActive}>
+      <CollapsibleTrigger className="flex justify-between items-center w-full px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider group">
+        <span>{title}</span>
+        <ChevronRight className="h-4 w-4 transform transition-transform duration-200 group-data-[state=open]:rotate-90" />
+      </CollapsibleTrigger>
+      <CollapsibleContent className="space-y-1 pl-4 border-l border-border ml-3">
+        {items.map((item) => (
+          <NavLink key={item.label} {...item} />
         ))}
-        <h3 className="px-3 pt-4 pb-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">Manage</h3>
-         {ADMIN_MENU_ITEMS.map(({ href, label, icon: Icon }) => (
-          <Link
-            key={label}
-            href={href}
-            className="flex items-center gap-3 py-2 px-3 rounded-md text-foreground/80 hover:bg-secondary hover:text-foreground transition-colors"
-          >
-            <Icon className="h-5 w-5" />
-            <span>
-              {t.sidebar[label as keyof typeof t.sidebar] || label.charAt(0).toUpperCase() + label.slice(1)}
-            </span>
-          </Link>
-        ))}
+      </CollapsibleContent>
+    </Collapsible>
+  );
+};
+
+export const Sidebar = () => {
+  return (
+    <aside className="w-64 hidden md:block border-r p-4">
+      <nav className="space-y-2">
+        <div className="space-y-1">
+          {mainNav.map((item) => (
+            <NavLink key={item.label} {...item} />
+          ))}
+        </div>
+        <CollapsibleNavSection title="Library" items={libraryNav} />
+        <CollapsibleNavSection title="Community" items={communityNav} />
+        <CollapsibleNavSection title="Personal" items={personalNav} />
+        <CollapsibleNavSection title="Marketplace" items={marketplaceNav} />
+        <CollapsibleNavSection title="Manage" items={adminNav} />
       </nav>
     </aside>
   );

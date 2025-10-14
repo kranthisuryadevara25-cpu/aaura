@@ -99,13 +99,21 @@ export default function ForumPage() {
 
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-            <div className="text-center mb-12">
-                <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                    <Users className="h-10 w-10" /> Community Groups
-                </h1>
-                <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                    Find and join groups based on your interests to connect with fellow seekers.
-                </p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
+                <div className="text-left">
+                    <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center gap-3">
+                        <Users className="h-10 w-10" /> Community Groups
+                    </h1>
+                    <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
+                        Find and join groups based on your interests to connect with fellow seekers.
+                    </p>
+                </div>
+                <Button asChild>
+                    <Link href="/admin/groups/create">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Create Group
+                    </Link>
+                </Button>
             </div>
 
             {isLoading ? (

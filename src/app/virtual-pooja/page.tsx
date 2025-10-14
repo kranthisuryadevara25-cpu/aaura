@@ -125,7 +125,7 @@ export default function VirtualPoojaPage() {
   }
 
   return (
-    <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4">
+    <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4 [perspective:800px]">
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
         {flowers.map((id, index) => (
           <FallingFlower key={id} id={id} delay={index * 0.1} />
@@ -170,17 +170,17 @@ export default function VirtualPoojaPage() {
       </div>
 
       <div className="relative z-20 grid grid-cols-4 gap-4 md:gap-8 w-full max-w-lg mb-8 mt-auto">
-        <button onClick={() => handleInteraction('ring-bell')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'ring-bell' && 'bg-white/20')}>
+        <button onClick={() => handleInteraction('ring-bell')} className={cn("flex flex-col items-center p-2 rounded-lg transition-all duration-200 pooja-button", activeInteraction === 'ring-bell' && 'animate-wiggle')}>
             <Bell className="w-12 h-12 md:w-16 md:h-16 text-amber-300 drop-shadow-lg" />
             <p className="text-amber-200 mt-2 font-semibold text-xs md:text-sm">Ring Bell</p>
         </button>
 
-        <button onClick={() => handleInteraction('offer-flower')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'offer-flower' && 'bg-white/20')}>
+        <button onClick={() => handleInteraction('offer-flower')} className={cn("flex flex-col items-center p-2 rounded-lg transition-all duration-200 pooja-button", activeInteraction === 'offer-flower' && 'scale-110')}>
             <Flower className="w-12 h-12 md:w-16 md:h-16 text-pink-300 drop-shadow-lg" />
             <p className="text-pink-200 mt-2 font-semibold text-xs md:text-sm">Offer Flowers</p>
         </button>
 
-        <button onClick={() => handleInteraction('light-diya')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'light-diya' && 'bg-white/20')}>
+        <button onClick={() => handleInteraction('light-diya')} className={cn("flex flex-col items-center p-2 rounded-lg transition-all duration-200 pooja-button", activeInteraction === 'light-diya' && 'scale-110')}>
              <div className="relative w-12 h-12 md:w-16 md:h-16 flex items-center justify-center">
                  {diyaLit ? (
                     <>
@@ -197,13 +197,34 @@ export default function VirtualPoojaPage() {
             </p>
         </button>
 
-        <button onClick={() => handleInteraction('offer-aarti')} className={cn("flex flex-col items-center p-2 rounded-lg transition-colors", activeInteraction === 'offer-aarti' && 'bg-white/20')}>
+        <button onClick={() => handleInteraction('offer-aarti')} className={cn("flex flex-col items-center p-2 rounded-lg transition-all duration-200 pooja-button", activeInteraction === 'offer-aarti' && 'scale-110')}>
             <Sparkle className="w-12 h-12 md:w-16 md:h-16 text-orange-400 drop-shadow-lg" />
             <p className="text-orange-300 mt-2 font-semibold text-xs md:text-sm">Offer Aarti</p>
         </button>
       </div>
 
        <style jsx>{`
+        .pooja-button {
+            transform-style: preserve-3d;
+            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+            animation: float 6s ease-in-out infinite;
+        }
+        .pooja-button:hover {
+            transform: translateY(-5px) translateZ(10px);
+        }
+        .pooja-button:active {
+            transform: translateY(1px) translateZ(0px) scale(0.95);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.5) inset;
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+            100% { transform: translateY(0px); }
+        }
+        .pooja-button:nth-child(2) { animation-delay: 1.5s; }
+        .pooja-button:nth-child(3) { animation-delay: 3s; }
+        .pooja-button:nth-child(4) { animation-delay: 4.5s; }
+        
         @keyframes fall {
           from {
             transform: translateY(-10vh) rotate(0deg);
@@ -219,15 +240,15 @@ export default function VirtualPoojaPage() {
           animation-timing-function: linear;
         }
         @keyframes flicker {
-          0%, 100% { transform: scale(1, 1); opacity: 1; }
-          50% { transform: scale(0.95, 1.05); opacity: 0.85; }
+          0%, 100% { transform: scale(1, 1) rotate(2deg); opacity: 1; }
+          50% { transform: scale(0.95, 1.05) rotate(-2deg); opacity: 0.85; }
         }
         .animate-flicker {
-            animation: flicker 1.5s ease-in-out infinite;
+            animation: flicker 0.15s ease-in-out infinite;
         }
         @keyframes pulse-glow {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.05); }
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
         }
         .animate-pulse-glow {
             animation: pulse-glow 3s ease-in-out infinite;

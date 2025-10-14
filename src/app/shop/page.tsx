@@ -8,7 +8,7 @@ import { ShoppingCart, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, doc, setDoc, serverTimestamp, getDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, getDoc, runTransaction, increment } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/firebase/provider';
@@ -38,22 +38,30 @@ export default function ShopPage() {
     startTransition(async () => {
         try {
             const cartRef = doc(db, 'users', user.uid, 'cart', productId);
-            const productRef = doc(db, 'products', productId);
 
-            const productSnap = await getDoc(productRef);
-            if (!productSnap.exists()) {
-                throw new Error("Product not found");
-            }
-            const productData = productSnap.data();
+            await runTransaction(db, async (transaction) => {
+                const cartDoc = await transaction.get(cartRef);
+                const productRef = doc(db, 'products', productId);
+                const productSnap = await transaction.get(productRef);
 
-            await setDoc(cartRef, {
-                productId: productId,
-                quantity: 1,
-                addedAt: serverTimestamp(),
-                price: productData.price,
-                name_en: productData.name_en,
-                imageUrl: productData.imageUrl,
-            }, { merge: true });
+                if (!productSnap.exists()) {
+                    throw "Product not found";
+                }
+                const productData = productSnap.data();
+
+                if (cartDoc.exists()) {
+                    transaction.update(cartRef, { quantity: increment(1) });
+                } else {
+                     transaction.set(cartRef, {
+                        productId: productId,
+                        quantity: 1,
+                        addedAt: serverTimestamp(),
+                        price: productData.price,
+                        name_en: productData.name_en,
+                        imageUrl: productData.imageUrl,
+                    });
+                }
+            });
 
             toast({
                 title: "Added to Cart",

@@ -27,8 +27,8 @@ const AuthorAvatar = ({ userId }: { userId: string }) => {
   return (
      <div className="w-10 h-10 shrink-0">
         <Avatar>
-            <AvatarImage src={author?.photoURL} />
-            <AvatarFallback>{author?.displayName?.[0] || 'A'}</AvatarFallback>
+            <AvatarImage src={author.photoURL} />
+            <AvatarFallback>{author.displayName?.[0] || 'A'}</AvatarFallback>
         </Avatar>
      </div>
   )
@@ -47,7 +47,7 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
     switch (item.type) {
         case 'media':
         case 'video':
-            return `/watch/${item.id}`;
+             return `/watch/${item.id}`;
         case 'temple':
             return `/temples/${item.slug}`;
         case 'story':
@@ -62,10 +62,10 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
     }
   }
 
-  const title = getText(item.title_en ? { en: item.title_en, hi: item.title_hi, te: item.title_te } : (item.title || item.name));
+  const title = getText(item.title_en ? { en: item.title_en, hi: item.title_hi, te: item.title_te } : (item.title || item.name || item.name_en));
   const description = getText(item.description_en ? { en: item.description_en, hi: item.description_hi, te: item.description_te } : (item.description || item.summary || item.location));
-  const authorName = item.userId || item.author?.name;
-  const thumbnail = item.thumbnailUrl || item.image?.url;
+  const authorName = item.userId || item.authorId;
+  const thumbnail = item.thumbnailUrl || item.image?.url || item.imageUrl;
   
   const createdAt = item.uploadDate?.toDate() || item.createdAt?.toDate() || null;
 

@@ -4,14 +4,14 @@
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
-import { collection, doc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, doc, deleteDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
 import { Loader2, ShoppingCart, Trash2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition } from 'react';
+import { useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createRazorpayOrder } from '@/ai/flows/create-razorpay-order';
 
@@ -61,11 +61,15 @@ export default function CartPage() {
         const firstProduct = cartItems[0];
         
         toast({ title: 'Initiating secure payment...' });
+
+        // The AI flow is designed for a single product ID verification.
+        // For a multi-item cart, we pass the first one for the server-side price check logic.
+        // The total amount is what's actually charged.
         const order = await createRazorpayOrder({
             amount: totalAmount * 100, // Amount in paise
             currency: 'INR',
             receipt: `receipt_cart_${new Date().getTime()}`,
-            productId: firstProduct.productId, // Placeholder
+            productId: firstProduct.productId, 
         });
         
         if (!order || !order.id) {
@@ -85,7 +89,7 @@ export default function CartPage() {
                 const batch = writeBatch(db);
                 const orderRef = doc(collection(db, 'users', user.uid, 'orders'));
                 batch.set(orderRef, {
-                    id: order.id,
+                    id: orderRef.id,
                     userId: user.uid,
                     items: cartItems,
                     totalAmount: totalAmount,
@@ -148,6 +152,9 @@ export default function CartPage() {
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
     document.body.appendChild(script);
+     return () => {
+      document.body.removeChild(script);
+    };
   }, []);
 
   if (authLoading || cartLoading) {

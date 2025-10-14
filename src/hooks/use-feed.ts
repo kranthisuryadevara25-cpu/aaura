@@ -15,12 +15,13 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
     return field[lang] || field["en"] || "";
 };
 
-const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity' | 'post'): FeedItem => {
+const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity' | 'post' | 'media'): FeedItem => {
     const data = doc.data();
     switch(kind) {
         case 'video':
+        case 'media':
              return {
-                id: `video-${doc.id}`,
+                id: `media-${doc.id}`,
                 kind: "video",
                 title: data.title_en ? { en: data.title_en, hi: data.title_hi, te: data.title_te } : data.title,
                 description: data.description_en ? { en: data.description_en, hi: data.description_hi, te: data.description_te } : data.description,

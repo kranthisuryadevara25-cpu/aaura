@@ -1,23 +1,21 @@
 
 'use client';
-import { useParams } from 'next/navigation';
-import { useEffect, useState, useTransition } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useTransition } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useAuth } from '@/lib/firebase/provider';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
+import { doc } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { createRazorpayOrder } from '@/ai/flows/create-razorpay-order';
 import { Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useLanguage } from '@/hooks/use-language';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const products = [
-    { id: '1', name: 'Handcrafted Ganesha Idol', price: 49.99, imageUrl: 'https://picsum.photos/seed/idol/400/400', imageHint: 'Ganesha idol', description: 'A beautiful, handcrafted Ganesha idol for your home altar.' },
-    { id: '2', name: 'Premium Sandalwood Incense Sticks', price: 12.99, imageUrl: 'https://picsum.photos/seed/incense/400/400', imageHint: 'incense sticks', description: 'Create a serene atmosphere with these aromatic incense sticks.' },
-    { id: '3', name: 'The Bhagavad Gita: A New Translation', price: 19.99, imageUrl: 'https://picsum.photos/seed/book/400/400', imageHint: 'spiritual book', description: 'A modern, accessible translation of the timeless Hindu scripture.' },
-    { id: '4', name: 'Brass Pooja Thali Set', price: 79.99, imageUrl: 'https://picsum.photos/seed/thali/400/400', imageHint: 'pooja thali', description: 'A complete set for your daily pooja rituals, made from pure brass.' },
-];
-
+// This is required to extend the window object for Razorpay
 declare global {
     interface Window {
         Razorpay: any;
@@ -26,12 +24,16 @@ declare global {
 
 export default function CheckoutPage() {
     const params = useParams();
+    const router = useRouter();
     const productId = params.productId as string;
-    const product = products.find(p => p.id === productId);
-
+    
+    const { language } = useLanguage();
     const auth = useAuth();
-    const [user] = useAuthState(auth);
+    const db = useFirestore();
     const { toast } = useToast();
+    
+    const [user, authLoading] = useAuthState(auth);
+    const [product, productLoading] = useDocumentData(doc(db, 'products', productId));
     const [isPending, startTransition] = useTransition();
 
     useEffect(() => {
@@ -53,11 +55,12 @@ export default function CheckoutPage() {
 
         startTransition(async () => {
             try {
+                toast({ title: 'Initiating secure payment...' });
                 const order = await createRazorpayOrder({
                     amount: product.price * 100, // Amount in paise
                     currency: 'INR',
                     receipt: `receipt_order_${new Date().getTime()}`,
-                    productId: product.id,
+                    productId: productId,
                 });
                 
                 if (!order || !order.id) {
@@ -68,9 +71,9 @@ export default function CheckoutPage() {
                     key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
                     amount: order.amount,
                     currency: order.currency,
-                    name: 'Aaura Super App',
-                    description: `Payment for ${product.name}`,
-                    image: 'https://picsum.photos/seed/logo/128/128',
+                    name: 'Aaura',
+                    description: `Payment for ${product[`name_${language}`] || product.name_en}`,
+                    image: 'https://picsum.photos/seed/logo/128/128', // Replace with your app logo
                     order_id: order.id,
                     handler: function (response: any) {
                         toast({
@@ -79,13 +82,19 @@ export default function CheckoutPage() {
                         });
                         // Here you would typically verify the payment signature on your backend
                         // and then update the order status in Firestore.
+                        router.push('/shop');
                     },
                     prefill: {
                         name: user.displayName || 'Aaura User',
                         email: user.email,
+                        contact: user.phoneNumber
+                    },
+                    notes: {
+                        productId: productId,
+                        userId: user.uid,
                     },
                     theme: {
-                        color: '#F59E0B',
+                        color: '#E6E6FA', // Soft Lavender
                     },
                 };
 
@@ -99,20 +108,43 @@ export default function CheckoutPage() {
                 });
                 rzp.open();
 
-            } catch (error) {
+            } catch (error: any) {
                 console.error("Payment initiation failed:", error);
                 toast({
                     variant: 'destructive',
                     title: 'Payment Error',
-                    description: 'Could not initiate payment. Please try again.',
+                    description: error.message || 'Could not initiate payment. Please try again.',
                 });
             }
         });
     };
 
+    if (authLoading || productLoading) {
+        return (
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </main>
+        );
+    }
+    
+    if (!user) {
+        return (
+             <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
+                <Alert className="max-w-md">
+                  <AlertTitle>Please Log In</AlertTitle>
+                  <AlertDescription>You need to be logged in to complete a purchase.</AlertDescription>
+                </Alert>
+            </main>
+        )
+    }
+
     if (!product) {
         return <div className="flex-grow container mx-auto px-4 py-8 md:py-16 text-center">Product not found.</div>;
     }
+    
+    const name = product[`name_${language}`] || product.name_en;
+    const description = product[`description_${language}`] || product.description_en;
+
 
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
@@ -123,13 +155,13 @@ export default function CheckoutPage() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <div className="flex items-center gap-4">
-                        <div className="relative w-24 h-24 rounded-md overflow-hidden">
-                           <Image src={product.imageUrl} alt={product.name} fill className="object-cover" />
+                        <div className="relative w-24 h-24 rounded-md overflow-hidden border">
+                           <Image src={product.imageUrl} alt={name} fill className="object-cover" />
                         </div>
                         <div>
-                            <h3 className="font-semibold">{product.name}</h3>
-                            <p className="text-muted-foreground text-sm">{product.description}</p>
-                            <p className="font-bold text-primary text-lg mt-1">${product.price.toFixed(2)}</p>
+                            <h3 className="font-semibold">{name}</h3>
+                            <p className="text-muted-foreground text-sm line-clamp-2">{description}</p>
+                            <p className="font-bold text-primary text-lg mt-1">₹{product.price.toFixed(2)}</p>
                         </div>
                     </div>
                 </CardContent>

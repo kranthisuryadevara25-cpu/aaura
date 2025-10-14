@@ -10,11 +10,28 @@ import Link from 'next/link';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/lib/firebase/provider';
+import { useAuthState } from 'react-firebase-hooks/auth';
 
 export default function ShopPage() {
   const { t, language } = useLanguage();
   const db = useFirestore();
+  const auth = useAuth();
+  const [user] = useAuthState(auth);
+  const { toast } = useToast();
   const [products, isLoading] = useCollectionData(collection(db, 'products'), { idField: 'id' });
+
+  const handleAddToCart = (e: React.MouseEvent, productId: string) => {
+    if (!user) {
+      e.preventDefault();
+      toast({
+        variant: 'destructive',
+        title: "Login Required",
+        description: "You must be logged in to add items to your cart.",
+      });
+    }
+  };
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -48,17 +65,14 @@ export default function ShopPage() {
                 </CardContent>
                 <CardHeader>
                     <CardTitle className="text-foreground">{name}</CardTitle>
-                    <CardDescription className="text-lg font-semibold text-primary">${product.price.toFixed(2)}</CardDescription>
+                    <CardDescription className="text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</CardDescription>
                 </CardHeader>
                 <CardContent className="mt-auto flex flex-col gap-2">
-                    <Button className="w-full">
-                        <ShoppingCart className="mr-2" />
+                    <Button asChild className="w-full">
+                      <Link href={`/checkout/${product.id}`} onClick={(e) => handleAddToCart(e, product.id)}>
+                        <ShoppingCart className="mr-2 h-4 w-4" />
                         {t.buttons.addToCart}
-                    </Button>
-                    <Button asChild className="w-full" variant="secondary">
-                    <Link href={`/checkout/${product.id}`}>
-                        {t.buttons.buyNow}
-                    </Link>
+                      </Link>
                     </Button>
                 </CardContent>
                 </Card>

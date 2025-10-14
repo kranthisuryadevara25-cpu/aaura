@@ -12,6 +12,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import Razorpay from 'razorpay';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase/server';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
@@ -62,11 +64,31 @@ const createRazorpayOrderFlow = ai.defineFlow(
     name: 'createRazorpayOrderFlow',
     inputSchema: CreateRazorpayOrderInputSchema,
     outputSchema: CreateRazorpayOrderOutputSchema,
+    authPolicy: (auth, input) => {
+        if (!auth) {
+          throw new Error("User must be authenticated to create an order.");
+        }
+    }
   },
   async (input) => {
     
     if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
       throw new Error("Razorpay credentials are not configured in the environment.");
+    }
+    
+    // Fetch product from Firestore to verify price on the server
+    const productRef = doc(db, 'products', input.productId);
+    const productSnap = await getDoc(productRef);
+
+    if (!productSnap.exists()) {
+        throw new Error("Product not found.");
+    }
+    const productData = productSnap.data();
+    const serverPriceInPaise = productData.price * 100;
+
+    // Security check: Verify the amount from the client matches the server's price
+    if (input.amount !== serverPriceInPaise) {
+        throw new Error(`Price mismatch. Client requested ${input.amount}, but server price is ${serverPriceInPaise}.`);
     }
 
     const instance = new Razorpay({
@@ -75,7 +97,7 @@ const createRazorpayOrderFlow = ai.defineFlow(
     });
 
     const options = {
-      amount: input.amount,
+      amount: serverPriceInPaise, // Use the server-verified price
       currency: input.currency,
       receipt: input.receipt,
       notes: {
@@ -85,9 +107,9 @@ const createRazorpayOrderFlow = ai.defineFlow(
     
     try {
       const order = await instance.orders.create(options);
-      // TODO: Here, you should also create an 'order' document in your Firestore
-      // `orders` collection with a status of 'created'. This document would
-      // be updated later via webhooks from Razorpay.
+      // In a real app, you would create an 'order' document in Firestore
+      // with a 'created' status here. This document would be updated
+      // later by a webhook from Razorpay upon payment success/failure.
 
       return order;
 

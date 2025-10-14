@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Bell, Flower, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
@@ -13,13 +13,13 @@ import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
-import { deities, type Deity } from '@/lib/deities'; // Import deities data
+import { deities, type Deity } from '@/lib/deities'; 
 
 // Component for the falling flower animation
 const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
   <Flower
     key={id}
-    className="absolute top-[-50px] w-8 h-8 text-yellow-500 animate-fall"
+    className="absolute top-[-50px] w-8 h-8 text-yellow-400 animate-fall"
     style={{ 
         left: `${Math.random() * 90 + 5}%`,
         animationDelay: `${delay}s`,
@@ -65,18 +65,17 @@ export default function VirtualPoojaPage() {
         case 'ring-bell':
           setBellRinging(true);
           new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_200821584b.mp3').play().catch(e => console.error("Error playing audio:", e));
-          setTimeout(() => setBellRinging(false), 800); // Animation duration
+          setTimeout(() => setBellRinging(false), 800);
           toast({ title: 'You rang the divine bell.' });
           break;
         case 'offer-flower':
            const newFlowerId = Date.now();
-           // Add a small burst of flowers at once
            const newFlowers = Array.from({ length: 5 }, (_, i) => newFlowerId + i);
            setFlowers(prev => [...prev, ...newFlowers]);
            newFlowers.forEach(id => {
                 setTimeout(() => {
                     setFlowers(prev => prev.filter(flowerId => flowerId !== id));
-                }, 7000); // Remove flower after animation
+                }, 7000);
            })
           toast({ title: 'You offered flowers to the divine.' });
           break;
@@ -93,7 +92,7 @@ export default function VirtualPoojaPage() {
   
   if (!selectedDeity) {
       return (
-        <main className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+        <main className="min-h-screen w-full flex flex-col items-center justify-center bg-background dark:bg-gray-900 p-4">
              <div className="text-center mb-8">
                 <h1 className="text-3xl md:text-5xl font-headline font-bold tracking-tight text-primary">
                     Select a Deity for Pooja
@@ -122,7 +121,6 @@ export default function VirtualPoojaPage() {
 
   return (
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4">
-      {/* This container is for the falling flowers */}
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
         {flowers.map((id, index) => (
           <FallingFlower key={id} id={id} delay={index * 0.1} />

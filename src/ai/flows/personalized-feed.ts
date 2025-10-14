@@ -10,34 +10,8 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
-import { getFirestore, type Firestore } from 'firebase-admin/firestore';
-
-// --- Server-Side Firebase Admin Initialization ---
-let adminApp: App;
-let db: Firestore;
-
-function initializeFirebaseAdmin() {
-  if (getApps().some(app => app.name === 'firebase-admin-personalized-feed')) {
-    adminApp = getApps().find(app => app.name === 'firebase-admin-personalized-feed')!;
-  } else {
-    try {
-      // Use require for robust loading in server environments.
-      const serviceAccount = require('../../../serviceAccountKey.json');
-
-      adminApp = initializeApp(
-        {
-          credential: cert(serviceAccount),
-        },
-        'firebase-admin-personalized-feed' // Use a unique name for this instance
-      );
-    } catch (error: any) {
-      console.error('🔥 Firebase Admin SDK initialization failed:', error);
-      throw new Error(`Firebase Admin SDK could not be initialized: ${error.message}`);
-    }
-  }
-  db = getFirestore(adminApp);
-}
+import { db } from '@/lib/firebase/server'; // Use the isolated server instance
+import type { Firestore } from 'firebase-admin/firestore';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
@@ -91,20 +65,17 @@ const personalizedFeedFlow = ai.defineFlow(
     outputSchema: PersonalizedFeedOutputSchema,
   },
   async (input) => {
-    initializeFirebaseAdmin(); // Ensure Firebase Admin is initialized
-    
     const { userId, pageSize } = input;
     
     if (!userId || await isUserNew(db, userId)) {
         // --- Fallback for New Users / Logged-out users ---
-        // For new users, we can't personalize yet. So, we return recent and trending content.
         console.log(`New or logged-out user detected. Returning trending content.`);
         return getTrendingContent(db, pageSize);
     }
 
     // --- Algorithm for Existing Users ---
     
-    // 1. Fetch User Interaction Data (e.g., last 50 interactions)
+    // 1. Fetch User Interaction Data
     const userLikes = await fetchUserInteractions(db, userId, 'likes'); 
     const userBookmarks = await fetchUserInteractions(db, userId, 'bookmarks');
 
@@ -119,9 +90,9 @@ const personalizedFeedFlow = ai.defineFlow(
         let score = 0;
         let reason = "Recommended based on recent uploads.";
 
-        // Recency Score (e.g., items from today get a higher base score)
+        // Recency Score
         const hoursSinceCreation = (new Date().getTime() - item.createdAt.getTime()) / (1000 * 60 * 60);
-        score += Math.max(0, 10 - Math.floor(hoursSinceCreation / 24)); // Higher score for newer items
+        score += Math.max(0, 10 - Math.floor(hoursSinceCreation / 24));
 
         // Engagement Score
         if (userLikes.some(l => l.contentId === item.contentId)) {
@@ -134,11 +105,10 @@ const personalizedFeedFlow = ai.defineFlow(
         }
         
         // Content Type preference
-        if(item.contentType === 'media') score += 15; // Prioritize videos
-        if(item.contentType === 'post') score += 10; // Then Q&A
+        if(item.contentType === 'media') score += 15;
+        if(item.contentType === 'post') score += 10;
 
-        // Popularity/Trending Score (placeholder)
-        // In a real app, this would come from an aggregation (e.g., total likes/views in last 24h)
+        // Popularity Score
         score += item.popularityScore || 0;
         
         return {
@@ -151,8 +121,8 @@ const personalizedFeedFlow = ai.defineFlow(
 
     // 4. Sort and Paginate
     const finalFeed = scoredContent
-        .sort((a, b) => b.score - a.score) // Sort descending by score
-        .filter((_, index) => index < (pageSize || 20)); // Take the top N items
+        .sort((a, b) => b.score - a.score)
+        .slice(0, pageSize || 20);
 
     return { feed: finalFeed };
   }
@@ -163,25 +133,16 @@ const personalizedFeedFlow = ai.defineFlow(
 // 4. Helper & Placeholder Functions
 // ---------------------------------------------------
 
-/**
- * Placeholder function to check if a user is new.
- */
 async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
     try {
         const userDoc = await db.collection('users').doc(userId).get();
-        // A user is new if they don't have a profile or haven't completed it.
         return !userDoc.exists || !userDoc.data()?.profileComplete;
     } catch {
         return true;
     }
 }
 
-/**
- * Placeholder function to get globally trending content for new users.
- */
 async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
-    // A real implementation would fetch pre-aggregated trending data.
-    // For now, fetch latest media and posts.
     const mediaQuery = db.collection('media').orderBy('uploadDate', 'desc').limit(10);
     const postsQuery = db.collection('posts').orderBy('createdAt', 'desc').limit(10);
 
@@ -208,23 +169,16 @@ async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise
     return { feed: feedItems };
 }
 
-/**
- * Placeholder to fetch user interactions (likes, bookmarks).
- */
 async function fetchUserInteractions(db: Firestore, userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
     try {
         const q = db.collection('users').doc(userId).collection(interactionType).limit(50);
         const snap = await q.get();
-        // This is a simplified version; a real app might need content type info here
         return snap.docs.map(d => ({ contentId: d.id, contentType: 'unknown' }));
     } catch {
         return [];
     }
 }
 
-/**
- * Placeholder to fetch recent content from a collection.
- */
 async function fetchRecentContent(
     db: Firestore,
     collectionName: 'media' | 'posts' | 'stories', 
@@ -239,7 +193,6 @@ async function fetchRecentContent(
             const data = d.data();
             const popularity = (data.likes || 0) + (data.views || 0) / 10;
             const createdAtTimestamp = data[dateField];
-            // Ensure createdAt is a Date object, handling Firestore Timestamps
             const createdAt = createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date();
 
             return {

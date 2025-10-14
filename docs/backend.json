@@ -43,14 +43,6 @@
             "description": "User's time of birth.",
             "format": "time"
         },
-        "fatherName": {
-            "type": "string",
-            "description": "User's father's name."
-        },
-        "motherName": {
-            "type": "string",
-            "description": "User's mother's name."
-        },
         "creationTimestamp": {
           "type": "string",
           "description": "Timestamp of user account creation.",
@@ -67,6 +59,10 @@
         "followingCount": {
           "type": "number",
           "description": "The number of channels this user is following."
+        },
+        "welcomeMessage": {
+            "type": "string",
+            "description": "A personalized welcome message for new users."
         }
       },
       "required": [
@@ -82,8 +78,25 @@
         "language": {
           "type": "string",
           "description": "The user's preferred language code (e.g., 'en', 'hi')."
+        },
+        "favoriteDeities": {
+            "type": "array",
+            "description": "A list of favorite deity slugs for content personalization.",
+            "items": { "type": "string" }
         }
       }
+    },
+    "Badge": {
+        "title": "Badge",
+        "type": "object",
+        "description": "Represents a gamification badge awarded to a user.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique ID for the badge (e.g., 'spiritual-seeker')." },
+            "name": { "type": "string", "description": "Display name of the badge." },
+            "description": { "type": "string", "description": "What the user did to earn the badge." },
+            "awardedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the badge was awarded." }
+        },
+        "required": ["id", "name", "awardedAt"]
     },
     "Media": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -646,6 +659,14 @@
           "description": "Stores user preferences, using a singleton document 'default'."
         }
       },
+       {
+        "path": "/users/{userId}/badges/{badgeId}",
+        "definition": {
+          "entityName": "Badge",
+          "schema": { "$ref": "#/entities/Badge" },
+          "description": "Stores gamification badges awarded to the user."
+        }
+      },
       {
         "path": "/users/{userId}/bookmarks/{bookmarkId}",
         "definition": {
@@ -791,6 +812,6 @@
           }
       }
     ],
-    "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, preferences and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
+    "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. Media, Channels, Deities, Shops, Products, Temples, Festivals, Stories, Characters, Rituals and Posts are in top-level collections for easy querying. User-specific data like subscriptions, bookmarks, preferences, badges and horoscopes are nested under the user's document for security and scalability. Reviews are a subcollection of temples, and comments are a subcollection of posts. This structure supports a multi-vendor marketplace, public content feeds, a detailed temple library, festival calendar, and personalized user content while keeping data organized."
   }
 }

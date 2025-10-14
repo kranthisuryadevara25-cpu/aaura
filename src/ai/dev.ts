@@ -10,3 +10,4 @@ import '@/ai/flows/deity-daily-relevance.ts';
 import '@/ai/flows/personalized-feed.ts';
 import '@/ai/flows/create-razorpay-order.ts';
 import '@/ai/ai-content-moderation.ts';
+import '@/ai/flows/onboarding-insights.ts';

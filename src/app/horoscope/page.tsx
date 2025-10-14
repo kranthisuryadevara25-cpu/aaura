@@ -16,12 +16,14 @@ export default function HoroscopePage() {
   const auth = useAuth();
   const db = useFirestore();
   const [user, authLoading] = useAuthState(auth);
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const horoscopeRef = user ? doc(db, `users/${user.uid}/horoscopes/daily`) : undefined;
   const [horoscope, horoscopeLoading] = useDocumentData(horoscopeRef);
 
   const isLoading = authLoading || horoscopeLoading;
+  
+  const horoscopeText = horoscope?.[`text_${language}`] || horoscope?.text_en || horoscope?.text;
 
   if (isLoading) {
     return (
@@ -48,7 +50,7 @@ export default function HoroscopePage() {
     );
   }
 
-  if (!horoscope) {
+  if (!horoscope || !horoscopeText) {
     return (
       <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
           <Alert>
@@ -57,7 +59,7 @@ export default function HoroscopePage() {
               <AlertDescription>
                    {t.horoscope.noHoroscopeDescription}
                   <Button asChild className="mt-4">
-                      <Link href="/settings">{t.horoscope.setupProfileButton}</Link>
+                      <Link href="/profile/setup">{t.horoscope.setupProfileButton}</Link>
                   </Button>
               </AlertDescription>
           </Alert>
@@ -81,12 +83,12 @@ export default function HoroscopePage() {
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
               <span>{horoscope.zodiacSign}</span>
-              <span className="text-sm font-normal text-muted-foreground">{horoscope.date}</span>
+              <span className="text-sm font-normal text-muted-foreground">{new Date(horoscope.date).toLocaleDateString()}</span>
             </CardTitle>
             <CardDescription>{t.horoscope.dailyReading}</CardDescription>
           </CardHeader>
           <CardContent>
-            <p className="text-lg text-foreground/90 leading-relaxed">{horoscope.text_en || horoscope.text}</p>
+            <p className="text-lg text-foreground/90 leading-relaxed">{horoscopeText}</p>
           </CardContent>
         </Card>
       </div>

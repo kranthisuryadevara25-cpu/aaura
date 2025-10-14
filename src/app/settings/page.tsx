@@ -43,8 +43,6 @@ const formSchema = z.object({
   birthDate: z.date({ required_error: 'Please select your birth date.' }),
   timeOfBirth: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please use HH:MM format.'),
   placeOfBirth: z.string().min(1, 'Place of birth is required.'),
-  fatherName: z.string().min(1, "Father's name is required."),
-  motherName: z.string().min(1, "Mother's name is required."),
   zodiacSign: z.string({ required_error: 'Please select your zodiac sign.' }),
 });
 
@@ -96,8 +94,6 @@ export default function SettingsPage() {
         birthDate: initialBirthDate,
         timeOfBirth: userData.timeOfBirth || '12:00',
         placeOfBirth: userData.placeOfBirth || '',
-        fatherName: userData.fatherName || '',
-        motherName: userData.motherName || '',
         zodiacSign: userData.zodiacSign || '',
       });
       if (initialBirthDate) {
@@ -287,32 +283,6 @@ export default function SettingsPage() {
                         </SelectContent>
                       </Select>
                       <FormDescription>This is automatically detected from your birth date.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                  <FormField
-                  control={form.control}
-                  name="fatherName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Father's Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Father's full name" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="motherName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mother's Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Mother's full name" {...field} />
-                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}

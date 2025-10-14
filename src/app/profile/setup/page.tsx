@@ -17,36 +17,42 @@ import {
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon, Loader2, Save } from 'lucide-react';
+import { CalendarIcon, Loader2, Save, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parse, isValid } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { doc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, setDoc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { zodiacSigns } from '@/lib/zodiac';
 import { useTransition, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from 'firebase/auth';
-import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope';
+import { generateOnboardingInsights } from '@/ai/flows/onboarding-insights';
+import { deities } from '@/lib/deities';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Progress } from '@/components/ui/progress';
 
-const formSchema = z.object({
+const step1Schema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
   birthDate: z.date({ required_error: 'Please select your birth date.' }),
   timeOfBirth: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please use HH:MM format.'),
   placeOfBirth: z.string().min(1, 'Place of birth is required.'),
-  fatherName: z.string().min(1, "Father's name is required."),
-  motherName: z.string().min(1, "Mother's name is required."),
-  zodiacSign: z.string(), // Not required, will be auto-detected
 });
+
+const step2Schema = z.object({
+  favoriteDeities: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: 'You have to select at least one deity.',
+  }),
+});
+
+const formSchema = step1Schema.merge(step2Schema);
 
 type FormValues = z.infer<typeof formSchema>;
 
-const getZodiacSign = (date: Date): (typeof zodiacSigns)[number] => {
+const getZodiacSign = (date: Date): string => {
   const day = date.getDate();
   const month = date.getMonth() + 1;
-
   if ((month === 3 && day >= 21) || (month === 4 && day <= 19)) return 'Aries';
   if ((month === 4 && day >= 20) || (month === 5 && day <= 20)) return 'Taurus';
   if ((month === 5 && day >= 21) || (month === 6 && day <= 20)) return 'Gemini';
@@ -68,30 +74,40 @@ export default function ProfileSetupPage() {
   const db = useFirestore();
   const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const steps = [
+    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] },
+    { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] },
+    { title: 'Get your first horoscope', schema: z.object({}), fields: [] },
+  ];
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(steps[currentStep].schema),
     defaultValues: {
       fullName: user?.displayName || '',
       placeOfBirth: '',
       timeOfBirth: '12:00',
-      fatherName: '',
-      motherName: '',
+      favoriteDeities: [],
     },
   });
-  
+
   const birthDateValue = form.watch('birthDate');
-  const [dateInputValue, setDateInputValue] = useState(
-    birthDateValue ? format(birthDateValue, 'yyyy-MM-dd') : ''
-  );
+  const [dateInputValue, setDateInputValue] = useState('');
 
   useEffect(() => {
     if (birthDateValue) {
       setDateInputValue(format(birthDateValue, 'yyyy-MM-dd'));
-      const sign = getZodiacSign(birthDateValue);
-      form.setValue('zodiacSign', sign);
     }
-  }, [birthDateValue, form]);
+  }, [birthDateValue]);
+
+  const nextStep = async () => {
+    const isValid = await form.trigger(steps[currentStep].fields as any);
+    if (isValid) {
+      setCurrentStep((prev) => prev + 1);
+    }
+  };
+  const prevStep = () => setCurrentStep((prev) => prev - 1);
 
 
   const onSubmit = (data: FormValues) => {
@@ -109,35 +125,49 @@ export default function ProfileSetupPage() {
         
         await updateProfile(currentUser, { displayName: data.fullName });
         
+        const insights = await generateOnboardingInsights({
+          zodiacSign,
+          birthDate: formattedBirthDate,
+          favoriteDeities: data.favoriteDeities,
+        });
+
+        const batch = writeBatch(db);
+
+        const userProfileRef = doc(db, `users/${currentUser.uid}`);
         const userProfileData = {
           email: currentUser.email,
           fullName: data.fullName,
           birthDate: formattedBirthDate,
           timeOfBirth: data.timeOfBirth,
           placeOfBirth: data.placeOfBirth,
-          fatherName: data.fatherName,
-          motherName: data.motherName,
           zodiacSign,
           profileComplete: true,
           creationTimestamp: serverTimestamp(),
           followerCount: 0,
           followingCount: 0,
+          welcomeMessage: insights.welcomeMessage, // Save welcome message
         };
-        
-        await setDoc(doc(db, `users/${currentUser.uid}`), userProfileData, { merge: true });
+        batch.set(userProfileRef, userProfileData, { merge: true });
 
-        const horoscopeResult = await generatePersonalizedHoroscope({
-          zodiacSign: zodiacSign,
-          birthDate: formattedBirthDate,
-        });
-        
+        const horoscopeRef = doc(db, `users/${currentUser.uid}/horoscopes/daily`);
         const horoscopeData = {
           userId: currentUser.uid,
           date: format(new Date(), 'yyyy-MM-dd'),
           zodiacSign: zodiacSign,
-          text: horoscopeResult.horoscope,
+          text_en: insights.horoscope,
+          text_hi: insights.horoscope,
         };
-        await setDoc(doc(db, `users/${currentUser.uid}/horoscopes/daily`), horoscopeData, { merge: true });
+        batch.set(horoscopeRef, horoscopeData, { merge: true });
+
+        const badgeRef = doc(db, `users/${currentUser.uid}/badges/spiritual-seeker`);
+        batch.set(badgeRef, {
+            id: 'spiritual-seeker',
+            name: 'Spiritual Seeker',
+            description: 'Completed the initial onboarding.',
+            awardedAt: serverTimestamp(),
+        });
+        
+        await batch.commit();
 
         toast({
           title: 'Profile Complete!',
@@ -161,140 +191,194 @@ export default function ProfileSetupPage() {
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
         <Card className="w-full max-w-2xl">
         <CardHeader>
-            <CardTitle>Complete Your Profile</CardTitle>
+            <CardTitle>{steps[currentStep].title}</CardTitle>
             <CardDescription>
-            A few more details will help us personalize your spiritual journey.
+                A few more details will help us personalize your spiritual journey.
             </CardDescription>
+            <Progress value={((currentStep + 1) / steps.length) * 100} className="w-full mt-2" />
         </CardHeader>
         <CardContent>
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                <FormField
-                    control={form.control}
-                    name="fullName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Full Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Your full name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="birthDate"
-                    render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Birth Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <div className="relative w-[240px]">
-                              <FormControl>
-                                <Input
-                                  value={dateInputValue}
-                                  onChange={(e) => setDateInputValue(e.target.value)}
-                                  onBlur={() => {
-                                    const parsedDate = parse(dateInputValue, 'yyyy-MM-dd', new Date());
-                                    if (isValid(parsedDate)) {
-                                      field.onChange(parsedDate);
-                                    }
-                                  }}
-                                  placeholder="YYYY-MM-DD"
-                                />
-                              </FormControl>
-                              <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
-                            </div>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value}
-                              onSelect={(date) => {
-                                field.onChange(date);
-                                if (date) {
-                                  setDateInputValue(format(date, 'yyyy-MM-dd'));
-                                }
-                              }}
-                              disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
-                              initialFocus
-                              fromYear={1900}
-                              toYear={new Date().getFullYear()}
-                              captionLayout="dropdown-buttons"
-                            />
-                          </PopoverContent>
-                        </Popover>
-                          <FormDescription>You can type your birth date (YYYY-MM-DD) or pick one from the calendar.</FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="timeOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Time of Birth</FormLabel>
-                        <FormControl>
-                          <Input type="time" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="placeOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Place of Birth</FormLabel>
-                        <FormControl>
-                          <Input placeholder="City, Country" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="fatherName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Father's Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Father's full name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="motherName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Mother's Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Mother's full name" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                <Button type="submit" disabled={isPending}>
-                {isPending ? (
+                {currentStep === 0 && (
                     <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Saving...
-                    </>
-                ) : (
-                    <>
-                        <Save className="mr-2 h-4 w-4" />
-                        Save and Continue
+                        <FormField
+                            control={form.control}
+                            name="fullName"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Full Name</FormLabel>
+                                <FormControl>
+                                <Input placeholder="Your full name" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="birthDate"
+                            render={({ field }) => (
+                            <FormItem className="flex flex-col">
+                                <FormLabel>Birth Date</FormLabel>
+                                <Popover>
+                                <PopoverTrigger asChild>
+                                    <div className="relative w-[240px]">
+                                    <FormControl>
+                                        <Input
+                                        value={dateInputValue}
+                                        onChange={(e) => setDateInputValue(e.target.value)}
+                                        onBlur={() => {
+                                            const parsedDate = parse(dateInputValue, 'yyyy-MM-dd', new Date());
+                                            if (isValid(parsedDate)) {
+                                            field.onChange(parsedDate);
+                                            }
+                                        }}
+                                        placeholder="YYYY-MM-DD"
+                                        />
+                                    </FormControl>
+                                    <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
+                                    </div>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                    <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={(date) => {
+                                        field.onChange(date);
+                                        if (date) {
+                                        setDateInputValue(format(date, 'yyyy-MM-dd'));
+                                        }
+                                    }}
+                                    disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
+                                    initialFocus
+                                    fromYear={1900}
+                                    toYear={new Date().getFullYear()}
+                                    captionLayout="dropdown-buttons"
+                                    />
+                                </PopoverContent>
+                                </Popover>
+                                <FormDescription>This helps us generate your horoscope.</FormDescription>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="timeOfBirth"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Time of Birth</FormLabel>
+                                <FormControl>
+                                <Input type="time" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="placeOfBirth"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Place of Birth</FormLabel>
+                                <FormControl>
+                                <Input placeholder="City, Country" {...field} />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
                     </>
                 )}
-                </Button>
+
+                {currentStep === 1 && (
+                     <FormField
+                        control={form.control}
+                        name="favoriteDeities"
+                        render={() => (
+                            <FormItem>
+                            <div className="mb-4">
+                                <FormLabel className="text-base">Favorite Deities</FormLabel>
+                                <FormDescription>
+                                Select a few deities you feel connected to. This will help us personalize your feed.
+                                </FormDescription>
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            {deities.map((item) => (
+                                <FormField
+                                key={item.id}
+                                control={form.control}
+                                name="favoriteDeities"
+                                render={({ field }) => {
+                                    return (
+                                    <FormItem
+                                        key={item.id}
+                                        className="flex flex-row items-center space-x-3 space-y-0 p-3 rounded-md border has-[:checked]:bg-primary/10 has-[:checked]:border-primary"
+                                    >
+                                        <FormControl>
+                                        <Checkbox
+                                            checked={field.value?.includes(item.slug)}
+                                            onCheckedChange={(checked) => {
+                                            return checked
+                                                ? field.onChange([...(field.value || []), item.slug])
+                                                : field.onChange(
+                                                    field.value?.filter(
+                                                    (value) => value !== item.slug
+                                                    )
+                                                )
+                                            }}
+                                        />
+                                        </FormControl>
+                                        <FormLabel className="font-normal text-foreground">
+                                           {item.name.en}
+                                        </FormLabel>
+                                    </FormItem>
+                                    )
+                                }}
+                                />
+                            ))}
+                            </div>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                    />
+                )}
+
+                {currentStep === 2 && (
+                    <div className="text-center p-8">
+                        <h3 className="text-xl font-semibold">Almost there!</h3>
+                        <p className="text-muted-foreground mt-2">Click below to generate your first personalized horoscope and start your journey on Aaura.</p>
+                    </div>
+                )}
+                
+                <div className="flex justify-between pt-4">
+                    {currentStep > 0 && (
+                        <Button type="button" variant="outline" onClick={prevStep}>
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+                        </Button>
+                    )}
+                    {currentStep < steps.length - 1 && (
+                         <Button type="button" onClick={nextStep} className="ml-auto">
+                            Next <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    )}
+                     {currentStep === steps.length - 1 && (
+                        <Button type="submit" disabled={isPending} className="ml-auto">
+                        {isPending ? (
+                            <>
+                                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                Saving...
+                            </>
+                        ) : (
+                            <>
+                                <Save className="mr-2 h-4 w-4" />
+                                Save and Complete
+                            </>
+                        )}
+                        </Button>
+                     )}
+                </div>
             </form>
             </Form>
         </CardContent>

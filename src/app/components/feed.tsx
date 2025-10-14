@@ -64,13 +64,13 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
   return (
     <>
         {filteredItems.length > 0 ? (
-            filteredItems.map((item) => {
+            filteredItems.map((item, index) => {
                 if (item.type === 'post') {
                     // This uses a different structure, so we pass the whole object
-                    return <PostCard key={item.id} post={item} />
+                    return <PostCard key={`${item.id}-${index}`} post={item} />
                 }
                 // Use FeedCard for all other types, as it can handle them.
-                return <FeedCard key={item.id} item={item} />
+                return <FeedCard key={`${item.id}-${index}`} item={item} />
             })
         ) : (
              <div className="flex justify-center items-center h-96">

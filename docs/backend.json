@@ -607,25 +607,39 @@
     "Story": {
       "title": "Story",
       "type": "object",
-      "description": "Represents a mythological story.",
+      "description": "Represents a mythological story, potentially as an episodic series.",
       "properties": {
         "id": { "type": "string" },
         "title_en": { "type": "string" },
         "title_hi": { "type": "string" },
         "summary_en": { "type": "string" },
         "summary_hi": { "type": "string" },
-        "fullText_en": { "type": "string" },
-        "fullText_hi": { "type": "string" },
-        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
-        "audioUrl": { "type": "string", "format": "uri" },
-        "videoLink": { "type": "string", "format": "uri" },
+        "image": { "type": "string", "format": "uri" },
         "tags": { "type": "array", "items": { "type": "string" } },
         "relatedCharacters": { "type": "array", "items": { "type": "string" } },
         "relatedTemples": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" },
-        "updatedAt": { "type": "string", "format": "date-time" }
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "episodes": {
+          "type": "array",
+          "description": "A series of video episodes for the story.",
+          "items": {
+            "type": "object",
+            "properties": {
+              "episodeNumber": { "type": "number" },
+              "title_en": { "type": "string" },
+              "title_hi": { "type": "string" },
+              "description_en": { "type": "string" },
+              "description_hi": { "type": "string" },
+              "videoId": { "type": "string", "description": "Identifier for the video (e.g., YouTube ID)." },
+              "thumbnailUrl": { "type": "string", "format": "uri" },
+              "duration": { "type": "number", "description": "Duration in seconds." }
+            },
+            "required": ["episodeNumber", "title_en", "videoId"]
+          }
+        }
       },
-      "required": ["id", "title_en", "summary_en", "fullText_en", "createdAt", "updatedAt"]
+      "required": ["id", "title_en", "summary_en", "createdAt", "updatedAt"]
     },
     "Character": {
       "title": "Character",

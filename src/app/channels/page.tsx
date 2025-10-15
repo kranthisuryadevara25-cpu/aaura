@@ -4,8 +4,8 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { CheckCircle, PlusCircle, Users } from 'lucide-react';
 import Link from 'next/link';
-import { collection, query, getDocs, type DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase/admin';
+import type { DocumentData } from 'firebase-admin/firestore';
 
 // This line disables caching, ensuring the channel list is always fresh.
 export const revalidate = 0;
@@ -57,8 +57,8 @@ export default async function ChannelsPage() {
   let fetchError: string | null = null;
   
   try {
-    const channelsQuery = query(collection(db, 'channels'));
-    const querySnapshot = await getDocs(channelsQuery);
+    const channelsQuery = db.collection('channels');
+    const querySnapshot = await channelsQuery.get();
     channels = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Channel));
   } catch (error: any) {
     console.error("Error fetching channels:", error);

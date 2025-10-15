@@ -23,12 +23,13 @@ export const getTodaysPanchang = (): Panchang => {
     
     // Find festivals that fall on today's date (ignoring time)
     const todaysFestivals = festivals
-        .filter(f => 
-            f.date.getUTCDate() === today.getUTCDate() &&
-            f.date.getUTCMonth() === today.getUTCMonth() &&
-            f.date.getUTCFullYear() === today.getUTCFullYear()
-        )
-        .map(f => f.name);
+        .filter(f => {
+            const festivalDate = new Date(f.date);
+            return festivalDate.getUTCDate() === today.getUTCDate() &&
+                   festivalDate.getUTCMonth() === today.getUTCMonth() &&
+                   festivalDate.getUTCFullYear() === today.getUTCFullYear()
+        })
+        .map(f => f.name.en); // Using English name as the identifier
 
     // Mock data for today
     return {
@@ -46,4 +47,3 @@ export const getTodaysPanchang = (): Panchang => {
         festivals: todaysFestivals.length > 0 ? todaysFestivals : []
     };
 };
-

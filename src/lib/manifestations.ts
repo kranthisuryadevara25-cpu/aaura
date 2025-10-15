@@ -10,8 +10,8 @@ export type Manifestation = {
     imageHint?: string;
     authorId: string;
     createdAt: string;
-    likes: number;
-    comments: number;
+    likesCount: number;
+    commentsCount: number;
 };
 
 export const manifestations: Manifestation[] = [
@@ -26,8 +26,8 @@ export const manifestations: Manifestation[] = [
         imageHint: "journal writing",
         authorId: "user123",
         createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: 1200,
-        comments: 75,
+        likesCount: 1200,
+        commentsCount: 75,
     },
     {
         id: "2",
@@ -40,8 +40,8 @@ export const manifestations: Manifestation[] = [
         imageHint: "two glasses water",
         authorId: "user456",
         createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: 2500,
-        comments: 150,
+        likesCount: 2500,
+        commentsCount: 150,
     },
     {
         id: "3",
@@ -53,8 +53,8 @@ export const manifestations: Manifestation[] = [
         imageHint: "peaceful sleep",
         authorId: "user789",
         createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        likes: 950,
-        comments: 45,
+        likesCount: 950,
+        commentsCount: 45,
     }
 ];
 

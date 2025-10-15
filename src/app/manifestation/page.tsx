@@ -42,10 +42,10 @@ function ManifestationCard({ post }: { post: Manifestation }) {
             <CardFooter className="flex justify-between items-center bg-secondary/30 p-4">
                  <div className="flex items-center gap-4 text-muted-foreground">
                     <span className="flex items-center gap-1.5 text-xs">
-                        <ThumbsUp className="w-4 h-4" /> {post.likes} Likes
+                        <ThumbsUp className="w-4 h-4" /> {post.likesCount || 0} Likes
                     </span>
                     <span className="flex items-center gap-1.5 text-xs">
-                        <MessageSquare className="w-4 h-4" /> {post.comments} Comments
+                        <MessageSquare className="w-4 h-4" /> {post.commentsCount || 0} Comments
                     </span>
                 </div>
                 <Button variant="ghost" size="sm" asChild>

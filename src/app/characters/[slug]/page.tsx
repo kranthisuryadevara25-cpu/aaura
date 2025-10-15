@@ -5,7 +5,7 @@ import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Loader2, Users, Shield, Award, AlertTriangle, Lightbulb } from 'lucide-react';
+import { BookOpen, Loader2, Users, Shield, Award, AlertTriangle, Lightbulb, UserSquare, Star, BookHeart, Link as LinkIcon, Quote } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { getCharacterBySlug } from '@/lib/characters';
@@ -58,9 +58,43 @@ export default function CharacterDetailPage() {
                       </div>
                   </CardHeader>
               </Card>
+               {character.relatedContent && (
+                    <Card className="mt-6 bg-transparent border-primary/20">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-lg"><LinkIcon />Associated Content</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2 text-sm">
+                           {character.relatedContent.deities.length > 0 && <Link href={`/deities/${character.relatedContent.deities[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><UserSquare className="h-4 w-4 text-primary" /> View Related Deities</Link>}
+                           {character.relatedContent.sacredTales.length > 0 && <Link href={`/stories/${character.relatedContent.sacredTales[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><BookOpen className="h-4 w-4 text-primary" /> Read Related Saga</Link>}
+                           {character.relatedContent.rituals.length > 0 && <Link href={`/rituals/${character.relatedContent.rituals[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><BookHeart className="h-4 w-4 text-primary" /> Explore Related Rituals</Link>}
+                        </CardContent>
+                    </Card>
+                )}
           </div>
           <div className="md:col-span-2 space-y-6">
-                <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+                <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3"><Quote />Inspirational Quote</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <blockquote className="text-xl italic text-foreground/90 border-l-4 border-primary pl-4">
+                            "{character.quote.text}"
+                        </blockquote>
+                        <p className="text-right mt-2 text-muted-foreground">- {character.quote.source}</p>
+                    </CardContent>
+                </Card>
+                
+                <Card className="bg-transparent border-primary/20">
+                     <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary"><Star />Prominence</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-foreground/90">{character.prominence}</p>
+                         <p className="mt-4 text-sm text-foreground/80"><strong className="text-primary">Modern Relevance:</strong> {character.modernRelevance}</p>
+                    </CardContent>
+                </Card>
+
+                <Accordion type="single" collapsible defaultValue="item-1" className="w-full space-y-4">
                     <AccordionItem value="item-1" className="bg-transparent border-primary/20 border rounded-lg px-4">
                         <AccordionTrigger className="text-primary text-xl font-semibold hover:no-underline">
                             <div className="flex items-center gap-3"><Users /> Background & Family</div>
@@ -81,7 +115,7 @@ export default function CharacterDetailPage() {
                         </AccordionContent>
                     </AccordionItem>
                     
-                    <AccordionItem value="item-2" className="bg-transparent border-primary/20 border rounded-lg px-4 mt-4">
+                    <AccordionItem value="item-2" className="bg-transparent border-primary/20 border rounded-lg px-4">
                         <AccordionTrigger className="text-primary text-xl font-semibold hover:no-underline">
                             <div className="flex items-center gap-3"><Shield /> Qualities & Achievements</div>
                         </AccordionTrigger>
@@ -102,7 +136,7 @@ export default function CharacterDetailPage() {
                         </AccordionContent>
                     </AccordionItem>
 
-                     <AccordionItem value="item-3" className="bg-transparent border-primary/20 border rounded-lg px-4 mt-4">
+                     <AccordionItem value="item-3" className="bg-transparent border-primary/20 border rounded-lg px-4">
                         <AccordionTrigger className="text-primary text-xl font-semibold hover:no-underline">
                              <div className="flex items-center gap-3"><AlertTriangle /> Mistakes & Learnings</div>
                         </AccordionTrigger>

@@ -654,6 +654,14 @@
         "epicAssociation": { "type": "array", "items": { "type": "string" }, "description": "Which epic(s) the hero is associated with." },
         "imageUrl": { "type": "string", "format": "uri", "description": "URL for the hero's image." },
         "description": { "type": "string", "description": "A brief, one-sentence summary of the hero." },
+        "quote": {
+          "type": "object",
+          "properties": {
+              "text": { "type": "string" },
+              "source": { "type": "string" }
+          }
+        },
+        "modernRelevance": { "type": "string" },
         "background": {
           "type": "object",
           "properties": {

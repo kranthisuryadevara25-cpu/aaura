@@ -1,13 +1,17 @@
 
-import { deities } from "./deities";
-
 export type EpicHero = {
     id: string;
     slug: string;
     name: { [key: string]: string };
     epicAssociation: string[];
     imageUrl: string;
+    imageHint: string;
     description: string;
+    quote: {
+        text: string;
+        source: string;
+    };
+    modernRelevance: string;
     background: {
         birth: string;
         earlyLife: string;
@@ -31,7 +35,6 @@ export type EpicHero = {
     popularity: number;
     createdAt: string;
     updatedAt: string;
-    imageHint: string;
 };
 
 export const characters: EpicHero[] = [
@@ -43,6 +46,11 @@ export const characters: EpicHero[] = [
         imageUrl: "https://picsum.photos/seed/arjuna1/600/400",
         imageHint: "warrior archer",
         description: "A legendary archer and one of the Pandava brothers, known for his unwavering focus and devotion to Krishna.",
+        quote: {
+            text: "It is better to live your own destiny imperfectly than to live an imitation of somebody else's life with perfection.",
+            source: "Bhagavad Gita"
+        },
+        modernRelevance: "Arjuna's internal conflict on the battlefield symbolizes the modern struggle with difficult ethical choices. His journey teaches us the importance of seeking wisdom and acting with purpose, even when faced with doubt.",
         background: {
             birth: "Born to Kunti and Indra through divine boon; third of the Pandavas.",
             earlyLife: "Trained under Dronacharya in Hastinapura; excelled in archery from a young age.",
@@ -75,9 +83,9 @@ export const characters: EpicHero[] = [
             "Humility and ethics: Mistakes like hesitation remind us that even heroes learn from errors, promoting resilience and moral growth."
         ],
         relatedContent: {
-            sacredTales: ["Kurukshetra War", "Bhagavad Gita"],
-            deities: ["Krishna", "Indra", "Shiva"],
-            rituals: ["Archery Puja for focus and skill"]
+            sacredTales: ["mahabharata-summary"],
+            deities: ["krishna", "shiva"],
+            rituals: ["daily-surya-puja"]
         },
         popularity: 1500,
         createdAt: "2025-10-15T00:00:00Z",
@@ -91,6 +99,11 @@ export const characters: EpicHero[] = [
         imageUrl: "https://picsum.photos/seed/hanuman1/600/400",
         imageHint: "Hanuman flying",
         description: "An ardent devotee of Lord Rama, Hanuman is a central character in the Ramayana epic. He is a divine vanara (monkey-like humanoid) and is known for his immense strength, devotion, and courage.",
+         quote: {
+            text: "I am a humble messenger of Sri Rama. I have come here to serve Rama, to do His work. By the command of Lord Rama, I have come here.",
+            source: "Ramayana"
+        },
+        modernRelevance: "Hanuman's selfless service and unwavering devotion are timeless examples of loyalty and faith. In modern life, he represents the power of dedication and using one's strength for a righteous cause.",
         background: {
             birth: "Born to Anjana and Kesari, with the blessings of Vayu, the wind god.",
             earlyLife: "Known for his mischievous childhood, once mistaking the sun for a ripe fruit.",
@@ -122,9 +135,9 @@ export const characters: EpicHero[] = [
             "Never give up: No matter the obstacle, Hanuman found a way to succeed."
         ],
         relatedContent: {
-            sacredTales: ["Ramayana", "Sita's Abduction"],
-            deities: ["Rama", "Sita", "Vayu"],
-            rituals: ["Hanuman Chalisa recitation"]
+            sacredTales: ["ramayana-summary"],
+            deities: ["shiva"],
+            rituals: []
         },
         popularity: 1800,
         createdAt: "2025-10-15T00:00:00Z",

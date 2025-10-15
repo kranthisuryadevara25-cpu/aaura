@@ -1,5 +1,5 @@
 
-import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
+import { initializeApp, getApps, cert, type App, type ServiceAccount } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
 import serviceAccount from './secrets/serviceAccountKey.json';
@@ -17,7 +17,7 @@ function initializeFirebaseAdmin() {
     try {
       adminApp = initializeApp(
         {
-          credential: cert(serviceAccount),
+          credential: cert(serviceAccount as ServiceAccount),
         }
       );
     } catch (error: any) {

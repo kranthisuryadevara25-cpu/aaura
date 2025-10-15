@@ -1,12 +1,11 @@
 
-
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, ShoppingBasket, Clock, Loader2, BookOpen, Lightbulb, AlertTriangle, Sparkles, Music } from 'lucide-react';
+import { CheckSquare, ShoppingBasket, Clock, Loader2, BookOpen, Lightbulb, AlertTriangle, Sparkles, Music, PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { getRitualBySlug } from '@/lib/rituals';
 import { useState, useTransition } from 'react';
@@ -231,7 +230,12 @@ export default function RitualDetailPage() {
                                         <p className="text-xs text-muted-foreground">{track.artist}</p>
                                     </div>
                                 ))}
-                                <Button variant="outline" className="w-full mt-2" disabled>Play (coming soon)</Button>
+                                <Button asChild variant="outline" className="w-full mt-2">
+                                  <Link href={`/playlists/${ritual.recommendedPlaylist.id}`}>
+                                    <PlayCircle className="mr-2 h-4 w-4" />
+                                    Listen to Playlist
+                                  </Link>
+                                </Button>
                             </CardContent>
                         </Card>
                     )}

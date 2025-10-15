@@ -33,7 +33,7 @@ export default function StoryDetailPage() {
   );
 
   if (!story) {
-    return notFound();
+    notFound();
   }
 
   const title = story.title[language] || story.title.en;
@@ -129,7 +129,7 @@ export default function StoryDetailPage() {
                             {relatedCharacters.map((character) => (
                                 <Link key={character.id} href={`/characters/${character.slug}`} className="block p-4 text-center rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                     <div className="w-24 h-24 relative mx-auto rounded-full overflow-hidden mb-2 border-2 border-accent/20">
-                                        <Image src={character.image.url} alt={character.name[language] || character.name.en} data-ai-hint={character.image.hint} fill className="object-cover" />
+                                        <Image src={character.imageUrl} alt={character.name[language] || character.name.en} data-ai-hint={character.imageHint} fill className="object-cover" />
                                     </div>
                                     <h4 className="font-semibold text-md text-foreground group-hover:underline">{character.name[language] || character.name.en}</h4>
                                 </Link>

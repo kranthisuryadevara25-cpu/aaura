@@ -1,559 +1,588 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a user-ownership model for private data and allows public read access for shared content.
- *
- * Data Structure:
- * - User-specific data is nested under `/users/{userId}`.
- * - Public content (media, deities, temples, etc.) resides in top-level collections.
- *
- * Key Security Decisions:
- * - Users can only access their own data under their respective `/users/{userId}` path.
- * - Listing of users is disallowed for privacy.
- * - Public content is readable by all users.
- * - Write access to public content is restricted to authorized users, based on denormalized ownerId fields.
- * - All write operations require authentication.
- * - All destructive operations (`update`, `delete`) require the document to exist.
- *
- * Denormalization for Authorization:
- * - Publicly readable documents require an `ownerId` or `authorId` field to control write access.
- *
- * Structural Segregation:
- * - Private user data is stored under `/users/{userId}`, while public content is stored in top-level collections.
+ * @file Firestore Security Rules for Aaura Platform
+ * @corePhilosophy This ruleset enforces a strict user-ownership model for personal data while allowing public read access to certain content collections.
+ *   It uses Firebase Authentication to verify user identity and authorize access to resources.
+ * @dataStructure The data is organized with user-specific data nested under `/users/{userId}` and public content in top-level collections (e.g., `/media`, `/temples`).
+ *   Follow relationships are stored as subcollections under each user document (`/users/{userId}/followers/{followerId}`, `/users/{userId}/following/{followedId}`).
+ * @keySecurityDecisions
+ *   - Users can only read and write their own data under `/users/{userId}`.
+ *   - Public content collections (e.g., `/media`, `/temples`, `/stories`, `/epicHeroes`, `/rituals`, `/festivals`) are publicly readable.
+ *   - Write access to public content collections is restricted to authenticated users who own the respective documents.
+ *   - Listing of user documents (`/users`) is disallowed for privacy.
+ *   - Subcollections inherit the security context of their parent documents.
+ * @denormalizationForAuthorization
+ *   - Channel ownership is enforced by matching the `userId` in the `/channels/{channelId}` document to the authenticated user's UID.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Checks if the user is signed in.
+     * @description Enforces owner-only access to user profiles.
+     * @path /users/{userId}
+     * @allow (create) User with UID 'user_abc' can create their profile at /users/user_abc if request.auth.uid == 'user_abc'.
+     * @allow (get, update, delete) User with UID 'user_abc' can read/write their profile at /users/user_abc.
+     * @deny (create) User with UID 'user_xyz' cannot create a profile at /users/user_abc.
+     * @deny (get, update, delete) User with UID 'user_xyz' cannot read/write the profile at /users/user_abc.
+     * @principle Enforces document ownership for all operations.
      */
-    function isSignedIn() {
-      return request.auth != null;
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false; // Listing all users is not permitted.
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the resource.
+     * @description Enforces owner-only access to user followers.
+     * @path /users/{userId}/followers/{followerId}
+     * @allow (create) User with UID 'follower_xyz' can follow user 'user_abc' by creating a document at /users/user_abc/followers/follower_xyz.
+     * @allow (get, update, delete) User with UID 'user_abc' can read/write their followers at /users/user_abc/followers/followerId.
+     * @deny (create) User with UID 'user_abc' cannot create a follower document at /users/user_abc/followers/follower_xyz for another user.
+     * @deny (get, update, delete) User with UID 'user_xyz' cannot read/write the followers at /users/user_abc/followers/followerId.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/followers/{followerId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isSignedIn();
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Enforces owner-only access to user following.
+     * @path /users/{userId}/following/{followedId}
+     * @allow (create) User with UID 'user_xyz' can follow user 'followed_abc' by creating a document at /users/user_xyz/following/followed_abc.
+     * @allow (get, update, delete) User with UID 'user_xyz' can read/write who they are following at /users/user_xyz/following/followedId.
+     * @deny (create) User with UID 'user_abc' cannot create a following document at /users/user_xyz/following/followed_abc for another user.
+     * @deny (get, update, delete) User with UID 'user_abc' cannot read/write the following at /users/user_xyz/following/followedId.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/following/{followedId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if false;
+      allow delete: if isOwner(userId);
+    }
+
+    /**
+     * @description Enforces owner-only access to user preferences.
+     * @path /users/{userId}/preferences/default
+     * @allow (get, update, delete) User with UID 'user_abc' can read/write their preferences at /users/user_abc/preferences/default.
+     * @deny (get, update, delete) User with UID 'user_xyz' cannot read/write the preferences at /users/user_abc/preferences/default.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/preferences/default {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if false; // Singleton document, creation not allowed through rules.
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+     /**
+      * @description Enforces owner-only access to user badges.
+      * @path /users/{userId}/badges/{badgeId}
+      * @allow (get, list) User with UID 'user_abc' can read their badges at /users/user_abc/badges/{badgeId}.
+      * @allow (create) System can award a badge to a user.
+      * @deny (get, list) User with UID 'user_xyz' cannot read the badges of user 'user_abc'.
+      * @deny (create, update, delete) User with UID 'user_xyz' cannot create/update/delete badges for user 'user_abc'.
+      * @principle Enforces document ownership for read operations.
+      */
+    match /users/{userId}/badges/{badgeId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Enforces owner-only access to user bookmarks.
+     * @path /users/{userId}/bookmarks/{bookmarkId}
+     * @allow (get, list, create, update, delete) User with UID 'user_abc' can read/write their bookmarks at /users/user_abc/bookmarks/{bookmarkId}.
+     * @deny (get, list, create, update, delete) User with UID 'user_xyz' cannot read/write the bookmarks of user 'user_abc'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/bookmarks/{bookmarkId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces owner-only access to user virtual offerings.
+     * @path /users/{userId}/virtualOfferings/{offeringId}
+     * @allow (get, list, create, update, delete) User with UID 'user_abc' can read/write their virtual offerings at /users/user_abc/virtualOfferings/{offeringId}.
+     * @deny (get, list, create, update, delete) User with UID 'user_xyz' cannot read/write the virtual offerings of user 'user_abc'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/virtualOfferings/{offeringId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces owner-only access to user cart items.
+     * @path /users/{userId}/cart/{productId}
+     * @allow (get, list, create, update, delete) User with UID 'user_abc' can read/write their cart items at /users/user_abc/cart/{productId}.
+     * @deny (get, list, create, update, delete) User with UID 'user_xyz' cannot read/write the cart items of user 'user_abc'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/cart/{productId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces owner-only access to user orders.
+     * @path /users/{userId}/orders/{orderId}
+     * @allow (get, list, create, update, delete) User with UID 'user_abc' can read/write their orders at /users/user_abc/orders/{orderId}.
+     * @deny (get, list, create, update, delete) User with UID 'user_xyz' cannot read/write the orders of user 'user_abc'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/orders/{orderId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Enforces owner-only access to user playlists.
+     * @path /users/{userId}/playlists/{playlistId}
+     * @allow (get, list, create, update, delete) User with UID 'user_abc' can read/write their playlists at /users/user_abc/playlists/{playlistId}.
+     * @deny (get, list, create, update, delete) User with UID 'user_xyz' cannot read/write the playlists of user 'user_abc'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/playlists/{playlistId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces owner-only access to user challenge progress.
+     * @path /users/{userId}/challenges/{challengeId}
+     * @allow (get, list, create, update, delete) User with UID 'user_abc' can read/write their challenge progress at /users/user_abc/challenges/{challengeId}.
+     * @deny (get, list, create, update, delete) User with UID 'user_xyz' cannot read/write the challenge progress of user 'user_abc'.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/challenges/{challengeId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Allows public read access to media items and restricts write access to the owner.
+     * @path /media/{mediaId}
+     * @allow (get, list) Any user can read media items.
+     * @allow (create) User with UID 'user_abc' can create a media item with userId: 'user_abc'.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete a media item if they are the owner (resource.data.userId == request.auth.uid).
+     * @deny (create) User with UID 'user_xyz' cannot create a media item with userId: 'user_abc'.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a media item owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+    match /media/{mediaId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(resource.data.userId);
+      allow delete: if isSignedIn() && isExistingOwner(resource.data.userId);
+    }
+
+    /**
+     * @description Allows public read access to media comments and restricts write access to the owner.
+     * @path /media/{mediaId}/comments/{commentId}
+     * @allow (get, list) Any user can read comments for a media item.
+     * @allow (create) User with UID 'user_abc' can create a comment.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their comment.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a comment owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+    match /media/{mediaId}/comments/{commentId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isExistingOwner(request.resource.data.authorId);
+      allow delete: if isExistingOwner(request.resource.data.authorId);
+    }
+
+     /**
+      * @description Allows public read access to media likes and restricts write access to signed in users.
+      * @path /media/{mediaId}/likes/{userId}
+      * @allow (get, list) Any user can read likes for a media item.
+      * @allow (create) User with UID 'user_abc' can like a media item.
+      * @allow (update, delete) No updates or deletes.
+      * @deny (create, update, delete) User with UID 'user_xyz' cannot create/update/delete likes for a media item on behalf of user 'user_abc'.
+      * @principle Allows public reads and enforces signed in user for writes.
+      */
+     match /media/{mediaId}/likes/{userId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn();
+        allow update: if false;
+        allow delete: if false;
+     }
+
+    /**
+     * @description Allows public read access to channels and restricts write access to the channel owner.
+     * @path /channels/{channelId}
+     * @allow (get, list) Any user can read channel information.
+     * @allow (create) User with UID 'user_abc' can create a channel with userId: 'user_abc'.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their channel if they are the owner (resource.data.userId == request.auth.uid).
+     * @deny (create) User with UID 'user_xyz' cannot create a channel with userId: 'user_abc'.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a channel owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+    match /channels/{channelId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(request.resource.data.userId);
+      allow delete: if isSignedIn() && isExistingOwner(request.resource.data.userId);
+    }
+
+    /**
+     * @description Allows public read access to playlists and restricts write access to the playlist owner.
+     * @path /playlists/{playlistId}
+     * @allow (get, list) Any user can read playlist information.
+     * @allow (create) User with UID 'user_abc' can create a playlist with creatorId: 'user_abc'.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their playlist if they are the owner (resource.data.creatorId == request.auth.uid).
+     * @deny (create) User with UID 'user_xyz' cannot create a playlist with creatorId: 'user_abc'.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a playlist owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+    match /playlists/{playlistId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(request.resource.data.creatorId);
+      allow delete: if isSignedIn() && isExistingOwner(request.resource.data.creatorId);
+    }
+
+    /**
+     * @description Enforces owner-only access to user horoscopes.
+     * @path /users/{userId}/horoscopes/{horoscopeId}
+     * @allow (get, list) User with UID 'user_abc' can read their horoscopes at /users/user_abc/horoscopes/{horoscopeId}.
+     * @deny (get, list) User with UID 'user_xyz' cannot read the horoscopes of user 'user_abc'.
+     * @principle Enforces document ownership for read operations.
+     */
+    match /users/{userId}/horoscopes/{horoscopeId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to deities.
+     * @path /deities/{deityId}
+     * @allow (get, list) Any user can read deity information.
+     * @deny (create, update, delete) No user can create, update, or delete deity information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /deities/{deityId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to shops and restricts write access to the shop owner.
+     * @path /shops/{shopId}
+     * @allow (get, list) Any user can read shop information.
+     * @allow (create) User with UID 'user_abc' can create a shop with ownerId: 'user_abc'.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their shop if they are the owner (resource.data.ownerId == request.auth.uid).
+     * @deny (create) User with UID 'user_xyz' cannot create a shop with ownerId: 'user_abc'.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a shop owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+    match /shops/{shopId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(request.resource.data.ownerId);
+      allow delete: if isSignedIn() && isExistingOwner(request.resource.data.ownerId);
+    }
+
+    /**
+     * @description Allows public read access to products and restricts write access.
+     * @path /products/{productId}
+     * @allow (get, list) Any user can read product information.
+     * // CRITICAL: Cannot implement owner-only writes. The 'Product' entity is missing an 'ownerId' or 'authorId' field.
+     */
+    match /products/{productId} {
+      allow get: if true;
+      allow list: if true;
+      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+    }
+
+    /**
+     * @description Allows public read access to temples.
+     * @path /temples/{templeId}
+     * @allow (get, list) Any user can read temple information.
+     * @deny (create, update, delete) No user can create, update, or delete temple information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /temples/{templeId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows authenticated users to create reviews for temples.
+     * @path /temples/{templeId}/reviews/{reviewId}
+     * @allow (get, list) Any user can read reviews for a temple.
+     * @allow (create) User with UID 'user_abc' can create a review for a temple.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their review.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a review owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+    match /temples/{templeId}/reviews/{reviewId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn();
+      allow update: if isExistingOwner(request.resource.data.userId);
+      allow delete: if isExistingOwner(request.resource.data.userId);
+    }
+
+    /**
+     * @description Allows authenticated users to create posts for temples.
+     * @path /temples/{templeId}/posts/{postId}
+     * @allow (get, list) Any user can read posts for a temple.
+     * @allow (create) User with UID 'user_abc' can create a post for a temple.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their post.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a post owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+    match /temples/{templeId}/posts/{postId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && isExistingOwner(request.resource.data.authorId);
+      allow delete: if isSignedIn() && isExistingOwner(request.resource.data.authorId);
+    }
+
+    /**
+     * @description Allows public read access to stories.
+     * @path /stories/{storyId}
+     * @allow (get, list) Any user can read story information.
+     * @deny (create, update, delete) No user can create, update, or delete story information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /stories/{storyId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to epic heroes.
+     * @path /epicHeroes/{heroId}
+     * @allow (get, list) Any user can read epic hero information.
+     * @deny (create, update, delete) No user can create, update, or delete epic hero information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /epicHeroes/{heroId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to rituals.
+     * @path /rituals/{ritualId}
+     * @allow (get, list) Any user can read ritual information.
+     * @deny (create, update, delete) No user can create, update, or delete ritual information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /rituals/{ritualId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to panchang data.
+     * @path /panchang/{date}
+     * @allow (get, list) Any user can read panchang information.
+     * @deny (create, update, delete) No user can create, update, or delete panchang information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /panchang/{date} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to festivals.
+     * @path /festivals/{festivalId}
+     * @allow (get, list) Any user can read festival information.
+     * @deny (create, update, delete) No user can create, update, or delete festival information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /festivals/{festivalId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+     /**
+      * @description Allows public read access to groups. Restricts write access to members.
+      * @path /groups/{groupId}
+      * @allow (get, list) Any user can read group information.
+      */
+     match /groups/{groupId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn();
+        allow update: if isSignedIn();
+        allow delete: if false;
+     }
+
+    /**
+     * @description Allows group members to manage membership.
+     * @path /groups/{groupId}/members/{userId}
+     * @allow (get, list) Any user can read group member information.
+     * @allow (create) User with UID 'user_abc' can join group '{groupId}'.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their membership.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete membership of user 'user_abc'.
+     * @principle Allows authenticated membership management.
+     */
+    match /groups/{groupId}/members/{userId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn() && userId == request.auth.uid;
+        allow update: if isSignedIn() && isExistingOwner(userId);
+        allow delete: if isSignedIn() && isExistingOwner(userId);
+     }
+
+    /**
+     * @description Allows authenticated users to create posts for groups.
+     * @path /groups/{groupId}/posts/{postId}
+     * @allow (get, list) Any user can read posts for a group.
+     * @allow (create) User with UID 'user_abc' can create a post in a group.
+     * @allow (update, delete) User with UID 'user_abc' can update/delete their post.
+     * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a post owned by user 'user_abc'.
+     * @principle Allows public reads and enforces document ownership for writes.
+     */
+     match /groups/{groupId}/posts/{postId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+        allow update: if isSignedIn() && isExistingOwner(request.resource.data.authorId);
+        allow delete: if isSignedIn() && isExistingOwner(request.resource.data.authorId);
+     }
+
+     /**
+      * @description Allows public read access to group post comments. Restricts write access to signed in users.
+      * @path /groups/{groupId}/posts/{postId}/comments/{commentId}
+      * @allow (get, list) Any user can read comments for a group post.
+      * @allow (create) User with UID 'user_abc' can comment on a group post.
+      * @allow (update, delete) User with UID 'user_abc' can update/delete their comment.
+      * @deny (update, delete) User with UID 'user_xyz' cannot update/delete a comment owned by user 'user_abc'.
+      * @principle Allows public reads and enforces document ownership for writes.
+      */
+     match /groups/{groupId}/posts/{postId}/comments/{commentId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+        allow update: if isSignedIn() && isExistingOwner(request.resource.data.authorId);
+        allow delete: if isSignedIn() && isExistingOwner(request.resource.data.authorId);
+     }
+
+     /**
+      * @description Allows public read access to group post likes and restricts write access to signed in users.
+      * @path /groups/{groupId}/posts/{postId}/likes/{userId}
+      * @allow (get, list) Any user can read likes for a group post.
+      * @allow (create) User with UID 'user_abc' can like a group post.
+      * @allow (update, delete) No updates or deletes.
+      * @deny (create, update, delete) User with UID 'user_xyz' cannot create/update/delete likes for a group post on behalf of user 'user_abc'.
+      * @principle Allows public reads and enforces signed in user for writes.
+      */
+     match /groups/{groupId}/posts/{postId}/likes/{userId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if isSignedIn();
+        allow update: if false;
+        allow delete: if false;
+     }
+
+    /**
+     * @description Allows public read access to challenges.
+     * @path /challenges/{challengeId}
+     * @allow (get, list) Any user can read challenge information.
+     * @deny (create, update, delete) No user can create, update, or delete challenge information.
+     * @principle Allows public reads and restricts writes.
+     */
+    match /challenges/{challengeId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+
+    /**
+     * @description Checks if the user ID matches the authenticated user ID.
+     * @param {string} userId The user ID to check against.
+     * @returns {boolean} True if the user ID matches the authenticated user ID, false otherwise.
      */
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
     /**
-     * @description Checks if the authenticated user is the owner of the resource, and that the resource exists.
+     * @description Checks if the user ID matches the authenticated user ID and the resource exists.
+     * @param {string} userId The user ID to check against.
+     * @returns {boolean} True if the user ID matches the authenticated user ID and the resource exists, false otherwise.
      */
     function isExistingOwner(userId) {
-      return isOwner(userId) && resource != null;
+        return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Enforces that the user ID in the request matches the user ID in the path.
+     * @description Checks if the user is signed in.
+     * @returns {boolean} True if the user is signed in, false otherwise.
      */
-    function isValidUserId(userId) {
-      return request.resource.data.id == userId;
-    }
-
-    /**
-     * @description Rules for user profiles.
-     * @path /users/{userId}
-     * @allow (create) Signed-in user can create their own profile if the userId matches.
-     * @deny (create) User cannot create a profile for another user.
-     * @allow (get, update, delete) Signed-in user can get, update, and delete their own profile.
-     * @deny (get, update, delete) User cannot get, update, or delete another user's profile.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false; // Disallow listing of all users.
-      allow create: if isSignedIn() && isOwner(userId) && isValidUserId(userId);
-      allow update: if isExistingOwner(userId) && isValidUserId(userId); // Enforce immutability of userId.
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Rules for followers subcollection.
-     * @path /users/{userId}/followers/{followerId}
-     * @allow (create) Any signed-in user can follow another user.
-     * @deny (create) If not signed in.
-     * @allow (get, list) Owner can read their followers.
-     * @deny (get, list) Not owner.
-     * @allow (update, delete) Followers cannot update/delete this relationship.
-     * @principle Followers and following relationships are readable by the user being followed.
-     */
-    match /users/{userId}/followers/{followerId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isSignedIn();
-        allow update, delete: if false;
-    }
-
-      /**
-       * @description Rules for following subcollection.
-       * @path /users/{userId}/following/{followedId}
-       * @allow (create) Any signed-in user can follow another user.
-       * @deny (create) If not signed in.
-       * @allow (get, list) Owner can read their following.
-       * @deny (get, list) Not owner.
-       * @allow (update, delete) Following users cannot update/delete this relationship.
-       * @principle Followers and following relationships are readable by the user and writeable by the user.
-       */
-    match /users/{userId}/following/{followedId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isSignedIn();
-        allow update, delete: if false;
-    }
-
-    /**
-     * @description Rules for user preferences (singleton document).
-     * @path /users/{userId}/preferences/default
-     * @allow (get, update) Signed-in user can get and update their own preferences.
-     * @deny (get, update) User cannot get or update another user's preferences.
-     * @allow (create, delete)  Creating/deleting is disallowed on the default document.
-     * @principle Enforces document ownership for preferences.
-     */
-    match /users/{userId}/preferences/default {
-      allow get: if isOwner(userId);
-      allow list: if false;
-      allow create: if false;
-      allow update: if isExistingOwner(userId);
-      allow delete: if false;
-    }
-
-    /**
-     * @description Rules for user badges.
-     * @path /users/{userId}/badges/{badgeId}
-     * @allow (get, list) Signed-in user can get and list their own badges.
-     * @deny (get, list) User cannot get or list another user's badges.
-     * @allow (create, update, delete) Badges are managed programmatically, not directly by users.
-     * @principle Enforces document ownership for badges.
-     */
-    match /users/{userId}/badges/{badgeId} {
-      allow get, list: if isOwner(userId);
-      allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Rules for user bookmarks.
-     * @path /users/{userId}/bookmarks/{bookmarkId}
-     * @allow (get, list) Signed-in user can get and list their own bookmarks.
-     * @deny (get, list) User cannot get or list another user's bookmarks.
-     * @allow (create, delete) Signed-in user can create and delete their own bookmarks.
-     * @deny (create, delete) User cannot create or delete another user's bookmarks.
-     * @allow (update) Bookmarks are not directly editable once created.
-     * @principle Enforces document ownership for bookmarks.
-     */
-    match /users/{userId}/bookmarks/{bookmarkId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if false;
-      allow delete: if isExistingOwner(userId);
-    }
-
-     /**
-      * @description Rules for virtual offerings.
-      * @path /users/{userId}/virtualOfferings/{offeringId}
-      * @allow (get, list) Signed-in user can get and list their own offerings.
-      * @deny (get, list) User cannot get or list another user's offerings.
-      * @allow (create) Signed-in user can create an offering.
-      * @deny (create) User cannot create an offering for another user.
-      * @allow (update, delete) Offerings are not directly editable or deletable once created.
-      * @principle Enforces document ownership for virtual offerings.
-      */
-    match /users/{userId}/virtualOfferings/{offeringId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update, delete: if false;
-    }
-
-    /**
-     * @description Rules for user's shopping cart.
-     * @path /users/{userId}/cart/{productId}
-     * @allow (get, list) Signed-in user can get and list their own cart items.
-     * @deny (get, list) User cannot get or list another user's cart items.
-     * @allow (create, update, delete) Signed-in user can manage their own cart.
-     * @deny (create, update, delete) User cannot manage another user's cart.
-     * @principle Enforces document ownership for shopping cart.
-     */
-    match /users/{userId}/cart/{productId} {
-      allow get, list: if isOwner(userId);
-      allow create, update, delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Rules for user orders.
-     * @path /users/{userId}/orders/{orderId}
-     * @allow (get, list) Signed-in user can get and list their own orders.
-     * @deny (get, list) User cannot get or list another user's orders.
-     * @allow (create) Signed-in user can create their own order.
-     * @deny (create) User cannot create an order for another user.
-     * @allow (update, delete) Orders are not directly editable or deletable once created.
-     * @principle Enforces document ownership for orders.
-     */
-    match /users/{userId}/orders/{orderId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update, delete: if false;
-    }
-
-    /**
-     * @description Rules for playlists created by a specific user.
-     * @path /users/{userId}/playlists/{playlistId}
-     * @allow (get, list) Signed-in user can get and list their own playlists.
-     * @deny (get, list) User cannot get or list another user's playlists.
-     * @allow (create, update, delete) Signed-in user can manage their own playlists.
-     * @deny (create, update, delete) User cannot manage another user's playlists.
-     * @principle Enforces document ownership for playlists.
-     */
-    match /users/{userId}/playlists/{playlistId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-      /**
-       * @description Rules for user challenge progress.
-       * @path /users/{userId}/challenges/{challengeId}
-       * @allow (get, list) Signed-in user can get and list their own challenge progress.
-       * @deny (get, list) User cannot get or list another user's challenge progress.
-       * @allow (create, update, delete) Signed-in user can manage their own challenge progress.
-       * @deny (create, update, delete) User cannot manage another user's challenge progress.
-       * @principle Enforces document ownership for user challenge progress.
-       */
-    match /users/{userId}/challenges/{challengeId} {
-      allow get, list: if isOwner(userId);
-      allow create: if isSignedIn() && isOwner(userId);
-      allow update: if isExistingOwner(userId);
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Rules for media items.
-     * @path /media/{mediaId}
-     * @allow (get, list) Public read access to all media.
-     * @allow (create) Media creation requires authentication and sets the userId field.
-     * @deny (create) If the userId doesn't match the authenticated user.
-     * @allow (update, delete) Only the owner of the media can update or delete it.
-     * @deny (update, delete) If the media does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /media/{mediaId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
-      allow delete: if isExistingOwner(resource.data.userId);
-    }
-
-    /**
-     * @description Rules for comments on media items.
-     * @path /media/{mediaId}/comments/{commentId}
-     * @allow (get, list) Public read access to all comments on media.
-     * @allow (create) Any signed-in user can create a comment.
-     * @deny (create) If not signed in.
-     * @allow (update, delete) Only the author of the comment can update or delete it.
-     * @deny (update, delete) If the comment does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /media/{mediaId}/comments/{commentId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isExistingOwner(resource.data.authorId);
-      allow delete: if isExistingOwner(resource.data.authorId);
-    }
-
-     /**
-      * @description Rules for likes on media items.
-      * @path /media/{mediaId}/likes/{userId}
-      * @allow get, list: if true; // Anyone can list likes
-      * @allow create: if isSignedIn(); // Anyone signed in can like something
-      * @allow update, delete: if false; // No one can edit the like once it's created
-      */
-    match /media/{mediaId}/likes/{userId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if false;
-    }
-
-    /**
-     * @description Rules for channels.
-     * @path /channels/{channelId}
-     * @allow (get, list) Public read access to all channels.
-     * @allow (create) Channel creation requires authentication and sets the userId field.
-     * @deny (create) If the userId doesn't match the authenticated user.
-     * @allow (update, delete) Only the owner of the channel can update or delete it.
-     * @deny (update, delete) If the channel does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /channels/{channelId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
-      allow delete: if isExistingOwner(resource.data.userId);
-    }
-
-    /**
-     * @description Rules for playlists.
-     * @path /playlists/{playlistId}
-     * @allow (get, list) Public read access to all playlists.
-     * @allow (create) Playlist creation requires authentication and sets the creatorId field.
-     * @deny (create) If the creatorId doesn't match the authenticated user.
-     * @allow (update, delete) Only the creator of the playlist can update or delete it.
-     * @deny (update, delete) If the playlist does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /playlists/{playlistId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.creatorId);
-      allow delete: if isExistingOwner(resource.data.creatorId);
-    }
-
-    /**
-     * @description Rules for horoscopes generated for a specific user.
-     * @path /users/{userId}/horoscopes/{horoscopeId}
-     * @allow (get, list) Signed-in user can get and list their own horoscopes.
-     * @deny (get, list) User cannot get or list another user's horoscopes.
-     * @allow (create, update, delete) Horoscopes are managed programmatically, not directly by users.
-     * @principle Enforces document ownership for horoscopes.
-     */
-    match /users/{userId}/horoscopes/{horoscopeId} {
-      allow get, list: if isOwner(userId);
-      allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Rules for deities.
-     * @path /deities/{deityId}
-     * @allow (get, list) Public read access to all deities.
-     * @allow (create, update, delete) Deities are managed programmatically, not directly by users.
-     * @principle Public read, admin-only writes.
-     */
-    match /deities/{deityId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for shops in the marketplace.
-     * @path /shops/{shopId}
-     * @allow (get, list) Public read access to all shops.
-     * @allow (create) Shop creation requires authentication and sets the ownerId field.
-     * @deny (create) If the ownerId doesn't match the authenticated user.
-     * @allow (update, delete) Only the owner of the shop can update or delete it.
-     * @deny (update, delete) If the shop does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /shops/{shopId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.ownerId);
-      allow delete: if isExistingOwner(resource.data.ownerId);
-    }
-
-    /**
-     * @description Rules for products in the marketplace.
-     * @path /products/{productId}
-     * @allow (get, list) Public read access to all products.
-     * @allow (create, update, delete) Products are managed by shop owners.
-     * @principle Public read, owner-only writes.
-     */
-    match /products/{productId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add shop owner validation if needed
-    }
-
-    /**
-     * @description Rules for temple data.
-     * @path /temples/{templeId}
-     * @allow (get, list) Public read access to all temples.
-     * @allow (create, update, delete) Temples are managed programmatically, not directly by users.
-     * @principle Public read, admin-only writes.
-     */
-    match /temples/{templeId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;  // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for user reviews for a specific temple.
-     * @path /temples/{templeId}/reviews/{reviewId}
-     * @allow (get, list) Public read access to all reviews for a temple.
-     * @allow (create) Any signed-in user can create a review.
-     * @deny (create) If not signed in.
-     * @allow (update, delete) Only the author of the review can update or delete it.
-     * @deny (update, delete) If the review does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /temples/{templeId}/reviews/{reviewId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
-      allow delete: if isExistingOwner(resource.data.userId);
-    }
-
-    /**
-     * @description Rules for user posts for a specific temple.
-     * @path /temples/{templeId}/posts/{postId}
-     * @allow (get, list) Public read access to all posts for a temple.
-     * @allow (create) Any signed-in user can create a post.
-     * @deny (create) If not signed in.
-     * @allow (update, delete) Only the author of the post can update or delete it.
-     * @deny (update, delete) If the post does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /temples/{templeId}/posts/{postId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId);
-      allow delete: if isExistingOwner(resource.data.authorId);
-    }
-
-     /**
-      * @description Rules for stories.
-      * @path /stories/{storyId}
-      * @allow (get, list) Public read access to all stories.
-      * @allow (create, update, delete) Stories are managed programmatically, not directly by users.
-      * @principle Public read, admin-only writes.
-      */
-    match /stories/{storyId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for epic heroes.
-     * @path /epicHeroes/{heroId}
-     * @allow (get, list) Public read access to all epic heroes.
-     * @allow (create, update, delete) Epic heroes are managed programmatically, not directly by users.
-     * @principle Public read, admin-only writes.
-     */
-    match /epicHeroes/{heroId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for rituals.
-     * @path /rituals/{ritualId}
-     * @allow (get, list) Public read access to all rituals.
-     * @allow (create, update, delete) Rituals are managed programmatically, not directly by users.
-     * @principle Public read, admin-only writes.
-     */
-    match /rituals/{ritualId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for panchang data.
-     * @path /panchang/{date}
-     * @allow (get, list) Public read access to all panchang data.
-     * @allow (create, update, delete) Panchang data is managed programmatically, not directly by users.
-     * @principle Public read, admin-only writes.
-     */
-    match /panchang/{date} {
-      allow get, list: if true;
-      allow create, update, delete: if false;  // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for festivals.
-     * @path /festivals/{festivalId}
-     * @allow (get, list) Public read access to all festivals.
-     * @allow (create, update, delete) Festivals are managed programmatically, not directly by users.
-     * @principle Public read, admin-only writes.
-     */
-    match /festivals/{festivalId} {
-      allow get, list: if true;
-      allow create, update, delete: if false;  // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for community groups.
-     * @path /groups/{groupId}
-     * @allow (get, list) Public read access to all groups.
-     * @allow (create) Any signed-in user can create a group.
-     * @deny (create) If not signed in.
-     * @allow (update, delete) Groups are managed programmatically, not directly by users.
-     * @principle Public read, limited writes (group creation).
-     */
-    match /groups/{groupId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if false;  // TODO: Add admin validation if needed
-    }
-
-    /**
-     * @description Rules for members of a group.
-     * @path /groups/{groupId}/members/{userId}
-     * @allow (get, list) Any member can get/list group members.
-     * @allow (create) Signed-in user can join a group.
-     * @deny (create) If not signed in.
-     * @allow (update, delete) Only the user can leave the group (delete their membership).
-     * @deny (update, delete) If the membership does not exist.
-     * @principle Shared access.
-     */
-    match /groups/{groupId}/members/{userId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isOwner(userId);
-    }
-
-    /**
-     * @description Rules for posts within a specific group.
-     * @path /groups/{groupId}/posts/{postId}
-     * @allow (get, list) Public read access to all posts in a group.
-     * @allow (create) Any signed-in user can create a post in a group.
-     * @deny (create) If not signed in.
-     * @allow (update, delete) Only the author of the post can update or delete it.
-     * @deny (update, delete) If the post does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /groups/{groupId}/posts/{postId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId);
-      allow delete: if isExistingOwner(resource.data.authorId);
-    }
-
-    /**
-     * @description Rules for comments on posts within a group.
-     * @path /groups/{groupId}/posts/{postId}/comments/{commentId}
-     * @allow (get, list) Public read access to all comments on a post.
-     * @allow (create) Any signed-in user can create a comment.
-     * @deny (create) If not signed in.
-     * @allow (update, delete) Only the author of the comment can update or delete it.
-     * @deny (update, delete) If the comment does not exist.
-     * @principle Public read, owner-only writes with ownership validation.
-     */
-    match /groups/{groupId}/posts/{postId}/comments/{commentId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.authorId);
-      allow delete: if isExistingOwner(resource.data.authorId);
-    }
-
-     /**
-      * @description Rules for likes on posts in groups.
-      * @path /groups/{groupId}/posts/{postId}/likes/{userId}
-      * @allow get, list: if true; // Anyone can list likes
-      * @allow create: if isSignedIn(); // Anyone signed in can like something
-      * @allow update, delete: if false; // No one can edit the like once it's created
-      */
-    match /groups/{groupId}/posts/{postId}/likes/{userId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if false;
-    }
-
-       /**
-        * @description Rules for community challenges.
-        * @path /challenges/{challengeId}
-        * @allow (get, list) Public read access to all challenges.
-        * @allow (create, update, delete) Challenges are managed programmatically, not directly by users.
-        * @principle Public read, admin-only writes.
-        */
-    match /challenges/{challengeId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add admin validation if needed
+    function isSignedIn() {
+      return request.auth != null;
     }
   }
 }

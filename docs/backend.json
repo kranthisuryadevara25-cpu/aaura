@@ -282,6 +282,10 @@
           "type": "string",
           "description": "Date the channel was created.",
           "format": "date-time"
+        },
+        "followerCount": {
+          "type": "number",
+          "description": "Number of subscribers to the channel."
         }
       },
       "required": [

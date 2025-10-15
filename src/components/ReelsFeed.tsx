@@ -91,10 +91,12 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
       <video
         ref={videoRef}
         src={item.mediaUrl}
-        className="w-full h-full object-contain"
+        poster={item.thumbnail || '/placeholder.jpg'}
+        preload="metadata"
         playsInline
         muted
         loop
+        className="w-full h-full object-contain"
         loading="lazy"
       />
 

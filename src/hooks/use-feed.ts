@@ -3,6 +3,9 @@
 import { useEffect, useState, useCallback } from "react";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
+import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useAuth } from "@/lib/firebase/provider";
 
 const getTextFromField = (field: Record<string, string> | string | undefined, lang: string): string => {
     if (!field) return "";
@@ -10,17 +13,46 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
     return field[lang] || field["en"] || "";
 };
 
-export const useFeed = (initialItems: FeedItem[] = []) => {
+export const useFeed = (initialItems: FeedItem[] = [], pageSize: number = 20) => {
   const { language } = useLanguage();
+  const [auth] = useAuthState(useAuth());
   const [allItems, setAllItems] = useState<FeedItem[]>(initialItems);
-  const [loading, setLoading] = useState(initialItems.length === 0);
-  
-  useEffect(() => {
-    if (initialItems.length > 0) {
-      setAllItems(initialItems);
+  const [loading, setLoading] = useState(false);
+  const [canLoadMore, setCanLoadMore] = useState(true);
+
+  const loadMore = useCallback(async () => {
+    if (loading || !canLoadMore) return;
+
+    setLoading(true);
+    try {
+      const result = await getPersonalizedFeed({
+        userId: auth?.uid,
+        pageSize: pageSize,
+        // In a real app, you'd pass a cursor from the last item of `allItems`
+      });
+      
+      if (result.feed.length === 0) {
+        setCanLoadMore(false);
+      } else {
+        // Prevent duplicates
+        const newItems = result.feed.filter(newItem => !allItems.some(existingItem => existingItem.id === newItem.id));
+        setAllItems(prevItems => [...prevItems, ...newItems]);
+      }
+
+    } catch (error) {
+      console.error("Failed to load more feed items:", error);
+    } finally {
       setLoading(false);
     }
-  }, [initialItems]);
+  }, [loading, canLoadMore, auth?.uid, pageSize, allItems]);
+  
+  // If there are no initial items, load the first batch.
+  useEffect(() => {
+    if (initialItems.length === 0) {
+      loadMore();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const filterItems = useCallback((searchQuery: string): FeedItem[] => {
     if (!searchQuery) {
@@ -34,6 +66,5 @@ export const useFeed = (initialItems: FeedItem[] = []) => {
     });
   }, [allItems, language]);
 
-  // loadMore and canLoadMore can be re-implemented here for client-side pagination if needed
-  return { allItems, loading, filterItems, loadMore: () => {}, canLoadMore: false };
+  return { allItems, loading, filterItems, loadMore, canLoadMore };
 };

@@ -8,7 +8,7 @@ import { Button } from "./ui/button";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
-import { doc, collection } from 'firebase/firestore';
+import { doc, collection, query } from 'firebase/firestore';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +18,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, Film, MessageSquare, Settings, ShoppingCart } from "lucide-react";
+import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
+import { FollowListDialog } from "./FollowListDialog";
+
 
 const UserStats = () => {
     const auth = useAuth();
@@ -57,14 +59,26 @@ const UserStats = () => {
 
     return (
         <div className="flex items-center gap-4 text-sm">
-            <div className="text-center">
-                <p className="font-bold">{userData.followerCount || 0}</p>
-                <p className="text-xs text-muted-foreground">Followers</p>
-            </div>
-            <div className="text-center">
-                <p className="font-bold">{userData.followingCount || 0}</p>
-                <p className="text-xs text-muted-foreground">Following</p>
-            </div>
+            <FollowListDialog 
+                userId={user.uid} 
+                type="followers" 
+                trigger={
+                    <div className="text-center cursor-pointer hover:bg-secondary p-2 rounded-md">
+                        <p className="font-bold">{userData.followerCount || 0}</p>
+                        <p className="text-xs text-muted-foreground">Followers</p>
+                    </div>
+                }
+            />
+             <FollowListDialog 
+                userId={user.uid} 
+                type="following" 
+                trigger={
+                    <div className="text-center cursor-pointer hover:bg-secondary p-2 rounded-md">
+                        <p className="font-bold">{userData.followingCount || 0}</p>
+                        <p className="text-xs text-muted-foreground">Following</p>
+                    </div>
+                }
+            />
         </div>
     )
 }

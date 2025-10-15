@@ -41,7 +41,7 @@ export default function PanchangPage() {
         setPanchang(data);
         setIsLoading(false);
 
-        if (user && userData) {
+        if (user && userData?.zodiacSign) {
           setIsAiLoading(true);
           personalizePanchang({
             userId: user.uid,
@@ -52,9 +52,14 @@ export default function PanchangPage() {
             }
           }).then(result => {
             setAiContent(result);
+          }).catch(error => {
+            console.error("Failed to get personalized panchang:", error);
+            setAiContent(null);
           }).finally(() => {
             setIsAiLoading(false);
           });
+        } else {
+            setAiContent(null);
         }
 
     }, [selectedDate, user, userData]);
@@ -213,7 +218,7 @@ export default function PanchangPage() {
                  <AccordionItem value="item-3" className="border-primary/20 border rounded-lg px-4 bg-transparent">
                      <AccordionTrigger className="text-lg font-semibold hover:no-underline">Today's Guidance</AccordionTrigger>
                      <AccordionContent className="pt-4 space-y-6">
-                        {zodiacInsight && (
+                        {zodiacInsight && userData?.zodiacSign && (
                             <div>
                                 <h3 className="font-semibold text-md mb-2 flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" /> For {userData.zodiacSign}</h3>
                                 <p className="text-muted-foreground text-sm">{zodiacInsight}</p>

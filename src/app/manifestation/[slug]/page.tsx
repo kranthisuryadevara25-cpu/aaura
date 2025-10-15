@@ -19,6 +19,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { Separator } from '@/components/ui/separator';
 import { Comments } from '@/components/comments';
 import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 export default function ManifestationDetailPage() {
   const params = useParams();
@@ -46,22 +48,27 @@ export default function ManifestationDetailPage() {
         toast({ variant: "destructive", title: "Please log in to like posts." });
         return;
     }
-    startLikeTransition(async () => {
+    startLikeTransition(() => {
         const batch = writeBatch(db);
+        const likeData = { createdAt: serverTimestamp() };
+
         if (isLiked) {
             batch.delete(likeRef);
             batch.update(postRef, { likesCount: increment(-1) });
         } else {
-            batch.set(likeRef, { createdAt: serverTimestamp() });
+            batch.set(likeRef, likeData);
             batch.update(postRef, { likesCount: increment(1) });
         }
         
-        try {
-            await batch.commit();
-        } catch (error) {
-            console.error("Failed to update like status:", error);
-            toast({ variant: "destructive", title: "Something went wrong." });
-        }
+        batch.commit().catch(async (serverError) => {
+            const operation = isLiked ? 'delete' : 'create';
+            const permissionError = new FirestorePermissionError({
+                path: likeRef.path,
+                operation: operation,
+                requestResourceData: operation === 'create' ? likeData : undefined,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
     });
   };
 

@@ -49,7 +49,7 @@ const prompt = ai.definePrompt({
       - Keep it to 2-3 sentences.
 
   2.  **Generate a Daily Horoscope:**
-      - Create a positive, uplifting, and brief (3-4 sentences) horoscope for today based on their zodiac sign and birth date.
+      - Create a positive, uplifting, and brief (3-4 sentences) horoscope for today based on their zodiac sign.
       - Focus on spiritual well-being, mindfulness, or positive actions.
 
   Respond in a valid JSON format.

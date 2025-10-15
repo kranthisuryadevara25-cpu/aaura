@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -16,6 +16,7 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import { getPostsByTempleId, type TemplePost } from '@/lib/temple-posts';
+import { getPostsByGroupId, type Post as GroupPost } from '@/lib/posts';
 import { Comments } from './comments';
 
 const postSchema = z.object({
@@ -24,12 +25,14 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
+type AnyPost = TemplePost | GroupPost;
+
 interface PostsProps {
     contextId: string;
     contextType: 'temple' | 'group';
 }
 
-function PostCard({ post }: { post: TemplePost }) {
+function PostCard({ post }: { post: AnyPost }) {
   const { toast } = useToast();
   const auth = useAuth();
   const [user] = useAuthState(auth);
@@ -111,14 +114,15 @@ function CreatePost({ contextId, contextType, onPostCreated }: { contextId: stri
     }
     startTransition(async () => {
         // Mock post creation
-        const newPost = {
-            id: `tpost-${Date.now()}`,
+        const newPost: AnyPost = {
+            id: `post-${Date.now()}`,
             authorId: user.uid,
             content: data.content,
             createdAt: new Date().toISOString(),
             likes: 0,
             commentsCount: 0,
-            [contextType === 'temple' ? 'templeId' : 'groupId']: contextId,
+            ...(contextType === 'temple' && { templeId: contextId }),
+            ...(contextType === 'group' && { groupId: contextId }),
         };
         onPostCreated(newPost);
         form.reset();
@@ -167,9 +171,17 @@ function CreatePost({ contextId, contextType, onPostCreated }: { contextId: stri
 }
 
 export function Posts({ contextId, contextType }: PostsProps) {
-    const [posts, setPosts] = useState<TemplePost[]>(getPostsByTempleId(contextId));
+    const [posts, setPosts] = useState<AnyPost[]>([]);
+    
+    useEffect(() => {
+        if (contextType === 'temple') {
+            setPosts(getPostsByTempleId(contextId));
+        } else if (contextType === 'group') {
+            setPosts(getPostsByGroupId(contextId));
+        }
+    }, [contextId, contextType]);
 
-    const handlePostCreated = (newPost: TemplePost) => {
+    const handlePostCreated = (newPost: AnyPost) => {
         setPosts(prevPosts => [newPost, ...prevPosts]);
     }
   

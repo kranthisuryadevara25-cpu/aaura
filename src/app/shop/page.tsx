@@ -47,7 +47,7 @@ export default function ShopPage() {
                 const productFromMock = products.find(p => p.id === productId);
 
                 if (!productFromMock) {
-                    throw "Product not found";
+                    throw new Error("Product not found");
                 }
                 const productData = productFromMock;
 

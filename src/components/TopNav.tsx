@@ -34,8 +34,11 @@ const UserStats = () => {
         setIsClient(true);
     }, []);
 
-    if (!isClient || !user) {
-        // Render nothing on the server or initial client render
+    if (!isClient) {
+        return <div className="flex items-center gap-4"><Skeleton className="h-8 w-16" /><Skeleton className="h-8 w-16" /></div>; 
+    }
+
+    if (!user) {
         return null; 
     }
 
@@ -72,7 +75,16 @@ const CartButton = () => {
     const [user] = useAuthState(auth);
     const cartRef = user ? collection(db, 'users', user.uid, 'cart') : undefined;
     const [cartItems] = useCollectionData(cartRef);
-    const itemCount = cartItems?.length || 0;
+    const itemCount = cartItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    if (!isClient || !user) {
+        return null;
+    }
 
     return (
         <Button asChild variant="ghost" size="icon">
@@ -102,9 +114,9 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
       </div>
 
       <div className="flex items-center gap-3">
-        {user && <UserStats />}
+        <UserStats />
         <LanguageSwitcher />
-        {user && <CartButton />}
+        <CartButton />
         {user ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

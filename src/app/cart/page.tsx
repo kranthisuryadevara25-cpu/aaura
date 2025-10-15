@@ -4,11 +4,11 @@
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
-import { collection, doc, deleteDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, deleteDoc, writeBatch, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
-import { Loader2, ShoppingCart, Trash2 } from 'lucide-react';
+import { Loader2, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useToast } from '@/hooks/use-toast';
 import { useTransition, useEffect } from 'react';
@@ -28,7 +28,7 @@ export default function CartPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [user, authLoading] = useAuthState(auth);
-  const [isDeleting, startDeleteTransition] = useTransition();
+  const [isUpdating, startUpdateTransition] = useTransition();
   const [isCheckingOut, startCheckoutTransition] = useTransition();
 
   const cartRef = user ? collection(db, 'users', user.uid, 'cart') : undefined;
@@ -36,9 +36,26 @@ export default function CartPage() {
 
   const totalAmount = cartItems?.reduce((total, item) => total + item.price * item.quantity, 0) || 0;
 
+  const handleUpdateQuantity = (productId: string, newQuantity: number) => {
+    if (!user) return;
+    if (newQuantity < 1) {
+        handleRemoveFromCart(productId);
+        return;
+    }
+    startUpdateTransition(async () => {
+      try {
+        const itemRef = doc(db, 'users', user.uid, 'cart', productId);
+        await updateDoc(itemRef, { quantity: newQuantity });
+      } catch (error) {
+        console.error('Error updating quantity:', error);
+        toast({ variant: 'destructive', title: 'Failed to update item quantity.' });
+      }
+    });
+  };
+
   const handleRemoveFromCart = (productId: string) => {
     if (!user) return;
-    startDeleteTransition(async () => {
+    startUpdateTransition(async () => {
       try {
         const itemRef = doc(db, 'users', user.uid, 'cart', productId);
         await deleteDoc(itemRef);
@@ -55,16 +72,10 @@ export default function CartPage() {
 
     startCheckoutTransition(async () => {
       try {
-        // For this example, we'll create an order for the whole cart.
-        // A real implementation would create line items.
-        // We'll use the first product's ID for the AI flow for now.
         const firstProduct = cartItems[0];
         
         toast({ title: 'Initiating secure payment...' });
 
-        // The AI flow is designed for a single product ID verification.
-        // For a multi-item cart, we pass the first one for the server-side price check logic.
-        // The total amount is what's actually charged.
         const order = await createRazorpayOrder({
             amount: totalAmount * 100, // Amount in paise
             currency: 'INR',
@@ -85,7 +96,6 @@ export default function CartPage() {
             image: 'https://picsum.photos/seed/logo/128/128',
             order_id: order.id,
             handler: async function (response: any) {
-                // On successful payment, move cart items to an order document
                 const batch = writeBatch(db);
                 const orderRef = doc(collection(db, 'users', user.uid, 'orders'));
                 batch.set(orderRef, {
@@ -102,7 +112,6 @@ export default function CartPage() {
                     }
                 });
 
-                // Clear the cart
                 cartItems.forEach(item => {
                     const cartItemRef = doc(db, 'users', user.uid, 'cart', item.productId);
                     batch.delete(cartItemRef);
@@ -188,15 +197,23 @@ export default function CartPage() {
                         </div>
                         <div>
                         <h3 className="font-semibold">{item.name_en}</h3>
-                        <p className="text-muted-foreground text-sm">Quantity: {item.quantity}</p>
-                        <p className="font-bold text-primary text-md mt-1">₹{item.price.toFixed(2)}</p>
+                         <div className="flex items-center gap-2 mt-1">
+                            <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)} disabled={isUpdating}>
+                                <Minus className="h-4 w-4" />
+                            </Button>
+                            <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
+                             <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)} disabled={isUpdating}>
+                                <Plus className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <p className="font-bold text-primary text-md mt-2">₹{(item.price * item.quantity).toFixed(2)}</p>
                         </div>
                     </div>
                     <Button
                       variant="ghost"
                       size="icon"
                       onClick={() => handleRemoveFromCart(item.productId)}
-                      disabled={isDeleting}
+                      disabled={isUpdating}
                     >
                       <Trash2 className="h-5 w-5 text-destructive" />
                     </Button>

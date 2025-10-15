@@ -6,6 +6,7 @@ import { CheckCircle, PlusCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { collection, query, getDocs, type DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase/admin';
+import { useLanguage } from '@/hooks/use-language';
 
 // This line disables caching, ensuring the channel list is always fresh.
 export const revalidate = 0;

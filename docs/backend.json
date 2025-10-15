@@ -1100,7 +1100,7 @@
         }
       },
       {
-        "path": "/groups/{groupId}/posts/{postId}",
+        "path": "/posts/{postId}",
         "definition": {
             "entityName": "Post",
             "schema": { "$ref": "#/entities/Post" },
@@ -1108,7 +1108,7 @@
         }
       },
       {
-          "path": "/groups/{groupId}/posts/{postId}/comments/{commentId}",
+          "path": "/posts/{postId}/comments/{commentId}",
           "definition": {
               "entityName": "Comment",
               "schema": { "$ref": "#/entities/Comment" },
@@ -1116,7 +1116,7 @@
           }
       },
       {
-        "path": "/groups/{groupId}/posts/{postId}/likes/{userId}",
+        "path": "/posts/{postId}/likes/{userId}",
         "definition": {
             "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
             "description": "Stores likes for a specific forum post within a group. Document ID is the user's UID."

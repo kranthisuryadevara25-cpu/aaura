@@ -1,13 +1,12 @@
-
 'use client';
 
-import { useTransition, useState } from 'react';
+import { useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -18,7 +17,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
-import { getCommentsByPostId, type Comment } from '@/lib/comments';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+
 
 const commentSchema = z.object({
   text: z.string().min(1, "Comment cannot be empty.").max(500, "Comment is too long."),
@@ -26,21 +27,32 @@ const commentSchema = z.object({
 
 type CommentFormValues = z.infer<typeof commentSchema>;
 
-function CommentCard({ comment }: { comment: any; }) {
-  // MOCK: This would fetch real author data
-  const author = { displayName: 'User ' + comment.authorId.slice(0, 4), photoURL: `https://picsum.photos/seed/${comment.authorId}/100/100` };
+function CommentAuthor({ authorId }: { authorId: string }) {
+    const db = useFirestore();
+    const authorRef = doc(db, 'users', authorId);
+    const [author, loading] = useDocumentData(authorRef);
 
+    if (loading) {
+        return <Skeleton className="h-9 w-9 rounded-full" />;
+    }
+    
+    return (
+        <Avatar className="h-9 w-9">
+            <AvatarImage src={author?.photoURL} />
+            <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
+        </Avatar>
+    )
+}
+
+function CommentCard({ comment }: { comment: any; }) {
   return (
     <div className="flex items-start gap-4">
-      <Avatar className="h-9 w-9">
-        <AvatarImage src={author?.photoURL} />
-        <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
-      </Avatar>
+      <CommentAuthor authorId={comment.authorId} />
       <div className="w-full">
         <div className="flex items-center gap-2">
-          <p className="font-semibold text-sm">{author?.displayName || 'Anonymous'}</p>
+          <p className="font-semibold text-sm">{comment.authorId.slice(0,6)}</p>
           <p className="text-xs text-muted-foreground">
-            {comment.createdAt ? formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true }) : 'Just now'}
+            {comment.createdAt ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
           </p>
         </div>
         <p className="text-sm mt-1 text-foreground/90">{comment.text}</p>
@@ -56,12 +68,14 @@ interface CommentsProps {
 
 export function Comments({ contentId, contentType }: CommentsProps) {
   const [user] = useAuthState(useAuth());
+  const db = useFirestore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
-
-  const [comments, setComments] = useState<Comment[]>(getCommentsByPostId(contentId));
-  const commentsLoading = false;
+  
+  const commentsCollectionRef = collection(db, `${contentType}s/${contentId}/comments`);
+  const commentsQuery = query(commentsCollectionRef, orderBy('createdAt', 'desc'));
+  const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
 
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
@@ -73,19 +87,34 @@ export function Comments({ contentId, contentType }: CommentsProps) {
       toast({ variant: 'destructive', title: 'You must be logged in to comment.' });
       return;
     }
+
     startTransition(async () => {
-      // Mock comment creation
-      const newComment = {
-          id: `comment-${Date.now()}`,
-          contentId: contentId,
-          contentType: contentType,
+        const commentData = {
+          contentId,
+          contentType,
           authorId: user.uid,
           text: data.text,
-          createdAt: new Date().toISOString(),
-      };
-      setComments(prev => [newComment, ...prev]);
-      form.reset();
-      toast({ title: 'Comment posted! (Mock)' });
+          createdAt: serverTimestamp(),
+        };
+
+        try {
+            await addDoc(commentsCollectionRef, commentData);
+            
+            // Increment commentsCount on the parent document
+            const parentDocRef = doc(db, `${contentType}s`, contentId);
+            await updateDoc(parentDocRef, {
+                commentsCount: increment(1)
+            });
+
+            form.reset();
+        } catch (serverError) {
+             const permissionError = new FirestorePermissionError({
+                path: commentsCollectionRef.path,
+                operation: 'create',
+                requestResourceData: commentData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
     });
   };
 

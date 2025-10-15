@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useToast } from '@/hooks/use-toast';
@@ -10,35 +9,54 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageCircle, ThumbsUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
-import { doc } from 'firebase/firestore';
+import { useTransition, useState } from 'react';
+import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
 import type { DocumentData } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 export function PostCard({ post }: { post: DocumentData; }) {
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
   const [user] = useAuthState(auth);
-  
-  const authorRef = doc(db, 'users', post.authorId);
+  const [isLiking, startLikeTransition] = useTransition();
+
+  const authorRef = post.authorId ? doc(db, 'users', post.authorId) : undefined;
   const [author, authorIsLoading] = useDocumentData(authorRef);
   
-  // MOCK: Like state is local for now. In a real app, this would be a Firestore read/write.
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes || 0);
-  
+  const postRef = doc(db, 'posts', post.id);
+  const likeRef = user ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined;
+  const [likeDoc, likeLoading] = useDocumentData(likeRef);
+  const isLiked = !!likeDoc;
+
   const handleLike = () => {
-    if (!user) {
-      toast({ variant: 'destructive', title: "You must be logged in to like a post." });
-      return;
+    if (!user || !postRef || !likeRef) {
+        toast({ variant: "destructive", title: "Please log in to like posts." });
+        return;
     }
-    // This is a mock implementation. A real one would update Firestore.
-    if (isLiked) {
-        setLikeCount(prev => prev - 1);
-    } else {
-        setLikeCount(prev => prev + 1);
-    }
-    setIsLiked(prev => !prev);
+    startLikeTransition(() => {
+        const batch = writeBatch(db);
+        const likeData = { createdAt: serverTimestamp() };
+
+        if (isLiked) {
+            batch.delete(likeRef);
+            batch.update(postRef, { likes: increment(-1) });
+        } else {
+            batch.set(likeRef, likeData);
+            batch.update(postRef, { likes: increment(1) });
+        }
+        
+        batch.commit().catch(async (serverError) => {
+            const operation = isLiked ? 'delete' : 'create';
+            const permissionError = new FirestorePermissionError({
+                path: likeRef.path,
+                operation: operation,
+                requestResourceData: operation === 'create' ? likeData : undefined,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+    });
   };
 
   return (
@@ -63,8 +81,9 @@ export function PostCard({ post }: { post: DocumentData; }) {
         <p className="whitespace-pre-wrap">{post.content}</p>
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-4">
-         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user}>
-            <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> {likeCount}
+         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
+            <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> 
+            {isLiking || likeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : post.likes || 0}
         </Button>
         <div className="flex items-center text-sm text-muted-foreground">
             <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} comments
@@ -73,5 +92,3 @@ export function PostCard({ post }: { post: DocumentData; }) {
     </Card>
   );
 }
-
-    

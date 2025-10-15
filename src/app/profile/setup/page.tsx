@@ -33,6 +33,8 @@ import { deities } from '@/lib/deities';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { formSchema, type FormValues } from '@/lib/profile-setup-schemas';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 
 const getZodiacSign = (date: Date): string => {
@@ -62,8 +64,8 @@ export default function ProfileSetupPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
-    { title: 'Tell us about yourself', schema: z.object({ fullName: formSchema.shape.fullName, birthDate: formSchema.shape.birthDate, timeOfBirth: formSchema.shape.timeOfBirth, placeOfBirth: formSchema.shape.placeOfBirth }), fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
-    { title: 'Select your interests', schema: z.object({ favoriteDeities: formSchema.shape.favoriteDeities }), fields: ['favoriteDeities'] as const },
+    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
+    { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] as const },
     { title: 'Get your first horoscope', schema: z.object({}), fields: [] },
   ];
 
@@ -80,7 +82,6 @@ export default function ProfileSetupPage() {
   });
 
   const nextStep = async () => {
-    const currentSchema = steps[currentStep].schema;
     const fieldsToValidate = steps[currentStep].fields;
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
@@ -106,7 +107,6 @@ export default function ProfileSetupPage() {
     const currentUser = auth.currentUser;
 
     startTransition(async () => {
-      try {
         const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
         const zodiacSign = getZodiacSign(data.birthDate);
         
@@ -166,24 +166,35 @@ export default function ProfileSetupPage() {
             awardedAt: serverTimestamp(),
         });
         
-        await batch.commit();
-
-        toast({
-          title: 'Profile Complete!',
-          description: 'Welcome to aaura! Your spiritual journey begins now.',
-        });
-        
-        router.push('/');
-
-      } catch (error) {
-        console.error('Failed to save profile:', error);
-        toast({
-          variant: 'destructive',
-          title: 'An Error Occurred',
-          description: 'Could not save your profile. Please try again.',
-        });
-      }
+        batch.commit()
+          .then(() => {
+            toast({
+              title: 'Profile Complete!',
+              description: 'Welcome to aaura! Your spiritual journey begins now.',
+            });
+            router.push('/');
+          })
+          .catch(async (serverError) => {
+            const permissionError = new FirestorePermissionError({
+              path: userProfileRef.path,
+              operation: 'create',
+              requestResourceData: userProfileData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+          });
     });
+  };
+
+  const { step1Schema, step2Schema } = {
+    step1Schema: z.object({
+      fullName: formSchema.shape.fullName,
+      birthDate: formSchema.shape.birthDate,
+      timeOfBirth: formSchema.shape.timeOfBirth,
+      placeOfBirth: formSchema.shape.placeOfBirth
+    }),
+    step2Schema: z.object({
+      favoriteDeities: formSchema.shape.favoriteDeities
+    })
   };
 
   return (

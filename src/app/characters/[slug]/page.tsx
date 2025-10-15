@@ -5,13 +5,11 @@ import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { BookOpen, Loader2 } from 'lucide-react';
+import { BookOpen, Loader2, Users, Shield, Award, AlertTriangle, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { getCharacterBySlug } from '@/lib/characters';
-import { stories as allStories } from '@/lib/stories';
-import type { DocumentData } from 'firebase/firestore';
-
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export default function CharacterDetailPage() {
   const params = useParams();
@@ -20,8 +18,6 @@ export default function CharacterDetailPage() {
   
   const character = getCharacterBySlug(slug);
   const isLoading = false;
-
-  const associatedStories = character ? allStories.filter(story => character.associatedStories.includes(story.slug)) : [];
   
   const pageLoading = isLoading;
 
@@ -38,8 +34,6 @@ export default function CharacterDetailPage() {
   }
   
   const name = character.name[language] || character.name.en;
-  const description = character.description[language] || character.description.en;
-  const role = character.role[language] || character.role.en;
   
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
@@ -48,47 +42,86 @@ export default function CharacterDetailPage() {
               <Card className="sticky top-24 bg-transparent border-primary/20">
                     <div className="aspect-square relative rounded-t-lg overflow-hidden">
                       <Image
-                          src={character.image.url}
+                          src={character.imageUrl}
                           alt={name}
-                          data-ai-hint={character.image.hint}
+                          data-ai-hint={character.imageHint}
                           fill
                           className="object-cover"
                       />
                   </div>
                   <CardHeader>
                       <CardTitle className="text-4xl font-headline text-primary">{name}</CardTitle>
+                      <p className="text-lg text-muted-foreground">{character.description}</p>
                       <div className="flex flex-wrap gap-2 pt-2">
-                          <Badge variant="default">{role}</Badge>
-                          {character.attributes.map((attr: string) => <Badge key={attr} variant="secondary">{attr}</Badge>)}
+                          {character.epicAssociation.map((epic: string) => <Badge key={epic} variant="default">{epic}</Badge>)}
                       </div>
                   </CardHeader>
               </Card>
           </div>
-          <div className="md:col-span-2 space-y-8">
-              <Card className="bg-transparent border-primary/20">
-                  <CardHeader>
-                      <CardTitle className="text-2xl text-primary">{t.characterDetail.about} {name}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                      <p className="text-lg text-foreground/90">{description}</p>
-                  </CardContent>
-              </Card>
-              
-              {associatedStories && associatedStories.length > 0 && (
-                  <Card className="bg-transparent border-primary/20">
-                      <CardHeader>
-                          <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.characterDetail.associatedStories}</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                          {associatedStories.map((story) => (
-                              <Link key={story.id} href={`/stories/${story.slug}`} className="block p-4 rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
-                                  <h4 className="font-semibold text-lg text-primary group-hover:underline">{story.title[language] || story.title.en}</h4>
-                                  <p className="text-sm text-muted-foreground line-clamp-2">{story.summary[language] || story.summary.en}</p>
-                              </Link>
-                          ))}
-                      </CardContent>
-                  </Card>
-              )}
+          <div className="md:col-span-2 space-y-6">
+                <Accordion type="single" collapsible defaultValue="item-1" className="w-full">
+                    <AccordionItem value="item-1" className="bg-transparent border-primary/20 border rounded-lg px-4">
+                        <AccordionTrigger className="text-primary text-xl font-semibold hover:no-underline">
+                            <div className="flex items-center gap-3"><Users /> Background & Family</div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                            <div>
+                                <h4 className="font-bold text-md">Birth & Early Life</h4>
+                                <p className="text-muted-foreground">{character.background.earlyLife}</p>
+                            </div>
+                            <Separator />
+                            <div>
+                                <h4 className="font-bold text-md">Family</h4>
+                                <p className="text-sm text-muted-foreground"><strong>Parents:</strong> {character.background.family.parents.join(', ')}</p>
+                                <p className="text-sm text-muted-foreground"><strong>Siblings:</strong> {character.background.family.siblings.join(', ')}</p>
+                                <p className="text-sm text-muted-foreground"><strong>Spouses:</strong> {character.background.family.spouses.join(', ')}</p>
+                                <p className="text-sm text-muted-foreground"><strong>Children:</strong> {character.background.family.children.join(', ')}</p>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                    
+                    <AccordionItem value="item-2" className="bg-transparent border-primary/20 border rounded-lg px-4 mt-4">
+                        <AccordionTrigger className="text-primary text-xl font-semibold hover:no-underline">
+                            <div className="flex items-center gap-3"><Shield /> Qualities & Achievements</div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                             <div>
+                                <h4 className="font-bold text-md">Qualities</h4>
+                                <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+                                    {character.qualities.map((q, i) => <li key={i}>{q}</li>)}
+                                </ul>
+                            </div>
+                            <Separator />
+                             <div>
+                                <h4 className="font-bold text-md">Achievements</h4>
+                                <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+                                    {character.achievements.map((a, i) => <li key={i}>{a}</li>)}
+                                </ul>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+
+                     <AccordionItem value="item-3" className="bg-transparent border-primary/20 border rounded-lg px-4 mt-4">
+                        <AccordionTrigger className="text-primary text-xl font-semibold hover:no-underline">
+                             <div className="flex items-center gap-3"><AlertTriangle /> Mistakes & Learnings</div>
+                        </AccordionTrigger>
+                        <AccordionContent className="space-y-4 pt-2">
+                             <div>
+                                <h4 className="font-bold text-md">Mistakes</h4>
+                                <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+                                    {character.mistakes.map((m, i) => <li key={i}>{m}</li>)}
+                                </ul>
+                            </div>
+                            <Separator />
+                             <div>
+                                <h4 className="font-bold text-md text-green-600 flex items-center gap-2"><Lightbulb/> Learnings for Children</h4>
+                                <ul className="list-disc pl-5 text-muted-foreground space-y-1">
+                                    {character.learningsForChildren.map((l, i) => <li key={i}>{l}</li>)}
+                                </ul>
+                            </div>
+                        </AccordionContent>
+                    </AccordionItem>
+                </Accordion>
           </div>
       </div>
     </main>

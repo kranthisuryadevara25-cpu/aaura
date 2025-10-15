@@ -19,10 +19,10 @@ export default function CharactersPage() {
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                <UserSquare className="h-10 w-10" /> {t.characters.title}
+                <UserSquare className="h-10 w-10" /> {t.sidebar.characters}
             </h1>
             <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                {t.characters.description}
+                Discover the heroes, villains, gods, and sages of Hindu mythology.
             </p>
         </div>
 
@@ -34,16 +34,15 @@ export default function CharactersPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {characters?.map((character: any) => {
             const name = character.name[language] || character.name.en;
-            const description = character.description[language] || character.description.en;
-            const role = character.role[language] || character.role.en;
+            const description = character.description;
             return (
                 <Card key={character.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
                     <CardContent className="p-0">
                         <div className="aspect-video relative">
                             <Image
-                                src={character.image.url}
+                                src={character.imageUrl}
                                 alt={name}
-                                data-ai-hint={character.image.hint}
+                                data-ai-hint={character.imageHint}
                                 fill
                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
                             />
@@ -51,7 +50,7 @@ export default function CharactersPage() {
                     </CardContent>
                     <CardHeader>
                         <CardTitle className="text-primary">{name}</CardTitle>
-                        <Badge variant="secondary" className="w-fit">{role}</Badge>
+                        <Badge variant="secondary" className="w-fit">{character.epicAssociation.join(', ')}</Badge>
                         <CardDescription className="line-clamp-3 pt-2">{description}</CardDescription>
                     </CardHeader>
                     <CardContent className="mt-auto">

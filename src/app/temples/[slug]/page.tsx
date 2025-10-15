@@ -14,12 +14,105 @@ import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useToast } from '@/hooks/use-toast';
 import { getTempleBySlug } from '@/lib/temples';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Posts } from '@/components/Posts';
 
 
 const getText = (field: { [key: string]: string } | undefined, lang: string = 'en') => {
     if (!field) return "";
     return field[lang] || field.en || Object.values(field)[0] || "";
 };
+
+function TempleInfo({ temple, language }: { temple: any, language: string }) {
+    const { t } = useLanguage();
+    const name = getText(temple.name, language);
+    const deityName = getText(temple.deity.name, language);
+    const mythologicalImportance = getText(temple.importance.mythological, language);
+    const historicalImportance = getText(temple.importance.historical, language);
+    const festivals = getText(temple.visitingInfo.festivals, language);
+    const timings = getText(temple.visitingInfo.timings, language);
+    const dressCode = getText(temple.visitingInfo.dressCode, language);
+    const poojaGuidelines = getText(temple.visitingInfo.poojaGuidelines, language);
+    const accommodation = getText(temple.nearbyInfo.accommodation, language);
+    const food = getText(temple.nearbyInfo.food, language);
+    const transport = getText(temple.nearbyInfo.transport, language);
+    const guides = getText(temple.nearbyInfo.guides, language);
+    const placesToVisit = getText(temple.nearbyInfo.placesToVisit, language);
+    
+    return (
+         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12 mt-8">
+            <div className="lg:col-span-2 space-y-8">
+                <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary"><BookOpen />{t.templeDetail.significance}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div>
+                            <h4 className="font-semibold text-lg">{t.templeDetail.mythologicalImportance}</h4>
+                            <p className="text-foreground/90">{mythologicalImportance}</p>
+                        </div>
+                        <Separator />
+                        <div>
+                            <h4 className="font-semibold text-lg">{t.templeDetail.historicalImportance}</h4>
+                            <p className="text-foreground/90">{historicalImportance}</p>
+                        </div>
+                    </CardContent>
+                </Card>
+                
+                  <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> {t.templeDetail.festivals}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-foreground/90">{festivals}</p>
+                    </CardContent>
+                </Card>
+            </div>
+
+            <div className="space-y-6">
+                <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.templeDetail.visitingInfo}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 text-sm">
+                        <p><strong className="text-foreground">{t.templeDetail.timings}:</strong> {timings}</p>
+                        <p><strong className="text-foreground">{t.templeDetail.dressCode}:</strong> {dressCode}</p>
+                        <p><strong className="text-foreground">{t.templeDetail.poojaGuidelines}:</strong> {poojaGuidelines}</p>
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-transparent border-primary/20">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-3 text-primary">{t.templeDetail.travelFacilities}</CardTitle>
+                    </CardHeader>
+                      <CardContent className="space-y-4 text-sm">
+                        <div className="flex items-start gap-3">
+                            <Building className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.accommodation}:</strong> {accommodation}</div>
+                        </div>
+                          <div className="flex items-start gap-3">
+                            <Utensils className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.food}:</strong> {food}</div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <Plane className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.transport}:</strong> {transport}</div>
+                        </div>
+                         <div className="flex items-start gap-3">
+                            <Users className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">Suggested Guides:</strong> {guides}</div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <MapPin className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">{t.templeDetail.placesToVisit}:</strong> {placesToVisit}</div>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
+        </div>
+    )
+}
+
 
 export default function TempleDetailPage() {
   const params = useParams();
@@ -58,16 +151,6 @@ export default function TempleDetailPage() {
   const name = getText(temple.name, language);
   const deityName = getText(temple.deity.name, language);
   const mythologicalImportance = getText(temple.importance.mythological, language);
-  const historicalImportance = getText(temple.importance.historical, language);
-  const festivals = getText(temple.visitingInfo.festivals, language);
-  const timings = getText(temple.visitingInfo.timings, language);
-  const dressCode = getText(temple.visitingInfo.dressCode, language);
-  const poojaGuidelines = getText(temple.visitingInfo.poojaGuidelines, language);
-  const accommodation = getText(temple.nearbyInfo.accommodation, language);
-  const food = getText(temple.nearbyInfo.food, language);
-  const transport = getText(temple.nearbyInfo.transport, language);
-  const guides = getText(temple.nearbyInfo.guides, language);
-  const placesToVisit = getText(temple.nearbyInfo.placesToVisit, language);
   
   const templeJsonLd = {
       '@context': 'https://schema.org',
@@ -141,76 +224,20 @@ export default function TempleDetailPage() {
             <CarouselNext />
         </Carousel>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
-            <div className="lg:col-span-2 space-y-8">
-                <Card className="bg-transparent border-primary/20">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-primary"><BookOpen />{t.templeDetail.significance}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <div>
-                            <h4 className="font-semibold text-lg">{t.templeDetail.mythologicalImportance}</h4>
-                            <p className="text-foreground/90">{mythologicalImportance}</p>
-                        </div>
-                        <Separator />
-                        <div>
-                            <h4 className="font-semibold text-lg">{t.templeDetail.historicalImportance}</h4>
-                            <p className="text-foreground/90">{historicalImportance}</p>
-                        </div>
-                    </CardContent>
-                </Card>
-                
-                  <Card className="bg-transparent border-primary/20">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> {t.templeDetail.festivals}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-foreground/90">{festivals}</p>
-                    </CardContent>
-                </Card>
-            </div>
-
-            <div className="space-y-6">
-                <Card className="bg-transparent border-primary/20">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.templeDetail.visitingInfo}</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-3 text-sm">
-                        <p><strong className="text-foreground">{t.templeDetail.timings}:</strong> {timings}</p>
-                        <p><strong className="text-foreground">{t.templeDetail.dressCode}:</strong> {dressCode}</p>
-                        <p><strong className="text-foreground">{t.templeDetail.poojaGuidelines}:</strong> {poojaGuidelines}</p>
-                    </CardContent>
-                </Card>
-
-                <Card className="bg-transparent border-primary/20">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-3 text-primary">{t.templeDetail.travelFacilities}</CardTitle>
-                    </CardHeader>
-                      <CardContent className="space-y-4 text-sm">
-                        <div className="flex items-start gap-3">
-                            <Building className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                            <div><strong className="text-foreground block">{t.templeDetail.accommodation}:</strong> {accommodation}</div>
-                        </div>
-                          <div className="flex items-start gap-3">
-                            <Utensils className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                            <div><strong className="text-foreground block">{t.templeDetail.food}:</strong> {food}</div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <Plane className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                            <div><strong className="text-foreground block">{t.templeDetail.transport}:</strong> {transport}</div>
-                        </div>
-                         <div className="flex items-start gap-3">
-                            <Users className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                            <div><strong className="text-foreground block">Suggested Guides:</strong> {guides}</div>
-                        </div>
-                        <div className="flex items-start gap-3">
-                            <MapPin className="h-5 w-5 mt-1 shrink-0 text-accent" />
-                            <div><strong className="text-foreground block">{t.templeDetail.placesToVisit}:</strong> {placesToVisit}</div>
-                        </div>
-                    </CardContent>
-                </Card>
-            </div>
-        </div>
+        <Tabs defaultValue="info" className="w-full max-w-6xl mx-auto">
+            <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="info">Temple Information</TabsTrigger>
+                <TabsTrigger value="community">Community Discussion</TabsTrigger>
+            </TabsList>
+            <TabsContent value="info">
+                <TempleInfo temple={temple} language={language} />
+            </TabsContent>
+            <TabsContent value="community">
+                <div className="max-w-4xl mx-auto mt-8">
+                     <Posts contextId={temple.slug} contextType="temple" />
+                </div>
+            </TabsContent>
+        </Tabs>
     </main>
   );
 }

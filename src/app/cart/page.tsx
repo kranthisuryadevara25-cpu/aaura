@@ -32,7 +32,7 @@ export default function CartPage() {
   const [isCheckingOut, startCheckoutTransition] = useTransition();
 
   const cartRef = user ? collection(db, 'users', user.uid, 'cart') : undefined;
-  const [cartItems, cartLoading] = useCollectionData(cartRef, { idField: 'id' });
+  const [cartItems, cartLoading] = useCollectionData(cartRef, { idField: 'productId' });
 
   const totalAmount = cartItems?.reduce((total, item) => total + item.price * item.quantity, 0) || 0;
 
@@ -104,7 +104,7 @@ export default function CartPage() {
 
                 // Clear the cart
                 cartItems.forEach(item => {
-                    const cartItemRef = doc(db, 'users', user.uid, 'cart', item.id);
+                    const cartItemRef = doc(db, 'users', user.uid, 'cart', item.productId);
                     batch.delete(cartItemRef);
                 });
 
@@ -181,7 +181,7 @@ export default function CartPage() {
             {cartItems && cartItems.length > 0 ? (
               <div className="space-y-4">
                 {cartItems.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between gap-4 p-2 rounded-md border">
+                  <div key={item.productId} className="flex items-center justify-between gap-4 p-2 rounded-md border">
                     <div className="flex items-center gap-4">
                         <div className="relative w-20 h-20 rounded-md overflow-hidden border">
                         <Image src={item.imageUrl} alt={item.name_en} fill className="object-cover" />
@@ -195,7 +195,7 @@ export default function CartPage() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => handleRemoveFromCart(item.id)}
+                      onClick={() => handleRemoveFromCart(item.productId)}
                       disabled={isDeleting}
                     >
                       <Trash2 className="h-5 w-5 text-destructive" />

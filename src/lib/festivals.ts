@@ -4,7 +4,7 @@ export type Festival = {
     slug: string;
     name: { [key: string]: string };
     description: { [key: string]: string };
-    date: Date;
+    date: string;
     duration: string;
     significance: { [key: string]: string };
     rituals: { [key: string]: string[] };
@@ -35,7 +35,7 @@ export const festivals: Festival[] = [
             kn: "ಬೆಳಕಿನ ಹಬ್ಬ, ಹಿಂದೂ ಧರ್ಮದ ಅತ್ಯಂತ ಜನಪ್ರಿಯ ಹಬ್ಬಗಳಲ್ಲಿ ಒಂದಾಗಿದೆ, ಇದು ಕತ್ತಲೆಯ ಮೇಲೆ ಬೆಳಕಿನ, ಕೆಟ್ಟದ್ದರ ಮೇಲೆ ಒಳ್ಳೆಯದರ ಮತ್ತು ಅಜ್ಞಾನದ ಮೇಲೆ ಜ್ಞಾನದ ಆಧ್ಯಾತ್ಮಿಕ ವಿಜಯವನ್ನು ಸಂಕೇತಿಸುತ್ತದೆ.",
             bn: "আলোর উৎসব, হিন্দুধর্মের অন্যতম জনপ্রিয় উৎসব, যা অন্ধকারের উপর আলো, মন্দের উপর ভাল এবং অজ্ঞতার উপর জ্ঞানের আধ্যাত্মিক বিজয়কে প্রতীক করে।",
         },
-        date: new Date(new Date().getFullYear(), 10, 1), // Approx. November 1
+        date: new Date(new Date().getFullYear(), 10, 1).toISOString(), // Approx. November 1
         duration: "5 days",
         significance: {
             en: "Diwali honors the return of Lord Rama, his wife Sita, and his brother Lakshmana from a 14-year exile and a war in which Rama defeated the demon king Ravana.",
@@ -90,7 +90,7 @@ export const festivals: Festival[] = [
                 "পটকা ফাটানো (যদিও পরিবেশগত উদ্বেগের কারণে এটি কম সাধারণ হয়ে উঠছে)।",
             ],
         },
-        associatedDeities: ["lakshmi", "ganesha", "rama"],
+        associatedDeities: ["ganesha", "vishnu"],
         image: { url: "https://picsum.photos/seed/diwali1/800/600", hint: "festival lights" }
     },
     {
@@ -114,7 +114,7 @@ export const festivals: Festival[] = [
             kn: "ಬಣ್ಣಗಳ ಹಬ್ಬ, ವಸಂತದ ಆಗಮನ, ಚಳಿಗಾಲದ ಅಂತ್ಯ, ಪ್ರೀತಿಯ ಅರಳುವಿಕೆಯನ್ನು ಆಚರಿಸುತ್ತದೆ ಮತ್ತು ಅನೇಕರಿಗೆ, ಇತರರನ್ನು ಭೇಟಿಯಾಗಲು, ಆಟವಾಡಲು ಮತ್ತು ನಗಲು, ಮರೆತು ಕ್ಷಮಿಸಲು ಮತ್ತು ಮುರಿದ ಸಂಬಂಧಗಳನ್ನು ಸರಿಪಡಿಸಲು ಒಂದು ಹಬ್ಬದ ದಿನ.",
             bn: "রঙের উৎসব, বসন্তের আগমন, শীতের শেষ, ভালবাসার প্রস্ফুটন উদযাপন করে এবং অনেকের জন্য, অন্যদের সাথে দেখা করার, খেলা এবং হাসার, ভুলে যাওয়া এবং ক্ষমা করার এবং ভাঙা সম্পর্ক মেরামত করার একটি উৎসবের দিন।",
         },
-        date: new Date(new Date().getFullYear(), 2, 25), // Approx. March 25
+        date: new Date(new Date().getFullYear(), 2, 25).toISOString(), // Approx. March 25
         duration: "2 days",
         significance: {
             en: "Holi celebrates the eternal and divine love of Radha and Krishna. It also signifies the triumph of good over evil, commemorating the victory of Vishnu as Narasimha Narayana over Hiranyakashipu.",
@@ -169,7 +169,7 @@ export const festivals: Festival[] = [
                 "গুজিয়ার মতো বিশেষ মিষ্টি ভাগ করে নেওয়া।",
             ],
         },
-        associatedDeities: ["krishna", "radha", "vishnu"],
+        associatedDeities: ["vishnu"],
         image: { url: "https://picsum.photos/seed/holi1/800/600", hint: "festival colors" }
     },
     {
@@ -193,7 +193,7 @@ export const festivals: Festival[] = [
             kn: "ಈ ಹಿಂದೂ ಹಬ್ಬವು ಗಂಗೆಯ (ಗಂಗಾ) ಸ್ವರ್ಗದಿಂದ ಭೂಮಿಗೆ ಅವತರಿಸಿದ್ದನ್ನು (ಅವತಾರಣ) ಆಚರಿಸುತ್ತದೆ.",
             bn: "এই হিন্দু উৎসব স্বর্গ থেকে পৃথিবীতে গঙ্গার অবতরণ (अवतरण) উদযাপন করে।",
         },
-        date: new Date(new Date().getFullYear(), 5, 16), // Approx. June 16
+        date: new Date(new Date().getFullYear(), 5, 16).toISOString(), // Approx. June 16
         duration: "1 day (rituals span 10 days)",
         significance: {
             en: "It is believed that on this day, the holy river Ganga descended from heaven to Earth. Devotees believe that taking a dip in the Ganges on this day can purify them of all sins.",
@@ -248,7 +248,7 @@ export const festivals: Festival[] = [
                 "দেবী গঙ্গাকে উৎসর্গীকৃত মন্ত্র জপ করা।",
             ],
         },
-        associatedDeities: ["ganga", "shiva"],
+        associatedDeities: ["shiva"],
         image: { url: "https://picsum.photos/seed/ganga1/800/600", hint: "holy river worship" }
     }
 ];
@@ -256,5 +256,3 @@ export const festivals: Festival[] = [
 export const getFestivalBySlug = (slug: string) => {
     return festivals.find(f => f.slug === slug);
 }
-
-    

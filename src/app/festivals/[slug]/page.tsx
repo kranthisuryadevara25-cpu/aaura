@@ -48,7 +48,7 @@ export default function FestivalDetailPage() {
         <article className="max-w-4xl mx-auto">
             <header className="text-center mb-8">
                 <Badge variant="default" className="text-lg mb-2">
-                    <Calendar className="mr-2" /> {format(festival.date, 'MMMM do, yyyy')}
+                    <Calendar className="mr-2" /> {format(new Date(festival.date), 'MMMM do, yyyy')}
                 </Badge>
                 <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{description}</p>

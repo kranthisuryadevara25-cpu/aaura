@@ -756,9 +756,9 @@
         "duration": { "type": "string" },
         "significance_en": { "type": "string" },
         "significance_hi": { "type": "string" },
+        "rituals": { "type": "array", "items": { "type": "string" } },
         "associatedDeities": { "type": "array", "items": { "type": "string" } },
-        "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
-        "relatedTemples": { "type": "array", "items": { "type": "string" } }
+        "image": { "type": "string", "format": "uri" }
       },
       "required": ["id", "name_en", "description_en", "date", "significance_en"]
     },

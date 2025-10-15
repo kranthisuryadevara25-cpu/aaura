@@ -14,10 +14,10 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { deities, type Deity } from '@/lib/deities'; 
 
-const FallingFlower = ({ id, delay }: { id: number, delay: number }) => (
+const RisingFlower = ({ id, delay }: { id: number, delay: number }) => (
   <Flower
     key={id}
-    className="absolute top-[-50px] w-8 h-8 text-yellow-400 animate-fall"
+    className="absolute bottom-[-50px] w-8 h-8 text-yellow-400 animate-rise"
     style={{ 
         left: `${Math.random() * 90 + 5}%`,
         animationDelay: `${delay}s`,
@@ -54,7 +54,7 @@ export default function VirtualPoojaPage() {
 
     switch (interaction) {
       case 'ring-bell':
-        new Audio('https://cdn.pixabay.com/audio/2022/03/15/audio_200821584b.mp3').play().catch(e => console.error("Error playing bell audio:", e));
+        new Audio('https://cdn.freesound.org/previews/215/215658_4036852-hq.mp3').play().catch(e => console.error("Error playing bell audio:", e));
         break;
       case 'offer-flower':
          const newFlowerId = Date.now();
@@ -70,7 +70,7 @@ export default function VirtualPoojaPage() {
       case 'offer-aarti':
           if (showAarti) return;
           setShowAarti(true);
-          new Audio('https://cdn.pixabay.com/audio/2022/11/17/audio_85d13f5139.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
+          new Audio('https://cdn.freesound.org/previews/264/264491_4387801-hq.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
           setTimeout(() => setShowAarti(false), 5000);
           break;
     }
@@ -128,7 +128,7 @@ export default function VirtualPoojaPage() {
     <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4 [perspective:800px]">
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
         {flowers.map((id, index) => (
-          <FallingFlower key={id} id={id} delay={index * 0.1} />
+          <RisingFlower key={id} id={id} delay={index * 0.1} />
         ))}
       </div>
       
@@ -225,18 +225,18 @@ export default function VirtualPoojaPage() {
         .pooja-button:nth-child(3) { animation-delay: 3s; }
         .pooja-button:nth-child(4) { animation-delay: 4.5s; }
         
-        @keyframes fall {
+        @keyframes rise {
           from {
-            transform: translateY(-10vh) rotate(0deg);
+            transform: translateY(10vh) rotate(0deg);
             opacity: 1;
           }
           to {
-            transform: translateY(110vh) rotate(360deg);
+            transform: translateY(-110vh) rotate(-360deg);
             opacity: 0;
           }
         }
-        .animate-fall {
-          animation-name: fall;
+        .animate-rise {
+          animation-name: rise;
           animation-timing-function: linear;
         }
         @keyframes flicker {
@@ -267,3 +267,5 @@ export default function VirtualPoojaPage() {
     </main>
   );
 }
+
+    

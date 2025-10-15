@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
-import { doc, writeBatch, increment, collection, query, where } from 'firebase/firestore';
+import { doc, writeBatch, increment, collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Image from 'next/image';
-import { Loader2, Users, CheckCircle, PlusCircle, Video, ListMusic, MessageSquare, Info } from 'lucide-react';
+import { Loader2, Users, CheckCircle, PlusCircle, Video, ListMusic, MessageSquare, Info, Upload } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
@@ -26,6 +26,85 @@ import {
 } from "@/components/ui/alert-dialog";
 import { PostCard } from '@/components/PostCard';
 import Link from 'next/link';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { useTransition } from 'react';
+import type { DocumentData } from 'firebase/firestore';
+
+const postSchema = z.object({
+  content: z.string().min(10, "Post must be at least 10 characters.").max(2000, "Post must be less than 2000 characters."),
+});
+type PostFormValues = z.infer<typeof postSchema>;
+
+
+function CreatePostCard({ channelId }: { channelId: string }) {
+    const [user] = useAuthState(useAuth());
+    const db = useFirestore();
+    const { toast } = useToast();
+    const [isPending, startTransition] = useTransition();
+
+    const form = useForm<PostFormValues>({
+        resolver: zodResolver(postSchema),
+        defaultValues: { content: '' },
+    });
+
+    const onSubmit = (data: PostFormValues) => {
+        if (!user) return;
+        startTransition(async () => {
+            try {
+                await addDoc(collection(db, 'posts'), {
+                    authorId: user.uid,
+                    content: data.content,
+                    createdAt: serverTimestamp(),
+                    contextId: channelId,
+                    contextType: 'channel',
+                    likes: 0,
+                    commentsCount: 0,
+                });
+                form.reset();
+                toast({ title: "Post created successfully!" });
+            } catch (error) {
+                console.error("Failed to create post:", error);
+                toast({ variant: 'destructive', title: "Failed to create post." });
+            }
+        });
+    };
+    
+    return (
+        <Card className="mb-6">
+            <CardHeader>
+                <CardTitle className="text-lg">Create a New Post</CardTitle>
+                <CardDescription>Share an update with your followers.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                        <FormField
+                            control={form.control}
+                            name="content"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormControl>
+                                        <Textarea {...field} placeholder="What's on your mind?" rows={3} />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <Button type="submit" disabled={isPending}>
+                            {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Post
+                        </Button>
+                    </form>
+                </Form>
+            </CardContent>
+        </Card>
+    )
+}
+
 
 function VideosTab({ channelId }: { channelId: string }) {
     const db = useFirestore();
@@ -70,21 +149,22 @@ function VideosTab({ channelId }: { channelId: string }) {
     );
 }
 
-function PostsTab({ channelId }: { channelId: string }) {
+function PostsTab({ channelId, isOwner }: { channelId: string, isOwner: boolean }) {
     const db = useFirestore();
-    const postsQuery = query(collection(db, 'posts'), where('authorId', '==', channelId));
+    const postsQuery = query(collection(db, 'posts'), where('authorId', '==', channelId), where('contextType', '==', 'channel'));
     const [posts, loading] = useCollectionData(postsQuery, { idField: 'id' });
 
     if (loading) return <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />;
 
     return (
         <div className="space-y-6 max-w-2xl mx-auto">
-            {posts && posts.length > 0 ? posts.map((post: any) => (
+             {isOwner && <CreatePostCard channelId={channelId} />}
+            {posts && posts.length > 0 ? posts.map((post: DocumentData) => (
                 <PostCard key={post.id} post={post} />
             )) : (
                  <div className="col-span-full text-center py-16 border-2 border-dashed rounded-lg">
                     <h2 className="text-2xl font-semibold text-foreground">No Posts Yet</h2>
-                    <p className="mt-2 text-muted-foreground">This creator hasn't made any posts.</p>
+                    <p className="mt-2 text-muted-foreground">This creator hasn't made any posts on their channel.</p>
                 </div>
             )}
         </div>
@@ -125,6 +205,7 @@ function PlaylistsTab({ channelId }: { channelId: string }) {
 
 export default function ChannelDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const channelId = params.id as string;
   const { language, t } = useLanguage();
   const db = useFirestore();
@@ -138,6 +219,8 @@ export default function ChannelDetailPage() {
   const followingRef = user ? doc(db, `users/${user.uid}/following`, channelId) : undefined;
   const [following, loadingFollowing] = useDocumentData(followingRef);
   const isFollowing = !!following;
+  const isOwner = user?.uid === channelId;
+
 
   const handleFollow = async () => {
     if (!user || !channel || !channel.userId) {
@@ -226,31 +309,38 @@ export default function ChannelDetailPage() {
                 </div>
               </div>
             </div>
-             {user && user.uid !== channel.userId && (
-                 <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant={isFollowing ? 'secondary' : 'default'} size="lg" disabled={loadingFollowing} >
-                            {loadingFollowing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
-                                isFollowing ? <><CheckCircle className="mr-2 h-4 w-4" /> Subscribed</> : <><PlusCircle className="mr-2 h-4 w-4" /> Subscribe</>
-                            )}
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>
-                                {isFollowing ? "Unfollow" : "Follow"} {channel.name}?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                                You can always change your mind later.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleFollow}>{isFollowing ? 'Unfollow' : 'Follow'}</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-             )}
+            <div className="flex items-center gap-2">
+              {isOwner && (
+                <Button variant="outline" onClick={() => router.push('/upload')}>
+                    <Upload className="mr-2 h-4 w-4" /> Upload Video
+                </Button>
+              )}
+              {user && !isOwner && (
+                  <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                          <Button variant={isFollowing ? 'secondary' : 'default'} size="lg" disabled={loadingFollowing} >
+                              {loadingFollowing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
+                                  isFollowing ? <><CheckCircle className="mr-2 h-4 w-4" /> Subscribed</> : <><PlusCircle className="mr-2 h-4 w-4" /> Subscribe</>
+                              )}
+                          </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                          <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                  {isFollowing ? "Unfollow" : "Follow"} {channel.name}?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                  You can always change your mind later.
+                              </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={handleFollow}>{isFollowing ? 'Unfollow' : 'Follow'}</AlertDialogAction>
+                          </AlertDialogFooter>
+                      </AlertDialogContent>
+                  </AlertDialog>
+              )}
+            </div>
           </div>
           <p className="mt-6 text-center sm:text-left text-muted-foreground">{description}</p>
         </CardContent>
@@ -267,7 +357,7 @@ export default function ChannelDetailPage() {
           <VideosTab channelId={channelId} />
         </TabsContent>
         <TabsContent value="posts" className="mt-6">
-           <PostsTab channelId={channelId} />
+           <PostsTab channelId={channelId} isOwner={isOwner} />
         </TabsContent>
         <TabsContent value="playlists" className="mt-6">
            <PlaylistsTab channelId={channelId} />

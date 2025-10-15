@@ -1,35 +1,12 @@
 
 "use client";
-import React, { useMemo } from "react";
+import React from "react";
 import { Loader2, FileQuestion } from "lucide-react";
 import { FeedCard } from "@/components/FeedCard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import sampleFeed from '@/lib/sample-feed.json';
+import type { FeedItem } from "@/types/feed";
 
-type FeedItem = {
-    type: string;
-    id: string;
-    [key: string]: any;
-};
-
-export function Feed({ searchQuery }: { searchQuery: string }) {
-  
-  const combinedFeed: FeedItem[] = sampleFeed.feed;
-  const isLoading = false;
-
-  const filteredItems = useMemo(() => {
-    if (!searchQuery) return combinedFeed;
-    const lowercasedQuery = searchQuery.toLowerCase();
-
-    return combinedFeed.filter(item => {
-        const title = item.title || '';
-        const summary = item.summary || '';
-        const content = item.content || '';
-        return title.toLowerCase().includes(lowercasedQuery) || 
-               summary.toLowerCase().includes(lowercasedQuery) ||
-               content.toLowerCase().includes(lowercasedQuery);
-    });
-  }, [searchQuery, combinedFeed]);
+export function Feed({ items, isLoading }: { items: FeedItem[], isLoading: boolean }) {
 
   if (isLoading) {
     return (
@@ -41,10 +18,10 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
 
   return (
     <>
-        {filteredItems.length > 0 ? (
-            filteredItems.map((item, index) => {
-                return <FeedCard key={`${item.id}-${index}`} item={item} />
-            })
+        {items.length > 0 ? (
+            items.map((item) => (
+                <FeedCard key={`${item.kind}-${item.id}`} item={item} />
+            ))
         ) : (
              <div className="flex justify-center items-center h-96">
                 <Alert className="max-w-md text-center">
@@ -59,3 +36,5 @@ export function Feed({ searchQuery }: { searchQuery: string }) {
     </>
   );
 }
+
+    

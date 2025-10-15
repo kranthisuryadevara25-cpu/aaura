@@ -796,8 +796,8 @@
       "type": "object",
       "properties": {
         "id": { "type": "string" },
-        "contextId": { "type": "string", "description": "ID of the group or temple the post belongs to." },
-        "contextType": { "type": "string", "enum": ["group", "temple"], "description": "The type of context the post belongs to." },
+        "contextId": { "type": "string", "description": "ID of the group, temple, or channel the post belongs to." },
+        "contextType": { "type": "string", "enum": ["group", "temple", "channel"], "description": "The type of context the post belongs to." },
         "authorId": { "type": "string" },
         "content": { "type": "string" },
         "images": { "type": "array", "items": { "type": "string", "format": "uri" } },
@@ -1103,3 +1103,5 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
+
+    

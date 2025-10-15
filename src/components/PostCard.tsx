@@ -12,8 +12,9 @@ import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
 import { doc } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
 
-export function PostCard({ post }: { post: any; }) {
+export function PostCard({ post }: { post: DocumentData; }) {
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
@@ -22,7 +23,7 @@ export function PostCard({ post }: { post: any; }) {
   const authorRef = doc(db, 'users', post.authorId);
   const [author, authorIsLoading] = useDocumentData(authorRef);
   
-  // MOCK: Like state is local
+  // MOCK: Like state is local for now. In a real app, this would be a Firestore read/write.
   const [isLiked, setIsLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(post.likes || 0);
   
@@ -31,6 +32,7 @@ export function PostCard({ post }: { post: any; }) {
       toast({ variant: 'destructive', title: "You must be logged in to like a post." });
       return;
     }
+    // This is a mock implementation. A real one would update Firestore.
     if (isLiked) {
         setLikeCount(prev => prev - 1);
     } else {

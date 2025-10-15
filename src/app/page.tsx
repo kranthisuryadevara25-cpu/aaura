@@ -13,6 +13,7 @@ import { doc, updateDoc } from 'firebase/firestore';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Sparkles } from "lucide-react";
+import { useFeed } from "@/hooks/use-feed";
 
 
 const WelcomeAlert = ({ user }: { user: any }) => {
@@ -57,6 +58,8 @@ export default function Page() {
   const [searchQuery, setSearchQuery] = useState('');
   const auth = useAuth();
   const [user] = useAuthState(auth);
+  const { allItems, loading, filterItems } = useFeed();
+  const feedItems = filterItems(searchQuery);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -67,7 +70,7 @@ export default function Page() {
           <div className="max-w-3xl mx-auto px-4 py-4 space-y-8">
             {user && <WelcomeAlert user={user} />}
             {user && <CreateContent />}
-            <Feed searchQuery={searchQuery} />
+            <Feed items={feedItems} isLoading={loading} />
           </div>
         </main>
         <aside className="hidden xl:block w-80 border-l p-4 shrink-0">
@@ -77,3 +80,5 @@ export default function Page() {
     </div>
   );
 }
+
+    

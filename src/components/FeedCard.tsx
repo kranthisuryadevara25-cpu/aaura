@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Heart, MessageCircle } from "lucide-react";
 import { Card } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
+import type { FeedItem } from "@/types/feed";
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {
   const db = useFirestore();
@@ -36,7 +37,7 @@ const AuthorAvatar = ({ userId }: { userId: string }) => {
   )
 }
 
-export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
+export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const { language } = useLanguage();
 
   const getText = (field?: Record<string,string> | string) => {
@@ -46,41 +47,38 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
   };
 
   const getHref = () => {
-    switch (item.type) {
+    switch (item.kind) {
         case 'media':
         case 'video':
              return `/watch/${item.id.replace('media-', '')}`;
         case 'temple':
-            return `/temples/${item.cta.link.split('/').pop()}`;
+            return `/temples/${item.meta?.slug}`;
         case 'story':
-            return `/stories/${item.cta.link.split('/').pop()}`;
+            return `/stories/${item.meta?.slug}`;
         case 'deity':
-             return `/deities/${item.cta.link.split('/').pop()}`;
+             return `/deities/${item.meta?.slug}`;
         case 'forum':
         case 'post':
-            return `/forum/${item.id.replace('post-', '')}`;
+            return `/forum/${item.meta?.contextId || item.id.replace('post-','')}`;
         default:
             return '#';
     }
   }
   
   const title = getText(item.title);
-  const description = getText(item.summary || item.location || item.description);
-  const authorId = item.authorId || item.author?.name; // 'author.name' for media mock
-  const engagement = item.engagement || {};
-  const thumbnail = item.image?.url || item.media?.thumbnailUrl || "https://picsum.photos/seed/placeholder/800/450";
-  const hint = item.image?.hint || item.media?.hint || "image";
+  const description = getText(item.description);
+  const authorId = item.meta?.authorId;
+  const engagement = item.meta || {};
+  const thumbnail = item.thumbnail || "https://picsum.photos/seed/placeholder/800/450";
+  const hint = item.meta?.imageHint || "image";
 
-  // Use a deterministic method to generate a "random" date for mock data to prevent hydration errors.
   const getDeterministicDate = (id: string): Date => {
-      // Simple hash function from string to number
       let hash = 0;
       for (let i = 0; i < id.length; i++) {
           const char = id.charCodeAt(i);
           hash = ((hash << 5) - hash) + char;
-          hash = hash & hash; // Convert to 32bit integer
+          hash = hash & hash;
       }
-      // Use the hash to get a consistent offset within the last 7 days
       const daysAgo = Math.abs(hash) % 7;
       const date = new Date();
       date.setDate(date.getDate() - daysAgo);
@@ -89,14 +87,13 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
   
   const createdAt = item.createdAt ? new Date(item.createdAt) : getDeterministicDate(item.id);
 
-
   return (
     <Card className="p-4 border-none shadow-none">
         <Link href={getHref()} className="group">
             <div className="aspect-video relative rounded-lg overflow-hidden mb-4">
                 <Image src={thumbnail} className="w-full h-full object-cover rounded-lg transition-transform duration-300 group-hover:scale-105" alt={title} fill data-ai-hint={hint}/>
-                {item.media?.duration > 0 && <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                {`${Math.floor(item.media.duration / 60)}:${String(item.media.duration % 60).padStart(2, '0')}`}
+                {item.meta?.duration > 0 && <span className="absolute bottom-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+                {`${Math.floor(item.meta.duration / 60)}:${String(item.meta.duration % 60).padStart(2, '0')}`}
                 </span>}
             </div>
         </Link>
@@ -104,20 +101,20 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
              {authorId && <AuthorAvatar userId={authorId} />}
              <div className="flex-1">
                 <Link href={getHref()} className="group">
-                  <h3 className="text-lg font-bold leading-tight line-clamp-2 text-foreground mb-1 group-hover:text-primary">{title}</h3>
+                  <h3 className="text-lg font-bold leading-tight line-clamp-2 text-foreground mb-1 group-hover:text-primary">{title || description}</h3>
                 </Link>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                {title && <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>}
+                <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                     <span>{engagement.views ? `${engagement.views.toLocaleString()} views` : "New"}</span>
                     &bull;
                     <span>{formatDistanceToNow(createdAt, { addSuffix: true })}</span>
                 </div>
-                <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>
                  <div className="flex items-center gap-4 mt-2 text-muted-foreground">
                     <span className="flex items-center gap-1 text-xs">
                         <Heart className="w-4 h-4" /> {engagement.likes || 0}
                     </span>
                     <span className="flex items-center gap-1 text-xs">
-                        <MessageCircle className="w-4 h-4" /> {engagement.comments || 0}
+                        <MessageCircle className="w-4 h-4" /> {engagement.commentsCount || 0}
                     </span>
                 </div>
              </div>
@@ -125,3 +122,5 @@ export const FeedCard: React.FC<{ item: any }> = ({ item }) => {
     </Card>
   );
 };
+
+    

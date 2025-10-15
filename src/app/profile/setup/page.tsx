@@ -19,13 +19,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { CalendarIcon, Loader2, Save, ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { format, parse, isValid } from 'date-fns';
+import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from 'firebase/auth';
 import { generateOnboardingInsights } from '@/ai/flows/onboarding-insights';
@@ -92,15 +92,6 @@ export default function ProfileSetupPage() {
     },
   });
 
-  const birthDateValue = form.watch('birthDate');
-  const [dateInputValue, setDateInputValue] = useState('');
-
-  useEffect(() => {
-    if (birthDateValue) {
-      setDateInputValue(format(birthDateValue, 'yyyy-MM-dd'));
-    }
-  }, [birthDateValue]);
-
   const nextStep = async () => {
     const isValid = await form.trigger(steps[currentStep].fields as any);
     if (isValid) {
@@ -113,6 +104,11 @@ export default function ProfileSetupPage() {
   const onSubmit = (data: FormValues) => {
     if (!auth?.currentUser) {
       toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to complete your profile.' });
+      return;
+    }
+    
+    if (!data.birthDate || !(data.birthDate instanceof Date)) {
+      toast({ variant: 'destructive', title: 'Error', description: 'Please provide a valid birth date.' });
       return;
     }
 
@@ -223,33 +219,28 @@ export default function ProfileSetupPage() {
                                 <FormLabel>Birth Date</FormLabel>
                                 <Popover>
                                 <PopoverTrigger asChild>
-                                    <div className="relative w-[240px]">
                                     <FormControl>
-                                        <Input
-                                        value={dateInputValue}
-                                        onChange={(e) => setDateInputValue(e.target.value)}
-                                        onBlur={() => {
-                                            const parsedDate = parse(dateInputValue, 'yyyy-MM-dd', new Date());
-                                            if (isValid(parsedDate)) {
-                                            field.onChange(parsedDate);
-                                            }
-                                        }}
-                                        placeholder="YYYY-MM-DD"
-                                        />
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                        "w-[240px] pl-3 text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                        )}
+                                    >
+                                        {field.value ? (
+                                        format(field.value, "PPP")
+                                        ) : (
+                                        <span>Pick a date</span>
+                                        )}
+                                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                    </Button>
                                     </FormControl>
-                                    <CalendarIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 opacity-50" />
-                                    </div>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0" align="start">
                                     <Calendar
                                     mode="single"
                                     selected={field.value}
-                                    onSelect={(date) => {
-                                        field.onChange(date);
-                                        if (date) {
-                                        setDateInputValue(format(date, 'yyyy-MM-dd'));
-                                        }
-                                    }}
+                                    onSelect={field.onChange}
                                     disabled={(date) => date > new Date() || date < new Date('1900-01-01')}
                                     initialFocus
                                     fromYear={1900}
@@ -386,5 +377,3 @@ export default function ProfileSetupPage() {
     </main>
   );
 }
-
-    

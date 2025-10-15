@@ -39,8 +39,8 @@ export default function CharacterDetailPage() {
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div className="md:col-span-1">
-              <Card className="sticky top-24 bg-transparent border-primary/20">
+          <div className="md:col-span-1 space-y-6">
+              <Card className="bg-transparent border-primary/20">
                     <div className="aspect-square relative rounded-t-lg overflow-hidden">
                       <Image
                           src={character.imageUrl}
@@ -59,7 +59,7 @@ export default function CharacterDetailPage() {
                   </CardHeader>
               </Card>
                {character.relatedContent && (
-                    <Card className="mt-6 bg-transparent border-primary/20">
+                    <Card className="bg-transparent border-primary/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-lg"><LinkIcon />Associated Content</CardTitle>
                         </CardHeader>

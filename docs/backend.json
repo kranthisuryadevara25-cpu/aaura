@@ -758,7 +758,15 @@
         "significance_hi": { "type": "string" },
         "rituals": { "type": "array", "items": { "type": "string" } },
         "associatedDeities": { "type": "array", "items": { "type": "string" } },
-        "image": { "type": "string", "format": "uri" }
+        "image": { "type": "string", "format": "uri" },
+        "relatedProducts": { "type": "array", "items": { "type": "string" } },
+        "recommendedPlaylist": {
+            "type": "object",
+            "properties": {
+                "id": { "type": "string" },
+                "title": { "type": "string" }
+            }
+        }
       },
       "required": ["id", "name_en", "description_en", "date", "significance_en"]
     },

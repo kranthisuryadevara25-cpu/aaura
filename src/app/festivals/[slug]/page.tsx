@@ -5,13 +5,14 @@ import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, CheckSquare, Sparkles, Loader2 } from 'lucide-react';
+import { Calendar, CheckSquare, Sparkles, Loader2, Music, PlayCircle, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { getFestivalBySlug } from '@/lib/festivals';
 import { deities as allDeities } from '@/lib/deities';
-import type { DocumentData } from 'firebase/firestore';
+import { products as allProducts } from '@/lib/products';
+import { Button } from '@/components/ui/button';
 
 export default function FestivalDetailPage() {
   const params = useParams();
@@ -22,9 +23,9 @@ export default function FestivalDetailPage() {
   const isLoading = false;
   
   const associatedDeities = festival ? allDeities.filter(d => festival.associatedDeities.includes(d.slug)) : [];
-  const deitiesLoading = false;
+  const relatedProducts = festival?.relatedProducts ? allProducts.filter(p => festival.relatedProducts.includes(p.id)) : [];
   
-  const pageLoading = isLoading || deitiesLoading;
+  const pageLoading = isLoading;
 
   if (pageLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
@@ -45,7 +46,7 @@ export default function FestivalDetailPage() {
 
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
-        <article className="max-w-4xl mx-auto">
+        <article className="max-w-6xl mx-auto">
             <header className="text-center mb-8">
                 <Badge variant="default" className="text-lg mb-2">
                     <Calendar className="mr-2" /> {format(new Date(festival.date), 'MMMM do, yyyy')}
@@ -64,9 +65,9 @@ export default function FestivalDetailPage() {
                 />
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-2">
-                      <Card className="bg-transparent border-primary/20 mb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
+                      <Card className="bg-transparent border-primary/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> {t.festivalDetail.significance}</CardTitle>
                         </CardHeader>
@@ -87,9 +88,9 @@ export default function FestivalDetailPage() {
                         </CardContent>
                     </Card>
                 </div>
-                <div className="space-y-6">
+                <div className="space-y-6 lg:sticky top-24 h-fit">
                     {associatedDeities && associatedDeities.length > 0 && (
-                    <Card className="bg-transparent border-primary/20 sticky top-24">
+                    <Card className="bg-transparent border-primary/20">
                         <CardHeader>
                             <CardTitle>{t.festivalDetail.associatedDeities}</CardTitle>
                         </CardHeader>
@@ -106,6 +107,42 @@ export default function FestivalDetailPage() {
                             ))}
                         </CardContent>
                     </Card>
+                    )}
+                    {festival.recommendedPlaylist && (
+                        <Card className="bg-transparent border-primary/20">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-3 text-primary"><Music /> Festival Playlist</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <p className="font-semibold text-foreground">{festival.recommendedPlaylist.title}</p>
+                                <Button asChild variant="outline" className="w-full mt-4">
+                                  <Link href={`/playlists/${festival.recommendedPlaylist.id}`}>
+                                    <PlayCircle className="mr-2 h-4 w-4" />
+                                    Listen Now
+                                  </Link>
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
+                    {relatedProducts.length > 0 && (
+                        <Card className="bg-transparent border-primary/20">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-3 text-primary"><ShoppingCart /> Shop Essentials</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-3">
+                               {relatedProducts.map(product => (
+                                   <Link key={product.id} href={`/shop/${product.id}`} className="group flex items-center gap-3 p-2 rounded-md hover:bg-primary/10">
+                                       <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
+                                           <Image src={product.imageUrl} alt={product.name_en} data-ai-hint={product.imageHint} fill className="object-cover" />
+                                       </div>
+                                       <div>
+                                           <p className="font-semibold text-sm group-hover:text-primary">{product.name_en}</p>
+                                           <p className="text-xs text-muted-foreground">₹{product.price.toFixed(2)}</p>
+                                       </div>
+                                   </Link>
+                               ))}
+                            </CardContent>
+                        </Card>
                     )}
                 </div>
             </div>

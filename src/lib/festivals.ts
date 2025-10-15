@@ -1,4 +1,5 @@
 
+
 export type Festival = {
     id: string;
     slug: string;
@@ -10,6 +11,11 @@ export type Festival = {
     rituals: { [key: string]: string[] };
     associatedDeities: string[]; // deity slugs
     image: { url: string; hint: string };
+    relatedProducts: string[]; // product IDs
+    recommendedPlaylist: {
+        id: string;
+        title: string;
+    };
 };
 
 // Note: Dates are placeholders and should be managed dynamically in a real app.
@@ -91,7 +97,12 @@ export const festivals: Festival[] = [
             ],
         },
         associatedDeities: ["ganesha", "vishnu"],
-        image: { url: "https://picsum.photos/seed/diwali1/800/600", hint: "festival lights" }
+        image: { url: "https://picsum.photos/seed/diwali1/800/600", hint: "festival lights" },
+        relatedProducts: ["prod_4", "prod_1", "prod_2"],
+        recommendedPlaylist: {
+            id: "pl-ganesha-1",
+            title: "Diwali Celebration Bhajans"
+        }
     },
     {
         id: "2",
@@ -170,7 +181,12 @@ export const festivals: Festival[] = [
             ],
         },
         associatedDeities: ["vishnu"],
-        image: { url: "https://picsum.photos/seed/holi1/800/600", hint: "festival colors" }
+        image: { url: "https://picsum.photos/seed/holi1/800/600", hint: "festival colors" },
+        relatedProducts: ["prod_2"],
+        recommendedPlaylist: {
+            id: "pl-surya-1",
+            title: "Holi Celebration Songs"
+        }
     },
     {
         id: "3",
@@ -249,7 +265,12 @@ export const festivals: Festival[] = [
             ],
         },
         associatedDeities: ["shiva"],
-        image: { url: "https://picsum.photos/seed/ganga1/800/600", hint: "holy river worship" }
+        image: { url: "https://picsum.photos/seed/ganga1/800/600", hint: "holy river worship" },
+        relatedProducts: ["prod_7"],
+        recommendedPlaylist: {
+            id: "pl-surya-1",
+            title: "Ganga Maa Bhajans"
+        }
     }
 ];
 

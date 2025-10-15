@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { useFirestore } from '@/lib/firebase/provider';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, DocumentData } from 'firebase/firestore';
+import { collection, query, type DocumentData } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
 
@@ -29,12 +29,13 @@ export default function ChannelsPage() {
   });
 
   // Memoize the filtering logic to prevent re-running on every render
+  // and ensure a stable, unique list for React.
   const uniqueChannels = useMemo(() => {
     if (!channels) return [];
-    const seen = new Set();
+    const seen = new Set<string>();
     // Filter out any channels that might not have an ID yet or are duplicates
     return channels.filter((channel): channel is Channel => {
-      if (!channel || !channel.id) return false;
+      if (!channel || !channel.id) return false; // Ensure channel and id exist
       const duplicate = seen.has(channel.id);
       seen.add(channel.id);
       return !duplicate;

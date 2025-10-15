@@ -59,13 +59,13 @@ export const characters: Character[] = [
             bn: "ভগবান রামের একনিষ্ঠ ভক্ত, হনুমান রামায়ণ মহাকাব্যের একটি কেন্দ্রীয় চরিত্র। তিনি একজন দিব্য বানর (বানরের মতো মানব) এবং তাঁর অপরিমেয় শক্তি, ভক্তি এবং সাহসের জন্য পরিচিত।",
         },
         role: {
-            en: "Hero / Devotee",
-            hi: "नायक / भक्त",
-            te: "వీరుడు / భక్తుడు",
-            mr: "नायक / भक्त",
-            ta: "ஹீரோ / பக்தர்",
-            kn: "ನಾಯಕ / ಭಕ್ತ",
-            bn: "নায়ক / ভক্ত",
+            en: "Epic Hero / Devotee",
+            hi: "महाकाव्य नायक / भक्त",
+            te: "పురాణ వీరుడు / భక్తుడు",
+            mr: "महाकाव्य नायक / भक्त",
+            ta: "காவிய நாயகன் / பக்தர்",
+            kn: "ಮಹಾಕಾವ್ಯದ ನಾಯಕ / ಭಕ್ತ",
+            bn: "মহাকাব্যিক নায়ক / ভক্ত",
         },
         image: { url: "https://picsum.photos/seed/hanuman1/600/400", hint: "Hanuman flying" },
         associatedStories: ["ramayana-summary", "sita-abduction"],
@@ -93,13 +93,13 @@ export const characters: Character[] = [
             bn: "পাঁচ পাণ্ডব ভাইদের মধ্যে একজন এবং মহাভারতের একজন কেন্দ্রীয় ব্যক্তিত্ব। তিনি একজন দক্ষ তীরন্দাজ এবং ভগবান কৃষ্ণের কাছ থেকে ভগবদ্গীতার জ্ঞান লাভ করেন।",
         },
         role: {
-            en: "Hero / Warrior",
-            hi: "नायक / योद्धा",
-            te: "వీరుడు / యోధుడు",
-            mr: "नायक / योद्धा",
-            ta: "ஹீரோ / போர்வீரன்",
-            kn: "ನಾಯಕ / ಯೋಧ",
-            bn: "নায়ক / যোদ্ধা",
+            en: "Epic Hero / Warrior",
+            hi: "महाकाव्य नायक / योद्धा",
+            te: "పురాణ వీరుడు / యోధుడు",
+            mr: "महाकाव्य नायक / योद्धा",
+            ta: "காவிய நாயகன் / போர்வீரன்",
+            kn: "ಮಹಾಕಾವ್ಯದ ನಾಯಕ / ಯೋಧ",
+            bn: "মহাকাব্যিক নায়ক / যোদ্ধা",
         },
         image: { url: "https://picsum.photos/seed/arjuna1/600/400", hint: "warrior archer" },
         associatedStories: ["mahabharata-summary", "kurukshetra-war"],
@@ -154,5 +154,3 @@ export const characters: Character[] = [
 export const getCharacterBySlug = (slug: string) => {
     return characters.find(c => c.slug === slug);
 }
-
-    

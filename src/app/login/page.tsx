@@ -17,11 +17,12 @@ import {
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAuth } from '@/lib/firebase/provider';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, type User } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -34,6 +35,7 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const auth = useAuth();
+  const db = useFirestore();
   const [user, loading] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -47,19 +49,46 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (user) {
-      router.push('/');
+      // If user is already logged in, check if their profile is complete.
+      const userDocRef = doc(db, 'users', user.uid);
+      getDoc(userDocRef).then(docSnap => {
+        if (docSnap.exists() && docSnap.data().profileComplete) {
+            router.push('/');
+        } else {
+            // If profile is not complete, they might have aborted setup.
+            // Let's send them to the setup page.
+            router.push('/profile/setup');
+        }
+      });
     }
-  }, [user, router]);
+  }, [user, router, db]);
   
   const handleAuthAction = async (action: 'signIn' | 'signUp', data: FormValues) => {
     setIsSubmitting(true);
     try {
+      let userCredential;
       if (action === 'signIn') {
-        await signInWithEmailAndPassword(auth, data.email, data.password);
+        userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
+        toast({ title: 'Success!', description: 'You are now signed in.' });
+        // The useEffect will handle redirection.
       } else {
-        await createUserWithEmailAndPassword(auth, data.email, data.password);
+        userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+        
+        // This is a new user, create a basic user document
+        const userDocRef = doc(db, 'users', userCredential.user.uid);
+        await setDoc(userDocRef, {
+            id: userCredential.user.uid,
+            email: userCredential.user.email,
+            profileComplete: false,
+            creationTimestamp: serverTimestamp(),
+            followerCount: 0,
+            followingCount: 0,
+        });
+
+        toast({ title: 'Account Created!', description: 'Let\'s set up your profile.' });
+        // Redirect new users directly to the setup page.
+        router.push('/profile/setup');
       }
-      toast({ title: 'Success!', description: action === 'signIn' ? 'You are now signed in.' : 'Your account has been created.' });
     } catch (error: any) {
       let description = 'An unexpected error occurred.';
       switch (error.code) {

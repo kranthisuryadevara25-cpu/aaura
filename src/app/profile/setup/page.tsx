@@ -136,7 +136,6 @@ export default function ProfileSetupPage() {
           });
         } catch (aiError: any) {
           console.error("AI Insight generation failed:", aiError);
-          // Check for rate limit error specifically
           if (aiError.message && aiError.message.includes('429')) {
              toast({
                 variant: "destructive",
@@ -383,9 +382,13 @@ export default function ProfileSetupPage() {
                 )}
                 
                 <div className="flex justify-between pt-4">
-                    {currentStep > 0 && (
+                    {currentStep > 0 ? (
                         <Button type="button" variant="outline" onClick={prevStep}>
                             <ArrowLeft className="mr-2 h-4 w-4" /> Previous
+                        </Button>
+                    ) : (
+                         <Button type="button" variant="ghost" onClick={() => router.push('/')}>
+                            Back to Home
                         </Button>
                     )}
                     {currentStep < steps.length - 1 && (

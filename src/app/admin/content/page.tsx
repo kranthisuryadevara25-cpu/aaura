@@ -29,15 +29,10 @@ import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
 import type { Temple } from '@/lib/temples';
 
-// Define DB references outside of the components
-const db = useFirestore();
-const deitiesRef = collection(db, 'deities');
-const storiesRef = collection(db, 'stories');
-const charactersRef = collection(db, 'epicHeroes');
-const templesRef = collection(db, 'temples');
-
 
 function DeitiesTabContent() {
+  const db = useFirestore();
+  const deitiesRef = collection(db, 'deities');
   const { toast } = useToast();
   const { language } = useLanguage();
   const [deities, isLoading] = useCollectionData(deitiesRef, { idField: 'id' });
@@ -119,6 +114,8 @@ function DeitiesTabContent() {
 }
 
 function StoriesTabContent() {
+  const db = useFirestore();
+  const storiesRef = collection(db, 'stories');
   const { toast } = useToast();
   const { language } = useLanguage();
   const [stories, isLoading] = useCollectionData(storiesRef, { idField: 'id' });
@@ -200,6 +197,8 @@ function StoriesTabContent() {
 }
 
 function CharactersTabContent() {
+  const db = useFirestore();
+  const charactersRef = collection(db, 'epicHeroes');
   const { toast } = useToast();
   const { language } = useLanguage();
   const [characters, isLoading] = useCollectionData(charactersRef, { idField: 'id' });
@@ -282,6 +281,8 @@ function CharactersTabContent() {
 }
 
 function TemplesTabContent() {
+  const db = useFirestore();
+  const templesRef = collection(db, 'temples');
   const { toast } = useToast();
   const { language } = useLanguage();
   const [temples, isLoading] = useCollectionData(templesRef, { idField: 'id' });

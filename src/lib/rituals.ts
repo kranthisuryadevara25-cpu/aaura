@@ -1,13 +1,27 @@
 
+
 export type Ritual = {
     id: string;
     slug: string;
     name: { [key: string]: string };
     deity: { [key: string]: string };
     description: { [key: string]: string };
-    procedure: { [key: string]: string[] };
+    procedure: { en: { title: string; steps: string[] }[], hi: [], te: [] };
     itemsRequired: { [key: string]: string[] };
-    auspiciousTime: { [key: string]: string };
+    auspiciousTime: { 
+        en: {
+            timing: string;
+            tithi?: string;
+            notes: string;
+        };
+        hi: {},
+        te: {},
+    };
+    recommendedPlaylist: {
+        id: string;
+        title: string;
+        tracks: { title: string; artist: string }[];
+    };
     image: { url: string; hint: string };
     significance: { [key: string]: string };
     benefits: { [key: string]: string[] };
@@ -40,23 +54,53 @@ export const rituals: Ritual[] = [
         },
         procedure: {
             en: [
-                "Wake up before sunrise and take a bath.",
-                "Wear clean clothes.",
-                "Take a copper vessel (lota) filled with clean water. You can add red sandalwood paste, red flowers, and rice grains.",
-                "Face the rising sun and offer the water by slowly pouring it, keeping your hands raised.",
-                "While offering water, chant the Surya mantra: 'Om Suryaya Namah' 11 times.",
-                "After the offering, bow down to the Sun God and pray for well-being."
+                {
+                    title: "Preparation (Shuddhi)",
+                    steps: [
+                        "Wake up before sunrise and take a bath to purify the body.",
+                        "Clean the space where you will perform the offering. Ensure it's tidy and peaceful.",
+                        "Wear clean, fresh clothes (preferably red, orange, or white).",
+                    ]
+                },
+                {
+                    title: "The Offering (Arghya)",
+                    steps: [
+                        "Take a copper vessel (lota) and fill it with clean water.",
+                        "If available, add red sandalwood paste, a red flower (like hibiscus), and a few rice grains to the water.",
+                        "Face the rising sun. Hold the copper vessel with both hands at chest level.",
+                        "Slowly pour the water in a steady stream, looking at the sun through the stream of water.",
+                        "While offering the water, chant the Surya mantra: 'Om Suryaya Namah' 11 times.",
+                    ]
+                },
+                {
+                    title: "Conclusion (Pranam)",
+                    steps: [
+                         "After the offering is complete, touch the remaining water on the ground to your forehead.",
+                         "Perform Pranam (bow down) to the Sun God and pray for well-being, health, and success.",
+                    ]
+                }
             ],
             hi: [], te: []
         },
         itemsRequired: {
-           en: ["Copper vessel (lota)", "Water", "Red flower (optional)", "Rice grains (optional)"],
+           en: ["Copper vessel (lota)", "Clean Water", "Red flower (optional)", "Rice grains (Akshat, optional)", "Red Sandalwood paste (optional)"],
            hi: [], te: []
         },
         auspiciousTime: {
-            en: "At sunrise",
-            hi: "सूर्योदय के समय",
-            te: "సూర్యోదయం సమయంలో",
+            en: {
+                timing: "Within one hour of sunrise.",
+                notes: "This ritual is performed daily and does not require a specific Tithi, but is most effective during the sun's waxing phase (Shukla Paksha)."
+            },
+            hi: {}, te: {},
+        },
+        recommendedPlaylist: {
+            id: "pl-surya-1",
+            title: "Surya Morning Mantras",
+            tracks: [
+                { title: "Surya Ashtakam", artist: "Traditional" },
+                { title: "Aditya Hrudayam", artist: "Traditional" },
+                { title: "Om Suryaya Namah (108 times)", artist: "Chant Central" }
+            ]
         },
         image: { url: "https://picsum.photos/seed/suryapuja/600/400", hint: "sun worship sunrise" },
         significance: {
@@ -104,24 +148,62 @@ export const rituals: Ritual[] = [
         },
         procedure: {
             en: [
-                "Clean the area where the puja will be performed.",
-                "Place a small idol or picture of Lord Ganesha.",
-                "Light a diya (lamp) and incense sticks.",
-                "Offer a fresh flower, preferably a red hibiscus.",
-                "Offer a piece of fruit or a sweet, like modak or ladoo.",
-                "Chant the Ganesha mantra: 'Om Gam Ganapataye Namah' 11, 21, or 108 times.",
-                "Conclude by folding your hands and seeking blessings for your new venture."
+                {
+                    title: "Preparation (Sthapana)",
+                    steps: [
+                        "Clean the entire house, especially the puja area. Sprinkling Ganga water is recommended for purification.",
+                        "Place a small table or platform and cover it with a clean red or yellow cloth.",
+                        "Place a small idol or picture of Lord Ganesha on the platform.",
+                        "Light a diya (lamp with ghee or oil) and some incense sticks to create a sacred ambiance."
+                    ]
+                },
+                {
+                    title: "The Offerings (Samarpan)",
+                    steps: [
+                        "Offer a fresh flower, preferably a red hibiscus, at the feet of the idol.",
+                        "Offer a piece of fruit and a special sweet, like Modak or Ladoo, which are favorites of Lord Ganesha.",
+                        "Offer a small bowl of water."
+                    ]
+                },
+                {
+                    title: "The Chant (Mantra Japa)",
+                    steps: [
+                        "With folded hands, close your eyes and invoke Lord Ganesha's presence.",
+                        "Chant the Ganesha mantra: 'Om Gam Ganapataye Namah' 11, 21, or 108 times.",
+                        "After the chant, sit in silence for a few minutes and meditate on your new venture."
+                    ]
+                },
+                {
+                    title: "Conclusion (Aarti & Prarthana)",
+                    steps: [
+                        "Perform a simple aarti by circling the lit lamp in front of the deity.",
+                        "Conclude by folding your hands again and seeking blessings for success and the removal of all obstacles.",
+                        "Distribute the offered fruit and sweets as 'prasad' to family members."
+                    ]
+                }
             ],
             hi: [], te: []
         },
         itemsRequired: {
-            en: ["Ganesha idol/photo", "Diya (lamp) with ghee or oil", "Incense sticks", "Flowers", "Fruit or sweet offering"],
+            en: ["Ganesha idol/photo", "Diya (lamp) and ghee/oil", "Incense sticks", "Flowers (Red Hibiscus preferred)", "Fruit", "Sweets (Modak or Ladoo preferred)", "Red or Yellow Cloth"],
             hi: [], te: []
         },
         auspiciousTime: {
-            en: "Beginning of a new venture",
-            hi: "एक नए उद्यम की शुरुआत",
-            te: "కొత్త వెంచర్ ప్రారంభం",
+            en: {
+                timing: "Morning, before starting your new venture.",
+                tithi: "Shukla Chaturthi (the 4th day of the waxing moon) is especially auspicious.",
+                notes: "Can be performed on any day, but Wednesdays are considered special for Lord Ganesha."
+            },
+            hi: {}, te: {},
+        },
+        recommendedPlaylist: {
+            id: "pl-ganesha-1",
+            title: "Ganesha Power Mantras",
+            tracks: [
+                { title: "Sankata Nashanam Ganapati Stotram", artist: "Traditional" },
+                { title: "Vakratunda Mahakaya", artist: "Shankar Mahadevan" },
+                { title: "Ganesh Atharvashirsha", artist: "Traditional" }
+            ]
         },
         image: { url: "https://picsum.photos/seed/ganeshapuja/600/400", hint: "Ganesha idol worship" },
         significance: {

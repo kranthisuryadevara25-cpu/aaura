@@ -3,9 +3,9 @@
 
 import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckSquare, ShoppingBasket, Clock, Loader2, BookOpen, Lightbulb, AlertTriangle, Sparkles } from 'lucide-react';
+import { CheckSquare, ShoppingBasket, Clock, Loader2, BookOpen, Lightbulb, AlertTriangle, Sparkles, Music } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { getRitualBySlug } from '@/lib/rituals';
 import { useState } from 'react';
@@ -62,7 +62,7 @@ export default function RitualDetailPage() {
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{description}</p>
             </header>
 
-            <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20 mb-8">
+             <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20 mb-12">
                 <Image
                     src={ritual.image.url}
                     alt={name}
@@ -72,8 +72,8 @@ export default function RitualDetailPage() {
                 />
             </div>
             
-            <div className="grid md:grid-cols-3 gap-8">
-                <div className="md:col-span-2 space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-8">
                       <Card className="bg-transparent border-primary/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> Significance & Benefits</CardTitle>
@@ -94,14 +94,20 @@ export default function RitualDetailPage() {
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-primary"><CheckSquare /> {t.ritualDetail.procedure}</CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <ol className="list-decimal list-inside space-y-4 text-foreground/90">
-                                {procedure.map((step: string, index: number) => (
-                                    <li key={index}>{step}</li>
-                                ))}
-                            </ol>
+                        <CardContent className="space-y-6">
+                            {procedure.map((section, sectionIndex) => (
+                                <div key={sectionIndex}>
+                                    <h3 className="font-bold text-lg mb-2">{section.title}</h3>
+                                    <ol className="list-decimal list-inside space-y-3 pl-4 border-l-2 border-primary/20">
+                                        {section.steps.map((step: string, index: number) => (
+                                            <li key={index}>{step}</li>
+                                        ))}
+                                    </ol>
+                                </div>
+                            ))}
                         </CardContent>
                     </Card>
+
                       <Card className="bg-transparent border-destructive/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-destructive"><AlertTriangle /> Common Mistakes to Avoid</CardTitle>
@@ -115,7 +121,19 @@ export default function RitualDetailPage() {
                         </CardContent>
                     </Card>
                 </div>
-                <div className="space-y-6 md:sticky top-24 h-fit">
+                <div className="space-y-6 lg:sticky top-24 h-fit">
+                    <Card className="bg-transparent border-primary/20">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.ritualDetail.auspiciousTime}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-2">
+                             <div>
+                                <p className="font-semibold">{auspiciousTime.timing}</p>
+                                {auspiciousTime.tithi && <p className="text-sm text-muted-foreground">{auspiciousTime.tithi}</p>}
+                                <p className="text-xs text-muted-foreground mt-1">{auspiciousTime.notes}</p>
+                            </div>
+                        </CardContent>
+                    </Card>
                     <Card className="bg-transparent border-primary/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> {t.ritualDetail.itemsRequired}</CardTitle>
@@ -141,18 +159,26 @@ export default function RitualDetailPage() {
                              </Button>
                         </CardContent>
                     </Card>
-                      <Card className="bg-transparent border-primary/20">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-3 text-primary"><Clock /> {t.ritualDetail.auspiciousTime}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-foreground/90">{auspiciousTime}</p>
-                        </CardContent>
-                    </Card>
+                    {ritual.recommendedPlaylist && (
+                        <Card className="bg-transparent border-primary/20">
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-3 text-primary"><Music /> Recommended Playlist</CardTitle>
+                                <CardDescription>{ritual.recommendedPlaylist.title}</CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {ritual.recommendedPlaylist.tracks.map((track, index) => (
+                                    <div key={index} className="text-sm">
+                                        <p className="font-semibold text-foreground">{track.title}</p>
+                                        <p className="text-xs text-muted-foreground">{track.artist}</p>
+                                    </div>
+                                ))}
+                                <Button variant="outline" className="w-full mt-2" disabled>Play (coming soon)</Button>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
             </div>
         </article>
     </main>
   );
 }
-

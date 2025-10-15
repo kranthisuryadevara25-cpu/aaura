@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Brain, PlusCircle, ThumbsUp, MessageSquare } from 'lucide-react';
+import { Brain, PlusCircle, ThumbsUp, MessageSquare, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { manifestations } from '@/lib/manifestations';
@@ -26,35 +26,34 @@ function ManifestationCard({ post }: { post: Manifestation }) {
                     <AvatarFallback>{author.displayName[0]}</AvatarFallback>
                 </Avatar>
                 <div>
-                    <CardTitle className="text-lg text-primary">{post.title}</CardTitle>
+                    <p className="text-sm font-semibold">{author.displayName}</p>
                     <p className="text-xs text-muted-foreground">
-                        Shared by {author.displayName} • {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
+                        Shared {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true })}
                     </p>
                 </div>
             </CardHeader>
             <CardContent className="flex-grow">
-                <p className="font-semibold text-foreground/90">Technique:</p>
-                <p className="text-muted-foreground line-clamp-3 mb-4">{post.technique}</p>
-                {post.results && (
-                     <>
-                        <p className="font-semibold text-foreground/90">Results:</p>
-                        <p className="text-muted-foreground line-clamp-2 italic">"{post.results}"</p>
-                    </>
-                )}
-            </CardContent>
-            <CardContent className="flex justify-between items-center">
-                 <div className="flex flex-wrap gap-2">
+                <h3 className="font-bold text-lg text-primary mb-2 line-clamp-2">{post.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-3 mb-4">{post.technique}</p>
+                <div className="flex flex-wrap gap-2">
                     {post.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
                 </div>
+            </CardContent>
+            <CardFooter className="flex justify-between items-center bg-secondary/30 p-4">
                  <div className="flex items-center gap-4 text-muted-foreground">
-                    <span className="flex items-center gap-1 text-xs">
-                        <ThumbsUp className="w-4 h-4" /> {post.likes}
+                    <span className="flex items-center gap-1.5 text-xs">
+                        <ThumbsUp className="w-4 h-4" /> {post.likes} Likes
                     </span>
-                    <span className="flex items-center gap-1 text-xs">
-                        <MessageSquare className="w-4 h-4" /> {post.comments}
+                    <span className="flex items-center gap-1.5 text-xs">
+                        <MessageSquare className="w-4 h-4" /> {post.comments} Comments
                     </span>
                 </div>
-            </CardContent>
+                <Button variant="ghost" size="sm" asChild>
+                    <Link href={`/manifestation/${post.slug}`}>
+                        Read More <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
+            </CardFooter>
         </Card>
     )
 }

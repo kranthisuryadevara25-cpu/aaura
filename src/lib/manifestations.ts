@@ -6,8 +6,8 @@ export type Manifestation = {
     technique: string;
     results?: string;
     tags: string[];
-    imageUrl: string;
-    imageHint: string;
+    imageUrl?: string;
+    imageHint?: string;
     authorId: string;
     createdAt: string;
     likes: number;

@@ -54,12 +54,13 @@ export default function VirtualPoojaPage() {
 
     switch (interaction) {
       case 'ring-bell':
-        new Audio('https://cdn.freesound.org/previews/215/215658_4036852-hq.mp3').play().catch(e => console.error("Error playing bell audio:", e));
+        new Audio('https://cdn.freesound.org/previews/573/573225_10521159-hq.mp3').play().catch(e => console.error("Error playing bell audio:", e));
         break;
       case 'offer-flower':
          const newFlowerId = Date.now();
          const newFlowers = Array.from({ length: 5 }, (_, i) => newFlowerId + i);
          setFlowers(prev => [...prev, ...newFlowers]);
+         new Audio('https://cdn.freesound.org/previews/276/276092_5123851-hq.mp3').play().catch(e => console.error("Error playing flower audio:", e));
          setTimeout(() => {
               setFlowers(prev => prev.filter(f => !newFlowers.includes(f)));
           }, 7000); 
@@ -70,7 +71,7 @@ export default function VirtualPoojaPage() {
       case 'offer-aarti':
           if (showAarti) return;
           setShowAarti(true);
-          new Audio('https://cdn.freesound.org/previews/264/264491_4387801-hq.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
+          new Audio('https://cdn.freesound.org/previews/323/323131_4962900-hq.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
           setTimeout(() => setShowAarti(false), 5000);
           break;
     }
@@ -267,5 +268,7 @@ export default function VirtualPoojaPage() {
     </main>
   );
 }
+
+    
 
     

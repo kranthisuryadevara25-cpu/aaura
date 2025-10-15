@@ -97,7 +97,7 @@ export default function ReelsFeed({ items }: { items: FeedItem[] }) {
   };
 
   return (
-    <div className="h-[85vh] overflow-y-scroll snap-y snap-mandatory rounded-lg bg-black">
+    <div className="h-full overflow-y-scroll snap-y snap-mandatory rounded-lg bg-black">
       {items
         .filter(item => item.kind === 'video' && item.mediaUrl) // Only show videos in reels
         .map((item) => (

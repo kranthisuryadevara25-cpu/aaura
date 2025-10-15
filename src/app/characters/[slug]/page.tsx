@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
 import { getCharacterBySlug } from '@/lib/characters';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Separator } from '@/components/ui/separator';
 
 export default function CharacterDetailPage() {
   const params = useParams();

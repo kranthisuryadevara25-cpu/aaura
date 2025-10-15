@@ -6,7 +6,6 @@ import { CheckCircle, PlusCircle, Users } from 'lucide-react';
 import Link from 'next/link';
 import { collection, query, getDocs, type DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase/admin';
-import { useLanguage } from '@/hooks/use-language';
 
 // This line disables caching, ensuring the channel list is always fresh.
 export const revalidate = 0;
@@ -46,7 +45,6 @@ function ChannelCard({ channel }: { channel: Channel }) {
                 <Users className="h-4 w-4" />
                 <span>{channel.followerCount || 0} Followers</span>
             </div>
-            {/* The subscription button requires client-side logic and hooks, which will be re-added later if needed. */}
          </CardFooter>
       </Card>
     </Link>

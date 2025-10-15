@@ -2,10 +2,7 @@
 import { initializeApp, getApps, cert, type App } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
-
-// Since this file is only ever imported on the server, we can directly require the JSON.
-// This is more robust in some bundler environments.
-const serviceAccount = require('./secrets/serviceAccountKey.json');
+import serviceAccount from './secrets/serviceAccountKey.json';
 
 let adminApp: App;
 let db: Firestore;
@@ -16,20 +13,19 @@ let auth: Auth;
  * Uses a directly required service account key.
  */
 function initializeFirebaseAdmin() {
-  if (getApps().some(app => app.name === 'firebase-admin')) {
-    adminApp = getApps().find(app => app.name === 'firebase-admin')!;
-  } else {
+  if (getApps().length === 0) {
     try {
       adminApp = initializeApp(
         {
           credential: cert(serviceAccount),
-        },
-        'firebase-admin'
+        }
       );
     } catch (error: any) {
       console.error('🔥 Firebase Admin SDK initialization failed:', error);
       throw new Error(`Firebase Admin SDK could not be initialized: ${error.message}`);
     }
+  } else {
+    adminApp = getApps()[0];
   }
 
   db = getFirestore(adminApp);

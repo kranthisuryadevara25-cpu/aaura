@@ -4,12 +4,13 @@
 import { FeedSidebar } from "@/components/feed-sidebar";
 import { VideoPlayer } from "@/components/video-player";
 import { useFeed } from '@/hooks/use-feed';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useMemo } from "react";
 
-export default function WatchPage({ params }: { params: { id: string }}) {
-  const { id } = params;
+export default function WatchPage() {
+  const params = useParams();
+  const id = params.id as string;
   const router = useRouter();
   const { allItems, loading } = useFeed(20);
 

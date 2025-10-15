@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useTransition } from 'react';
@@ -24,6 +23,8 @@ import { Loader2, PlusCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '@/hooks/use-language';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   name: z.string().min(3, { message: 'Channel name must be at least 3 characters.' }),
@@ -59,33 +60,35 @@ export default function CreateChannelPage() {
       return;
     }
 
-    startTransition(async () => {
-      try {
+    startTransition(() => {
         const channelId = user.uid; // Use user's UID as channel ID for a 1-to-1 mapping
         const channelRef = doc(db, 'channels', channelId);
 
-        await setDoc(channelRef, {
+        const channelData = {
           userId: user.uid,
           name: data.name,
           description_en: data.description_en,
           description_hi: data.description_hi,
           description_te: data.description_te,
           creationDate: serverTimestamp(),
-        });
+        };
 
-        toast({
-          title: t.toasts.channelCreatedTitle,
-          description: t.toasts.channelCreatedDescription,
+        setDoc(channelRef, channelData)
+        .then(() => {
+            toast({
+                title: t.toasts.channelCreatedTitle,
+                description: t.toasts.channelCreatedDescription,
+            });
+            router.push('/channels');
+        })
+        .catch(async (serverError) => {
+             const permissionError = new FirestorePermissionError({
+                path: channelRef.path,
+                operation: 'create',
+                requestResourceData: channelData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
-        router.push('/channels');
-      } catch (error) {
-        console.error('Channel creation failed:', error);
-        toast({
-          variant: 'destructive',
-          title: t.toasts.creationFailedTitle,
-          description: t.toasts.creationFailedDescription,
-        });
-      }
     });
   };
 

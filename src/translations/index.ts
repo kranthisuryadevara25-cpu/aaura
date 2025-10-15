@@ -3,6 +3,7 @@ export const translations = {
   en: {
     sidebar: {
       home: "For You",
+      reels: "Reels",
       virtualPooja: "Virtual Pooja",
       deities: "Deities",
       stories: "Epic Sagas",
@@ -193,6 +194,7 @@ export const translations = {
   te: {
     sidebar: {
       home: "మీ కోసం",
+      reels: "రీల్స్",
       virtualPooja: "వర్చువల్ పూజ",
       deities: "దేవతలు",
       stories: "పురాణ గాథలు",
@@ -383,6 +385,7 @@ export const translations = {
   hi: {
     sidebar: {
       home: "आपके लिए",
+      reels: "रील्स",
       virtualPooja: "वर्चुअल पूजा",
       deities: "देवता",
       stories: "महाकाव्य गाथाएँ",
@@ -573,6 +576,7 @@ export const translations = {
   mr: {
     sidebar: {
       home: "तुमच्यासाठी",
+      reels: "रील्स",
       virtualPooja: "आभासी पूजा",
       deities: "देवता",
       stories: "महाकाव्य गाथा",
@@ -758,6 +762,7 @@ export const translations = {
   ta: {
     sidebar: {
       home: "உங்களுக்காக",
+      reels: "ரீல்கள்",
       virtualPooja: "மெய்நிகர் பூஜை",
       deities: "தெய்வங்கள்",
       stories: "காவியக் கதைகள்",
@@ -943,6 +948,7 @@ export const translations = {
   kn: {
     sidebar: {
       home: "ನಿಮಗಾಗಿ",
+      reels: "ರೀಲ್ಸ್",
       virtualPooja: "ವರ್ಚುವಲ್ ಪೂಜೆ",
       deities: "ದೇವತೆಗಳು",
       stories: "ಮಹಾಕಾವ್ಯಗಳು",
@@ -1128,6 +1134,7 @@ export const translations = {
   bn: {
     sidebar: {
       home: "আপনার জন্য",
+      reels: "রিল",
       virtualPooja: "ভার্চুয়াল পূজা",
       deities: "দেবদেবী",
       stories: "মহাকাব্য",
@@ -1184,7 +1191,7 @@ export const translations = {
       stotras: "স্তোত্র",
     },
     stories: {
-      title: "পৌরাণিক মহাকাব্য",
+      title: "पौরাণিক মহাকাব্য",
       description: "തലമുറകളെ രൂപപ്പെടുത്തിയ കാലാതീതമായ ഇതിഹാസങ്ങളും നാടോടിക്കഥകളും പര്യവേക്ഷണം ചെയ്യുക।",
     },
     storyDetail: {

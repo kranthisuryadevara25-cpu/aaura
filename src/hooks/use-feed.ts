@@ -66,7 +66,7 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
                 kind: 'post',
                 description: { en: data.content },
                 createdAt: data.createdAt?.toDate(),
-                meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount },
+                meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount, contextId: data.contextId },
             }
     }
 }
@@ -79,42 +79,52 @@ export const useFeed = (pageSize = 20) => {
   const [user] = useAuthState(auth);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [canLoadMore, setCanLoadMore] = useState(true);
+  const [lastCursor, setLastCursor] = useState<string | undefined>(undefined);
+
+  const loadMore = useCallback(async () => {
+    if (loading || !canLoadMore) return;
+
+    setLoading(true);
+
+    const feedResponse = await getPersonalizedFeed({ 
+        userId: user?.uid, 
+        pageSize,
+        lastCursor: lastCursor
+    });
+
+    if (feedResponse.feed.length === 0) {
+        setCanLoadMore(false);
+        setLoading(false);
+        return;
+    }
+    
+    const feedDocs = await Promise.all(
+        feedResponse.feed.map(item => getDoc(doc(db, item.contentType, item.contentId)))
+    );
+
+    const newItems = feedDocs
+      .map((doc, i) => {
+          if (!doc.exists()) return null;
+          const contentType = feedResponse.feed[i].contentType;
+           if (['temple', 'deity', 'story', 'media', 'post'].includes(contentType)) {
+               return mapToFeedItem(doc, contentType as any);
+          }
+          return null;
+      })
+      .filter((item): item is FeedItem => item !== null);
+
+    setAllItems(prev => [...prev, ...newItems]);
+    // The AI flow doesn't support cursors yet, so we prevent further loading for now.
+    setCanLoadMore(false); 
+    // setLastCursor(newCursor); 
+
+    setLoading(false);
+  }, [loading, canLoadMore, user, pageSize, lastCursor, db]);
 
   useEffect(() => {
-    let canceled = false;
-    async function load() {
-      setLoading(true);
-
-      const feedResponse = await getPersonalizedFeed({ userId: user?.uid, pageSize });
-      
-      if (canceled) return;
-
-      const feedDocs = await Promise.all(
-          feedResponse.feed.map(item => getDoc(doc(db, item.contentType, item.contentId)))
-      );
-      
-      if (canceled) return;
-
-      const mappedItems = feedDocs
-        .map((doc, i) => {
-            if (!doc.exists()) return null;
-            const contentType = feedResponse.feed[i].contentType;
-            if (contentType === 'temple' || contentType === 'deity' || contentType === 'story' || contentType === 'media' || contentType === 'post') {
-                 return mapToFeedItem(doc, contentType as 'temple' | 'deity' | 'story' | 'media' | 'post');
-            }
-            return null;
-        })
-        .filter((item): item is FeedItem => item !== null);
-
-      setAllItems(mappedItems);
-      setLoading(false);
-    }
-
-    load();
-    return () => {
-      canceled = true;
-    };
-  }, [user, pageSize, db]); 
+    loadMore();
+  }, []); // Initial load
 
   const filterItems = useCallback((searchQuery: string): FeedItem[] => {
     if (!searchQuery) {
@@ -128,5 +138,5 @@ export const useFeed = (pageSize = 20) => {
     });
   }, [allItems, language]);
 
-  return { allItems, loading, filterItems };
+  return { allItems, loading, filterItems, loadMore, canLoadMore };
 };

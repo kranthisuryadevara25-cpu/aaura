@@ -77,14 +77,16 @@ const personalizedFeedFlow = ai.defineFlow(
         return getTrendingContent(db, pageSize);
     }
 
-    // --- Algorithm for Existing Users ---
+    // --- Optimized Algorithm for Existing Users ---
     
-    const userLikes = await fetchUserInteractions(db, userId, 'likes'); 
-    const userBookmarks = await fetchUserInteractions(db, userId, 'bookmarks');
-
-    const recentMedia = await fetchRecentContent(db, 'media', 50);
-    const recentPosts = await fetchRecentContent(db, 'posts', 50);
-    const recentStories = await fetchRecentContent(db, 'stories', 50);
+    // Step 2: Parallelize Firestore fetches
+    const [userLikes, userBookmarks, recentMedia, recentPosts, recentStories] = await Promise.all([
+        fetchUserInteractions(db, userId, 'likes'),
+        fetchUserInteractions(db, userId, 'bookmarks'),
+        fetchRecentContent(db, 'media', 50),
+        fetchRecentContent(db, 'posts', 50),
+        fetchRecentContent(db, 'stories', 50)
+    ]);
     
     const allCandidates = [...recentMedia, ...recentPosts, ...recentStories];
 
@@ -257,5 +259,3 @@ async function fetchRecentContent(
         return [];
     }
 }
-
-    

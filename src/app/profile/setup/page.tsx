@@ -32,10 +32,7 @@ import { generateOnboardingInsights } from '@/ai/flows/onboarding-insights';
 import { deities } from '@/lib/deities';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { step1Schema, step2Schema } from '@/lib/profile-setup-schemas';
-
-const formSchema = step1Schema.merge(step2Schema);
-type FormValues = z.infer<typeof formSchema>;
+import { formSchema, step1Schema, step2Schema, FormValues } from '@/lib/profile-setup-schemas';
 
 const getZodiacSign = (date: Date): string => {
   const day = date.getDate();
@@ -70,7 +67,7 @@ export default function ProfileSetupPage() {
   ];
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(currentStep === 0 ? step1Schema : step2Schema),
+    resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: user?.displayName || '',
       placeOfBirth: '',
@@ -82,11 +79,13 @@ export default function ProfileSetupPage() {
   });
 
   const nextStep = async () => {
-    const isValid = await form.trigger(steps[currentStep].fields);
+    const fieldsToValidate = steps[currentStep].fields;
+    const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
       setCurrentStep((prev) => prev + 1);
     }
   };
+
   const prevStep = () => setCurrentStep((prev) => prev - 1);
 
 
@@ -367,5 +366,3 @@ export default function ProfileSetupPage() {
     </main>
   );
 }
-
-    

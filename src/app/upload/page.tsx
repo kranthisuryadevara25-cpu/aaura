@@ -94,7 +94,7 @@ export default function UploadPage() {
           return;
         }
 
-        const placeholderMediaUrl = 'https://placehold.co/600x400.mp4?text=Media+Processing';
+        const placeholderMediaUrl = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
         const placeholderThumbnailUrl = 'https://picsum.photos/seed/spirit/600/400';
         
         const mediaCollection = collection(db, 'media');

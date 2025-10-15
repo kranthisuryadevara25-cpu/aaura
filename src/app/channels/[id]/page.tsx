@@ -3,11 +3,11 @@
 
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
-import { doc, writeBatch, increment, collection, query, where, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
+import { doc, writeBatch, increment, collection, query, where, addDoc, serverTimestamp, orderBy, updateDoc } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Image from 'next/image';
-import { Loader2, Users, CheckCircle, PlusCircle, Video, ListMusic, MessageSquare, Info, Upload } from 'lucide-react';
+import { Loader2, Users, CheckCircle, PlusCircle, Video, ListMusic, MessageSquare, Info, Upload, Edit, BarChart3, Heart } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
@@ -35,6 +35,9 @@ import { useTransition } from 'react';
 import type { DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { format } from 'date-fns';
+import { ManagePlaylistsDialog } from '@/components/ManagePlaylistsDialog';
+
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(2000, "Post must be less than 2000 characters."),
@@ -186,36 +189,90 @@ function PostsTab({ channelId, isOwner }: { channelId: string, isOwner: boolean 
     );
 }
 
-function PlaylistsTab({ channelId }: { channelId: string }) {
+function PlaylistsTab({ channel, isOwner }: { channel: DocumentData, isOwner: boolean }) {
      const db = useFirestore();
-     const playlistsQuery = query(collection(db, 'playlists'), where('creatorId', '==', channelId), where('isPublic', '==', true));
-     const [playlists, loading] = useCollectionData(playlistsQuery, { idField: 'id' });
+     
+     const featuredPlaylistIds = channel.featuredPlaylists || [];
+
+     const playlistsQuery = query(collection(db, 'playlists'), where('creatorId', '==', channel.userId), where('isPublic', '==', true));
+     const [allPlaylists, loading] = useCollectionData(playlistsQuery, { idField: 'id' });
 
     if (loading) return <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />;
+    
+    const featuredPlaylists = allPlaylists?.filter(p => featuredPlaylistIds.includes(p.id));
 
      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-             {playlists && playlists.length > 0 ? playlists.map((playlist: any) => (
-                <Link href={`/playlists/${playlist.id}`} key={playlist.id} className="group">
-                    <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
-                        <div className="relative aspect-video bg-secondary">
-                            <Image src={`https://picsum.photos/seed/${playlist.id}/600/400`} alt={playlist.title} layout="fill" className="object-cover" />
-                        </div>
-                        <CardHeader>
-                            <CardTitle className="text-md font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-primary">
-                                {playlist.title}
-                            </CardTitle>
-                        </CardHeader>
-                    </Card>
-                </Link>
-             )) : (
-                 <div className="col-span-full text-center py-16 border-2 border-dashed rounded-lg">
-                    <h2 className="text-2xl font-semibold text-foreground">No Playlists Yet</h2>
-                    <p className="mt-2 text-muted-foreground">This creator hasn't created any public playlists.</p>
+        <div>
+            {isOwner && (
+                <div className="mb-6 flex justify-end">
+                    <ManagePlaylistsDialog 
+                        allPlaylists={allPlaylists || []} 
+                        featuredIds={featuredPlaylistIds} 
+                        channelId={channel.userId}
+                    />
                 </div>
-             )}
-         </div>
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {featuredPlaylists && featuredPlaylists.length > 0 ? featuredPlaylists.map((playlist: any) => (
+                    <Link href={`/playlists/${playlist.id}`} key={playlist.id} className="group">
+                        <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
+                            <div className="relative aspect-video bg-secondary">
+                                <Image src={`https://picsum.photos/seed/${playlist.id}/600/400`} alt={playlist.title} layout="fill" className="object-cover" />
+                            </div>
+                            <CardHeader>
+                                <CardTitle className="text-md font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-primary">
+                                    {playlist.title}
+                                </CardTitle>
+                            </CardHeader>
+                        </Card>
+                    </Link>
+                )) : (
+                    <div className="col-span-full text-center py-16 border-2 border-dashed rounded-lg">
+                        <h2 className="text-2xl font-semibold text-foreground">No Featured Playlists</h2>
+                        <p className="mt-2 text-muted-foreground">This creator hasn't featured any playlists yet.</p>
+                        {isOwner && <p className="mt-1 text-sm text-muted-foreground">Click 'Manage Playlists' to add some.</p>}
+                    </div>
+                )}
+            </div>
+        </div>
      );
+}
+
+function AboutTab({ channel, language }: { channel: DocumentData, language: string }) {
+    const description = channel[`description_${language}`] || channel.description_en;
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>About {channel.name}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <p className="text-muted-foreground whitespace-pre-wrap">{description}</p>
+                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 border-t">
+                    <div className="flex items-center gap-3">
+                        <BarChart3 className="h-6 w-6 text-primary" />
+                        <div>
+                            <p className="font-bold text-lg">{channel.totalViews || 0}</p>
+                            <p className="text-sm text-muted-foreground">Total Views</p>
+                        </div>
+                    </div>
+                     <div className="flex items-center gap-3">
+                        <Heart className="h-6 w-6 text-primary" />
+                        <div>
+                            <p className="font-bold text-lg">{channel.totalLikes || 0}</p>
+                            <p className="text-sm text-muted-foreground">Total Likes</p>
+                        </div>
+                    </div>
+                     <div className="flex items-center gap-3">
+                        <Users className="h-6 w-6 text-primary" />
+                        <div>
+                            <p className="font-bold text-lg">{channel.followerCount || 0}</p>
+                            <p className="text-sm text-muted-foreground">Followers</p>
+                        </div>
+                    </div>
+                 </div>
+            </CardContent>
+        </Card>
+    );
 }
 
 export default function ChannelDetailPage() {
@@ -303,18 +360,19 @@ export default function ChannelDetailPage() {
   return (
     <main className="container mx-auto px-4 py-8">
       <Card className="overflow-hidden">
-        <div className="relative h-48 w-full bg-secondary">
-          <Image
-            src={`https://picsum.photos/seed/${channelId}-banner/1200/400`}
-            alt={`${channel.name} banner`}
-            data-ai-hint="abstract spiritual background"
-            layout="fill"
-            objectFit="cover"
-          />
+        <div className="relative h-48 w-full">
+            <Image
+                src={`https://picsum.photos/seed/${channelId}-banner/1200/400`}
+                alt={`${channel.name} banner`}
+                data-ai-hint="abstract spiritual background"
+                layout="fill"
+                objectFit="cover"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
         </div>
         <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row sm:items-end gap-6 -mt-20">
-            <div className="relative h-32 w-32 shrink-0 rounded-full border-4 border-background bg-secondary">
+          <div className="flex flex-col sm:flex-row gap-6 -mt-20">
+            <div className="relative h-32 w-32 shrink-0 rounded-full border-4 border-background bg-secondary mx-auto sm:mx-0">
               <Image
                 src={`https://picsum.photos/seed/${channelId}/200/200`}
                 alt={channel.name}
@@ -324,50 +382,47 @@ export default function ChannelDetailPage() {
                 className="rounded-full"
               />
             </div>
-            <div className="flex-grow text-center sm:text-left">
-              <CardTitle className="text-3xl font-bold flex items-center justify-center sm:justify-start gap-2">
-                {channel.name} <CheckCircle className="h-6 w-6 text-blue-500" />
-              </CardTitle>
-              <div className="mt-2 flex items-center justify-center sm:justify-start gap-4 text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Users className="h-4 w-4" /> {channel.followerCount || 0} Followers
+            <div className="flex-grow">
+                <div className="flex flex-col sm:flex-row justify-between items-center">
+                    <CardTitle className="text-3xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                        {channel.name} <CheckCircle className="h-6 w-6 text-blue-500" />
+                    </CardTitle>
+                    <div className="flex items-center gap-2 mt-4 sm:mt-0">
+                        {isOwner && (
+                            <Button variant="outline" onClick={() => router.push('/upload')}>
+                                <Upload className="mr-2 h-4 w-4" /> Upload Video
+                            </Button>
+                        )}
+                        {user && !isOwner && (
+                            <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant={isFollowing ? 'secondary' : 'default'} size="lg" disabled={loadingFollowing} >
+                                        {loadingFollowing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
+                                            isFollowing ? <><CheckCircle className="mr-2 h-4 w-4" /> Subscribed</> : <><PlusCircle className="mr-2 h-4 w-4" /> Subscribe</>
+                                        )}
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>
+                                            {isFollowing ? "Unfollow" : "Follow"} {channel.name}?
+                                        </AlertDialogTitle>
+                                        <AlertDialogDescription>
+                                            You can always change your mind later.
+                                        </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleFollow}>{isFollowing ? 'Unfollow' : 'Follow'}</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        )}
+                    </div>
                 </div>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              {isOwner && (
-                <Button variant="outline" onClick={() => router.push('/upload')}>
-                    <Upload className="mr-2 h-4 w-4" /> Upload Video
-                </Button>
-              )}
-              {user && !isOwner && (
-                  <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                          <Button variant={isFollowing ? 'secondary' : 'default'} size="lg" disabled={loadingFollowing} >
-                              {loadingFollowing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
-                                  isFollowing ? <><CheckCircle className="mr-2 h-4 w-4" /> Subscribed</> : <><PlusCircle className="mr-2 h-4 w-4" /> Subscribe</>
-                              )}
-                          </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                          <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                  {isFollowing ? "Unfollow" : "Follow"} {channel.name}?
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                  You can always change your mind later.
-                              </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction onClick={handleFollow}>{isFollowing ? 'Unfollow' : 'Follow'}</AlertDialogAction>
-                          </AlertDialogFooter>
-                      </AlertDialogContent>
-                  </AlertDialog>
-              )}
+                <p className="mt-2 text-muted-foreground text-center sm:text-left">{description}</p>
             </div>
           </div>
-          <p className="mt-6 text-center sm:text-left text-muted-foreground">{description}</p>
         </CardContent>
       </Card>
 
@@ -385,17 +440,10 @@ export default function ChannelDetailPage() {
            <PostsTab channelId={channelId} isOwner={isOwner} />
         </TabsContent>
         <TabsContent value="playlists" className="mt-6">
-           <PlaylistsTab channelId={channelId} />
+           <PlaylistsTab channel={channel} isOwner={isOwner} />
         </TabsContent>
         <TabsContent value="about" className="mt-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>About {channel.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p>{description}</p>
-            </CardContent>
-          </Card>
+          <AboutTab channel={channel} language={language} />
         </TabsContent>
       </Tabs>
     </main>

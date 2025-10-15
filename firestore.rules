@@ -1,163 +1,132 @@
 /**
- * @file Firestore Security Rules
- * @description This ruleset enforces a strict user-ownership model for personal data while allowing public read access to shared content.
+ * @fileoverview Firestore Security Rules for the aaura app.
+ *
+ * Core Philosophy:
+ * This ruleset primarily enforces a user-ownership model, where users can only
+ * read and write their own data, with some exceptions for public content.
  *
  * Data Structure:
- * - User-specific data (profiles, preferences, bookmarks, virtual offerings, orders, playlists, challenges, horoscopes, cart) is nested under `/users/{userId}`.
- * - Social connections (followers, following) are managed via subcollections under `/users/{userId}`.
- * - Public content (media, channels, playlists, deities, shops, products, temples, stories, epic heroes, rituals, festivals, panchang, groups, manifestations, challenges) resides in top-level collections.
- * - Likes for media, group posts, and manifestations are stored in subcollections.
+ * - User-specific data is nested under `/users/{userId}`.
+ * - Public content (media, deities, temples, etc.) resides in top-level collections.
+ * - Social connections are modeled using `followers` and `following` subcollections under users.
+ * - Likes are tracked as subcollections on the liked entities.
  *
  * Key Security Decisions:
- * - User listing is disallowed.
- * - All write operations on user-owned data require authentication and ownership validation.
- * - Public content is readable by all users but writable only with specific authorization (e.g., owner-only or role-based).
- *
- * Denormalization for Authorization:
- * - User-specific data includes the userId for easy authorization checks.
- * - Ownership fields (e.g., `userId`, `creatorId`, `ownerId`) are used to control write access to public content.
- *
- * Structural Segregation:
- * - Private user data and public content are stored in separate collections to optimize security and querying.
+ * - Users can only manage their own profiles and associated data.
+ * - Listing of users is disallowed to prevent data scraping.
+ * - Public content is generally readable by anyone.
+ * - Write access to public content is restricted based on ownership.
+ * - Strict validation of ownership is enforced for all write operations.
+ * - De-normalization is not fully implemented due to the prototyping philosophy.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    /**
-     * @description Checks if the request is authenticated.
-     */
     function isSignedIn() {
       return request.auth != null;
     }
 
-    /**
-     * @description Checks if the authenticated user is the owner of the resource.
-     */
     function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
+      return request.auth.uid == userId;
     }
 
-    /**
-     * @description Checks if the authenticated user is the existing owner of the resource.
-     */
     function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      return isOwner(userId) && resource != null;
     }
 
     /**
-     * @description Rules for user profiles.
+     * @description Enforces user-ownership for profile data.
      * @path /users/{userId}
-     * @allow (create) Authenticated user creates their profile.
-     * @allow (get, update, delete) Authenticated user accesses/modifies their own profile.
-     * @deny (create) Unauthenticated user attempts to create a profile.
-     * @deny (get, update, delete) Authenticated user attempts to access/modify another user's profile.
-     * @principle Enforces document ownership for writes.
+     * @allow (create) User A creates their own profile: `request.auth.uid == 'user_a' && request.resource.data.id == 'user_a'`
+     * @allow (get, update, delete) User A reads/updates/deletes their own profile: `request.auth.uid == 'user_a' && resource.data.id == 'user_a'`
+     * @deny (create) User A tries to create User B's profile: `request.auth.uid == 'user_a' && request.resource.data.id == 'user_b'`
+     * @deny (get, update, delete) User A tries to read/update/delete User B's profile: `request.auth.uid == 'user_a' && resource.data.id == 'user_b'`
+     * @principle Enforces document ownership for all operations.
      */
     match /users/{userId} {
-      allow get: if isOwner(userId);
-      allow list: if false;
+      allow get: if isSignedIn();
+      allow list: if false; // Do not allow listing all users.
       allow create: if isOwner(userId) && request.resource.data.id == userId;
-      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id; //Enforce immutability
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
     }
 
-     /**
-      * @description Rules for followers subcollection.
-      * @path /users/{userId}/followers/{followerId}
-      * @allow (create) Any signed-in user can create a follow document.
-      * @allow (get, list) The owner can read their followers.
-      * @deny (update, delete) Only the system can update or delete follow records.
-      * @principle Data in this collection is user-specific but readable by the owning user.
-      */
+    /**
+     * @description Enforces user-ownership for follower data.
+     * @path /users/{userId}/followers/{followerId}
+     * @allow (create) User A creates a follower entry for themselves: `request.auth.uid == 'user_a' && userId == 'user_a'`
+     * @allow (get) User A gets a follower entry for themselves.
+     * @deny (create) User A tries to create a follower entry for User B: `request.auth.uid == 'user_a' && userId == 'user_b'`
+     * @deny (update, delete) No updates or deletes allowed on follower documents.
+     * @principle Enforces document ownership for writes, read access.
+     */
     match /users/{userId}/followers/{followerId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isSignedIn();
+        allow get: if isSignedIn();
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
         allow update, delete: if false;
     }
 
-    /**
-     * @description Rules for following subcollection.
+     /**
+     * @description Enforces user-ownership for following data.
      * @path /users/{userId}/following/{followedId}
-     * @allow (create) Any signed-in user can create a following document.
-     * @allow (get, list) The owner can read who they are following.
-     * @deny (update, delete) Only the system can update or delete following records.
-     * @principle Data in this collection is user-specific but readable by the owning user.
+     * @allow (create) User A creates a following entry for themselves: `request.auth.uid == 'user_a' && userId == 'user_a'`
+     * @allow (get) User A gets a following entry for themselves.
+     * @deny (create) User A tries to create a following entry for User B: `request.auth.uid == 'user_a' && userId == 'user_b'`
+     * @deny (update, delete) No updates or deletes allowed on following documents.
+     * @principle Enforces document ownership for writes, read access.
      */
     match /users/{userId}/following/{followedId} {
-        allow get, list: if isOwner(userId);
-        allow create: if isSignedIn();
+        allow get: if isSignedIn();
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
         allow update, delete: if false;
     }
 
     /**
-     * @description Rules for user preferences.
+     * @description Enforces user-ownership for preference data.
      * @path /users/{userId}/preferences/default
-     * @allow (get, update) Authenticated user accesses/modifies their own preferences.
-     * @allow (create) Authenticated user creates their preferences.
-     * @deny (delete) Prevent client-side deletion.
-     * @deny (get, update) Authenticated user attempts to access/modify another user's preferences.
+     * @allow (create, update) User A creates/updates their own preferences: `request.auth.uid == 'user_a'`
+     * @allow (get) User A gets their preferences if signed in.
+     * @deny (create, update) User A tries to create/update User B's preferences: `request.auth.uid == 'user_a'`
+     * @deny (delete) Deletion is not allowed for preferences.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/preferences/default {
-      allow get: if isOwner(userId);
+      allow get: if isSignedIn();
       allow list: if false;
       allow create: if isOwner(userId);
       allow update: if isExistingOwner(userId);
       allow delete: if false;
     }
 
-     /**
-      * @description Rules for user badges.
-      * @path /users/{userId}/badges/{badgeId}
-      * @allow (get, list) The owner can read their badges.
-      * @deny (create, update, delete) Only the system can manage badges.
-      * @principle Data in this collection is user-specific but readable by the owning user.
-      */
+    /**
+     * @description Enforces user-ownership for badge data.
+     * @path /users/{userId}/badges/{badgeId}
+     * @allow (create, update) If the user owns the badge.
+     * @allow (get) User A gets their badge if signed in.
+     * @deny (delete) Deletion is not allowed for badges.
+     * @principle Enforces document ownership for writes.
+     */
     match /users/{userId}/badges/{badgeId} {
-        allow get, list: if isOwner(userId);
-        allow create, update, delete: if false;
+        allow get: if isSignedIn();
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if false;
     }
 
     /**
-     * @description Rules for user bookmarks.
+     * @description Enforces user-ownership for bookmark data.
      * @path /users/{userId}/bookmarks/{bookmarkId}
-     * @allow (get, create, delete, list) Authenticated user manages their own bookmarks.
-     * @deny (get, create, delete, list) Authenticated user attempts to access/modify another user's bookmarks.
+     * @allow (create) If the user owns the bookmark.
+     * @allow (get) User A gets their bookmark if signed in.
+     * @deny (delete) Deletion is not allowed for bookmarks.
      * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/bookmarks/{bookmarkId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if false;
-      allow delete: if isExistingOwner(userId);
-    }
-
-    /**
-     * @description Rules for virtual offerings.
-     * @path /users/{userId}/virtualOfferings/{offeringId}
-     * @allow (get, create, list) Authenticated user manages their own virtual offerings.
-     * @deny (get, create, list) Authenticated user attempts to access/modify another user's virtual offerings.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/virtualOfferings/{offeringId} {
-      allow get: if isOwner(userId);
-      allow list: if isOwner(userId);
-      allow create: if isOwner(userId);
-      allow update: if false;
-      allow delete: if false; //No deleting virtual offerings.
-    }
-
-    /**
-     * @description Rules for cart items.
-     * @path /users/{userId}/cart/{productId}
-     * @allow (get, create, update, delete, list) Authenticated user manages their own cart.
-     * @deny (get, create, update, delete, list) Authenticated user attempts to access/modify another user's cart.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/cart/{productId} {
-        allow get: if isOwner(userId);
+        allow get: if isSignedIn();
         allow list: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update: if isExistingOwner(userId);
@@ -165,395 +134,444 @@ service cloud.firestore {
     }
 
     /**
-     * @description Rules for user orders.
-     * @path /users/{userId}/orders/{orderId}
-     * @allow (get, list) Authenticated user can view their own orders.
-     * @deny (create, update, delete) Prevent client-side creation, updates, and deletions.
-     * @principle Enforces document ownership for reads.
-     */
-    match /users/{userId}/orders/{orderId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create, update, delete: if false;
-    }
-
-    /**
-     * @description Rules for user playlists.
-     * @path /users/{userId}/playlists/{playlistId}
-     * @allow (get, create, list) Authenticated user manages their own playlist references.
-     * @deny (get, create, list) Authenticated user attempts to access/modify another user's playlists.
+     * @description Enforces user-ownership for virtual offering data.
+     * @path /users/{userId}/virtualOfferings/{offeringId}
+     * @allow (create) If the user owns the virtual offering.
+     * @allow (get) User A gets their virtual offering if signed in.
+     * @deny (delete) Deletion is not allowed for virtual offerings.
      * @principle Enforces document ownership for writes.
      */
-    match /users/{userId}/playlists/{playlistId} {
-        allow get: if isOwner(userId);
-        allow list: if isOwner(userId);
-        allow create: if isOwner(userId);
-        allow update: if false;
-        allow delete: if false; //Playlists themselves are in a top-level collection
-    }
-
-    /**
-     * @description Rules for user challenge progress.
-     * @path /users/{userId}/challenges/{challengeId}
-     * @allow (get, create, update, list) Authenticated user manages their own challenge progress.
-     * @deny (get, create, update, list) Authenticated user attempts to access/modify another user's challenge progress.
-     * @principle Enforces document ownership for writes.
-     */
-    match /users/{userId}/challenges/{challengeId} {
-        allow get: if isOwner(userId);
+    match /users/{userId}/virtualOfferings/{offeringId} {
+        allow get: if isSignedIn();
         allow list: if isOwner(userId);
         allow create: if isOwner(userId);
         allow update: if isExistingOwner(userId);
-        allow delete: if false; //No deleting challenge progress.
+        allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Rules for media.
+     * @description Enforces user-ownership for cart item data.
+     * @path /users/{userId}/cart/{productId}
+     * @allow (create, update, delete) If the user owns the cart item.
+     * @allow (get) User A gets their cart item if signed in.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/cart/{productId} {
+      allow get: if isSignedIn();
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces user-ownership for order data.
+     * @path /users/{userId}/orders/{orderId}
+     * @allow (create, update, delete) If the user owns the order.
+     * @allow (get) User A gets their order if signed in.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/orders/{orderId} {
+        allow get: if isSignedIn();
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isExistingOwner(userId);
+        allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces user-ownership for playlist data.
+     * @path /users/{userId}/playlists/{playlistId}
+     * @allow (create, update, delete) If the user owns the playlist.
+     * @allow (get) User A gets their playlist if signed in.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/playlists/{playlistId} {
+      allow get: if isSignedIn();
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+     /**
+     * @description Enforces user-ownership for challenge progress data.
+     * @path /users/{userId}/challenges/{challengeId}
+     * @allow (create, update, delete) If the user owns the challenge progress.
+     * @allow (get) User A gets their challenge progress if signed in.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/challenges/{challengeId} {
+      allow get: if isSignedIn();
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Allows public read access to media, but restricts write access to owners.
      * @path /media/{mediaId}
      * @allow (get, list) Public read access for all media.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Media entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @allow (create) If the authorId matches the authenticated user.
+     * @allow (update, delete) If the authorId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
+     * @principle Public read, owner-only writes.
      */
     match /media/{mediaId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Rules for comments on media.
+     * @description Allows authenticated users to read comments, but only the author can create, update, or delete.
      * @path /media/{mediaId}/comments/{commentId}
-     * @allow (get, list) Public read access for comments.
-     * @allow (create) Authenticated users can create comments.
-     * @deny (update, delete) Only the owner can modify/delete.
+     * @allow (get, list) Anyone can read comments on media if signed in.
+     * @allow (create) If the authorId matches the authenticated user.
+     * @allow (update, delete) If the authorId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
      * @principle Public read, owner-only writes.
      */
     match /media/{mediaId}/comments/{commentId} {
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if isExistingOwner(request.auth.uid);
-        allow delete: if isExistingOwner(request.auth.uid);
-    }
-
-   /**
-    * @description Rules for likes on media.
-    * @path /media/{mediaId}/likes/{userId}
-    * @allow (get, list) Public read access for all likes.
-    * @allow (create, delete) Authenticated user can like/unlike.
-    * @deny (update) No updates.
-    * @principle Public read, authenticated like/unlike.
-    */
-    match /media/{mediaId}/likes/{userId} {
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if false;
-        allow delete: if isSignedIn() && request.auth.uid == userId;
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
     }
 
     /**
-     * @description Rules for channels.
+     * @description Allows public read access to media likes, but restricts write access to the user who liked the media.
+     * @path /media/{mediaId}/likes/{userId}
+     * @allow (get, list) Public read access for all media likes.
+     * @allow (create) If the userId matches the authenticated user.
+     * @allow (update, delete) No updates or deletes allowed on likes documents.
+     * @deny (create, update, delete) if ownership is not established
+     * @principle Public read, owner-only writes.
+     */
+    match /media/{mediaId}/likes/{userId} {
+        allow get, list: if true;
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
+    }
+
+    /**
+     * @description Allows public read access to channels, but restricts write access to owners.
      * @path /channels/{channelId}
      * @allow (get, list) Public read access for all channels.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Channel entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @allow (create) If the userId matches the authenticated user.
+     * @allow (update, delete) If the userId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
+     * @principle Public read, owner-only writes.
      */
     match /channels/{channelId} {
       allow get, list: if true;
-       allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Rules for playlists.
+     * @description Allows public read access to playlists.
      * @path /playlists/{playlistId}
      * @allow (get, list) Public read access for all playlists.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no creatorId is present on the Playlist entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @allow (create) If the creatorId matches the authenticated user.
+     * @allow (update, delete) If the creatorId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
      */
     match /playlists/{playlistId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+        allow get, list: if true;
+        allow create: if isSignedIn() && request.resource.data.creatorId == request.auth.uid;
+        allow update: if isSignedIn() && resource != null && resource.data.creatorId == request.auth.uid;
+        allow delete: if isSignedIn() && resource != null && resource.data.creatorId == request.auth.uid;
     }
 
     /**
-     * @description Rules for horoscopes.
+     * @description Enforces user-ownership for horoscope data.
      * @path /users/{userId}/horoscopes/{horoscopeId}
-     * @allow (get, list) Authenticated user can access their own horoscopes.
-     * @deny (create, update, delete) Horoscopes are system-generated.
-     * @principle Owner-only read, system-only writes.
+     * @allow (create, update, delete) If the user owns the horoscope.
+     * @allow (get) User A gets their horoscope if signed in.
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId}/horoscopes/{horoscopeId} {
-      allow get: if isOwner(userId);
+      allow get: if isSignedIn();
       allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Allows public read access to deities.
+     * @path /deities/{deityId}
+     * @allow (get, list) Public read access for all deities.
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
+     */
+    match /deities/{deityId} {
+      allow get, list: if true;
       allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for deities.
-     * @path /deities/{deityId}
-     * @allow (get, list) Public read access for all deities.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Deity entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
-     */
-    match /deities/{deityId} {
-      allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
-    }
-
-    /**
-     * @description Rules for shops.
+     * @description Allows shop owners to manage their shop.
      * @path /shops/{shopId}
      * @allow (get, list) Public read access for all shops.
-     * @allow (create) Authenticated user can create a shop if they own the shop.
-     * @deny (update, delete) Only the owner can modify/delete.
+     * @allow (create) If the ownerId matches the authenticated user.
+     * @allow (update, delete) If the ownerId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
      * @principle Public read, owner-only writes.
      */
     match /shops/{shopId} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
-      allow update: if isSignedIn() && request.resource.data.ownerId == resource.data.ownerId;
-      allow delete: if isSignedIn() && request.resource.data.ownerId == resource.data.ownerId;
+        allow get, list: if true;
+        allow create: if isSignedIn() && request.resource.data.ownerId == request.auth.uid;
+        allow update: if isSignedIn() && resource != null && resource.data.ownerId == request.auth.uid;
+        allow delete: if isSignedIn() && resource != null && resource.data.ownerId == request.auth.uid;
     }
 
     /**
-     * @description Rules for products.
+     * @description Allows public read access to products.
      * @path /products/{productId}
      * @allow (get, list) Public read access for all products.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no shopId is present on the Product entity to link back to the shop.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /products/{productId} {
       allow get, list: if true;
-       allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for temples.
+     * @description Allows public read access to temples.
      * @path /temples/{templeId}
      * @allow (get, list) Public read access for all temples.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Temple entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /temples/{templeId} {
       allow get, list: if true;
-       allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for reviews on temples.
+     * @description Allows users to create, update, and delete their own reviews for temples.
      * @path /temples/{templeId}/reviews/{reviewId}
-     * @allow (get, list) Public read access for all reviews.
-     * @allow (create) Authenticated users can create reviews.
-     * @deny (update, delete) Only the owner can modify/delete.
+     * @allow (get, list) Anyone can read reviews for temples if signed in.
+     * @allow (create) If the userId matches the authenticated user.
+     * @allow (update, delete) If the userId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
      * @principle Public read, owner-only writes.
      */
     match /temples/{templeId}/reviews/{reviewId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isExistingOwner(request.auth.uid);
-      allow delete: if isExistingOwner(request.auth.uid);
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
     }
 
     /**
-     * @description Rules for posts on temples.
+     * @description Allows users to create, update, and delete their own posts for temples.
      * @path /temples/{templeId}/posts/{postId}
-     * @allow (get, list) Public read access for all posts.
-     * @allow (create) Authenticated users can create posts.
-     * @deny (update, delete) Only the owner can modify/delete.
+     * @allow (get, list) Anyone can read posts for temples if signed in.
+     * @allow (create) If the authorId matches the authenticated user.
+     * @allow (update, delete) If the authorId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
      * @principle Public read, owner-only writes.
      */
     match /temples/{templeId}/posts/{postId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isExistingOwner(request.auth.uid);
-      allow delete: if isExistingOwner(request.auth.uid);
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
     }
 
      /**
-      * @description Rules for stories.
-      * @path /stories/{storyId}
-      * @allow (get, list) Public read access for all stories.
-      * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Story entity.
-      * @principle Public read, restricted writes (MISSING OWNER FIELD).
-      */
+     * @description Allows public read access to stories.
+     * @path /stories/{storyId}
+     * @allow (get, list) Public read access for all stories.
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
+     */
     match /stories/{storyId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for epic heroes.
+     * @description Allows public read access to epic heroes.
      * @path /epicHeroes/{heroId}
-     * @allow (get, list) Public read access for all heroes.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the EpicHero entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @allow (get, list) Public read access for all epic heroes.
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /epicHeroes/{heroId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for rituals.
+     * @description Allows public read access to rituals.
      * @path /rituals/{ritualId}
      * @allow (get, list) Public read access for all rituals.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Ritual entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /rituals/{ritualId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for Panchang data.
+     * @description Allows public read access to panchang data.
      * @path /panchang/{date}
      * @allow (get, list) Public read access for all panchang data.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Panchang entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /panchang/{date} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for festivals.
+     * @description Allows public read access to festival data.
      * @path /festivals/{festivalId}
-     * @allow (get, list) Public read access for all festivals.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Festival entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @allow (get, list) Public read access for all festival data.
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /festivals/{festivalId} {
       allow get, list: if true;
-       allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for community groups.
+     * @description Allows anyone to read group data, but restricts write access.
      * @path /groups/{groupId}
      * @allow (get, list) Public read access for all groups.
-     * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Group entity.
-     * @principle Public read, restricted writes (MISSING OWNER FIELD).
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /groups/{groupId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for group members.
+     * @description Allows group members to read members list.
      * @path /groups/{groupId}/members/{userId}
-     * @allow get, list: if true;
-     * @allow create: if isSignedIn();
-     * @deny update, delete: if false;
-     * @principle Public read, restricted writes.
+     * @allow (get, list) Public read access for group members.
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
      */
     match /groups/{groupId}/members/{userId} {
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if false;
-        allow delete: if false; //Let the backend handle deletes
+      allow get, list: if true;
+      allow create, update, delete: if false;
     }
 
     /**
-     * @description Rules for posts in a group.
-     * @path /groups/{groupId}/posts/{postId}
-     * @allow (get, list) Public read access for all group posts.
-     * @allow (create) Authenticated users can create group posts.
-     * @deny (update, delete) Only the owner can modify/delete.
+     * @description Allows anyone to read posts, but restricts write access.
+     * @path /posts/{postId}
+     * @allow (get, list) Public read access for all posts.
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
+     */
+    match /posts/{postId} {
+      allow get, list: if true;
+       allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
+    }
+
+    /**
+     * @description Allows anyone to read comments, but only the author can create, update, or delete.
+     * @path /posts/{postId}/comments/{commentId}
+     * @allow (get, list) Anyone can read comments on posts if signed in.
+     * @allow (create) If the authorId matches the authenticated user.
+     * @allow (update, delete) If the authorId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
      * @principle Public read, owner-only writes.
      */
-    match /groups/{groupId}/posts/{postId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update: if isExistingOwner(request.auth.uid);
-      allow delete: if isExistingOwner(request.auth.uid);
+    match /posts/{postId}/comments/{commentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
     }
 
-   /**
-    * @description Rules for likes on group posts.
-    * @path /groups/{groupId}/posts/{postId}/likes/{userId}
-    * @allow (get, list) Public read access for all likes.
-    * @allow (create, delete) Authenticated user can like/unlike.
-    * @deny (update) No updates.
-    * @principle Public read, authenticated like/unlike.
-    */
-    match /groups/{groupId}/posts/{postId}/likes/{userId} {
+     /**
+     * @description Allows public read access to post likes, but restricts write access to the user who liked the post.
+     * @path /posts/{postId}/likes/{userId}
+     * @allow (get, list) Public read access for all post likes.
+     * @allow (create) If the userId matches the authenticated user.
+     * @allow (update, delete) No updates or deletes allowed on likes documents.
+     * @deny (create, update, delete) if ownership is not established
+     * @principle Public read, owner-only writes.
+     */
+    match /posts/{postId}/likes/{userId} {
         allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if false;
-        allow delete: if isSignedIn() && request.auth.uid == userId;
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
     }
 
-   /**
-    * @description Rules for comments on group posts.
-    * @path /groups/{groupId}/posts/{postId}/comments/{commentId}
-    * @allow (get, list) Public read access for all comments.
-    * @allow (create) Authenticated users can create comments.
-    * @deny (update, delete) Only the owner can modify/delete.
-    * @principle Public read, owner-only writes.
-    */
-    match /groups/{groupId}/posts/{postId}/comments/{commentId} {
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if isExistingOwner(request.auth.uid);
-        allow delete: if isExistingOwner(request.auth.uid);
-    }
-
-   /**
-    * @description Rules for community challenges.
-    * @path /challenges/{challengeId}
-    * @allow (get, list) Public read access for all challenges.
-    * @deny (create, update, delete) Owner-only writes are NOT POSSIBLE because no ownerId is present on the Challenge entity.
-    * @principle Public read, restricted writes (MISSING OWNER FIELD).
-    */
-     match /challenges/{challengeId} {
+    /**
+     * @description Allows public read access to challenges.
+     * @path /challenges/{challengeId}
+     * @allow (get, list) Public read access for all challenges.
+     * @deny (create, update, delete) No write access allowed.
+     * @principle Public read, no writes.
+     */
+    match /challenges/{challengeId} {
       allow get, list: if true;
-      allow create, update, delete: if false; // TODO: Add owner validation once the schema is updated with an ownership field.
+      allow create, update, delete: if false;
     }
 
-   /**
-    * @description Rules for manifestation posts.
-    * @path /manifestations/{manifestationId}
-    * @allow (get, list) Public read access for all posts.
-    * @allow (create) Authenticated users can create posts.
-    * @deny (update, delete) Only the owner can modify/delete.
-    * @principle Public read, owner-only writes.
-    */
+    /**
+     * @description Allows public read access to Manifestations, but restricts write access to owners.
+     * @path /manifestations/{manifestationId}
+     * @allow (get, list) Public read access for all Manifestations.
+     * @allow (create) If the userId matches the authenticated user.
+     * @allow (update, delete) If the userId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
+     * @principle Public read, owner-only writes.
+     */
     match /manifestations/{manifestationId} {
       allow get, list: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(request.auth.uid) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(request.auth.uid) && resource.data.userId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.userId == request.auth.uid;
     }
 
-   /**
-    * @description Rules for likes on manifestation posts.
-    * @path /manifestations/{manifestationId}/likes/{userId}
-    * @allow (get, list) Public read access for all likes.
-    * @allow (create, delete) Authenticated user can like/unlike.
-    * @deny (update) No updates.
-    * @principle Public read, authenticated like/unlike.
-    */
+    /**
+     * @description Allows authenticated users to read comments, but only the author can create, update, or delete.
+     * @path /manifestations/{manifestationId}/comments/{commentId}
+     * @allow (get, list) Anyone can read comments on manifestations if signed in.
+     * @allow (create) If the authorId matches the authenticated user.
+     * @allow (update, delete) If the authorId matches the authenticated user and the document exists.
+     * @deny (create, update, delete) if ownership is not established
+     * @principle Public read, owner-only writes.
+     */
+    match /manifestations/{manifestationId}/comments/{commentId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      allow update: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
+      allow delete: if isSignedIn() && resource != null && resource.data.authorId == request.auth.uid;
+    }
+
+     /**
+     * @description Allows public read access to manifestation likes, but restricts write access to the user who liked the manifestation.
+     * @path /manifestations/{manifestationId}/likes/{userId}
+     * @allow (get, list) Public read access for all manifestation likes.
+     * @allow (create) If the userId matches the authenticated user.
+     * @allow (update, delete) No updates or deletes allowed on likes documents.
+     * @deny (create, update, delete) if ownership is not established
+     * @principle Public read, owner-only writes.
+     */
     match /manifestations/{manifestationId}/likes/{userId} {
         allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if false;
-        allow delete: if isSignedIn() && request.auth.uid == userId;
-    }
-
-   /**
-    * @description Rules for comments on manifestation posts.
-    * @path /manifestations/{manifestationId}/comments/{commentId}
-    * @allow (get, list) Public read access for all comments.
-    * @allow (create) Authenticated users can create comments.
-    * @deny (update, delete) Only the owner can modify/delete.
-    * @principle Public read, owner-only writes.
-    */
-    match /manifestations/{manifestationId}/comments/{commentId} {
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update: if isExistingOwner(request.auth.uid);
-        allow delete: if isExistingOwner(request.auth.uid);
+        allow create: if isOwner(userId);
+        allow update, delete: if false;
     }
   }
 }

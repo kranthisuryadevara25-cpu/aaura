@@ -1,18 +1,23 @@
 
 "use client";
-import React from "react";
+import React, { useTransition } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import Link from "next/link";
 import Image from "next/image";
 import { formatDistanceToNow } from 'date-fns';
 import { useDocumentData } from "react-firebase-hooks/firestore";
-import { doc } from "firebase/firestore";
-import { useFirestore } from "@/lib/firebase/provider";
+import { doc, writeBatch, increment, serverTimestamp } from "firebase/firestore";
+import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Heart, MessageCircle } from "lucide-react";
+import { Heart, Loader2, MessageCircle } from "lucide-react";
 import { Card } from "./ui/card";
 import { Skeleton } from "./ui/skeleton";
 import type { FeedItem } from "@/types/feed";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "./ui/button";
+import { FirestorePermissionError } from "@/lib/firebase/errors";
+import { errorEmitter } from "@/lib/firebase/error-emitter";
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {
   const db = useFirestore();
@@ -39,6 +44,50 @@ const AuthorAvatar = ({ userId }: { userId: string }) => {
 
 export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const { language } = useLanguage();
+  const { toast } = useToast();
+  const auth = useAuth();
+  const db = useFirestore();
+  const [user] = useAuthState(auth);
+  const [isLiking, startLikeTransition] = useTransition();
+
+  const contentCollection = item.kind === 'post' ? 'posts' : 'media';
+  const contentId = item.id.replace(`${item.kind}-`, '');
+  
+  const contentRef = doc(db, contentCollection, contentId);
+  const likeRef = user ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined;
+
+  const [like, likeLoading] = useDocumentData(likeRef);
+  const isLiked = !!like;
+
+  const handleLike = () => {
+      if (!user || !contentRef || !likeRef) {
+        toast({ variant: "destructive", title: "Please log in to like content." });
+        return;
+      }
+
+      startLikeTransition(() => {
+        const batch = writeBatch(db);
+        const likeData = { createdAt: serverTimestamp() };
+
+        if (isLiked) {
+            batch.delete(likeRef);
+            batch.update(contentRef, { likes: increment(-1) });
+        } else {
+            batch.set(likeRef, likeData);
+            batch.update(contentRef, { likes: increment(1) });
+        }
+        
+        batch.commit().catch(async (serverError) => {
+            const operation = isLiked ? 'delete' : 'create';
+            const permissionError = new FirestorePermissionError({
+                path: likeRef.path,
+                operation: operation,
+                requestResourceData: operation === 'create' ? likeData : undefined,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+      })
+  }
 
   const getText = (field?: Record<string,string> | string) => {
     if (!field) return "";
@@ -50,16 +99,15 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
     switch (item.kind) {
         case 'media':
         case 'video':
-             return `/watch/${item.id.replace('media-', '')}`;
+             return `/watch/${contentId}`;
         case 'temple':
             return `/temples/${item.meta?.slug}`;
         case 'story':
             return `/stories/${item.meta?.slug}`;
         case 'deity':
              return `/deities/${item.meta?.slug}`;
-        case 'forum':
         case 'post':
-            return `/forum/${item.meta?.contextId || item.id.replace('post-','')}`;
+            return `/forum/${item.meta?.contextId || contentId}`;
         default:
             return '#';
     }
@@ -87,6 +135,8 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   
   const createdAt = item.createdAt ? new Date(item.createdAt) : getDeterministicDate(item.id);
 
+  const canInteract = item.kind === 'post' || item.kind === 'media' || item.kind === 'video';
+
   return (
     <Card className="p-4 border-none shadow-none">
         <Link href={getHref()} className="group">
@@ -109,18 +159,21 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
                     &bull;
                     <span>{formatDistanceToNow(createdAt, { addSuffix: true })}</span>
                 </div>
-                 <div className="flex items-center gap-4 mt-2 text-muted-foreground">
-                    <span className="flex items-center gap-1 text-xs">
-                        <Heart className="w-4 h-4" /> {engagement.likes || 0}
-                    </span>
-                    <span className="flex items-center gap-1 text-xs">
-                        <MessageCircle className="w-4 h-4" /> {engagement.commentsCount || 0}
-                    </span>
-                </div>
+                 {canInteract && (
+                    <div className="flex items-center gap-2 mt-2 text-muted-foreground">
+                        <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs px-2" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
+                            {isLiking || likeLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Heart className={`w-4 h-4 ${isLiked ? "text-red-500 fill-current" : ""}`} />} 
+                            {engagement.likes || 0}
+                        </Button>
+                        <Button variant="ghost" size="sm" asChild className="flex items-center gap-1.5 text-xs px-2">
+                            <Link href={getHref()}>
+                                <MessageCircle className="w-4 h-4" /> {engagement.commentsCount || 0}
+                            </Link>
+                        </Button>
+                    </div>
+                 )}
              </div>
         </div>
     </Card>
   );
 };
-
-    

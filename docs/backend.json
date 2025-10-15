@@ -834,6 +834,24 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["contentId", "contentType", "authorId", "text", "createdAt"]
+    },
+    "Manifestation": {
+      "title": "Manifestation Post",
+      "description": "Represents a user-submitted manifestation technique or story.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "technique": { "type": "string", "description": "The description of the manifestation technique." },
+        "results": { "type": "string", "description": "The optional results or story from the practice." },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "likesCount": { "type": "number" },
+        "commentsCount": { "type": "number" }
+      },
+      "required": ["id", "userId", "title", "technique", "createdAt"]
     }
   },
   "auth": {
@@ -1111,7 +1129,30 @@
           "schema": { "$ref": "#/entities/Challenge" },
           "description": "Stores community challenges."
         }
-      }
+      },
+      {
+        "path": "/manifestations/{manifestationId}",
+        "definition": {
+          "entityName": "Manifestation",
+          "schema": { "$ref": "#/entities/Manifestation" },
+          "description": "Stores user-submitted manifestation techniques and stories."
+        }
+      },
+      {
+        "path": "/manifestations/{manifestationId}/comments/{commentId}",
+        "definition": {
+          "entityName": "Comment",
+          "schema": { "$ref": "#/entities/Comment" },
+          "description": "Stores comments on a manifestation post."
+        }
+      },
+      {
+        "path": "/manifestations/{manifestationId}/likes/{userId}",
+        "definition": {
+            "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
+            "description": "Stores likes for a manifestation post."
+        }
+       }
     ],
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }

@@ -30,6 +30,7 @@ import {
   Trophy,
   ChevronRight,
   Clapperboard, // New Icon
+  Brain,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -58,6 +59,7 @@ const communityNav = [
 const personalNav = [
   { href: '/panchang', label: 'panchang', icon: CalendarDays },
   { href: '/horoscope', label: 'horoscope', icon: Star },
+  { href: '/manifestation', label: 'manifestation', icon: Brain },
   { href: '/playlists', label: 'playlists', icon: ListMusic },
   { href: '/challenges', label: 'challenges', icon: Trophy },
 ];

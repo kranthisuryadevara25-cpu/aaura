@@ -10,7 +10,7 @@ import type { FeedItem } from '@/types/feed';
 const VIRTUALIZATION_BUFFER = 3;
 
 export default function ReelsPage() {
-  const { allItems, loading, loadMore, canLoadMore } = useFeed(5); // Fetch smaller batches
+  const { allItems, loading, loadMore, canLoadMore } = useFeed([], 5); // Fetch smaller batches for reels
   const [visibleItemIndex, setVisibleItemIndex] = useState(0);
   const observer = useRef<IntersectionObserver | null>(null);
 
@@ -18,7 +18,6 @@ export default function ReelsPage() {
     return allItems.filter(item => item.kind === 'video' && item.mediaUrl);
   }, [allItems]);
 
-  // Observer for infinite scroll
   const loadMoreObserver = useRef<IntersectionObserver | null>(null);
   const lastVideoElementRef = useCallback((node: HTMLDivElement) => {
     if (loading) return;
@@ -50,7 +49,7 @@ export default function ReelsPage() {
     elements.forEach(el => observer.current?.observe(el));
 
     return () => observer.current?.disconnect();
-  }, [videoItems]); // Added videoItems to dependency array
+  }, [videoItems]);
 
 
   if (loading && videoItems.length === 0) {
@@ -72,11 +71,15 @@ export default function ReelsPage() {
 
   return (
     <div className="h-screen w-full snap-y snap-mandatory overflow-y-scroll bg-black">
-      {videoItems.map((_, index) => (
-        <div key={index} data-index={index} className="reel-item h-screen w-full snap-start flex items-center justify-center">
+      {videoItems.map((item, index) => (
+        <div 
+            key={item.id} 
+            ref={index === videoItems.length - 1 ? lastVideoElementRef : null}
+            data-index={index} 
+            className="reel-item h-screen w-full snap-start flex items-center justify-center">
           {Math.abs(index - visibleItemIndex) <= VIRTUALIZATION_BUFFER ? (
              <ReelsFeed 
-                items={[videoItems[index]]} 
+                items={[item]} 
                 isVisible={index === visibleItemIndex} 
              />
           ) : (
@@ -91,9 +94,6 @@ export default function ReelsPage() {
             <Loader2 className="h-8 w-8 animate-spin text-white" />
         </div>
       )}
-      {/* Infinite scroll trigger */}
-      <div ref={lastVideoElementRef} style={{ height: '1px' }} />
     </div>
   );
 }
-

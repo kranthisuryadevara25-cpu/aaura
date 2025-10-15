@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
-import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
+import { getPersonalizedFeed as getPersonalizedFeedFlow } from "@/ai/flows/personalized-feed";
 
 const getTextFromField = (field: Record<string, string> | string | undefined, lang: string): string => {
     if (!field) return "";
@@ -13,60 +13,52 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
     return field[lang] || field["en"] || "";
 };
 
-export const useFeed = (pageSize = 20) => {
+export const useFeed = (initialItems: FeedItem[] = [], pageSize = 20) => {
   const { language } = useLanguage();
   const auth = useAuth();
   const [user] = useAuthState(auth);
-  const [allItems, setAllItems] = useState<FeedItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [allItems, setAllItems] = useState<FeedItem[]>(initialItems);
+  const [loading, setLoading] = useState(initialItems.length === 0);
   const [canLoadMore, setCanLoadMore] = useState(true);
-  const [lastCursor, setLastCursor] = useState<string | undefined>(undefined);
 
   const loadMore = useCallback(async () => {
     if (loading || !canLoadMore) return;
 
     setLoading(true);
-
     try {
-        const feedResponse = await getPersonalizedFeed({ 
+        const feedResponse = await getPersonalizedFeedFlow({ 
             userId: user?.uid, 
             pageSize,
-            lastCursor: lastCursor
         });
 
         if (feedResponse.feed.length === 0) {
             setCanLoadMore(false);
-            setLoading(false);
-            return;
+        } else {
+            setAllItems(prev => {
+                const existingIds = new Set(prev.map(item => item.id));
+                const uniqueNewItems = feedResponse.feed.filter(item => !existingIds.has(item.id));
+                return [...prev, ...uniqueNewItems];
+            });
         }
-        
-        // The AI flow now returns fully populated items
-        const newItems = feedResponse.feed;
-
-        setAllItems(prev => {
-            const existingIds = new Set(prev.map(item => item.id));
-            const uniqueNewItems = newItems.filter(item => !existingIds.has(item.id));
-            return [...prev, ...uniqueNewItems];
-        });
-
-        // The AI flow doesn't support cursors yet, so we prevent further loading for now.
-        // This prevents duplicate items from being loaded.
-        setCanLoadMore(false); 
-        // setLastCursor(newCursor); 
-
     } catch (error) {
         console.error("Failed to fetch personalized feed:", error);
         setCanLoadMore(false); // Stop trying if there's an error
     } finally {
         setLoading(false);
     }
-  }, [loading, canLoadMore, user, pageSize, lastCursor]);
+  }, [loading, canLoadMore, user, pageSize]);
+
 
   useEffect(() => {
-    if(allItems.length === 0) { // Only run initial load if feed is empty
-      loadMore();
+    // This effect is now primarily for the Reels page or other client-side feeds.
+    // The main feed is server-rendered.
+    if (initialItems.length === 0 && allItems.length === 0) {
+        loadMore();
+    } else {
+      setLoading(false);
     }
-  }, [user]); // Rerun if user logs in or out
+  }, [initialItems, allItems, loadMore]);
+
 
   const filterItems = useCallback((searchQuery: string): FeedItem[] => {
     if (!searchQuery) {
@@ -82,5 +74,3 @@ export const useFeed = (pageSize = 20) => {
 
   return { allItems, loading, filterItems, loadMore, canLoadMore };
 };
-
-    

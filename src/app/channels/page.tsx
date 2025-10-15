@@ -123,6 +123,22 @@ export default function ChannelsPage() {
   const db = useFirestore();
   const channelsQuery = query(collection(db, 'channels'));
   const [channels, isLoading] = useCollectionData(channelsQuery, { idField: 'id' });
+  const [uniqueChannels, setUniqueChannels] = useState<Channel[]>([]);
+
+  useEffect(() => {
+    if (channels) {
+      const seen = new Set();
+      const filteredChannels = channels.filter(channel => {
+        if (!channel.id || seen.has(channel.id)) {
+          return false;
+        } else {
+          seen.add(channel.id);
+          return true;
+        }
+      });
+      setUniqueChannels(filteredChannels as Channel[]);
+    }
+  }, [channels]);
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -147,8 +163,8 @@ export default function ChannelsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {channels && channels.map((channel) => (
-              <ChannelCard key={channel.id} channel={channel as Channel} />
+            {uniqueChannels.map((channel) => (
+              <ChannelCard key={channel.id} channel={channel} />
             ))}
           </div>
         )}

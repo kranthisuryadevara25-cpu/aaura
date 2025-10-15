@@ -32,7 +32,6 @@ import { generateOnboardingInsights, type OnboardingInsightsOutput } from '@/ai/
 import { deities } from '@/lib/deities';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { formSchema, step1Schema, step2Schema, type FormValues } from '@/lib/profile-setup-schemas';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 
@@ -53,6 +52,24 @@ const getZodiacSign = (date: Date): string => {
   if ((month === 1 && day >= 20) || (month === 2 && day <= 18)) return 'Aquarius';
   return 'Pisces';
 };
+
+const step1Schema = z.object({
+  fullName: z.string().min(1, 'Full name is required.'),
+  birthDate: z.date({
+    required_error: "A date of birth is required.",
+  }),
+  timeOfBirth: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please use HH:MM format.'),
+  placeOfBirth: z.string().min(1, 'Place of birth is required.'),
+});
+
+const step2Schema = z.object({
+  favoriteDeities: z.array(z.string()).refine((value) => value.some((item) => item), {
+    message: 'You have to select at least one deity.',
+  }),
+});
+
+const formSchema = step1Schema.merge(step2Schema);
+type FormValues = z.infer<typeof formSchema>;
 
 const steps = [
     { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
@@ -175,22 +192,32 @@ export default function ProfileSetupPage() {
             awardedAt: serverTimestamp(),
         });
         
-        batch.commit()
-          .then(() => {
+        try {
+            await batch.commit();
             toast({
-              title: 'Profile Complete!',
-              description: 'Welcome to aaura! Your spiritual journey begins now.',
+                title: 'Profile Complete!',
+                description: 'Welcome to aaura! Your spiritual journey begins now.',
             });
             router.push('/');
-          })
-          .catch(async (serverError) => {
-            const permissionError = new FirestorePermissionError({
-              path: userProfileRef.path,
-              operation: 'create',
-              requestResourceData: userProfileData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
-          });
+        } catch (serverError: any) {
+            const isPermissionError = serverError.code === 'permission-denied';
+
+            if (isPermissionError) {
+                const permissionError = new FirestorePermissionError({
+                    path: userProfileRef.path,
+                    operation: 'write',
+                    requestResourceData: userProfileData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } else {
+                 toast({
+                    variant: "destructive",
+                    title: "Save Failed",
+                    description: "An unexpected error occurred while saving your profile.",
+                });
+                console.error("Firestore batch commit failed:", serverError);
+            }
+        }
     });
   };
 

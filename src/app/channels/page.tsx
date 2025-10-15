@@ -50,7 +50,7 @@ export default function ChannelsPage() {
         </div>
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {channels && channels.map((channel: Channel) => {
+        {channels && channels.filter(channel => channel.id).map((channel: Channel) => {
             const description = channel[`description_${language}`] || channel.description_en;
             return (
             <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-card border-border hover:border-primary/50 transition-colors duration-300">

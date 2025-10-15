@@ -25,14 +25,14 @@ import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from 'firebase/auth';
 import { generateOnboardingInsights, type OnboardingInsightsOutput } from '@/ai/flows/onboarding-insights';
 import { deities } from '@/lib/deities';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { formSchema, type FormValues } from '@/lib/profile-setup-schemas';
+import { formSchema, step1Schema, step2Schema, type FormValues } from '@/lib/profile-setup-schemas';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 
@@ -54,6 +54,12 @@ const getZodiacSign = (date: Date): string => {
   return 'Pisces';
 };
 
+const steps = [
+    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
+    { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] as const },
+    { title: 'Get your first horoscope', schema: z.object({}), fields: [] },
+  ];
+
 export default function ProfileSetupPage() {
   const { toast } = useToast();
   const router = useRouter();
@@ -62,12 +68,6 @@ export default function ProfileSetupPage() {
   const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
   const [currentStep, setCurrentStep] = useState(0);
-
-  const steps = [
-    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
-    { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] as const },
-    { title: 'Get your first horoscope', schema: z.object({}), fields: [] },
-  ];
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -107,26 +107,35 @@ export default function ProfileSetupPage() {
     const currentUser = auth.currentUser;
 
     startTransition(async () => {
+        let insights: OnboardingInsightsOutput | null = null;
         const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
         const zodiacSign = getZodiacSign(data.birthDate);
-        
-        await updateProfile(currentUser, { displayName: data.fullName });
-        
-        let insights: OnboardingInsightsOutput | null = null;
+
         try {
           insights = await generateOnboardingInsights({
             zodiacSign,
             birthDate: formattedBirthDate,
             favoriteDeities: data.favoriteDeities,
           });
-        } catch (aiError) {
+        } catch (aiError: any) {
           console.error("AI Insight generation failed:", aiError);
-          toast({
-            variant: "destructive",
-            title: "AI Insights Failed",
-            description: "Could not generate welcome message. Your profile will be saved without it.",
-          });
+          // Check for rate limit error specifically
+          if (aiError.message && aiError.message.includes('429')) {
+             toast({
+                variant: "destructive",
+                title: "AI Service Busy",
+                description: "The horoscope service is currently busy. Your profile will be saved without it. Please try again later.",
+             });
+          } else {
+            toast({
+              variant: "destructive",
+              title: "AI Insights Failed",
+              description: "Could not generate welcome message. Your profile will be saved without it.",
+            });
+          }
         }
+        
+        await updateProfile(currentUser, { displayName: data.fullName });
 
         const batch = writeBatch(db);
 
@@ -185,17 +194,6 @@ export default function ProfileSetupPage() {
     });
   };
 
-  const { step1Schema, step2Schema } = {
-    step1Schema: z.object({
-      fullName: formSchema.shape.fullName,
-      birthDate: formSchema.shape.birthDate,
-      timeOfBirth: formSchema.shape.timeOfBirth,
-      placeOfBirth: formSchema.shape.placeOfBirth
-    }),
-    step2Schema: z.object({
-      favoriteDeities: formSchema.shape.favoriteDeities
-    })
-  };
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">

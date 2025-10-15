@@ -54,7 +54,7 @@ export default function VirtualPoojaPage() {
 
     switch (interaction) {
       case 'ring-bell':
-        new Audio('https://cdn.freesound.org/previews/573/573225_10521159-hq.mp3').play().catch(e => console.error("Error playing bell audio:", e));
+        new Audio('https://storage.googleapis.com/spec-host-backup/mio-design-assets/assets/v1/sounds/bell.mp3').play().catch(e => console.error("Error playing bell audio:", e));
         break;
       case 'offer-flower':
          const newFlowerId = Date.now();
@@ -268,7 +268,3 @@ export default function VirtualPoojaPage() {
     </main>
   );
 }
-
-    
-
-    

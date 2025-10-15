@@ -11,6 +11,8 @@ import { getRitualBySlug } from '@/lib/rituals';
 import { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function RitualDetailPage() {
   const params = useParams();
@@ -53,7 +55,7 @@ export default function RitualDetailPage() {
 
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
-        <article className="max-w-4xl mx-auto">
+        <article className="max-w-6xl mx-auto">
             <header className="text-center mb-8">
                 <Badge variant="default" className="mb-2">{deity}</Badge>
                 <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">{name}</h1>
@@ -74,7 +76,7 @@ export default function RitualDetailPage() {
                 <div className="md:col-span-2 space-y-8">
                       <Card className="bg-transparent border-primary/20">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> Significance & Benefits</CardTitle>
+                            <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> Significance & Benefits</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <p className="text-foreground/90">{significance}</p>
@@ -113,8 +115,8 @@ export default function RitualDetailPage() {
                         </CardContent>
                     </Card>
                 </div>
-                <div className="space-y-6">
-                    <Card className="bg-transparent border-primary/20 sticky top-24">
+                <div className="space-y-6 md:sticky top-24 h-fit">
+                    <Card className="bg-transparent border-primary/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> {t.ritualDetail.itemsRequired}</CardTitle>
                         </CardHeader>
@@ -126,11 +128,17 @@ export default function RitualDetailPage() {
                                     onCheckedChange={() => handleCheck(item)}
                                     checked={checkedItems.includes(item)}
                                   />
-                                  <label htmlFor={`item-${index}`} className={`text-sm ${checkedItems.includes(item) ? 'line-through text-muted-foreground' : 'text-foreground'}`}>
+                                  <label htmlFor={`item-${index}`} className="text-sm text-foreground">
                                     {item}
                                   </label>
                                 </div>
                             ))}
+                             <Button asChild className="w-full mt-4">
+                                <Link href="/shop">
+                                    <ShoppingBasket className="mr-2 h-4 w-4" />
+                                    Shop for Ritual Items
+                                </Link>
+                             </Button>
                         </CardContent>
                     </Card>
                       <Card className="bg-transparent border-primary/20">
@@ -147,3 +155,4 @@ export default function RitualDetailPage() {
     </main>
   );
 }
+

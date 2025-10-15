@@ -33,6 +33,8 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Textarea } from '@/components/ui/textarea';
 import { useTransition } from 'react';
 import type { DocumentData } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(2000, "Post must be less than 2000 characters."),
@@ -53,23 +55,31 @@ function CreatePostCard({ channelId }: { channelId: string }) {
 
     const onSubmit = (data: PostFormValues) => {
         if (!user) return;
-        startTransition(async () => {
-            try {
-                await addDoc(collection(db, 'posts'), {
-                    authorId: user.uid,
-                    content: data.content,
-                    createdAt: serverTimestamp(),
-                    contextId: channelId,
-                    contextType: 'channel',
-                    likes: 0,
-                    commentsCount: 0,
-                });
+        startTransition(() => {
+            const postsCollection = collection(db, 'posts');
+            const postData = {
+                authorId: user.uid,
+                content: data.content,
+                createdAt: serverTimestamp(),
+                contextId: channelId,
+                contextType: 'channel' as const,
+                likes: 0,
+                commentsCount: 0,
+            };
+
+            addDoc(postsCollection, postData)
+            .then(() => {
                 form.reset();
                 toast({ title: "Post created successfully!" });
-            } catch (error) {
-                console.error("Failed to create post:", error);
-                toast({ variant: 'destructive', title: "Failed to create post." });
-            }
+            })
+            .catch(async (serverError) => {
+                const permissionError = new FirestorePermissionError({
+                    path: postsCollection.path,
+                    operation: 'create',
+                    requestResourceData: postData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            });
         });
     };
     
@@ -376,5 +386,3 @@ export default function ChannelDetailPage() {
     </main>
   );
 }
-
-    

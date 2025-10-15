@@ -7,7 +7,11 @@ export type Ritual = {
     deity: { [key: string]: string };
     description: { [key: string]: string };
     procedure: { en: { title: string; steps: string[] }[], hi: [], te: [] };
-    itemsRequired: { [key: string]: string[] };
+    itemsRequired: { 
+        en: { name: string; productId: string; }[], 
+        hi: { name: string; productId: string; }[], 
+        te: { name: string; productId: string; }[] 
+    };
     auspiciousTime: { 
         en: {
             timing: string;
@@ -83,7 +87,10 @@ export const rituals: Ritual[] = [
             hi: [], te: []
         },
         itemsRequired: {
-           en: ["Copper vessel (lota)", "Clean Water", "Red flower (optional)", "Rice grains (Akshat, optional)", "Red Sandalwood paste (optional)"],
+           en: [
+               { name: "Copper Water Bottle", productId: "prod_7" },
+               { name: "Sandalwood Incense Sticks", productId: "prod_2" }
+            ],
            hi: [], te: []
         },
         auspiciousTime: {
@@ -121,7 +128,7 @@ export const rituals: Ritual[] = [
             hi: [], te: []
         },
         reflections: {
-            en: ["How did you feel after the offering?", "Did you feel a connection with the morning sun's energy?", "What is one thing you are grateful for today?"],
+            en: ["How did this ritual make you feel?", "Did you feel a connection with the morning sun's energy?", "What is one thing you are grateful for today?"],
             hi: [], te: []
         },
         difficulty: "Beginner",
@@ -185,7 +192,11 @@ export const rituals: Ritual[] = [
             hi: [], te: []
         },
         itemsRequired: {
-            en: ["Ganesha idol/photo", "Diya (lamp) and ghee/oil", "Incense sticks", "Flowers (Red Hibiscus preferred)", "Fruit", "Sweets (Modak or Ladoo preferred)", "Red or Yellow Cloth"],
+            en: [
+                { name: "Ganesha Idol", productId: "prod_1" },
+                { name: "Pooja Thali Set", productId: "prod_4" },
+                { name: "Sandalwood Incense Sticks", productId: "prod_2" }
+            ],
             hi: [], te: []
         },
         auspiciousTime: {

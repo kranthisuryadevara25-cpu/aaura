@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
@@ -8,26 +9,80 @@ import { Badge } from '@/components/ui/badge';
 import { CheckSquare, ShoppingBasket, Clock, Loader2, BookOpen, Lightbulb, AlertTriangle, Sparkles, Music } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { getRitualBySlug } from '@/lib/rituals';
-import { useState } from 'react';
+import { useState, useTransition } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useToast } from '@/hooks/use-toast';
+import { doc, runTransaction, serverTimestamp, increment } from 'firebase/firestore';
+import { products } from '@/lib/products';
 
 export default function RitualDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
+  const { toast } = useToast();
+  const auth = useAuth();
+  const db = useFirestore();
+  const [user] = useAuthState(auth);
+  const [isAddingToCart, startTransition] = useTransition();
   
   const ritual = getRitualBySlug(slug);
   const isLoading = false;
 
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
 
-  const handleCheck = (item: string) => {
-    setCheckedItems(prev => 
-      prev.includes(item) ? prev.filter(i => i !== item) : [...prev, item]
-    );
+  const handleAddToCart = (productId: string, name: string) => {
+    if (!user) {
+      toast({
+        variant: 'destructive',
+        title: "Login Required",
+        description: "You must be logged in to add items to your cart.",
+      });
+      return;
+    }
+     if (!productId) return;
+
+    startTransition(async () => {
+        try {
+            const product = products.find(p => p.id === productId);
+            if (!product) throw new Error("Product not found");
+            
+            const cartRef = doc(db, 'users', user.uid, 'cart', productId);
+
+            await runTransaction(db, async (transaction) => {
+                const cartDoc = await transaction.get(cartRef);
+                if (cartDoc.exists()) {
+                    transaction.update(cartRef, { quantity: increment(1) });
+                } else {
+                     transaction.set(cartRef, {
+                        productId: product.id,
+                        quantity: 1,
+                        addedAt: serverTimestamp(),
+                        price: product.price,
+                        name_en: product.name_en,
+                        imageUrl: product.imageUrl,
+                    });
+                }
+            });
+
+            toast({
+                title: "Added to Cart",
+                description: `${name} has been added to your shopping cart.`,
+            });
+            setCheckedItems(prev => [...prev, name]);
+        } catch (error) {
+             console.error("Error adding to cart: ", error);
+             toast({
+                variant: "destructive",
+                title: "Failed to Add",
+                description: "Could not add the item to your cart. Please try again.",
+             });
+        }
+    });
   };
 
   if (isLoading) {
@@ -45,12 +100,12 @@ export default function RitualDetailPage() {
   const name = ritual.name[language] || ritual.name.en;
   const description = ritual.description[language] || ritual.description.en;
   const deity = ritual.deity[language] || ritual.deity.en;
-  const auspiciousTime = ritual.auspiciousTime[language] || ritual.auspiciousTime.en;
-  const procedure = ritual.procedure[language] || ritual.procedure.en || [];
-  const itemsRequired = ritual.itemsRequired[language] || ritual.itemsRequired.en || [];
+  const auspiciousTime = ritual.auspiciousTime.en;
+  const procedure = ritual.procedure.en || [];
+  const itemsRequired = ritual.itemsRequired.en || [];
   const significance = ritual.significance[language] || ritual.significance.en;
-  const benefits = ritual.benefits[language] || ritual.benefits.en || [];
-  const commonMistakes = ritual.commonMistakes[language] || ritual.commonMistakes.en || [];
+  const benefits = ritual.benefits.en || [];
+  const commonMistakes = ritual.commonMistakes.en || [];
 
 
   return (
@@ -62,18 +117,17 @@ export default function RitualDetailPage() {
                 <p className="mt-4 max-w-2xl mx-auto text-lg text-muted-foreground">{description}</p>
             </header>
 
-             <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20 mb-12">
-                <Image
-                    src={ritual.image.url}
-                    alt={name}
-                    data-ai-hint={ritual.image.hint}
-                    fill
-                    className="object-cover"
-                />
-            </div>
-            
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2 space-y-8">
+                    <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-accent/20">
+                        <Image
+                            src={ritual.image.url}
+                            alt={name}
+                            data-ai-hint={ritual.image.hint}
+                            fill
+                            className="object-cover"
+                        />
+                    </div>
                       <Card className="bg-transparent border-primary/20">
                         <CardHeader>
                             <CardTitle className="flex items-center gap-3 text-primary"><Sparkles /> Significance & Benefits</CardTitle>
@@ -139,22 +193,27 @@ export default function RitualDetailPage() {
                             <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> {t.ritualDetail.itemsRequired}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {itemsRequired.map((item: string, index: number) => (
+                            {itemsRequired.map((item, index) => (
                                 <div key={index} className="flex items-center gap-3">
                                   <Checkbox 
                                     id={`item-${index}`} 
-                                    onCheckedChange={() => handleCheck(item)}
-                                    checked={checkedItems.includes(item)}
+                                    onCheckedChange={(checked) => {
+                                        if (checked) {
+                                            handleAddToCart(item.productId, item.name);
+                                        }
+                                    }}
+                                    checked={checkedItems.includes(item.name)}
+                                    disabled={isAddingToCart}
                                   />
                                   <label htmlFor={`item-${index}`} className="text-sm text-foreground">
-                                    {item}
+                                    {item.name}
                                   </label>
                                 </div>
                             ))}
                              <Button asChild className="w-full mt-4">
                                 <Link href="/shop">
                                     <ShoppingBasket className="mr-2 h-4 w-4" />
-                                    Shop for Ritual Items
+                                    Shop for More Ritual Items
                                 </Link>
                              </Button>
                         </CardContent>

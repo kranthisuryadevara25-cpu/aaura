@@ -8,25 +8,26 @@ import { Badge } from '@/components/ui/badge';
 import { BookOpen, Loader2, Users, Shield, Award, AlertTriangle, Lightbulb, UserSquare, Star, BookHeart, Link as LinkIcon, Quote } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { getCharacterBySlug } from '@/lib/characters';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Separator } from '@/components/ui/separator';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function CharacterDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
+  const db = useFirestore();
   
-  const character = getCharacterBySlug(slug);
-  const isLoading = false;
+  const characterRef = doc(db, 'epicHeroes', slug);
+  const [character, isLoading] = useDocumentData(characterRef);
   
-  const pageLoading = isLoading;
-
-  if (pageLoading) {
+  if (isLoading) {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
   }
 
-  if (!pageLoading && !character) {
+  if (!isLoading && !character) {
     notFound();
   }
 
@@ -64,9 +65,9 @@ export default function CharacterDetailPage() {
                             <CardTitle className="flex items-center gap-3 text-lg"><LinkIcon />Associated Content</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-2 text-sm">
-                           {character.relatedContent.deities.length > 0 && <Link href={`/deities/${character.relatedContent.deities[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><UserSquare className="h-4 w-4 text-primary" /> View Related Deities</Link>}
-                           {character.relatedContent.sacredTales.length > 0 && <Link href={`/stories/${character.relatedContent.sacredTales[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><BookOpen className="h-4 w-4 text-primary" /> Read Related Saga</Link>}
-                           {character.relatedContent.rituals.length > 0 && <Link href={`/rituals/${character.relatedContent.rituals[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><BookHeart className="h-4 w-4 text-primary" /> Explore Related Rituals</Link>}
+                           {character.relatedContent.deities?.length > 0 && <Link href={`/deities/${character.relatedContent.deities[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><UserSquare className="h-4 w-4 text-primary" /> View Related Deities</Link>}
+                           {character.relatedContent.sacredTales?.length > 0 && <Link href={`/stories/${character.relatedContent.sacredTales[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><BookOpen className="h-4 w-4 text-primary" /> Read Related Saga</Link>}
+                           {character.relatedContent.rituals?.length > 0 && <Link href={`/rituals/${character.relatedContent.rituals[0]}`} className="flex items-center gap-2 p-2 rounded-md hover:bg-primary/10"><BookHeart className="h-4 w-4 text-primary" /> Explore Related Rituals</Link>}
                         </CardContent>
                     </Card>
                 )}
@@ -107,10 +108,10 @@ export default function CharacterDetailPage() {
                             <Separator />
                             <div>
                                 <h4 className="font-bold text-md">Family</h4>
-                                <p className="text-sm text-muted-foreground"><strong>Parents:</strong> {character.background.family.parents.join(', ')}</p>
-                                <p className="text-sm text-muted-foreground"><strong>Siblings:</strong> {character.background.family.siblings.join(', ')}</p>
-                                <p className="text-sm text-muted-foreground"><strong>Spouses:</strong> {character.background.family.spouses.join(', ')}</p>
-                                <p className="text-sm text-muted-foreground"><strong>Children:</strong> {character.background.family.children.join(', ')}</p>
+                                <p className="text-sm text-muted-foreground"><strong>Parents:</strong> {character.background.family.parents?.join(', ')}</p>
+                                <p className="text-sm text-muted-foreground"><strong>Siblings:</strong> {character.background.family.siblings?.join(', ')}</p>
+                                <p className="text-sm text-muted-foreground"><strong>Spouses:</strong> {character.background.family.spouses?.join(', ')}</p>
+                                <p className="text-sm text-muted-foreground"><strong>Children:</strong> {character.background.family.children?.join(', ')}</p>
                             </div>
                         </AccordionContent>
                     </AccordionItem>
@@ -123,14 +124,14 @@ export default function CharacterDetailPage() {
                              <div>
                                 <h4 className="font-bold text-md">Qualities</h4>
                                 <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                                    {character.qualities.map((q, i) => <li key={i}>{q}</li>)}
+                                    {character.qualities.map((q: string, i: number) => <li key={i}>{q}</li>)}
                                 </ul>
                             </div>
                             <Separator />
                              <div>
                                 <h4 className="font-bold text-md">Achievements</h4>
                                 <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                                    {character.achievements.map((a, i) => <li key={i}>{a}</li>)}
+                                    {character.achievements.map((a: string, i: number) => <li key={i}>{a}</li>)}
                                 </ul>
                             </div>
                         </AccordionContent>
@@ -144,14 +145,14 @@ export default function CharacterDetailPage() {
                              <div>
                                 <h4 className="font-bold text-md">Mistakes</h4>
                                 <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                                    {character.mistakes.map((m, i) => <li key={i}>{m}</li>)}
+                                    {character.mistakes.map((m: string, i: number) => <li key={i}>{m}</li>)}
                                 </ul>
                             </div>
                             <Separator />
                              <div>
                                 <h4 className="font-bold text-md text-green-600 flex items-center gap-2"><Lightbulb/> Learnings for Children</h4>
                                 <ul className="list-disc pl-5 text-muted-foreground space-y-1">
-                                    {character.learningsForChildren.map((l, i) => <li key={i}>{l}</li>)}
+                                    {character.learningsForChildren.map((l: string, i: number) => <li key={i}>{l}</li>)}
                                 </ul>
                             </div>
                         </AccordionContent>

@@ -22,6 +22,10 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useFirestore } from '@/lib/firebase/provider';
+import { doc, setDoc } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
@@ -67,6 +71,7 @@ interface DeityFormProps {
 export function DeityForm({ deity }: DeityFormProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -98,25 +103,24 @@ export function DeityForm({ deity }: DeityFormProps) {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
-      try {
-        if (deity) {
-          // Mock update
-          console.log("Updating deity (mock):", { id: deity.id, ...data });
-          toast({ title: 'Deity Updated! (Mock)', description: 'The deity has been successfully updated.' });
-        } else {
-          // Mock create
-          console.log("Creating new deity (mock):", data);
-          toast({ title: 'Deity Created! (Mock)', description: 'The new deity has been added.' });
-        }
-        router.push('/admin/content');
-      } catch (error) {
-        console.error('Failed to save deity:', error);
-        toast({
-          variant: 'destructive',
-          title: 'An Error Occurred',
-          description: 'Could not save the deity. Please try again.',
+      const deityId = deity ? deity.id : data.slug;
+      const deityRef = doc(db, 'deities', deityId);
+      
+      const saveData = { id: deityId, ...data };
+
+      setDoc(deityRef, saveData, { merge: true })
+        .then(() => {
+          toast({ title: `Deity ${deity ? 'Updated' : 'Created'}!`, description: 'The deity has been successfully saved.' });
+          router.push('/admin/content');
+        })
+        .catch((serverError) => {
+            const permissionError = new FirestorePermissionError({
+                path: deityRef.path,
+                operation: 'write',
+                requestResourceData: saveData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
-      }
     });
   };
   

@@ -22,6 +22,10 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useFirestore } from '@/lib/firebase/provider';
+import { doc, setDoc } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
@@ -72,6 +76,7 @@ interface TempleFormProps {
 export function TempleForm({ temple }: TempleFormProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -95,23 +100,24 @@ export function TempleForm({ temple }: TempleFormProps) {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
-      try {
-        if (temple) {
-          console.log("Updating temple (mock):", { id: temple.id, ...data });
-          toast({ title: 'Temple Updated! (Mock)', description: 'The temple has been successfully updated.' });
-        } else {
-          console.log("Creating new temple (mock):", data);
-          toast({ title: 'Temple Created! (Mock)', description: 'The new temple has been added.' });
-        }
+      const templeId = temple ? temple.id : data.slug;
+      const templeRef = doc(db, 'temples', templeId);
+
+      const fullData = { id: templeId, ...data };
+
+      setDoc(templeRef, fullData, { merge: true })
+      .then(() => {
+        toast({ title: `Temple ${temple ? 'Updated' : 'Created'}!`, description: 'The temple has been successfully saved.' });
         router.push('/admin/content');
-      } catch (error) {
-        console.error('Failed to save temple:', error);
-        toast({
-          variant: 'destructive',
-          title: 'An Error Occurred',
-          description: 'Could not save the temple. Please try again.',
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: templeRef.path,
+            operation: 'write',
+            requestResourceData: fullData,
         });
-      }
+        errorEmitter.emit('permission-error', permissionError);
+      });
     });
   };
   

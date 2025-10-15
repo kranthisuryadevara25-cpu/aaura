@@ -7,12 +7,16 @@ import Link from 'next/link';
 import { ArrowRight, ScrollText, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
-import { stories as mockStories } from '@/lib/stories';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+
 
 export default function StoriesPage() {
   const { language, t } = useLanguage();
-  const stories = mockStories;
-  const isLoading = false;
+  const db = useFirestore();
+  const storiesRef = collection(db, 'stories');
+  const [stories, isLoading] = useCollectionData(storiesRef, { idField: 'id' });
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">

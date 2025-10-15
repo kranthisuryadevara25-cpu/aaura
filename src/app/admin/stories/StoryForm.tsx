@@ -22,6 +22,10 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { useFirestore } from '@/lib/firebase/provider';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
@@ -53,6 +57,7 @@ interface StoryFormProps {
 export function StoryForm({ story }: StoryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -81,23 +86,32 @@ export function StoryForm({ story }: StoryFormProps) {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
-      try {
-        if (story) {
-          console.log("Updating story (mock):", { id: story.id, ...data });
-          toast({ title: 'Story Updated! (Mock)', description: 'The story has been successfully updated.' });
-        } else {
-          console.log("Creating new story (mock):", data);
-          toast({ title: 'Story Created! (Mock)', description: 'The new story has been added.' });
-        }
+      const storyId = story ? story.id : data.slug;
+      const storyRef = doc(db, 'stories', storyId);
+
+      const fullData = {
+          id: storyId,
+          ...data,
+          tags: data.tags.split(',').map(s => s.trim()),
+          relatedCharacters: data.relatedCharacters ? data.relatedCharacters.split(',').map(s => s.trim()) : [],
+          relatedTemples: data.relatedTemples ? data.relatedTemples.split(',').map(s => s.trim()) : [],
+          updatedAt: serverTimestamp(),
+          ...(story ? {} : { createdAt: serverTimestamp() }),
+      };
+
+      setDoc(storyRef, fullData, { merge: true })
+      .then(() => {
+        toast({ title: `Story ${story ? 'Updated' : 'Created'}!`, description: 'The story has been successfully saved.' });
         router.push('/admin/content');
-      } catch (error) {
-        console.error('Failed to save story:', error);
-        toast({
-          variant: 'destructive',
-          title: 'An Error Occurred',
-          description: 'Could not save the story. Please try again.',
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: storyRef.path,
+            operation: 'write',
+            requestResourceData: fullData,
         });
-      }
+        errorEmitter.emit('permission-error', permissionError);
+      });
     });
   };
   

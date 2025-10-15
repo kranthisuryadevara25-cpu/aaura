@@ -7,12 +7,15 @@ import Link from 'next/link';
 import { ArrowRight, Palmtree, Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
-import { temples as mockTemples } from '@/lib/temples';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function TemplesPage() {
   const { language, t } = useLanguage();
-  const temples = mockTemples;
-  const isLoading = false;
+  const db = useFirestore();
+  const templesRef = collection(db, 'temples');
+  const [temples, isLoading] = useCollectionData(templesRef, { idField: 'id' });
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -26,9 +29,9 @@ export default function TemplesPage() {
                 </p>
             </div>
              <Button asChild>
-                <Link href="/admin/content">
+                <Link href="/admin/temples/new">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Manage Temples
+                    Add Temple
                 </Link>
             </Button>
         </div>

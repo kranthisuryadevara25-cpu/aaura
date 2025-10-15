@@ -20,24 +20,29 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
-import { deities as mockDeities } from '@/lib/deities';
-import { stories as mockStories } from '@/lib/stories';
-import { characters as mockCharacters } from '@/lib/characters';
-import { temples as mockTemples } from '@/lib/temples';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import { collection, deleteDoc, doc } from 'firebase/firestore';
+import type { Deity } from '@/lib/deities';
+import type { Story } from '@/lib/stories';
+import type { EpicHero } from '@/lib/characters';
+import type { Temple } from '@/lib/temples';
 
 function DeitiesTabContent() {
   const { toast } = useToast();
-  const [deities, setDeities] = useState(mockDeities);
+  const db = useFirestore();
   const { language } = useLanguage();
-  const isLoading = false; 
+  const deitiesRef = collection(db, 'deities');
+  const [deities, isLoading] = useCollectionData(deitiesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
-    setDeities(prevDeities => prevDeities.filter(d => d.id !== id));
-    toast({
-      title: 'Deity Deleted (Mock)',
-      description: 'The deity has been removed from the view.',
-    });
+    try {
+      await deleteDoc(doc(db, 'deities', id));
+      toast({ title: 'Deity Deleted', description: 'The deity has been removed from the database.' });
+    } catch {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete deity.' });
+    }
   };
 
   return (
@@ -57,7 +62,7 @@ function DeitiesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {deities?.map((deity: any) => (
+          {deities?.map((deity: Deity) => (
             <Card key={deity.id}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{deity.name[language] || deity.name.en}</CardTitle>
@@ -109,16 +114,18 @@ function DeitiesTabContent() {
 
 function StoriesTabContent() {
   const { toast } = useToast();
-  const [stories, setStories] = useState(mockStories);
+  const db = useFirestore();
   const { language } = useLanguage();
-  const isLoading = false;
+  const storiesRef = collection(db, 'stories');
+  const [stories, isLoading] = useCollectionData(storiesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
-    setStories(prevStories => prevStories.filter(s => s.id !== id));
-    toast({
-      title: 'Story Deleted (Mock)',
-      description: 'The story has been removed from the view.',
-    });
+    try {
+      await deleteDoc(doc(db, 'stories', id));
+      toast({ title: 'Story Deleted', description: 'The story has been removed.' });
+    } catch {
+       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete story.' });
+    }
   };
 
   return (
@@ -190,16 +197,19 @@ function StoriesTabContent() {
 
 function CharactersTabContent() {
   const { toast } = useToast();
-  const [characters, setCharacters] = useState(mockCharacters);
+  const db = useFirestore();
   const { language } = useLanguage();
-  const isLoading = false;
+  const charactersRef = collection(db, 'epicHeroes');
+  const [characters, isLoading] = useCollectionData(charactersRef, { idField: 'id' });
+
 
   const handleDelete = async (id: string) => {
-    setCharacters(prev => prev.filter(c => c.id !== id));
-    toast({
-      title: 'Character Deleted (Mock)',
-      description: 'The character has been removed from the view.',
-    });
+    try {
+      await deleteDoc(doc(db, 'epicHeroes', id));
+      toast({ title: 'Character Deleted', description: 'The character has been removed.' });
+    } catch {
+       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete character.' });
+    }
   };
 
   return (
@@ -219,7 +229,7 @@ function CharactersTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {characters?.map((character) => (
+          {characters?.map((character: EpicHero) => (
             <Card key={character.id}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{character.name[language] || character.name.en}</CardTitle>
@@ -271,16 +281,18 @@ function CharactersTabContent() {
 
 function TemplesTabContent() {
   const { toast } = useToast();
-  const [temples, setTemples] = useState(mockTemples);
+  const db = useFirestore();
   const { language } = useLanguage();
-  const isLoading = false;
+  const templesRef = collection(db, 'temples');
+  const [temples, isLoading] = useCollectionData(templesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
-    setTemples(prev => prev.filter(t => t.id !== id));
-    toast({
-      title: 'Temple Deleted (Mock)',
-      description: 'The temple has been removed from the view.',
-    });
+    try {
+      await deleteDoc(doc(db, 'temples', id));
+      toast({ title: 'Temple Deleted', description: 'The temple has been removed.' });
+    } catch {
+       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete temple.' });
+    }
   };
 
   return (
@@ -300,7 +312,7 @@ function TemplesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {temples?.map((temple) => (
+          {temples?.map((temple: Temple) => (
             <Card key={temple.id}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{temple.name[language] || temple.name.en}</CardTitle>

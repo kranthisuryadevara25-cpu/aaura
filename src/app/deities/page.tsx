@@ -9,12 +9,15 @@ import { ArrowRight, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { Input } from '@/components/ui/input';
-import { deities as mockDeities } from '@/lib/deities';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function DeitiesPage() {
   const { language, t } = useLanguage();
-  const [deities, setDeities] = useState(mockDeities);
-  const isLoading = false; // Using mock data
+  const db = useFirestore();
+  const deitiesRef = collection(db, 'deities');
+  const [deities, isLoading] = useCollectionData(deitiesRef, { idField: 'id' });
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredDeities, setFilteredDeities] = useState(deities);
 

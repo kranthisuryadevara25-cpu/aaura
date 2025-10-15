@@ -4,17 +4,21 @@
 import { useParams, useRouter } from 'next/navigation';
 import { CharacterForm } from '../../CharacterForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { getCharacterBySlug } from '@/lib/characters';
 import { Button } from '@/components/ui/button';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import type { EpicHero } from '@/lib/characters';
 
 export default function EditCharacterPage() {
   const params = useParams();
   const router = useRouter();
+  const db = useFirestore();
   const id = params.id as string;
 
-  const character = getCharacterBySlug(id);
-  const isLoading = false;
-
+  const characterRef = doc(db, 'epicHeroes', id);
+  const [character, isLoading] = useDocumentData(characterRef);
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -29,7 +33,7 @@ export default function EditCharacterPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Content
         </Button>
-        <CharacterForm character={character} />
+        <CharacterForm character={character as EpicHero} />
     </main>
   );
 }

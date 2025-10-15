@@ -22,6 +22,10 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import type { EpicHero } from '@/lib/characters';
+import { useFirestore } from '@/lib/firebase/provider';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
@@ -41,6 +45,7 @@ interface CharacterFormProps {
 export function CharacterForm({ character }: CharacterFormProps) {
   const { toast } = useToast();
   const router = useRouter();
+  const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -64,40 +69,41 @@ export function CharacterForm({ character }: CharacterFormProps) {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
-      try {
-        // This is a mock implementation
-        const fullData = {
-            ...data,
-            epicAssociation: data.epicAssociation.split(',').map(s => s.trim()),
-            // Add other fields with default values for mock
-            background: { birth: '', earlyLife: '', family: { parents: [], siblings: [], spouses: [], children: [] } },
-            prominence: '',
-            qualities: [],
-            achievements: [],
-            mistakes: [],
-            learningsForChildren: [],
-            relatedContent: { sacredTales: [], deities: [], rituals: [] },
-            popularity: 0,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        }
-
-        if (character) {
-          console.log("Updating character (mock):", { id: character.id, ...fullData });
-          toast({ title: 'Character Updated! (Mock)', description: 'The character has been successfully updated.' });
-        } else {
-          console.log("Creating new character (mock):", fullData);
-          toast({ title: 'Character Created! (Mock)', description: 'The new character has been added.' });
-        }
-        router.push('/admin/content');
-      } catch (error) {
-        console.error('Failed to save character:', error);
-        toast({
-          variant: 'destructive',
-          title: 'An Error Occurred',
-          description: 'Could not save the character. Please try again.',
-        });
+      const characterId = character ? character.id : data.slug;
+      const characterRef = doc(db, 'epicHeroes', characterId);
+      
+      const fullData = {
+          id: characterId,
+          ...data,
+          epicAssociation: data.epicAssociation.split(',').map(s => s.trim()),
+          // Add other fields with default values
+          background: character?.background || { birth: '', earlyLife: '', family: { parents: [], siblings: [], spouses: [], children: [] } },
+          prominence: character?.prominence || '',
+          qualities: character?.qualities || [],
+          achievements: character?.achievements || [],
+          mistakes: character?.mistakes || [],
+          learningsForChildren: character?.learningsForChildren || [],
+          relatedContent: character?.relatedContent || { sacredTales: [], deities: [], rituals: [] },
+          popularity: character?.popularity || 0,
+          quote: character?.quote || {text: '', source: ''},
+          modernRelevance: character?.modernRelevance || '',
+          updatedAt: serverTimestamp(),
+          ...(character ? {} : { createdAt: serverTimestamp() }),
       }
+
+      setDoc(characterRef, fullData, { merge: true })
+      .then(() => {
+        toast({ title: `Character ${character ? 'Updated' : 'Created'}!`, description: `The character has been successfully saved.` });
+        router.push('/admin/content');
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: characterRef.path,
+            operation: 'write',
+            requestResourceData: fullData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
     });
   };
   

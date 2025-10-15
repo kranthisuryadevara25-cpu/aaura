@@ -4,16 +4,19 @@
 import { useParams, useRouter } from 'next/navigation';
 import { StoryForm } from '../../StoryForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
-import { getStoryBySlug } from '@/lib/stories';
 import { Button } from '@/components/ui/button';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
 
 export default function EditStoryPage() {
   const params = useParams();
   const router = useRouter();
+  const db = useFirestore();
   const id = params.id as string;
 
-  const story = getStoryBySlug(id);
-  const isLoading = false;
+  const storyRef = doc(db, 'stories', id);
+  const [story, isLoading] = useDocumentData(storyRef);
 
   if (isLoading) {
     return (

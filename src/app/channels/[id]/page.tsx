@@ -249,26 +249,36 @@ export default function ChannelDetailPage() {
     
     const batch = writeBatch(db);
 
-    try {
-      if (isFollowing) {
-        batch.delete(userFollowingRef);
-        batch.delete(targetFollowerRef);
-        batch.update(currentUserRef, { followingCount: increment(-1) });
-        batch.update(targetUserRef, { followerCount: increment(-1) });
-        await batch.commit();
-        toast({ title: 'Unfollowed', description: `You have unfollowed ${channel.name}.` });
-      } else {
-        batch.set(userFollowingRef, { userId: channelId, followedAt: new Date() });
-        batch.set(targetFollowerRef, { userId: user.uid, followedAt: new Date() });
-        batch.update(currentUserRef, { followingCount: increment(1) });
-        batch.update(targetUserRef, { followerCount: increment(1) });
-        await batch.commit();
-        toast({ title: 'Followed!', description: `You are now following ${channel.name}.` });
-      }
-    } catch (error) {
-      console.error('Failed to follow/unfollow:', error);
-      toast({ variant: 'destructive', title: 'An error occurred.' });
+    if (isFollowing) {
+      batch.delete(userFollowingRef);
+      batch.delete(targetFollowerRef);
+      batch.update(currentUserRef, { followingCount: increment(-1) });
+      batch.update(targetUserRef, { followerCount: increment(-1) });
+    } else {
+      const followingData = { userId: channelId, followedAt: serverTimestamp() };
+      const followerData = { userId: user.uid, followedAt: serverTimestamp() };
+      batch.set(userFollowingRef, followingData);
+      batch.set(targetFollowerRef, followerData);
+      batch.update(currentUserRef, { followingCount: increment(1) });
+      batch.update(targetUserRef, { followerCount: increment(1) });
     }
+
+    batch.commit()
+    .then(() => {
+        toast({
+          title: isFollowing ? 'Unfollowed' : 'Followed!',
+          description: `You have ${isFollowing ? 'unfollowed' : 'started following'} ${channel.name}.`
+        });
+    })
+    .catch((serverError) => {
+        const operation = isFollowing ? 'delete' : 'create';
+        const permissionError = new FirestorePermissionError({
+            path: userFollowingRef.path,
+            operation: operation,
+            requestResourceData: isFollowing ? undefined : { userId: channelId },
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
   };
 
   if (loadingChannel) {

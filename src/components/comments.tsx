@@ -1,12 +1,13 @@
+
 'use client';
 
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -19,6 +20,7 @@ import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { Skeleton } from './ui/skeleton';
 
 
 const commentSchema = z.object({
@@ -29,7 +31,7 @@ type CommentFormValues = z.infer<typeof commentSchema>;
 
 function CommentAuthor({ authorId }: { authorId: string }) {
     const db = useFirestore();
-    const authorRef = doc(db, 'users', authorId);
+    const authorRef = useMemo(() => doc(db, 'users', authorId), [db, authorId]);
     const [author, loading] = useDocumentData(authorRef);
 
     if (loading) {
@@ -73,8 +75,11 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
   
-  const commentsCollectionRef = collection(db, `${contentType}s/${contentId}/comments`);
-  const commentsQuery = query(commentsCollectionRef, orderBy('createdAt', 'desc'));
+  const commentsQuery = useMemo(() => {
+      const commentsCollectionRef = collection(db, `${contentType}s/${contentId}/comments`);
+      return query(commentsCollectionRef, orderBy('createdAt', 'desc'));
+  }, [db, contentType, contentId]);
+  
   const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
 
   const form = useForm<CommentFormValues>({
@@ -89,6 +94,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
     }
 
     startTransition(async () => {
+        const commentsCollectionRef = collection(db, `${contentType}s/${contentId}/comments`);
         const commentData = {
           contentId,
           contentType,
@@ -100,7 +106,6 @@ export function Comments({ contentId, contentType }: CommentsProps) {
         try {
             await addDoc(commentsCollectionRef, commentData);
             
-            // Increment commentsCount on the parent document
             const parentDocRef = doc(db, `${contentType}s`, contentId);
             await updateDoc(parentDocRef, {
                 commentsCount: increment(1)

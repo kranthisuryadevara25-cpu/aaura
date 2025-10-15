@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useToast } from '@/hooks/use-toast';
@@ -9,7 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageCircle, ThumbsUp } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useMemo } from 'react';
 import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
 import type { DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
@@ -22,11 +23,11 @@ export function PostCard({ post }: { post: DocumentData; }) {
   const [user] = useAuthState(auth);
   const [isLiking, startLikeTransition] = useTransition();
 
-  const authorRef = post.authorId ? doc(db, 'users', post.authorId) : undefined;
+  const authorRef = useMemo(() => post.authorId ? doc(db, 'users', post.authorId) : undefined, [db, post.authorId]);
   const [author, authorIsLoading] = useDocumentData(authorRef);
   
-  const postRef = doc(db, 'posts', post.id);
-  const likeRef = user ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined;
+  const postRef = useMemo(() => doc(db, 'posts', post.id), [db, post.id]);
+  const likeRef = useMemo(() => user ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined, [db, post.id, user]);
   const [likeDoc, likeLoading] = useDocumentData(likeRef);
   const isLiked = !!likeDoc;
 

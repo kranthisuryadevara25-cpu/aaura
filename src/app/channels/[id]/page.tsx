@@ -3,7 +3,7 @@
 
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
-import { doc, writeBatch, increment, collection, query, where, addDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, writeBatch, increment, collection, query, where, addDoc, serverTimestamp, orderBy } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Image from 'next/image';
@@ -161,7 +161,12 @@ function VideosTab({ channelId }: { channelId: string }) {
 
 function PostsTab({ channelId, isOwner }: { channelId: string, isOwner: boolean }) {
     const db = useFirestore();
-    const postsQuery = query(collection(db, 'posts'), where('authorId', '==', channelId), where('contextType', '==', 'channel'));
+    const postsQuery = query(
+        collection(db, 'posts'), 
+        where('authorId', '==', channelId), 
+        where('contextType', '==', 'channel'),
+        orderBy('createdAt', 'desc')
+    );
     const [posts, loading] = useCollectionData(postsQuery, { idField: 'id' });
 
     if (loading) return <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />;

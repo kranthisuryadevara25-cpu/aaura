@@ -12,7 +12,6 @@ import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firesto
 import { collection, query, type DocumentData, doc, writeBatch, increment } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
 
 interface Channel extends DocumentData {
   id: string;
@@ -123,22 +122,6 @@ export default function ChannelsPage() {
   const db = useFirestore();
   const channelsQuery = query(collection(db, 'channels'));
   const [channels, isLoading] = useCollectionData(channelsQuery, { idField: 'id' });
-  const [uniqueChannels, setUniqueChannels] = useState<Channel[]>([]);
-
-  useEffect(() => {
-    if (channels) {
-      const seen = new Set();
-      const filteredChannels = channels.filter(channel => {
-        if (!channel.id || seen.has(channel.id)) {
-          return false;
-        } else {
-          seen.add(channel.id);
-          return true;
-        }
-      });
-      setUniqueChannels(filteredChannels as Channel[]);
-    }
-  }, [channels]);
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -163,8 +146,8 @@ export default function ChannelsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {uniqueChannels.map((channel) => (
-              <ChannelCard key={channel.id} channel={channel} />
+            {channels && channels.map((channel) => (
+              <ChannelCard key={channel.id} channel={channel as Channel} />
             ))}
           </div>
         )}

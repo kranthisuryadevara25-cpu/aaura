@@ -25,14 +25,15 @@ import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from 'firebase/auth';
-import { generateOnboardingInsights } from '@/ai/flows/onboarding-insights';
+import { generateOnboardingInsights, type OnboardingInsightsOutput } from '@/ai/flows/onboarding-insights';
 import { deities } from '@/lib/deities';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { formSchema, step1Schema, step2Schema, FormValues } from '@/lib/profile-setup-schemas';
+import { formSchema, type FormValues } from '@/lib/profile-setup-schemas';
+
 
 const getZodiacSign = (date: Date): string => {
   const day = date.getDate();
@@ -61,8 +62,8 @@ export default function ProfileSetupPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
-    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
-    { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] as const },
+    { title: 'Tell us about yourself', schema: z.object({ fullName: formSchema.shape.fullName, birthDate: formSchema.shape.birthDate, timeOfBirth: formSchema.shape.timeOfBirth, placeOfBirth: formSchema.shape.placeOfBirth }), fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
+    { title: 'Select your interests', schema: z.object({ favoriteDeities: formSchema.shape.favoriteDeities }), fields: ['favoriteDeities'] as const },
     { title: 'Get your first horoscope', schema: z.object({}), fields: [] },
   ];
 
@@ -79,6 +80,7 @@ export default function ProfileSetupPage() {
   });
 
   const nextStep = async () => {
+    const currentSchema = steps[currentStep].schema;
     const fieldsToValidate = steps[currentStep].fields;
     const isValid = await form.trigger(fieldsToValidate);
     if (isValid) {
@@ -110,11 +112,21 @@ export default function ProfileSetupPage() {
         
         await updateProfile(currentUser, { displayName: data.fullName });
         
-        const insights = await generateOnboardingInsights({
-          zodiacSign,
-          birthDate: formattedBirthDate,
-          favoriteDeities: data.favoriteDeities,
-        });
+        let insights: OnboardingInsightsOutput | null = null;
+        try {
+          insights = await generateOnboardingInsights({
+            zodiacSign,
+            birthDate: formattedBirthDate,
+            favoriteDeities: data.favoriteDeities,
+          });
+        } catch (aiError) {
+          console.error("AI Insight generation failed:", aiError);
+          toast({
+            variant: "destructive",
+            title: "AI Insights Failed",
+            description: "Could not generate welcome message. Your profile will be saved without it.",
+          });
+        }
 
         const batch = writeBatch(db);
 
@@ -130,19 +142,21 @@ export default function ProfileSetupPage() {
           creationTimestamp: serverTimestamp(),
           followerCount: 0,
           followingCount: 0,
-          welcomeMessage: insights.welcomeMessage, // Save welcome message
+          welcomeMessage: insights?.welcomeMessage || null, 
         };
         batch.set(userProfileRef, userProfileData, { merge: true });
 
-        const horoscopeRef = doc(db, `users/${currentUser.uid}/horoscopes/daily`);
-        const horoscopeData = {
-          userId: currentUser.uid,
-          date: format(new Date(), 'yyyy-MM-dd'),
-          zodiacSign: zodiacSign,
-          text_en: insights.horoscope,
-          text_hi: insights.horoscope,
-        };
-        batch.set(horoscopeRef, horoscopeData, { merge: true });
+        if (insights) {
+          const horoscopeRef = doc(db, `users/${currentUser.uid}/horoscopes/daily`);
+          const horoscopeData = {
+            userId: currentUser.uid,
+            date: format(new Date(), 'yyyy-MM-dd'),
+            zodiacSign: zodiacSign,
+            text_en: insights.horoscope,
+            text_hi: insights.horoscope,
+          };
+          batch.set(horoscopeRef, horoscopeData, { merge: true });
+        }
 
         const badgeRef = doc(db, `users/${currentUser.uid}/badges/spiritual-seeker`);
         batch.set(badgeRef, {

@@ -11,6 +11,7 @@ import { useFirestore } from '@/lib/firebase/provider';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, DocumentData } from 'firebase/firestore';
 import { Loader2 } from 'lucide-react';
+import { useMemo } from 'react';
 
 interface Channel extends DocumentData {
   id: string;
@@ -26,6 +27,19 @@ export default function ChannelsPage() {
   const [channels, isLoading] = useCollectionData(channelsQuery, {
     idField: 'id',
   });
+
+  // Memoize the filtering logic to prevent re-running on every render
+  const uniqueChannels = useMemo(() => {
+    if (!channels) return [];
+    const seen = new Set();
+    // Filter out any channels that might not have an ID yet or are duplicates
+    return channels.filter((channel): channel is Channel => {
+      if (!channel || !channel.id) return false;
+      const duplicate = seen.has(channel.id);
+      seen.add(channel.id);
+      return !duplicate;
+    });
+  }, [channels]);
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -50,7 +64,7 @@ export default function ChannelsPage() {
         </div>
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {channels && channels.map((channel: Channel) => {
+        {uniqueChannels.map((channel: Channel) => {
             const description = channel[`description_${language}`] || channel.description_en;
             return (
             <Card key={channel.id} className="flex flex-col text-center items-center p-6 bg-card border-border hover:border-primary/50 transition-colors duration-300">

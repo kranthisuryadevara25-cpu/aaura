@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { CalendarDays, Sunrise, Sunset, Moon, Star, AlertTriangle, PartyPopper, Loader2, BookHeart, Sparkles, BrainCircuit } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -19,6 +19,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
+import { PanchangTimeline } from './PanchangTimeline';
 
 
 export default function PanchangPage() {
@@ -41,7 +42,7 @@ export default function PanchangPage() {
         setPanchang(data);
         setIsLoading(false);
 
-        if (user && userData?.zodiacSign) {
+        if (user && userData?.zodiacSign && data) {
           setIsAiLoading(true);
           personalizePanchang({
             userId: user.uid,
@@ -85,18 +86,6 @@ export default function PanchangPage() {
         { icon: Star, label: "Nakshatra", value: panchang.nakshatra[language] || panchang.nakshatra.en },
         { icon: Star, label: "Yoga", value: panchang.yoga[language] || panchang.yoga.en },
         { icon: Star, label: "Karana", value: panchang.karana[language] || panchang.karana.en },
-    ];
-    
-    const timings = [
-        { icon: Sunrise, label: "Sunrise", value: panchang.sunrise },
-        { icon: Sunset, label: "Sunset", value: panchang.sunset },
-        { icon: Moon, label: "Moonrise", value: panchang.moonrise },
-        { icon: Moon, label: "Moonset", value: panchang.moonset },
-    ];
-
-    const inauspiciousTimings = [
-        { icon: AlertTriangle, label: "Rahu Kalam", value: panchang.rahukalam, color: "text-red-500" },
-        { icon: AlertTriangle, label: "Yama Gandam", value: panchang.yamaGandam, color: "text-orange-500" },
     ];
     
     const zodiacInsight = panchang.zodiacInsights[userData?.zodiacSign?.toLowerCase() || 'aries'];
@@ -152,70 +141,45 @@ export default function PanchangPage() {
                 </Card>
             )}
 
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {panchangItems.map((item, index) => (
+                    <Card key={index} className="bg-transparent border-border text-center">
+                        <CardHeader>
+                            <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
+                                <item.icon className="h-6 w-6 text-primary" />
+                            </div>
+                            <CardTitle className="text-md text-foreground mt-2">{item.label}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="font-semibold text-muted-foreground">{item.value}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+
+            <PanchangTimeline panchang={panchang} />
+
             {isAiLoading ? (
                 <div className="flex justify-center items-center h-24"><Loader2 className="animate-spin" /></div>
             ) : aiContent && (
                  <Card className="bg-gradient-to-tr from-accent/10 to-background border-accent/20">
                     <CardHeader>
                         <CardTitle className="flex items-center gap-3 text-accent"><BrainCircuit /> Personalized Guidance for you</CardTitle>
+                        <CardDescription>Based on your zodiac sign, {userData?.zodiacSign}.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                        {aiContent.recommendations.map((rec, index) => <p key={index} className="text-foreground/90">- {rec}</p>)}
+                        {aiContent.recommendations.map((rec, index) => (
+                          <div key={index} className="flex items-start gap-2">
+                            <Sparkles className="h-4 w-4 text-accent mt-1 shrink-0" />
+                            <p className="text-foreground/90">{rec}</p>
+                          </div>
+                        ))}
                     </CardContent>
                 </Card>
             )}
 
-            <Accordion type="single" collapsible defaultValue="item-1" className="w-full space-y-4">
-                <AccordionItem value="item-1" className="border-primary/20 border rounded-lg px-4 bg-transparent">
-                     <AccordionTrigger className="text-lg font-semibold hover:no-underline">Core Panchang Details</AccordionTrigger>
-                     <AccordionContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 pt-4">
-                            {panchangItems.map((item, index) => (
-                                <Card key={index} className="bg-transparent border-none shadow-none text-center">
-                                    <CardHeader>
-                                        <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit">
-                                            <item.icon className="h-6 w-6 text-primary" />
-                                        </div>
-                                        <CardTitle className="text-md text-foreground">{item.label}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <p className="font-semibold text-muted-foreground">{item.value}</p>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
-                     </AccordionContent>
-                </AccordionItem>
-                 <AccordionItem value="item-2" className="border-primary/20 border rounded-lg px-4 bg-transparent">
-                     <AccordionTrigger className="text-lg font-semibold hover:no-underline">Timings</AccordionTrigger>
-                     <AccordionContent>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
-                            <Card className="bg-transparent border-none shadow-none">
-                                <CardHeader><CardTitle>{t.panchang.astronomicalTimings}</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    {timings.map((item, index) => (
-                                        <div key={index} className="flex justify-between items-center text-foreground/90">
-                                            <div className="flex items-center gap-3"><item.icon className="h-5 w-5 text-accent" /><span>{item.label}</span></div>
-                                            <span className="font-mono font-semibold">{item.value}</span>
-                                        </div>
-                                    ))}
-                                </CardContent>
-                            </Card>
-                            <Card className="bg-transparent border-none shadow-none">
-                                <CardHeader><CardTitle>{t.panchang.inauspiciousTimings}</CardTitle></CardHeader>
-                                <CardContent className="space-y-4">
-                                    {inauspiciousTimings.map((item, index) => (
-                                        <div key={index} className="flex justify-between items-center">
-                                            <div className="flex items-center gap-3"><item.icon className={`h-5 w-5 ${item.color}`} /> <span className="text-foreground/90">{item.label}</span></div>
-                                            <span className="font-mono font-semibold">{item.value}</span>
-                                        </div>
-))}
-                                </CardContent>
-                            </Card>
-                        </div>
-                     </AccordionContent>
-                </AccordionItem>
-                 <AccordionItem value="item-3" className="border-primary/20 border rounded-lg px-4 bg-transparent">
+            <Accordion type="single" collapsible className="w-full space-y-4">
+                 <AccordionItem value="item-1" className="border-primary/20 border rounded-lg px-4 bg-transparent">
                      <AccordionTrigger className="text-lg font-semibold hover:no-underline">Today's Guidance</AccordionTrigger>
                      <AccordionContent className="pt-4 space-y-6">
                         {zodiacInsight && userData?.zodiacSign && (

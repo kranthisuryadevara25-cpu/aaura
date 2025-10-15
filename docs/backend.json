@@ -707,16 +707,23 @@
       "description": "Represents a ritual or pooja.",
       "properties": {
         "id": { "type": "string" },
-        "name_en": { "type": "string" },
-        "name_hi": { "type": "string" },
-        "procedure_en": { "type": "string" },
-        "procedure_hi": { "type": "string" },
-        "deity": { "type": "string" },
-        "itemsRequired": { "type": "array", "items": { "type": "string" } },
-        "auspiciousTime": { "type": "string" },
-        "images": { "type": "array", "items": { "type": "string", "format": "uri" } }
+        "name": { "type": "object", "properties": { "en": { "type": "string" } } },
+        "deity": { "type": "object", "properties": { "en": { "type": "string" } } },
+        "description": { "type": "object", "properties": { "en": { "type": "string" } } },
+        "procedure": { "type": "object", "properties": { "en": { "type": "array", "items": { "type": "string" } } } },
+        "itemsRequired": { "type": "object", "properties": { "en": { "type": "array", "items": { "type": "string" } } } },
+        "auspiciousTime": { "type": "object", "properties": { "en": { "type": "string" } } },
+        "image": { "type": "object", "properties": { "url": { "type": "string", "format": "uri" }, "hint": { "type": "string" } } },
+        "significance": { "type": "object", "properties": { "en": { "type": "string" } } },
+        "benefits": { "type": "object", "properties": { "en": { "type": "array", "items": { "type": "string" } } } },
+        "variations": { "type": "object", "properties": { "en": { "type": "array", "items": { "type": "string" } } } },
+        "commonMistakes": { "type": "object", "properties": { "en": { "type": "array", "items": { "type": "string" } } } },
+        "reflections": { "type": "object", "properties": { "en": { "type": "array", "items": { "type": "string" } } } },
+        "difficulty": { "type": "string", "enum": ["Beginner", "Intermediate", "Advanced"] },
+        "keywords": { "type": "array", "items": { "type": "string" } },
+        "popularity": { "type": "number" }
       },
-      "required": ["id", "name_en", "procedure_en"]
+      "required": ["id", "name", "procedure"]
     },
     "Panchang": {
       "title": "Panchang",

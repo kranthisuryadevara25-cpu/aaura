@@ -32,22 +32,9 @@ import { generateOnboardingInsights } from '@/ai/flows/onboarding-insights';
 import { deities } from '@/lib/deities';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-
-const step1Schema = z.object({
-  fullName: z.string().min(1, 'Full name is required.'),
-  birthDate: z.date({ required_error: 'Please select your birth date.' }),
-  timeOfBirth: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please use HH:MM format.'),
-  placeOfBirth: z.string().min(1, 'Place of birth is required.'),
-});
-
-const step2Schema = z.object({
-  favoriteDeities: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one deity.',
-  }),
-});
+import { step1Schema, step2Schema } from '@/lib/profile-setup-schemas';
 
 const formSchema = step1Schema.merge(step2Schema);
-
 type FormValues = z.infer<typeof formSchema>;
 
 const getZodiacSign = (date: Date): string => {
@@ -77,23 +64,25 @@ export default function ProfileSetupPage() {
   const [currentStep, setCurrentStep] = useState(0);
 
   const steps = [
-    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] },
-    { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] },
+    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
+    { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] as const },
     { title: 'Get your first horoscope', schema: z.object({}), fields: [] },
   ];
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(steps[currentStep].schema),
+    resolver: zodResolver(currentStep === 0 ? step1Schema : step2Schema),
     defaultValues: {
       fullName: user?.displayName || '',
       placeOfBirth: '',
       timeOfBirth: '12:00',
       favoriteDeities: [],
+      birthDate: new Date(),
     },
+     mode: "onChange",
   });
 
   const nextStep = async () => {
-    const isValid = await form.trigger(steps[currentStep].fields as any);
+    const isValid = await form.trigger(steps[currentStep].fields);
     if (isValid) {
       setCurrentStep((prev) => prev + 1);
     }
@@ -109,6 +98,7 @@ export default function ProfileSetupPage() {
     
     if (!data.birthDate || !(data.birthDate instanceof Date)) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please provide a valid birth date.' });
+      form.setError("birthDate", { type: "manual", message: "A valid birth date is required." });
       return;
     }
 
@@ -377,3 +367,5 @@ export default function ProfileSetupPage() {
     </main>
   );
 }
+
+    

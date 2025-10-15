@@ -93,6 +93,13 @@ export default function SettingsPage() {
         placeOfBirth: userData.placeOfBirth || '',
         zodiacSign: userData.zodiacSign || '',
       });
+    } else if (user) {
+        form.reset({
+             fullName: user.displayName || '',
+             timeOfBirth: '12:00',
+             placeOfBirth: '',
+             zodiacSign: '',
+        })
     }
   }, [userData, user, form]);
 
@@ -112,6 +119,7 @@ export default function SettingsPage() {
     
     if (!data.birthDate || !(data.birthDate instanceof Date)) {
       toast({ variant: 'destructive', title: 'Error', description: 'Please provide a valid birth date.' });
+      form.setError("birthDate", { type: "manual", message: "A valid birth date is required." });
       return;
     }
 
@@ -302,3 +310,5 @@ export default function SettingsPage() {
     </main>
   );
 }
+
+    

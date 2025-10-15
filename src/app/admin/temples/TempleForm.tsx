@@ -26,6 +26,7 @@ import { Separator } from '@/components/ui/separator';
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
   name: z.object({ en: z.string().min(1, "English name is required.") }),
+  officialWebsite: z.string().url("Must be a valid URL.").optional().or(z.literal('')),
   deity: z.object({ name: z.object({ en: z.string().min(1, "Deity name is required.") }) }),
   location: z.object({
       address: z.string().min(1, "Address is required."),
@@ -58,6 +59,7 @@ const formSchema = z.object({
       accommodation: z.object({ en: z.string().optional() }),
       food: z.object({ en: z.string().optional() }),
       transport: z.object({ en: z.string().optional() }),
+      guides: z.object({ en: z.string().optional() }),
   }),
 });
 
@@ -131,6 +133,9 @@ export function TempleForm({ temple }: TempleFormProps) {
             )} />
             <FormField control={form.control} name="name.en" render={({ field }) => (
               <FormItem><FormLabel>Name (English)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+             <FormField control={form.control} name="officialWebsite" render={({ field }) => (
+              <FormItem><FormLabel>Official Website</FormLabel><FormControl><Input type="url" {...field} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="deity.name.en" render={({ field }) => (
               <FormItem><FormLabel>Primary Deity</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -209,18 +214,21 @@ export function TempleForm({ temple }: TempleFormProps) {
             )} />
 
             <Separator />
-            <h3 className="text-xl font-semibold text-primary">Nearby Information</h3>
+            <h3 className="text-xl font-semibold text-primary">Nearby Information & Suggestions</h3>
              <FormField control={form.control} name="nearbyInfo.accommodation.en" render={({ field }) => (
-                <FormItem><FormLabel>Accommodation</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Suggested Accommodation</FormLabel><FormControl><Textarea placeholder="List suggested hotels, dharamshalas, etc." {...field} /></FormControl><FormMessage /></FormItem>
             )} />
              <FormField control={form.control} name="nearbyInfo.food.en" render={({ field }) => (
-                <FormItem><FormLabel>Food</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Suggested Food/Restaurants</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
             )} />
              <FormField control={form.control} name="nearbyInfo.transport.en" render={({ field }) => (
-                <FormItem><FormLabel>Transport</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Suggested Transport/Travel Agents</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+            )} />
+             <FormField control={form.control} name="nearbyInfo.guides.en" render={({ field }) => (
+                <FormItem><FormLabel>Suggested Tourist Guides</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
             )} />
              <FormField control={form.control} name="nearbyInfo.placesToVisit.en" render={({ field }) => (
-                <FormItem><FormLabel>Other Places to Visit</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Other Places to Visit Nearby</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
             )} />
 
             <Button type="submit" disabled={isPending} className="w-full">

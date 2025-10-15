@@ -3,6 +3,7 @@ export type Temple = {
   id: string;
   slug: string;
   name: { [key: string]: string };
+  officialWebsite?: string;
   deity: {
     name: { [key: string]: string };
     significance: { [key: string]: string };
@@ -37,6 +38,7 @@ export type Temple = {
     accommodation: { [key: string]: string };
     food: { [key: string]: string };
     transport: { [key: string]: string };
+    guides: { [key: string]: string };
   };
 };
 
@@ -53,6 +55,7 @@ export const temples: Temple[] = [
       kn: "ರಾಮ ಮಂದಿರ, ಅಯೋಧ್ಯೆ",
       bn: "রাম মন্দির, অযোধ্যা",
     },
+    officialWebsite: "https://srjbtkshetra.org/",
     deity: {
       name: {
         en: "Ram Lalla (infant Lord Rama)",
@@ -184,6 +187,7 @@ export const temples: Temple[] = [
         kn: "ಹತ್ತಿರದ ವಿಮಾನ ನಿಲ್ದಾಣ: ಅಯೋಧ್ಯೆ (AYJ). ರೈಲು (ಅಯೋಧ್ಯೆ ಧಾಮ ಜಂ) ಮತ್ತು ರಸ್ತೆಯ ಮೂಲಕ ಉತ್ತಮವಾಗಿ ಸಂಪರ್ಕ ಹೊಂದಿದೆ.",
         bn: "নিকটতম বিমানবন্দর: অযোধ্যা (AYJ)। রেল (অযোধ্যা ধাম জং) এবং সড়কপথে ভালভাবে সংযুক্ত।",
       },
+      guides: { en: "", hi: "", te: "", mr: "", ta: "", kn: "", bn: "" },
     },
   },
   {
@@ -329,6 +333,15 @@ export const temples: Temple[] = [
         kn: "ಹತ್ತಿರದ ಮೋಟಾರು ರಸ್ತೆ ಗೌರಿಕುಂಡ್ ಆಗಿದೆ. ಅಲ್ಲಿಂದ, ಇದು 16 ಕಿಮೀ ಟ್ರೆಕ್ ಆಗಿದೆ. ಕುದುರೆ ಮತ್ತು ಹೆಲಿಕಾಪ್ಟರ್ ಸೇವೆಗಳು ಲಭ್ಯವಿದೆ.",
         bn: "নিকটতম মোটরযোগ্য রাস্তা গৌরিকুণ্ড। সেখান থেকে এটি ১৬ কিলোমিটারের একটি ট্রেক। টাট্টু এবং হেলিকপ্টার পরিষেবা উপলব্ধ।",
       },
+       guides: {
+        en: "Local guides can be hired at Gaurikund or Sonprayag for the trek.",
+        hi: "ट्रेक के लिए गौरीकुंड या सोनप्रयाग में स्थानीय गाइड किराए पर लिए जा सकते हैं।",
+        te: "ట్రెక్ కోసం గౌరికుండ్ లేదా సోన్‌ప్రయాగ్‌లో స్థానిక గైడ్‌లను నియమించుకోవచ్చు.",
+        mr: "ट्रेकसाठी गौरीकुंड किंवा सोनप्रयाग येथे स्थानिक मार्गदर्शक भाड्याने घेऊ शकता.",
+        ta: "மலையேற்றத்திற்காக கௌரிகுண்ட் அல்லது சோன்பிரயாக்கில் உள்ளூர் வழிகாட்டிகளை அமர்த்தலாம்.",
+        kn: "ಟ್ರೆಕ್‌ಗಾಗಿ ಗೌರಿಕುಂಡ್ ಅಥವಾ ಸೋನಪ್ರಯಾಗದಲ್ಲಿ ಸ್ಥಳೀಯ ಮಾರ್ಗದರ್ಶಕರನ್ನು ನೇಮಿಸಿಕೊಳ್ಳಬಹುದು.",
+        bn: "ট্রেকের জন্য গৌরিকুণ্ড বা সোনপ্রয়াগে স্থানীয় গাইড ভাড়া করা যেতে পারে।",
+      },
     },
   },
 ];
@@ -336,5 +349,3 @@ export const temples: Temple[] = [
 export const getTempleBySlug = (slug: string) => {
     return temples.find(t => t.slug === slug);
 }
-
-    

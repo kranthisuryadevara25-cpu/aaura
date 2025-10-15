@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users, Bookmark, Loader2 } from 'lucide-react';
+import { MapPin, Clock, BookOpen, Sparkles, Building, Utensils, Plane, Users, Bookmark, Loader2, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { useAuth } from '@/lib/firebase/provider';
@@ -66,6 +66,7 @@ export default function TempleDetailPage() {
   const accommodation = getText(temple.nearbyInfo.accommodation, language);
   const food = getText(temple.nearbyInfo.food, language);
   const transport = getText(temple.nearbyInfo.transport, language);
+  const guides = getText(temple.nearbyInfo.guides, language);
   const placesToVisit = getText(temple.nearbyInfo.placesToVisit, language);
   
   const templeJsonLd = {
@@ -86,7 +87,8 @@ export default function TempleDetailPage() {
         '@type': 'GeoCoordinates',
         latitude: temple.location.geo.lat,
         longitude: temple.location.geo.lng
-      }
+      },
+      ...(temple.officialWebsite && { url: temple.officialWebsite })
   };
 
 
@@ -102,12 +104,19 @@ export default function TempleDetailPage() {
             <p className="mt-2 text-lg text-muted-foreground flex items-center justify-center gap-2">
                 <MapPin className="h-5 w-5" /> {temple.location.city}, {temple.location.state}
             </p>
-            <div className="mt-4 flex justify-center items-center gap-4">
+            <div className="mt-4 flex justify-center items-center gap-4 flex-wrap">
                 <Badge variant="secondary">Pilgrimage</Badge>
                 <Badge variant="secondary">{deityName}</Badge>
-                  <Button variant="outline" size="sm" onClick={handleBookmark} disabled={isBookmarkLoading}>
+                <Button variant="outline" size="sm" onClick={handleBookmark} disabled={isBookmarkLoading}>
                     <Bookmark className={`mr-2 h-4 w-4 ${bookmark ? 'fill-yellow-400 text-yellow-500' : ''}`} /> {t.buttons.bookmark}
                 </Button>
+                {temple.officialWebsite && (
+                     <Button variant="outline" size="sm" asChild>
+                        <a href={temple.officialWebsite} target="_blank" rel="noopener noreferrer">
+                            <Globe className="mr-2 h-4 w-4" /> Official Website
+                        </a>
+                    </Button>
+                )}
             </div>
         </div>
 
@@ -190,8 +199,12 @@ export default function TempleDetailPage() {
                             <Plane className="h-5 w-5 mt-1 shrink-0 text-accent" />
                             <div><strong className="text-foreground block">{t.templeDetail.transport}:</strong> {transport}</div>
                         </div>
-                        <div className="flex items-start gap-3">
+                         <div className="flex items-start gap-3">
                             <Users className="h-5 w-5 mt-1 shrink-0 text-accent" />
+                            <div><strong className="text-foreground block">Suggested Guides:</strong> {guides}</div>
+                        </div>
+                        <div className="flex items-start gap-3">
+                            <MapPin className="h-5 w-5 mt-1 shrink-0 text-accent" />
                             <div><strong className="text-foreground block">{t.templeDetail.placesToVisit}:</strong> {placesToVisit}</div>
                         </div>
                     </CardContent>

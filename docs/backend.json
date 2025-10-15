@@ -494,6 +494,7 @@
         "id": { "type": "string" },
         "name_en": { "type": "string", "description": "Name of the temple in English." },
         "name_hi": { "type": "string", "description": "Name of the temple in Hindi." },
+        "officialWebsite": { "type": "string", "format": "uri", "description": "The official website of the temple." },
         "deity": {
           "type": "object",
           "properties": {
@@ -560,12 +561,14 @@
           "properties": {
             "placesToVisit_en": { "type": "string" },
             "placesToVisit_hi": { "type": "string" },
-            "accommodation_en": { "type": "string" },
+            "accommodation_en": { "type": "string", "description": "Information on suggested hotels and dharamshalas." },
             "accommodation_hi": { "type": "string" },
             "food_en": { "type": "string" },
             "food_hi": { "type": "string" },
-            "transport_en": { "type": "string" },
-            "transport_hi": { "type": "string" }
+            "transport_en": { "type": "string", "description": "Information on suggested travel agents and transport options." },
+            "transport_hi": { "type": "string" },
+            "guides_en": { "type": "string", "description": "Information on suggested tourist guides." },
+            "guides_hi": { "type": "string" }
           }
         }
       },

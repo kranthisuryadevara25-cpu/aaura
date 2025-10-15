@@ -204,7 +204,7 @@ async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
     }
 }
 
-async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
+export async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
     const mediaQuery = db.collection('media').orderBy('uploadDate', 'desc').limit(Math.floor(pageSize / 2));
     const postsQuery = db.collection('posts').orderBy('createdAt', 'desc').limit(Math.floor(pageSize / 2));
 

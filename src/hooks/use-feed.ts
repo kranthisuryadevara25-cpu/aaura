@@ -1,13 +1,11 @@
 
 "use client";
 import { useEffect, useState, useCallback } from "react";
-import { collection, getDoc, doc, DocumentData } from "firebase/firestore";
-import { useAuth, useFirestore } from "@/lib/firebase/provider";
+import { useAuth } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
 import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
-
 
 const getTextFromField = (field: Record<string, string> | string | undefined, lang: string): string => {
     if (!field) return "";
@@ -15,67 +13,9 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
     return field[lang] || field["en"] || "";
 };
 
-const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity' | 'post' | 'media'): FeedItem => {
-    const data = doc.data();
-    switch(kind) {
-        case 'video':
-        case 'media':
-             return {
-                id: `media-${doc.id}`,
-                kind: "video",
-                title: data.title_en ? { en: data.title_en, hi: data.title_hi, te: data.title_te } : data.title,
-                description: data.description_en ? { en: data.description_en, hi: data.description_hi, te: data.description_te } : data.description,
-                thumbnail: data.thumbnailUrl || "",
-                mediaUrl: data.mediaUrl,
-                meta: { duration: data.duration, views: data.views, userId: data.userId, channelName: data.channelName, likes: data.likes },
-                createdAt: data.uploadDate?.toDate(),
-            };
-        case 'temple':
-             return {
-                id: `temple-${doc.id}`,
-                kind: "temple",
-                title: data.name,
-                description: data.importance.mythological,
-                thumbnail: data.media?.images?.[0].url,
-                meta: { location: data.location, slug: data.slug, imageHint: data.media?.images?.[0]?.hint },
-                createdAt: new Date(),
-            };
-        case 'story':
-            return {
-                id: `story-${doc.id}`,
-                kind: "story",
-                title: data.title,
-                description: data.summary,
-                thumbnail: data.image?.url,
-                meta: { slug: data.slug, imageHint: data.image?.hint },
-                createdAt: data.createdAt?.toDate(),
-            };
-        case 'deity':
-             return {
-                id: `deity-${doc.id}`,
-                kind: "deity",
-                title: data.name,
-                description: data.description,
-                thumbnail: data.images?.[0].url,
-                meta: { slug: data.slug, imageHint: data.images?.[0]?.hint },
-                createdAt: new Date(),
-            };
-        case 'post':
-            return {
-                id: `post-${doc.id}`,
-                kind: 'post',
-                description: { en: data.content },
-                createdAt: data.createdAt?.toDate(),
-                meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount, contextId: data.contextId },
-            }
-    }
-}
-
-
 export const useFeed = (pageSize = 20) => {
   const { language } = useLanguage();
   const auth = useAuth();
-  const db = useFirestore();
   const [user] = useAuthState(auth);
   const [allItems, setAllItems] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -87,44 +27,46 @@ export const useFeed = (pageSize = 20) => {
 
     setLoading(true);
 
-    const feedResponse = await getPersonalizedFeed({ 
-        userId: user?.uid, 
-        pageSize,
-        lastCursor: lastCursor
-    });
+    try {
+        const feedResponse = await getPersonalizedFeed({ 
+            userId: user?.uid, 
+            pageSize,
+            lastCursor: lastCursor
+        });
 
-    if (feedResponse.feed.length === 0) {
-        setCanLoadMore(false);
+        if (feedResponse.feed.length === 0) {
+            setCanLoadMore(false);
+            setLoading(false);
+            return;
+        }
+        
+        // The AI flow now returns fully populated items
+        const newItems = feedResponse.feed;
+
+        setAllItems(prev => {
+            const existingIds = new Set(prev.map(item => item.id));
+            const uniqueNewItems = newItems.filter(item => !existingIds.has(item.id));
+            return [...prev, ...uniqueNewItems];
+        });
+
+        // The AI flow doesn't support cursors yet, so we prevent further loading for now.
+        // This prevents duplicate items from being loaded.
+        setCanLoadMore(false); 
+        // setLastCursor(newCursor); 
+
+    } catch (error) {
+        console.error("Failed to fetch personalized feed:", error);
+        setCanLoadMore(false); // Stop trying if there's an error
+    } finally {
         setLoading(false);
-        return;
     }
-    
-    const feedDocs = await Promise.all(
-        feedResponse.feed.map(item => getDoc(doc(db, item.contentType, item.contentId)))
-    );
-
-    const newItems = feedDocs
-      .map((doc, i) => {
-          if (!doc.exists()) return null;
-          const contentType = feedResponse.feed[i].contentType;
-           if (['temple', 'deity', 'story', 'media', 'post'].includes(contentType)) {
-               return mapToFeedItem(doc, contentType as any);
-          }
-          return null;
-      })
-      .filter((item): item is FeedItem => item !== null);
-
-    setAllItems(prev => [...prev, ...newItems]);
-    // The AI flow doesn't support cursors yet, so we prevent further loading for now.
-    setCanLoadMore(false); 
-    // setLastCursor(newCursor); 
-
-    setLoading(false);
-  }, [loading, canLoadMore, user, pageSize, lastCursor, db]);
+  }, [loading, canLoadMore, user, pageSize, lastCursor]);
 
   useEffect(() => {
-    loadMore();
-  }, []); // Initial load
+    if(allItems.length === 0) { // Only run initial load if feed is empty
+      loadMore();
+    }
+  }, [user]); // Rerun if user logs in or out
 
   const filterItems = useCallback((searchQuery: string): FeedItem[] => {
     if (!searchQuery) {
@@ -140,3 +82,5 @@ export const useFeed = (pageSize = 20) => {
 
   return { allItems, loading, filterItems, loadMore, canLoadMore };
 };
+
+    

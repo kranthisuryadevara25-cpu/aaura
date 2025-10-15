@@ -11,7 +11,8 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { db } from '@/lib/firebase/admin'; 
-import type { Firestore } from 'firebase-admin/firestore';
+import type { Firestore, DocumentData } from 'firebase-admin/firestore';
+import type { FeedItem } from '@/types/feed';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
@@ -25,10 +26,14 @@ const PersonalizedFeedInputSchema = z.object({
 export type PersonalizedFeedInput = z.infer<typeof PersonalizedFeedInputSchema>;
 
 const FeedItemSchema = z.object({
-    contentId: z.string().describe("The document ID of the content item."),
-    contentType: z.enum(['media', 'post', 'story', 'deity', 'temple', 'product']).describe("The type of content, corresponding to a Firestore collection."),
-    score: z.number().describe("The relevance score for this item."),
-    reason: z.string().describe("A brief explanation for the recommendation."),
+  id: z.string(),
+  kind: z.enum(['video', 'temple', 'story', 'deity', 'post', 'media']),
+  title: z.record(z.string()).optional(),
+  description: z.record(z.string()).optional(),
+  thumbnail: z.string().optional(),
+  mediaUrl: z.string().optional(),
+  meta: z.record(z.any()).optional(),
+  createdAt: z.string().optional(), // Using ISO string for serialization
 });
 
 const PersonalizedFeedOutputSchema = z.object({
@@ -68,33 +73,28 @@ const personalizedFeedFlow = ai.defineFlow(
     const { userId, pageSize } = input;
     
     if (!userId || await isUserNew(db, userId)) {
-        // --- Fallback for New Users / Logged-out users ---
         console.log(`New or logged-out user detected. Returning trending content.`);
         return getTrendingContent(db, pageSize);
     }
 
     // --- Algorithm for Existing Users ---
     
-    // 1. Fetch User Interaction Data
     const userLikes = await fetchUserInteractions(db, userId, 'likes'); 
     const userBookmarks = await fetchUserInteractions(db, userId, 'bookmarks');
 
-    // 2. Fetch Candidate Content
     const recentMedia = await fetchRecentContent(db, 'media', 50);
     const recentPosts = await fetchRecentContent(db, 'posts', 50);
     const recentStories = await fetchRecentContent(db, 'stories', 50);
+    
     const allCandidates = [...recentMedia, ...recentPosts, ...recentStories];
 
-    // 3. Score Content
-    const scoredContent: z.infer<typeof FeedItemSchema>[] = allCandidates.map(item => {
+    const scoredContent = allCandidates.map(item => {
         let score = 0;
         let reason = "Recommended based on recent uploads.";
 
-        // Recency Score
         const hoursSinceCreation = (new Date().getTime() - item.createdAt.getTime()) / (1000 * 60 * 60);
         score += Math.max(0, 10 - Math.floor(hoursSinceCreation / 24));
 
-        // Engagement Score
         if (userLikes.some(l => l.contentId === item.contentId)) {
             score += 20;
             reason = "You previously liked content like this.";
@@ -104,34 +104,94 @@ const personalizedFeedFlow = ai.defineFlow(
             reason = "From your bookmarks.";
         }
         
-        // Content Type preference
         if(item.contentType === 'media') score += 15;
         if(item.contentType === 'post') score += 10;
 
-        // Popularity Score
         score += item.popularityScore || 0;
         
         return {
-            contentId: item.contentId,
-            contentType: item.contentType,
+            ...item,
             score,
             reason
         };
     });
 
-    // 4. Sort and Paginate
-    const finalFeed = scoredContent
+    const sortedFeed = scoredContent
         .sort((a, b) => b.score - a.score)
         .slice(0, pageSize || 20);
 
-    return { feed: finalFeed };
+    const finalFeed = sortedFeed.map(item => mapToFeedItem(item.doc, item.contentType as any));
+
+    return { feed: finalFeed.filter((i): i is FeedItem => i !== null) };
   }
 );
 
 
 // ---------------------------------------------------
-// 4. Helper & Placeholder Functions
+// 4. Helper & Data Transformation Functions
 // ---------------------------------------------------
+const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity' | 'post' | 'media'): FeedItem | null => {
+    const data = doc.data();
+    if (!data) return null;
+
+    let createdAt = data.createdAt?.toDate ? data.createdAt.toDate() : (data.uploadDate?.toDate ? data.uploadDate.toDate() : new Date());
+
+    switch(kind) {
+        case 'video':
+        case 'media':
+             return {
+                id: `media-${doc.id}`,
+                kind: "video",
+                title: data.title_en ? { en: data.title_en, hi: data.title_hi, te: data.title_te } : data.title,
+                description: data.description_en ? { en: data.description_en, hi: data.description_hi, te: data.description_te } : data.description,
+                thumbnail: data.thumbnailUrl || "",
+                mediaUrl: data.mediaUrl,
+                meta: { duration: data.duration, views: data.views, userId: data.userId, channelName: data.channelName, likes: data.likes },
+                createdAt: createdAt.toISOString(),
+            };
+        case 'temple':
+             return {
+                id: `temple-${doc.id}`,
+                kind: "temple",
+                title: data.name,
+                description: data.importance.mythological,
+                thumbnail: data.media?.images?.[0].url,
+                meta: { location: data.location, slug: data.slug, imageHint: data.media?.images?.[0]?.hint },
+                createdAt: createdAt.toISOString(),
+            };
+        case 'story':
+            return {
+                id: `story-${doc.id}`,
+                kind: "story",
+                title: data.title,
+                description: data.summary,
+                thumbnail: data.image?.url,
+                meta: { slug: data.slug, imageHint: data.image?.hint },
+                createdAt: createdAt.toISOString(),
+            };
+        case 'deity':
+             return {
+                id: `deity-${doc.id}`,
+                kind: "deity",
+                title: data.name,
+                description: data.description,
+                thumbnail: data.images?.[0].url,
+                meta: { slug: data.slug, imageHint: data.images?.[0]?.hint },
+                createdAt: createdAt.toISOString(),
+            };
+        case 'post':
+            return {
+                id: `post-${doc.id}`,
+                kind: 'post',
+                description: { en: data.content },
+                createdAt: createdAt.toISOString(),
+                meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount, contextId: data.contextId },
+            }
+        default:
+            return null;
+    }
+}
+
 
 async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
     try {
@@ -143,27 +203,16 @@ async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
 }
 
 async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
-    const mediaQuery = db.collection('media').orderBy('uploadDate', 'desc').limit(10);
-    const postsQuery = db.collection('posts').orderBy('createdAt', 'desc').limit(10);
+    const mediaQuery = db.collection('media').orderBy('uploadDate', 'desc').limit(Math.floor(pageSize / 2));
+    const postsQuery = db.collection('posts').orderBy('createdAt', 'desc').limit(Math.floor(pageSize / 2));
 
     const [mediaSnap, postsSnap] = await Promise.all([
         mediaQuery.get(),
         postsQuery.get()
     ]);
     
-    const mediaItems = mediaSnap.docs.map(d => ({
-        contentId: d.id,
-        contentType: 'media' as const,
-        score: 100,
-        reason: "Trending on Aaura"
-    }));
-
-    const postItems = postsSnap.docs.map(d => ({
-        contentId: d.id,
-        contentType: 'post' as const,
-        score: 90,
-        reason: "Popular in the community"
-    }));
+    const mediaItems = mediaSnap.docs.map(d => mapToFeedItem(d, 'media')).filter(Boolean) as FeedItem[];
+    const postItems = postsSnap.docs.map(d => mapToFeedItem(d, 'post')).filter(Boolean) as FeedItem[];
     
     const feedItems = [...mediaItems, ...postItems].slice(0, pageSize);
     return { feed: feedItems };
@@ -183,23 +232,24 @@ async function fetchRecentContent(
     db: Firestore,
     collectionName: 'media' | 'posts' | 'stories', 
     count: number
-): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number}[]> {
+): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number, doc: DocumentData}[]> {
     try {
         const dateField = collectionName === 'media' ? 'uploadDate' : 'createdAt';
         const q = db.collection(collectionName).orderBy(dateField, 'desc').limit(count);
         const snap = await q.get();
 
-        return snap.docs.map(d => {
-            const data = d.data();
+        return snap.docs.map(doc => {
+            const data = doc.data();
             const popularity = (data.likes || 0) + (data.views || 0) / 10;
             const createdAtTimestamp = data[dateField];
             const createdAt = createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date();
 
             return {
-                contentId: d.id,
+                contentId: doc.id,
                 contentType: collectionName,
                 createdAt: createdAt,
-                popularityScore: popularity
+                popularityScore: popularity,
+                doc: doc
             };
         });
     } catch (e) {
@@ -208,3 +258,4 @@ async function fetchRecentContent(
     }
 }
 
+    

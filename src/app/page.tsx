@@ -1,13 +1,13 @@
 
+
 import { Sidebar } from "@/components/Sidebar";
 import { TopNav } from "@/components/TopNav";
 import { RightSidebar } from "@/app/components/right-sidebar";
 import { Feed } from "./components/feed";
 import { CreateContent } from "./components/CreateContent";
 import { getPersonalizedFeed } from '@/ai/flows/personalized-feed';
-import { getAuth } from 'firebase-admin/auth';
 import { cookies } from 'next/headers';
-import { adminApp } from '@/lib/firebase/admin';
+import { auth as adminAuth } from '@/lib/firebase/admin';
 
 // This function attempts to get the UID from the session cookie
 // It's a simplified example; a real app would use a more robust session management solution
@@ -15,11 +15,8 @@ async function getUserIdFromSession(): Promise<string | undefined> {
     try {
         const sessionCookie = cookies().get('__session')?.value;
         if (!sessionCookie) return undefined;
-        // This checks if the admin app is initialized, which is necessary for verifySessionCookie
-        if (adminApp.name) {
-            const decodedIdToken = await getAuth(adminApp).verifySessionCookie(sessionCookie, true);
-            return decodedIdToken.uid;
-        }
+        const decodedIdToken = await adminAuth.verifySessionCookie(sessionCookie, true);
+        return decodedIdToken.uid;
     } catch (error) {
         // Session cookie is invalid or expired.
         // console.error("Session cookie verification failed:", error);

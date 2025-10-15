@@ -29,8 +29,9 @@ import {
   ListMusic,
   Trophy,
   ChevronRight,
-  Clapperboard, // New Icon
+  Clapperboard,
   Brain,
+  LayoutDashboard,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -67,6 +68,7 @@ const personalNav = [
 const marketplaceNav = [{ href: '/shop', label: 'shop', icon: ShoppingCart }];
 
 const adminNav = [
+  { href: '/admin', label: 'adminDashboard', icon: LayoutDashboard, exact: true },
   { href: '/upload', label: 'upload', icon: Upload },
   { href: '/admin/content', label: 'adminContent', icon: ShieldCheck },
   { href: '/admin/review', label: 'adminReview', icon: ShieldCheck },

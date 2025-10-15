@@ -25,8 +25,6 @@ const getText = (field: { [key: string]: string } | undefined, lang: string = 'e
 
 function TempleInfo({ temple, language }: { temple: any, language: string }) {
     const { t } = useLanguage();
-    const name = getText(temple.name, language);
-    const deityName = getText(temple.deity.name, language);
     const mythologicalImportance = getText(temple.importance.mythological, language);
     const historicalImportance = getText(temple.importance.historical, language);
     const festivals = getText(temple.visitingInfo.festivals, language);

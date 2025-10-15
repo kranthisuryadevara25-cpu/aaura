@@ -60,7 +60,7 @@ export default function VirtualPoojaPage() {
          const newFlowerId = Date.now();
          const newFlowers = Array.from({ length: 5 }, (_, i) => newFlowerId + i);
          setFlowers(prev => [...prev, ...newFlowers]);
-         new Audio('https://storage.googleapis.com/spec-host-backup/mio-design-assets/assets/v1/sounds/falling_rose_petals.mp3').play().catch(e => console.error("Error playing flower audio:", e));
+         new Audio('https://www.soundjay.com/nature/sounds/wind-chime-1.mp3').play().catch(e => console.error("Error playing flower audio:", e));
          setTimeout(() => {
               setFlowers(prev => prev.filter(f => !newFlowers.includes(f)));
           }, 7000); 
@@ -71,7 +71,7 @@ export default function VirtualPoojaPage() {
       case 'offer-aarti':
           if (showAarti) return;
           setShowAarti(true);
-          new Audio('https://storage.googleapis.com/spec-host-backup/mio-design-assets/assets/v1/sounds/aarti_with_bell.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
+          new Audio('https://www.soundjay.com/human/sounds/woman-humming-1.mp3').play().catch(e => console.error("Error playing aarti audio:", e));
           setTimeout(() => setShowAarti(false), 5000);
           break;
     }

@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Palmtree, Loader2 } from 'lucide-react';
+import { ArrowRight, Palmtree, Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { temples as mockTemples } from '@/lib/temples';
@@ -16,13 +16,21 @@ export default function TemplesPage() {
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                <Palmtree className="h-10 w-10" /> {t.temples.title}
-            </h1>
-            <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                {t.temples.description}
-            </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
+            <div className="text-left">
+                <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center gap-3">
+                    <Palmtree className="h-10 w-10" /> {t.temples.title}
+                </h1>
+                <p className="mt-4 max-w-3xl text-lg text-muted-foreground">
+                    {t.temples.description}
+                </p>
+            </div>
+             <Button asChild>
+                <Link href="/admin/content">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Manage Temples
+                </Link>
+            </Button>
         </div>
         
         {isLoading ? (

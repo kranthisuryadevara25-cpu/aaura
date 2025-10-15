@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { deities as mockDeities } from '@/lib/deities';
 import { stories as mockStories } from '@/lib/stories';
 import { characters as mockCharacters } from '@/lib/characters';
+import { temples as mockTemples } from '@/lib/temples';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 function DeitiesTabContent() {
@@ -252,9 +253,90 @@ function CharactersTabContent() {
               <CardContent>
                 <div className="relative aspect-video rounded-md overflow-hidden">
                   <Image
-                    src={character.image.url}
+                    src={character.imageUrl}
                     alt={character.name.en}
-                    data-ai-hint={character.image.hint}
+                    data-ai-hint={character.imageHint}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function TemplesTabContent() {
+  const { toast } = useToast();
+  const [temples, setTemples] = useState(mockTemples);
+  const { language } = useLanguage();
+  const isLoading = false;
+
+  const handleDelete = async (id: string) => {
+    setTemples(prev => prev.filter(t => t.id !== id));
+    toast({
+      title: 'Temple Deleted (Mock)',
+      description: 'The temple has been removed from the view.',
+    });
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-muted-foreground">Manage the temples and pilgrimage sites.</p>
+        <Button asChild>
+          <Link href="/admin/temples/new">
+            <PlusCircle className="mr-2" />
+            Add New Temple
+          </Link>
+        </Button>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {temples?.map((temple) => (
+            <Card key={temple.id}>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>{temple.name[language] || temple.name.en}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin/temples/edit/${temple.slug}`}>
+                      <Edit className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure you want to delete this temple?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the temple data.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(temple.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative aspect-video rounded-md overflow-hidden">
+                  <Image
+                    src={temple.media.images[0].url}
+                    alt={temple.name.en}
+                    data-ai-hint={temple.media.images[0].hint}
                     fill
                     className="object-cover"
                   />
@@ -281,10 +363,11 @@ export default function ContentManagementPage() {
       </div>
 
        <Tabs defaultValue="deities" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="deities"><Sparkles className="mr-2 h-4 w-4" />Deities</TabsTrigger>
-            <TabsTrigger value="stories"><BookOpen className="mr-2 h-4 w-4" />Stories</TabsTrigger>
-            <TabsTrigger value="characters"><UserSquare className="mr-2 h-4 w-4" />Characters</TabsTrigger>
+            <TabsTrigger value="stories"><BookOpen className="mr-2 h-4 w-4" />Epic Sagas</TabsTrigger>
+            <TabsTrigger value="characters"><UserSquare className="mr-2 h-4 w-4" />Epic Heroes</TabsTrigger>
+            <TabsTrigger value="temples"><Palmtree className="mr-2 h-4 w-4" />Temples</TabsTrigger>
         </TabsList>
         <TabsContent value="deities" className="mt-6">
             <DeitiesTabContent />
@@ -294,6 +377,9 @@ export default function ContentManagementPage() {
         </TabsContent>
         <TabsContent value="characters" className="mt-6">
             <CharactersTabContent />
+        </TabsContent>
+         <TabsContent value="temples" className="mt-6">
+            <TemplesTabContent />
         </TabsContent>
         </Tabs>
       

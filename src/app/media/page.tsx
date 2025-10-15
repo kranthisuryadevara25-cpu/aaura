@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useMemo } from 'react';
@@ -104,35 +105,36 @@ export default function MediaPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {filteredMedia.map((item: any) => {
             const title = item[`title_${language}` as keyof typeof item] || item.title_en;
-            const description = item.userId; // Placeholder for author name
             return (
-            <Link href={`/watch/${item.id}`} key={item.id} className="group">
-              <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300">
-                <CardContent className="p-0 mb-3">
-                  <div className="aspect-video relative rounded-t-lg overflow-hidden">
-                    <Image
-                      src={item.thumbnailUrl}
-                      alt={title}
-                      data-ai-hint={item.imageHint}
-                      fill
-                      className="object-cover transform transition-transform duration-300 group-hover:scale-105"
-                    />
-                      <div className="absolute top-2 right-2 bg-background/80 text-foreground px-2 py-1 rounded-full text-xs font-semibold flex items-center capitalize">
-                        {getIconForType(item.mediaType)}
-                        <span>{item.mediaType.replace('_', ' ')}</span>
+            <Card key={item.id} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 group">
+                <Link href={`/watch/${item.id}`} className="block">
+                    <CardContent className="p-0 mb-3">
+                    <div className="aspect-video relative rounded-t-lg overflow-hidden">
+                        <Image
+                        src={item.thumbnailUrl}
+                        alt={title}
+                        data-ai-hint={item.imageHint}
+                        fill
+                        className="object-cover transform transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute top-2 right-2 bg-background/80 text-foreground px-2 py-1 rounded-full text-xs font-semibold flex items-center capitalize">
+                            {getIconForType(item.mediaType)}
+                            <span>{item.mediaType.replace('_', ' ')}</span>
+                        </div>
                     </div>
-                  </div>
+                    </CardContent>
+                    <CardHeader className="p-4 pt-0">
+                    <CardTitle className="text-md font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-primary">
+                        {title}
+                    </CardTitle>
+                    </CardHeader>
+                </Link>
+                <CardContent className="p-4 pt-0">
+                     <Link href={`/channels/${item.userId}`} className="text-sm text-muted-foreground hover:text-primary line-clamp-1">
+                        Creator: {item.userId}
+                    </Link>
                 </CardContent>
-                <CardHeader className="p-4 pt-0">
-                  <CardTitle className="text-md font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-primary">
-                    {title}
-                  </CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                    {description}
-                  </p>
-                </CardHeader>
-              </Card>
-            </Link>
+            </Card>
           )})}
         </div>
       ) : (

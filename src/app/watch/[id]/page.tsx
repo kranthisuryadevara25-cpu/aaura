@@ -15,14 +15,14 @@ export default function WatchPage() {
   const { allItems, loading } = useFeed(20);
 
   const upNextItems = useMemo(() => {
-    return allItems.filter(item => item.id !== `video-${id}`);
+    return allItems.filter(item => item.id !== `media-${id}`);
   }, [allItems, id]);
 
   const handleVideoEnd = () => {
     if (upNextItems.length > 0) {
       const nextItem = upNextItems[0];
       const nextHref = nextItem.kind === 'video' 
-          ? `/watch/${nextItem.id.replace('video-', '')}`
+          ? `/watch/${nextItem.id.replace('media-', '')}`
           : `/${nextItem.kind}s/${nextItem.meta?.slug}`;
       router.push(nextHref);
     }

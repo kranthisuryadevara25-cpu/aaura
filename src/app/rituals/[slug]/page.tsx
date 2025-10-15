@@ -193,7 +193,7 @@ export default function RitualDetailPage() {
                         </CardHeader>
                         <CardContent className="space-y-3">
                             {itemsRequired.map((item, index) => (
-                                <div key={index} className="flex items-center gap-3">
+                                <div key={item.name} className="flex items-center gap-3">
                                   <Checkbox 
                                     id={`item-${index}`} 
                                     onCheckedChange={(checked) => {

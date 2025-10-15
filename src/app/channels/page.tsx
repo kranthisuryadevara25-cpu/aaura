@@ -12,6 +12,7 @@ import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firesto
 import { collection, query, type DocumentData, doc, writeBatch, increment } from 'firebase/firestore';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useToast } from '@/hooks/use-toast';
+import { useMemo } from 'react';
 
 interface Channel extends DocumentData {
   id: string;
@@ -123,6 +124,18 @@ export default function ChannelsPage() {
   const channelsQuery = query(collection(db, 'channels'));
   const [channels, isLoading] = useCollectionData(channelsQuery, { idField: 'id' });
 
+  // Create a memoized, unique list of channels to prevent key errors
+  const uniqueChannels = useMemo(() => {
+    if (!channels) return [];
+    const channelMap = new Map<string, Channel>();
+    channels.forEach(channel => {
+      if (channel.id) {
+        channelMap.set(channel.id, channel as Channel);
+      }
+    });
+    return Array.from(channelMap.values());
+  }, [channels]);
+
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <div className="text-center mb-12">
@@ -146,8 +159,8 @@ export default function ChannelsPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {channels && channels.map((channel) => (
-              <ChannelCard key={channel.id} channel={channel as Channel} />
+            {uniqueChannels.map((channel) => (
+              <ChannelCard key={channel.id} channel={channel} />
             ))}
           </div>
         )}

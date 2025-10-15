@@ -23,17 +23,23 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { collection, deleteDoc, doc } from 'firebase/firestore';
+import { collection, deleteDoc, doc, DocumentData } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
 import type { Temple } from '@/lib/temples';
 
+// Define DB references outside of the components
+const db = useFirestore();
+const deitiesRef = collection(db, 'deities');
+const storiesRef = collection(db, 'stories');
+const charactersRef = collection(db, 'epicHeroes');
+const templesRef = collection(db, 'temples');
+
+
 function DeitiesTabContent() {
   const { toast } = useToast();
-  const db = useFirestore();
   const { language } = useLanguage();
-  const deitiesRef = collection(db, 'deities');
   const [deities, isLoading] = useCollectionData(deitiesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
@@ -62,7 +68,7 @@ function DeitiesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {deities?.map((deity: Deity) => (
+          {(deities as Deity[] | undefined)?.map((deity) => (
             <Card key={deity.id}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{deity.name[language] || deity.name.en}</CardTitle>
@@ -114,9 +120,7 @@ function DeitiesTabContent() {
 
 function StoriesTabContent() {
   const { toast } = useToast();
-  const db = useFirestore();
   const { language } = useLanguage();
-  const storiesRef = collection(db, 'stories');
   const [stories, isLoading] = useCollectionData(storiesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
@@ -145,7 +149,7 @@ function StoriesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stories?.map((story) => (
+          {(stories as Story[] | undefined)?.map((story) => (
             <Card key={story.id}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{story.title[language] || story.title.en}</CardTitle>
@@ -197,9 +201,7 @@ function StoriesTabContent() {
 
 function CharactersTabContent() {
   const { toast } = useToast();
-  const db = useFirestore();
   const { language } = useLanguage();
-  const charactersRef = collection(db, 'epicHeroes');
   const [characters, isLoading] = useCollectionData(charactersRef, { idField: 'id' });
 
 
@@ -229,7 +231,7 @@ function CharactersTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {characters?.map((character: EpicHero) => (
+          {(characters as EpicHero[] | undefined)?.map((character) => (
             <Card key={character.id}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{character.name[language] || character.name.en}</CardTitle>
@@ -281,9 +283,7 @@ function CharactersTabContent() {
 
 function TemplesTabContent() {
   const { toast } = useToast();
-  const db = useFirestore();
   const { language } = useLanguage();
-  const templesRef = collection(db, 'temples');
   const [temples, isLoading] = useCollectionData(templesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
@@ -312,7 +312,7 @@ function TemplesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {temples?.map((temple: Temple) => (
+          {(temples as Temple[] | undefined)?.map((temple) => (
             <Card key={temple.id}>
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>{temple.name[language] || temple.name.en}</CardTitle>

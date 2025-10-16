@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -21,7 +20,7 @@ import { useTransition, useEffect } from 'react';
 import { useRouter, useParams, notFound } from 'next/navigation';
 import { Loader2, Save, ArrowLeft, Calendar as CalendarIcon } from 'lucide-react';
 import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
@@ -33,9 +32,19 @@ const formSchema = z.object({
   goal: z.coerce.number().min(1, "Goal must be at least 1."),
   startDate: z.date({ required_error: "A start date is required." }),
   endDate: z.date({ required_error: "An end date is required." }),
+}).refine(data => data.endDate > data.startDate, {
+  message: "End date must be after start date.",
+  path: ["endDate"],
 });
 
 type FormValues = z.infer<typeof formSchema>;
+
+const getContestStatus = (startDate: Date, endDate: Date): 'upcoming' | 'active' | 'completed' => {
+    const now = new Date();
+    if (now < startDate) return 'upcoming';
+    if (now > endDate) return 'completed';
+    return 'active';
+}
 
 export default function EditContestPage() {
   const { toast } = useToast();
@@ -66,17 +75,19 @@ export default function EditContestPage() {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
+      const status = getContestStatus(data.startDate, data.endDate);
       const contestData = {
         title: data.title,
         goal: data.goal,
         startDate: data.startDate,
         endDate: data.endDate,
+        status: status,
         updatedAt: serverTimestamp(),
       };
       
       await updateDoc(contestRef, contestData)
         .then(() => {
-          toast({ title: 'Contest Updated!', description: `The "${data.title}" contest has been updated.` });
+          toast({ title: 'Contest Updated!', description: `The "${data.title}" contest has been updated with status: ${status}.` });
           router.push('/admin/content?tab=contests');
         })
         .catch((error) => {
@@ -162,5 +173,3 @@ export default function EditContestPage() {
     </main>
   );
 }
-
-    

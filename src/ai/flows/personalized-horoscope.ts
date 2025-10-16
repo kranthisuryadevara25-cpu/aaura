@@ -50,9 +50,9 @@ const prompt = ai.definePrompt({
   Generate a positive, uplifting, and insightful horoscope for the user. The response must be in JSON format and include the following fields:
 
   1.  **horoscope**: An object with three sub-fields:
-      *   `love`: A 1-2 sentence forecast for relationships and personal connections.
-      *   `career`: A 1-2 sentence forecast for work, finance, and professional life.
-      *   `health`: A 1-2 sentence forecast for physical and mental well-being.
+      *   'love': A 1-2 sentence forecast for relationships and personal connections.
+      *   'career': A 1-2 sentence forecast for work, finance, and professional life.
+      *   'health': A 1-2 sentence forecast for physical and mental well-being.
   2.  **luckyNumber**: A single lucky number for the day.
   3.  **luckyColor**: A single lucky color for the day.
   4.  **disclaimer**: Include the default disclaimer.

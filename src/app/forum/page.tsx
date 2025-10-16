@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, doc, writeBatch, increment, where, serverTimestamp } from 'firebase/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, query, doc, writeBatch, increment, where, serverTimestamp, DocumentData } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -24,20 +24,24 @@ export default function ForumPage() {
     const { toast } = useToast();
     
     const groupsQuery = query(collection(db, 'groups'));
-    const [groups, isLoading] = useCollectionData(groupsQuery, { idField: 'id' });
+    const [groupsSnapshot, isLoading] = useCollection(groupsQuery);
+    
+    const groups = useMemo(() => {
+        return groupsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [];
+    }, [groupsSnapshot]);
 
     const userGroupsQuery = user ? query(collection(db, `users/${user.uid}/groups`)) : undefined;
-    const [userGroupMemberships] = useCollectionData(userGroupsQuery);
+    const [userGroupMemberships] = useCollection(userGroupsQuery);
     
     const userJoinedGroups = useMemo(() => {
       if (!userGroupMemberships) return new Set();
-      return new Set(userGroupMemberships.map(g => g.groupId));
+      return new Set(userGroupMemberships.docs.map(doc => doc.id));
     }, [userGroupMemberships]);
 
 
     const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
 
-    const handleJoinLeave = async (group: any) => {
+    const handleJoinLeave = async (group: DocumentData) => {
         if (!user) {
             toast({ variant: 'destructive', title: 'You must be logged in to join a group.' });
             return;
@@ -113,7 +117,7 @@ export default function ForumPage() {
                         const loadingMembership = loadingStates[group.id] || false;
                         
                         return (
-                             <Card key={group.id} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
+                             <Card key={group.id || `group-${index}`} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
                                 <Link href={`/forum/${group.id}`} className="group block flex flex-col flex-grow">
                                     <div className="relative aspect-video bg-secondary">
                                         <Image src={group.coverImageUrl || `https://picsum.photos/seed/${group.id}/600/400`} alt={group.name} fill className="object-cover" />

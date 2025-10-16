@@ -26,7 +26,7 @@ import { deities } from '@/lib/deities';
 import { temples } from '@/lib/temples';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, doc, setDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -61,12 +61,14 @@ export default function CreateGroupPage() {
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       const groupsCollection = collection(db, 'groups');
+      const newDocRef = doc(groupsCollection);
       const groupData = {
+          id: newDocRef.id,
           ...data,
           memberCount: 0,
           createdAt: serverTimestamp(),
       }
-      addDoc(groupsCollection, groupData)
+      setDoc(newDocRef, groupData)
       .then(() => {
         toast({ 
             title: 'Group Created!', 

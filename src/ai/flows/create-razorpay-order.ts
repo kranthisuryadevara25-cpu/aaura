@@ -12,18 +12,20 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import Razorpay from 'razorpay';
-import { doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase/admin';
 
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
 // ---------------------------------------------------
+const CartItemSchema = z.object({
+  productId: z.string(),
+  quantity: z.number().min(1),
+});
 
 const CreateRazorpayOrderInputSchema = z.object({
-  amount: z.number().min(100, "Amount must be at least 100 paise (₹1)."), // Amount in smallest currency unit (e.g., paise)
+  cartItems: z.array(CartItemSchema).min(1, "Cart cannot be empty."),
   currency: z.string().default('INR'),
-  receipt: z.string(),
-  productId: z.string(),
 });
 export type CreateRazorpayOrderInput = z.infer<typeof CreateRazorpayOrderInputSchema>;
 
@@ -76,33 +78,40 @@ const createRazorpayOrderFlow = ai.defineFlow(
       throw new Error("Razorpay credentials are not configured in the environment.");
     }
     
-    // Fetch product from Firestore to verify price on the server
-    const productRef = doc(db, 'products', input.productId);
-    const productSnap = await getDoc(productRef);
+    // --- Server-side price calculation ---
+    const productIds = input.cartItems.map(item => item.productId);
+    const productsRef = collection(db, 'products');
+    const q = query(productsRef, where('__name__', 'in', productIds));
+    const productSnapshots = await getDocs(q);
 
-    if (!productSnap.exists()) {
-        throw new Error("Product not found.");
-    }
-    const productData = productSnap.data();
-    const serverPriceInPaise = productData.price * 100;
+    const productPriceMap = new Map<string, number>();
+    productSnapshots.forEach(doc => {
+      productPriceMap.set(doc.id, doc.data().price);
+    });
 
-    // Security check: Verify the amount from the client matches the server's price
-    if (input.amount !== serverPriceInPaise) {
-        throw new Error(`Price mismatch. Client requested ${input.amount}, but server price is ${serverPriceInPaise}.`);
+    let serverCalculatedTotal = 0;
+    for (const item of input.cartItems) {
+      const price = productPriceMap.get(item.productId);
+      if (price === undefined) {
+        throw new Error(`Product with ID ${item.productId} not found or price is missing.`);
+      }
+      serverCalculatedTotal += price * item.quantity;
     }
+    // --- End server-side price calculation ---
+
+    const serverPriceInPaise = Math.round(serverCalculatedTotal * 100);
 
     const instance = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
+    
+    const receiptId = `receipt_cart_${new Date().getTime()}`;
 
     const options = {
-      amount: serverPriceInPaise, // Use the server-verified price
+      amount: serverPriceInPaise,
       currency: input.currency,
-      receipt: input.receipt,
-      notes: {
-        productId: input.productId,
-      }
+      receipt: receiptId,
     };
     
     try {

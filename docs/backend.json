@@ -517,10 +517,12 @@
         "properties": {
             "id": { "type": "string", "description": "Unique identifier for the order." },
             "userId": { "type": "string", "description": "The ID of the user who placed the order." },
+            "shopId": { "type": "string", "description": "The ID of the shop fulfilling the order." },
             "items": { "type": "array", "items": { "$ref": "#/entities/CartItem" } },
             "totalAmount": { "type": "number", "description": "The total amount paid for the order." },
             "status": { "type": "string", "enum": ["created", "paid", "shipped", "delivered", "cancelled"] },
             "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" },
             "paymentDetails": {
                 "type": "object",
                 "properties": {
@@ -982,11 +984,11 @@
         }
       },
       {
-          "path": "/users/{userId}/orders/{orderId}",
+          "path": "/orders/{orderId}",
           "definition": {
               "entityName": "Order",
               "schema": { "$ref": "#/entities/Order" },
-              "description": "Stores a user's past orders."
+              "description": "Stores all user orders globally for easier admin access."
           }
       },
       {
@@ -1221,5 +1223,3 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
-
-    

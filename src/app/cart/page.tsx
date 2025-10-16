@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { useTransition, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createRazorpayOrder } from '@/ai/flows/create-razorpay-order';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 declare global {
     interface Window {
@@ -46,9 +48,10 @@ export default function CartPage() {
       try {
         const itemRef = doc(db, 'users', user.uid, 'cart', productId);
         await updateDoc(itemRef, { quantity: newQuantity });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error updating quantity:', error);
         toast({ variant: 'destructive', title: 'Failed to update item quantity.' });
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/cart/${productId}`, operation: 'update', requestResourceData: { quantity: newQuantity }}));
       }
     });
   };
@@ -60,9 +63,10 @@ export default function CartPage() {
         const itemRef = doc(db, 'users', user.uid, 'cart', productId);
         await deleteDoc(itemRef);
         toast({ title: 'Item removed from cart.' });
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error removing from cart:', error);
         toast({ variant: 'destructive', title: 'Failed to remove item.' });
+        errorEmitter.emit('permission-error', new FirestorePermissionError({ path: `users/${user.uid}/cart/${productId}`, operation: 'delete'}));
       }
     });
   };
@@ -72,16 +76,14 @@ export default function CartPage() {
 
     startCheckoutTransition(async () => {
       try {
-        const firstProduct = cartItems[0];
-        
         toast({ title: 'Initiating secure payment...' });
-
-        const order = await createRazorpayOrder({
-            amount: totalAmount * 100, // Amount in paise
+        
+        const orderPayload = {
+            cartItems: cartItems.map(item => ({ productId: item.productId, quantity: item.quantity })),
             currency: 'INR',
-            receipt: `receipt_cart_${new Date().getTime()}`,
-            productId: firstProduct.productId, 
-        });
+        };
+
+        const order = await createRazorpayOrder(orderPayload);
         
         if (!order || !order.id) {
              throw new Error('Failed to create Razorpay order.');
@@ -97,7 +99,8 @@ export default function CartPage() {
             order_id: order.id,
             handler: async function (response: any) {
                 const batch = writeBatch(db);
-                const orderRef = doc(collection(db, 'users', user.uid, 'orders'));
+                // Save order to the global /orders collection
+                const orderRef = doc(collection(db, 'orders'));
                 batch.set(orderRef, {
                     id: orderRef.id,
                     userId: user.uid,
@@ -105,6 +108,8 @@ export default function CartPage() {
                     totalAmount: totalAmount,
                     status: 'paid',
                     createdAt: serverTimestamp(),
+                    updatedAt: serverTimestamp(),
+                    shopId: cartItems[0].shopId || 'default_shop', // Assuming single shop for now
                     paymentDetails: {
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_payment_id: response.razorpay_payment_id,
@@ -112,6 +117,7 @@ export default function CartPage() {
                     }
                 });
 
+                // Clear the user's cart
                 cartItems.forEach(item => {
                     const cartItemRef = doc(db, 'users', user.uid, 'cart', item.productId);
                     batch.delete(cartItemRef);

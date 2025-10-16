@@ -99,12 +99,12 @@ export default function ForumPage() {
                 </div>
             ) : groups && groups.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {groups.map((group) => {
+                    {groups.map((group, index) => {
                         const isMember = user ? userJoinedGroups.has(group.id) : false;
                         const loadingMembership = loadingStates[group.id] || false;
                         
                         return (
-                             <Card key={group.id} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
+                             <Card key={group.id || `group-${index}`} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
                                 <Link href={`/forum/${group.id}`} className="group block flex flex-col flex-grow">
                                     <div className="relative aspect-video bg-secondary">
                                         <Image src={group.coverImageUrl || `https://picsum.photos/seed/${group.id}/600/400`} alt={group.name} fill className="object-cover" />

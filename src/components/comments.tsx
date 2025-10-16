@@ -35,29 +35,36 @@ function CommentAuthor({ authorId }: { authorId: string }) {
     const [author, loading] = useDocumentData(authorRef);
 
     if (loading) {
-        return <Skeleton className="h-9 w-9 rounded-full" />;
+        return (
+             <div className="flex items-center gap-2">
+                <Skeleton className="h-9 w-9 rounded-full" />
+                <Skeleton className="h-4 w-24" />
+            </div>
+        );
     }
     
     return (
-        <Avatar className="h-9 w-9">
-            <AvatarImage src={author?.photoURL} />
-            <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
-        </Avatar>
+        <div className="flex items-center gap-2">
+            <Avatar className="h-9 w-9">
+                <AvatarImage src={author?.photoURL} />
+                <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
+            </Avatar>
+            <p className="font-semibold text-sm">{author?.displayName || 'Anonymous User'}</p>
+        </div>
     )
 }
 
 function CommentCard({ comment }: { comment: any; }) {
   return (
-    <div className="flex items-start gap-4">
-      <CommentAuthor authorId={comment.authorId} />
+    <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-secondary/50">
       <div className="w-full">
-        <div className="flex items-center gap-2">
-          <p className="font-semibold text-sm">{comment.authorId.slice(0,6)}</p>
+        <div className="flex items-center justify-between">
+            <CommentAuthor authorId={comment.authorId} />
           <p className="text-xs text-muted-foreground">
             {comment.createdAt ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
           </p>
         </div>
-        <p className="text-sm mt-1 text-foreground/90">{comment.text}</p>
+        <p className="text-sm mt-2 text-foreground/90 pl-11">{comment.text}</p>
       </div>
     </div>
   );
@@ -144,6 +151,8 @@ export function Comments({ contentId, contentType }: CommentsProps) {
                       placeholder={t.forum.commentPlaceholder}
                       className="resize-none"
                       rows={1}
+                      onFocus={(e) => e.target.rows = 3}
+                      onBlur={(e) => e.target.rows = 1}
                       {...field}
                     />
                   </FormControl>
@@ -165,8 +174,16 @@ export function Comments({ contentId, contentType }: CommentsProps) {
 
 
       {commentsLoading ? (
-        <div className="flex justify-center items-center h-24">
-            <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="space-y-6">
+            {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-start gap-3 p-2">
+                    <Skeleton className="h-9 w-9 rounded-full" />
+                    <div className="w-full space-y-2">
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-4 w-full" />
+                    </div>
+                </div>
+            ))}
         </div>
       ) : (
         <div className="space-y-6">

@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronsUpDown, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
 import { stories as allSagas } from '@/lib/stories';
@@ -16,18 +16,17 @@ export default function NewStoryPage() {
   const router = useRouter();
   const { language } = useLanguage();
   
-  // Use local mock data instead of Firestore
   const stories = allSagas;
   const isLoading = false;
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
 
-  const handleSelect = (currentValue: string) => {
-    setValue(currentValue);
+  const handleSelect = (slug: string) => {
+    setValue(slug);
     setOpen(false);
-    if (currentValue) {
-      router.push(`/admin/stories/edit/${currentValue}`);
+    if (slug) {
+      router.push(`/admin/stories/edit/${slug}`);
     }
   };
 
@@ -66,24 +65,26 @@ export default function NewStoryPage() {
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
                                 <CommandInput placeholder="Search saga..." />
-                                <CommandEmpty>No unclaimed sagas found.</CommandEmpty>
-                                <CommandGroup>
-                                {stories?.map((story) => (
-                                    <CommandItem
-                                    key={story.id}
-                                    value={story.slug}
-                                    onSelect={() => handleSelect(story.slug)}
-                                    >
-                                    <Check
-                                        className={cn(
-                                        "mr-2 h-4 w-4",
-                                        value === story.slug ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    {story.title[language] || story.title.en}
-                                    </CommandItem>
-                                ))}
-                                </CommandGroup>
+                                <CommandList>
+                                    <CommandEmpty>No unclaimed sagas found.</CommandEmpty>
+                                    <CommandGroup>
+                                    {stories?.map((story) => (
+                                        <CommandItem
+                                        key={story.slug}
+                                        value={story.title.en}
+                                        onSelect={() => handleSelect(story.slug)}
+                                        >
+                                        <Check
+                                            className={cn(
+                                            "mr-2 h-4 w-4",
+                                            value === story.slug ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                        {story.title[language] || story.title.en}
+                                        </CommandItem>
+                                    ))}
+                                    </CommandGroup>
+                                </CommandList>
                             </Command>
                         </PopoverContent>
                     </Popover>

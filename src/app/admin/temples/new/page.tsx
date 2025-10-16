@@ -7,7 +7,7 @@ import { ArrowLeft, ChevronsUpDown, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
 import { temples as allTemples } from '@/lib/temples';
@@ -16,18 +16,17 @@ export default function NewTemplePage() {
   const router = useRouter();
   const { language } = useLanguage();
   
-  // Use local mock data instead of Firestore
   const temples = allTemples;
   const isLoading = false;
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');
 
-  const handleSelect = (currentValue: string) => {
-    setValue(currentValue);
+  const handleSelect = (slug: string) => {
+    setValue(slug);
     setOpen(false);
-    if (currentValue) {
-      router.push(`/admin/temples/edit/${currentValue}`);
+    if (slug) {
+      router.push(`/admin/temples/edit/${slug}`);
     }
   };
 
@@ -66,24 +65,26 @@ export default function NewTemplePage() {
                         <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
                             <Command>
                                 <CommandInput placeholder="Search temple..." />
-                                <CommandEmpty>No unclaimed temples found.</CommandEmpty>
-                                <CommandGroup>
-                                {temples?.map((temple) => (
-                                    <CommandItem
-                                    key={temple.id}
-                                    value={temple.slug}
-                                    onSelect={() => handleSelect(temple.slug)}
-                                    >
-                                    <Check
-                                        className={cn(
-                                        "mr-2 h-4 w-4",
-                                        value === temple.slug ? "opacity-100" : "opacity-0"
-                                        )}
-                                    />
-                                    {temple.name[language] || temple.name.en}
-                                    </CommandItem>
-                                ))}
-                                </CommandGroup>
+                                <CommandList>
+                                    <CommandEmpty>No unclaimed temples found.</CommandEmpty>
+                                    <CommandGroup>
+                                    {temples?.map((temple) => (
+                                        <CommandItem
+                                        key={temple.slug}
+                                        value={temple.name.en}
+                                        onSelect={() => handleSelect(temple.slug)}
+                                        >
+                                        <Check
+                                            className={cn(
+                                            "mr-2 h-4 w-4",
+                                            value === temple.slug ? "opacity-100" : "opacity-0"
+                                            )}
+                                        />
+                                        {temple.name[language] || temple.name.en}
+                                        </CommandItem>
+                                    ))}
+                                    </CommandGroup>
+                                </CommandList>
                             </Command>
                         </PopoverContent>
                     </Popover>

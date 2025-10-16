@@ -1,6 +1,6 @@
 
 "use client";
-import React, { useTransition } from "react";
+import React, { useTransition, useMemo } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import Link from "next/link";
 import Image from "next/image";
@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "./ui/button";
 import { FirestorePermissionError } from "@/lib/firebase/errors";
 import { errorEmitter } from "@/lib/firebase/error-emitter";
+import { Comments } from './comments';
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {
   const db = useFirestore();
@@ -49,11 +50,14 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const db = useFirestore();
   const [user] = useAuthState(auth);
   const [isLiking, startLikeTransition] = useTransition();
+  const [showComments, setShowComments] = React.useState(false);
 
   const contentCollection = item.kind === 'post' ? 'posts' : 'media';
   const contentId = item.id.replace(`${item.kind}-`, '');
   
   const contentRef = doc(db, contentCollection, contentId);
+  const [contentData, contentLoading] = useDocumentData(contentRef);
+  
   const likeRef = user ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined;
 
   const [like, likeLoading] = useDocumentData(likeRef);
@@ -107,34 +111,21 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
         case 'deity':
              return `/deities/${item.meta?.slug}`;
         case 'post':
-            // A post belongs to a context (group or temple), so link to that context's page.
             return `/forum/${item.meta?.contextId}`;
         default:
             return '#';
     }
   }
   
-  const title = getText(item.title);
-  const description = getText(item.description);
-  const authorId = item.meta?.authorId;
-  const engagement = item.meta || {};
-  const thumbnail = item.thumbnail || "https://picsum.photos/seed/placeholder/800/450";
-  const hint = item.meta?.imageHint || "image";
+  const currentItemData = contentData || item;
+  const title = getText(currentItemData.title);
+  const description = getText(currentItemData.description);
+  const authorId = currentItemData.meta?.authorId || currentItemData.authorId;
+  const engagement = contentLoading ? item.meta : (currentItemData.meta || currentItemData);
+  const thumbnail = currentItemData.thumbnail || "https://picsum.photos/seed/placeholder/800/450";
+  const hint = currentItemData.meta?.imageHint || "image";
+  const createdAt = currentItemData.createdAt?.toDate ? currentItemData.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : new Date());
 
-  const getDeterministicDate = (id: string): Date => {
-      let hash = 0;
-      for (let i = 0; i < id.length; i++) {
-          const char = id.charCodeAt(i);
-          hash = ((hash << 5) - hash) + char;
-          hash = hash & hash;
-      }
-      const daysAgo = Math.abs(hash) % 7;
-      const date = new Date();
-      date.setDate(date.getDate() - daysAgo);
-      return date;
-  }
-  
-  const createdAt = item.createdAt ? new Date(item.createdAt) : getDeterministicDate(item.id);
 
   const canInteract = item.kind === 'post' || item.kind === 'media' || item.kind === 'video';
 
@@ -164,17 +155,20 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
                     <div className="flex items-center gap-2 mt-2 text-muted-foreground">
                         <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs px-2" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
                             {isLiking || likeLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Heart className={`w-4 h-4 ${isLiked ? "text-red-500 fill-current" : ""}`} />} 
-                            {engagement.likes || 0}
+                            {contentLoading ? (item.meta?.likes || 0) : (engagement.likes || 0)}
                         </Button>
-                        <Button variant="ghost" size="sm" asChild className="flex items-center gap-1.5 text-xs px-2">
-                            <Link href={getHref()}>
-                                <MessageCircle className="w-4 h-4" /> {engagement.commentsCount || 0}
-                            </Link>
+                        <Button variant="ghost" size="sm" onClick={() => setShowComments(!showComments)} className="flex items-center gap-1.5 text-xs px-2">
+                            <MessageCircle className="w-4 h-4" /> {contentLoading ? (item.meta?.commentsCount || 0) : (engagement.commentsCount || 0)}
                         </Button>
                     </div>
                  )}
              </div>
         </div>
+         {showComments && canInteract && (
+            <div className="mt-4">
+                <Comments contentId={contentId} contentType={contentCollection as 'post' | 'media'} />
+            </div>
+        )}
     </Card>
   );
 };

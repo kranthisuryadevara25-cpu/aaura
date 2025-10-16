@@ -3,16 +3,66 @@
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp } from 'firebase/firestore';
-import { Loader2, Trophy, Heart } from 'lucide-react';
+import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp, orderBy } from 'firebase/firestore';
+import { Loader2, Trophy, Heart, Send } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useState, useEffect, useMemo } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { formatDistanceToNow } from 'date-fns';
+
+const chantSchema = z.object({
+  mantra: z.string().min(1, "Mantra cannot be empty."),
+});
+type ChantFormValues = z.infer<typeof chantSchema>;
+
+function RecentChants({ contestId }: { contestId: string }) {
+    const db = useFirestore();
+    const recentChantsQuery = useMemo(() => 
+        query(
+            collection(db, `contests/${contestId}/leaderboard`), 
+            orderBy('lastChantedAt', 'desc'), 
+            limit(5)
+        ), [db, contestId]
+    );
+    const [recentChants, loading] = useCollectionData(recentChantsQuery);
+
+    if (loading) {
+        return <div className="flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
+    }
+
+    return (
+        <div className="space-y-3 mt-6">
+            <h4 className="font-semibold text-center text-muted-foreground">Recent Activity</h4>
+            {recentChants && recentChants.map((chant, index) => (
+                <div key={index} className="flex items-center gap-3 text-sm">
+                    <Avatar className="h-8 w-8">
+                         <AvatarImage src={`https://picsum.photos/seed/${chant.userId}/40`} />
+                        <AvatarFallback>{chant.displayName?.[0] || 'A'}</AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1">
+                        <p className="font-semibold text-foreground">{chant.displayName}</p>
+                        <p className="text-xs text-muted-foreground">{chant.mantra}</p>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                        {chant.lastChantedAt ? formatDistanceToNow(chant.lastChantedAt.toDate(), { addSuffix: true }) : 'just now'}
+                    </p>
+                </div>
+            ))}
+        </div>
+    )
+}
+
 
 function ContestContent({ contestId }: { contestId: string, }) {
     const db = useFirestore();
@@ -24,10 +74,13 @@ function ContestContent({ contestId }: { contestId: string, }) {
     const contestRef = doc(db, 'contests', contestId);
     const [activeContest, loadingContest] = useDocumentData(contestRef);
 
-    const userProgressRef = user ? doc(db, `users/${user.uid}/contestProgress`, contestId) : undefined;
-    const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
+    const form = useForm<ChantFormValues>({
+        resolver: zodResolver(chantSchema),
+        defaultValues: { mantra: "Jai Shri Ram" },
+    });
 
-    const handleChant = () => {
+
+    const handleChant = (data: ChantFormValues) => {
          if (!user) {
             toast({ variant: 'destructive', title: 'You must be logged in to chant.' });
             return;
@@ -37,37 +90,34 @@ function ContestContent({ contestId }: { contestId: string, }) {
             toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
             return;
         }
-
-        const currentUserProgressRef = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
-
+        
         startChantTransition(async () => {
              try {
                 await runTransaction(db, async (transaction) => {
-                    const userProgressDoc = await transaction.get(currentUserProgressRef);
+                    const userProgressRef = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
+                    const contestLeaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, user.uid);
                     
-                    if (userProgressDoc.exists()) {
-                        transaction.update(currentUserProgressRef, {
-                            chants: increment(1),
-                            lastChantedAt: serverTimestamp(),
-                        });
-                    } else {
-                         transaction.set(currentUserProgressRef, {
-                            chants: 1,
-                            lastChantedAt: serverTimestamp(),
-                            displayName: user.displayName || 'Anonymous',
-                        });
-                    }
+                    transaction.update(contestRef, { totalChants: increment(1) });
+                    transaction.set(userProgressRef, {
+                        chants: increment(1),
+                        lastChantedAt: serverTimestamp(),
+                        displayName: user.displayName || 'Anonymous',
+                    }, { merge: true });
+                     transaction.set(contestLeaderboardRef, {
+                        userId: user.uid,
+                        chants: increment(1),
+                        lastChantedAt: serverTimestamp(),
+                        displayName: user.displayName || 'Anonymous',
+                        mantra: data.mantra,
+                    }, { merge: true });
+
                 });
+                 form.reset({ mantra: "Jai Shri Ram" });
              } catch (error: any) {
                  const permissionError = new FirestorePermissionError({
-                    path: currentUserProgressRef.path,
+                    path: contestRef.path,
                     operation: 'write',
-                    requestResourceData: {
-                         chants: userProgress ? userProgress.chants + 1 : 1,
-                         lastChantedAt: new Date(),
-                         displayName: user.displayName,
-                    }
-                });
+                 });
                 errorEmitter.emit('permission-error', permissionError);
              }
         });
@@ -88,7 +138,7 @@ function ContestContent({ contestId }: { contestId: string, }) {
     }
 
     const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
-    const isCompleted = activeContest.status === 'completed';
+    const isCompleted = activeContest.status === 'completed' || progressPercentage >= 100;
     
     return (
         <Card className="w-full max-w-2xl text-center shadow-2xl bg-gradient-to-br from-primary/10 to-background border-primary/20">
@@ -115,25 +165,34 @@ function ContestContent({ contestId }: { contestId: string, }) {
                     <div className="font-semibold text-green-600">
                         Contest Completed!
                     </div>
+                 ) : user ? (
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(handleChant)} className="flex items-start gap-2">
+                             <FormField
+                                control={form.control}
+                                name="mantra"
+                                render={({ field }) => (
+                                    <FormItem className="w-full">
+                                    <FormControl>
+                                        <Textarea
+                                            placeholder="Type your mantra..."
+                                            className="resize-none text-center text-lg"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <Button type="submit" size="lg" disabled={isChanting}>
+                                {isChanting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                            </Button>
+                        </form>
+                    </Form>
                  ) : (
-                    <Button 
-                        size="lg" 
-                        className="w-full h-16 text-2xl font-bold rounded-full shadow-lg transform active:scale-95 transition-transform duration-150"
-                        onClick={handleChant}
-                        disabled={!user || isChanting}
-                    >
-                        {isChanting ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Heart className="mr-3 h-6 w-6 fill-current" />}
-                        Jai Shri Ram
-                    </Button>
+                    <p className="text-muted-foreground">Please log in to participate.</p>
                  )}
-
-
-                {user && !loadingUserProgress && (
-                     <p className="text-muted-foreground">
-                        You have contributed {userProgress?.chants || 0} times.
-                    </p>
-                )}
-                 {user && loadingUserProgress && <Loader2 className="mx-auto h-4 w-4 animate-spin" />}
+                <RecentChants contestId={contestId} />
             </CardContent>
         </Card>
     )
@@ -141,8 +200,6 @@ function ContestContent({ contestId }: { contestId: string, }) {
 
 export default function ContestsPage() {
     const db = useFirestore();
-    const auth = useAuth();
-    const [user] = useAuthState(auth);
 
     const contestsQuery = query(
         collection(db, 'contests'), 

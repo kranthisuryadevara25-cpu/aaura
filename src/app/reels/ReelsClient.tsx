@@ -3,7 +3,7 @@
 
 import { useFeed } from '@/hooks/use-feed';
 import ReelsFeed from '@/components/ReelsFeed';
-import { Loader2 } from 'lucide-react';
+import { Loader2, VideoOff } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import type { FeedItem } from '@/types/feed';
 
@@ -16,7 +16,7 @@ export default function ReelsClient({ initialVideos = [] }: { initialVideos: Fee
   const loadMoreObserver = useRef<IntersectionObserver | null>(null);
 
   const videoItems = useMemo(
-    () => allItems.filter(item => item.kind === 'video' && item.mediaUrl),
+    () => allItems.filter(item => (item.kind === 'video' || item.kind === 'media') && item.mediaUrl),
     [allItems]
   );
 
@@ -25,7 +25,9 @@ export default function ReelsClient({ initialVideos = [] }: { initialVideos: Fee
     if (loading) return;
     if (loadMoreObserver.current) loadMoreObserver.current.disconnect();
     loadMoreObserver.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && canLoadMore) loadMore();
+      if (entries[0].isIntersecting && canLoadMore) {
+        loadMore();
+      }
     });
     if (node) loadMoreObserver.current.observe(node);
   }, [loading, canLoadMore, loadMore]);
@@ -47,22 +49,19 @@ export default function ReelsClient({ initialVideos = [] }: { initialVideos: Fee
     return () => observer.current?.disconnect();
   }, [videoItems]);
 
-  const itemsToRender = useMemo(() => {
-    const start = Math.max(0, visibleItemIndex - VIRTUALIZATION_BUFFER);
-    const end = Math.min(videoItems.length, visibleItemIndex + VIRTUALIZATION_BUFFER + 1);
-    return videoItems.slice(start, end).map((item, i) => ({
-      item, index: start + i
-    }));
-  }, [visibleItemIndex, videoItems]);
+
+  if (videoItems.length === 0 && !loading) {
+    return (
+        <div className="flex h-screen w-full flex-col items-center justify-center bg-background text-center">
+            <VideoOff className="h-16 w-16 text-muted-foreground" />
+            <h2 className="mt-4 text-2xl font-semibold">No Reels Found</h2>
+            <p className="mt-2 text-muted-foreground">There's no video content available to display right now.</p>
+        </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full snap-y snap-mandatory overflow-y-scroll bg-black">
-      {videoItems.length === 0 && (
-        <div className="flex h-screen w-full items-center justify-center bg-background">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
-        </div>
-      )}
-
       {videoItems.map((item, index) => (
         <div
           key={item.id}
@@ -80,7 +79,7 @@ export default function ReelsClient({ initialVideos = [] }: { initialVideos: Fee
         </div>
       ))}
 
-      {loading && allItems.length > 0 && (
+      {loading && (
         <div className="h-screen w-full snap-start flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
         </div>

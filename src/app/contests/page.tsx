@@ -29,6 +29,7 @@ export default function ContestsPage() {
     const [contests, loadingContests] = useCollectionData(contestsQuery, { idField: 'id' });
     const activeContest = contests?.[0];
 
+    // Correctly define userProgressRef only when user and activeContest are available
     const userProgressRef = user && activeContest ? doc(db, `users/${user.uid}/contestProgress`, activeContest.id) : undefined;
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
 

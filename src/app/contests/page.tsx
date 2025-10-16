@@ -3,7 +3,7 @@
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentReference, DocumentData } from 'firebase/firestore';
+import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData } from 'firebase/firestore';
 import { Loader2, Trophy, Heart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -18,13 +18,21 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     const db = useFirestore();
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
+    
+    // State to hold the reference, ensuring it's only set when safe.
+    const [userProgressRef, setUserProgressRef] = useState<DocumentData | undefined>(undefined);
 
-    const userProgressRef = useMemo(() => {
-        if (!user) return undefined;
-        return doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
-    }, [db, user, activeContest.id]);
+    // This effect safely creates the document reference once contest and user are available.
+    useEffect(() => {
+        if (user && activeContest?.id) {
+            const ref = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
+            setUserProgressRef(ref);
+        }
+    }, [db, user, activeContest]);
 
+    // This hook will only run when userProgressRef is a valid reference.
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
+
 
     const handleChant = () => {
         if (!user) {

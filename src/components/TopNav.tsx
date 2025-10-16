@@ -20,6 +20,9 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X } from "lucide-react";
@@ -129,6 +132,10 @@ const MobileNav = () => {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0 w-64">
+        <SheetHeader className="p-4 border-b">
+          <SheetTitle className="text-2xl font-serif">Aura</SheetTitle>
+          <SheetDescription className="sr-only">Main Navigation</SheetDescription>
+        </SheetHeader>
         <Sidebar />
       </SheetContent>
     </Sheet>

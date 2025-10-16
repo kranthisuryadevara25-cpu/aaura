@@ -19,12 +19,14 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     const db = useFirestore();
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
-    const [userProgressRef, setUserProgressRef] = useState<DocumentData | undefined>(undefined);
+    const [userProgressRef, setUserProgressRef] = useState<any>(null);
 
     useEffect(() => {
-        if (user && activeContest?.id) {
+        if (user && activeContest) {
             const ref = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
             setUserProgressRef(ref);
+        } else {
+            setUserProgressRef(null);
         }
     }, [db, user, activeContest]);
     
@@ -36,7 +38,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
             return;
         }
 
-        if (!activeContest?.id) {
+        if (!activeContest || !activeContest.id) {
             toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
             return;
         }
@@ -83,7 +85,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
     const isCompleted = activeContest.status === 'completed';
     const achievementDays = isCompleted && activeContest.achievedAt && activeContest.startDate
-        ? differenceInDays(activeContest.achievedAt, activeContest.startDate) + 1
+        ? differenceInDays(activeContest.achievedAt.toDate(), activeContest.startDate.toDate()) + 1
         : null;
 
     return (
@@ -92,7 +94,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
                 <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
                 <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
                 <CardDescription className="text-lg">
-                    {format(activeContest.startDate, 'PPP')} - {format(activeContest.endDate, 'PPP')}
+                    {format(activeContest.startDate.toDate(), 'PPP')} - {format(activeContest.endDate.toDate(), 'PPP')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition, useState, useEffect, useMemo } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { differenceInDays, format } from 'date-fns';
@@ -22,7 +22,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     const [userProgressRef, setUserProgressRef] = useState<any>(null);
 
     useEffect(() => {
-        if (user && activeContest) {
+        if (user && activeContest?.id) {
             const ref = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
             setUserProgressRef(ref);
         } else {
@@ -38,7 +38,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
             return;
         }
 
-        if (!activeContest || !activeContest.id) {
+        if (!activeContest?.id) {
             toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
             return;
         }
@@ -84,8 +84,13 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     
     const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
     const isCompleted = activeContest.status === 'completed';
-    const achievementDays = isCompleted && activeContest.achievedAt && activeContest.startDate
-        ? differenceInDays(activeContest.achievedAt, activeContest.startDate) + 1
+    
+    const startDate = activeContest.startDate ? (activeContest.startDate instanceof Timestamp ? activeContest.startDate.toDate() : new Date(activeContest.startDate)) : new Date();
+    const endDate = activeContest.endDate ? (activeContest.endDate instanceof Timestamp ? activeContest.endDate.toDate() : new Date(activeContest.endDate)) : new Date();
+    const achievedAt = activeContest.achievedAt ? (activeContest.achievedAt instanceof Timestamp ? activeContest.achievedAt.toDate() : new Date(activeContest.achievedAt)) : null;
+
+    const achievementDays = isCompleted && achievedAt
+        ? differenceInDays(achievedAt, startDate) + 1
         : null;
 
     return (
@@ -94,7 +99,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
                 <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
                 <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
                 <CardDescription className="text-lg">
-                    {format(activeContest.startDate, 'PPP')} - {format(activeContest.endDate, 'PPP')}
+                    {format(startDate, 'PPP')} - {format(endDate, 'PPP')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

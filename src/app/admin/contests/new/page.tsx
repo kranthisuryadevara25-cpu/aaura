@@ -1,160 +1,169 @@
-
 'use client';
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Button } from '@/components/ui/button';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, PlusCircle, ArrowLeft, Calendar as CalendarIcon } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { doc, collection, updateDoc, increment, query, orderBy, limit, getDocs } from 'firebase/firestore';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useAuth } from '@/lib/firebase/provider';
 import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
-import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 
-const formSchema = z.object({
-  id: z.string().min(3, "Contest ID is required").regex(/^[a-z0-9-]+$/, "Slug must be lowercase with hyphens."),
-  title: z.string().min(10, "Title must be at least 10 characters."),
-  goal: z.coerce.number().min(1, "Goal must be at least 1."),
-  startDate: z.date({ required_error: "A start date is required." }),
-  endDate: z.date({ required_error: "An end date is required." }),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-export default function CreateContestPage() {
-  const { toast } = useToast();
-  const router = useRouter();
-  const db = useFirestore();
-  const [isPending, startTransition] = useTransition();
-
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      id: '',
-      title: '',
-      goal: 10000000,
-    },
-  });
-
-  const onSubmit = (data: FormValues) => {
-    startTransition(async () => {
-      const contestRef = doc(db, 'contests', data.id);
-      
-      const now = new Date();
-      let status = 'upcoming';
-      if (now >= data.startDate && now <= data.endDate) {
-          status = 'active';
-      } else if (now > data.endDate) {
-          status = 'completed';
-      }
-
-      const contestData = {
-        title: data.title,
-        goal: data.goal,
-        totalChants: 0,
-        startDate: data.startDate,
-        endDate: data.endDate,
-        status: status,
-        createdAt: serverTimestamp(),
-      };
-      
-      setDoc(contestRef, contestData)
-        .then(() => {
-          toast({ title: 'Contest Created!', description: `The "${data.title}" contest is now scheduled.` });
-          router.push('/admin/content?tab=contests');
-        })
-        .catch((error) => {
-          console.error("Error creating contest: ", error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Failed to create contest.' });
-        });
-    });
-  };
-
-  return (
-    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <div className="max-w-2xl mx-auto">
-             <Button variant="outline" onClick={() => router.back()} className="mb-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Content Management
-            </Button>
-            <Card className="w-full">
-            <CardHeader>
-                <CardTitle>Create a New Contest</CardTitle>
-                <CardDescription>Fill out the details below to launch a new global chanting contest.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    
-                    <FormField control={form.control} name="id" render={({ field }) => (
-                        <FormItem><FormLabel>Contest ID</FormLabel><FormControl><Input placeholder="e.g., jai-shri-ram-2025" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-
-                    <FormField control={form.control} name="title" render={({ field }) => (
-                        <FormItem><FormLabel>Contest Title</FormLabel><FormControl><Input placeholder="E.g., Jai Shri Ram Global Chant Marathon" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-
-                    <FormField control={form.control} name="goal" render={({ field }) => (
-                        <FormItem><FormLabel>Chant Goal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField control={form.control} name="startDate" render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>Start Date</FormLabel>
-                                <Popover><PopoverTrigger asChild>
-                                <FormControl><Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button></FormControl>
-                                </PopoverTrigger><PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                                </PopoverContent></Popover>
-                                <FormMessage />
-                            </FormItem>
-                         )} />
-                         <FormField control={form.control} name="endDate" render={({ field }) => (
-                            <FormItem className="flex flex-col">
-                                <FormLabel>End Date</FormLabel>
-                                <Popover><PopoverTrigger asChild>
-                                <FormControl><Button variant={"outline"} className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                    {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                                </Button></FormControl>
-                                </PopoverTrigger><PopoverContent className="w-auto p-0" align="start">
-                                <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                                </PopoverContent></Popover>
-                                <FormMessage />
-                            </FormItem>
-                         )} />
-                    </div>
-                    
-                    <Button type="submit" disabled={isPending} className="w-full">
-                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                    Create Contest
-                    </Button>
-                </form>
-                </Form>
-            </CardContent>
-            </Card>
-        </div>
-    </main>
-  );
+interface LeaderboardEntry {
+  uid: string;
+  displayName: string;
+  chants: number;
 }
 
-    
+export default function ContestsPage() {
+  const { user } = useAuth();
+  const db = useFirestore();
+
+  const [activeContest, setActiveContest] = useState<any>(null);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+
+  // Simulate fetching contest from Firestore
+  useEffect(() => {
+    setActiveContest({
+      id: 'jai-shri-ram-2025',
+      title: 'Jai Shri Ram Chant Marathon 🪔',
+      startDate: '2025-10-16T00:00:00Z',
+      endDate: '2025-11-15T23:59:59Z',
+    });
+  }, []);
+
+  // Normalize Firestore dates
+  const startDate = useMemo(() => {
+    if (!activeContest) return null;
+    return activeContest.startDate instanceof Date
+      ? activeContest.startDate
+      : activeContest.startDate?.toDate?.() ?? new Date(activeContest.startDate);
+  }, [activeContest]);
+
+  const endDate = useMemo(() => {
+    if (!activeContest) return null;
+    return activeContest.endDate instanceof Date
+      ? activeContest.endDate
+      : activeContest.endDate?.toDate?.() ?? new Date(activeContest.endDate);
+  }, [activeContest]);
+
+  // Check if contest is active
+  const isContestActive = startDate && endDate && new Date() >= startDate && new Date() <= endDate;
+
+  // User progress Firestore reference
+  const userProgressRef = useMemo(() => {
+    if (!user || !activeContest) return null;
+    return doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
+  }, [db, user, activeContest]);
+
+  const contestRef = useMemo(() => {
+    if (!activeContest) return null;
+    return doc(db, 'contests', activeContest.id);
+  }, [db, activeContest]);
+
+  const [userProgress] = useDocumentData(userProgressRef ? userProgressRef : null);
+  const [contestData] = useDocumentData(contestRef ? contestRef : null);
+
+  // Fetch leaderboard
+  const fetchLeaderboard = async () => {
+    if (!activeContest) return;
+
+    const q = query(
+      collection(db, 'users'),
+      orderBy(`contestProgress.${activeContest.id}.chants`, 'desc'),
+      limit(10)
+    );
+
+    const snapshot = await getDocs(q);
+    const entries: LeaderboardEntry[] = [];
+    snapshot.forEach(docSnap => {
+      const data = docSnap.data();
+      const chants = data.contestProgress?.[activeContest.id]?.chants ?? 0;
+      const displayName = data.displayName ?? 'Anonymous';
+      entries.push({ uid: docSnap.id, displayName, chants });
+    });
+
+    setLeaderboard(entries);
+  };
+
+  useEffect(() => {
+    fetchLeaderboard();
+  }, [activeContest, userProgress]);
+
+  // Handle user chanting
+  const handleChant = async () => {
+    if (!user || !activeContest || !isContestActive) return;
+
+    // Update user progress
+    if (userProgressRef) {
+      try {
+        await updateDoc(userProgressRef, {
+          chants: increment(1),
+          lastChantedAt: new Date(),
+          displayName: user.displayName || 'Anonymous',
+        });
+      } catch {
+        // If doc doesn't exist, create it
+        await updateDoc(userProgressRef, {
+          chants: 1,
+          lastChantedAt: new Date(),
+          displayName: user.displayName || 'Anonymous',
+        }).catch(() => {});
+      }
+    }
+
+    // Update global counter
+    if (contestRef) {
+      await updateDoc(contestRef, {
+        totalChants: increment(1),
+      });
+    }
+  };
+
+  if (!user || !activeContest) return <div className="p-6 text-center">Loading contest...</div>;
+
+  if (!isContestActive)
+    return (
+      <div className="p-6 text-center text-red-600">
+        This contest is not active. <br />
+        Contest period: {startDate && format(startDate, 'PPP')} - {endDate && format(endDate, 'PPP')}
+      </div>
+    );
+
+  return (
+    <div className="p-6 text-center">
+      <h1 className="text-3xl font-bold text-orange-600 mb-2">{activeContest.title}</h1>
+      <p className="text-gray-600 mb-6">
+        Chant “Jai Shri Ram” and help us reach 1 crore chants!
+      </p>
+
+      <div className="bg-orange-50 p-6 rounded-xl shadow-md inline-block mb-6">
+        <h2 className="text-xl font-semibold text-orange-700 mb-2">Your Progress</h2>
+        <p className="text-2xl font-bold text-orange-800">{userProgress?.chants ?? 0} chants</p>
+      </div>
+
+      <div className="bg-orange-100 p-6 rounded-xl shadow-md inline-block mb-6">
+        <h2 className="text-xl font-semibold text-orange-700 mb-2">Global Counter</h2>
+        <p className="text-2xl font-bold text-orange-800">{contestData?.totalChants ?? 0} chants</p>
+      </div>
+
+      <Button
+        onClick={handleChant}
+        className="bg-orange-600 hover:bg-orange-700 text-white text-lg px-8 py-4 rounded-full mb-6"
+      >
+        Chant Jai Shri Ram 🙏
+      </Button>
+
+      <div className="mt-6">
+        <h2 className="text-2xl font-bold mb-2 text-orange-600">Top Devotees</h2>
+        <ol className="text-left mx-auto max-w-md space-y-1">
+          {leaderboard.map((entry, idx) => (
+            <li key={entry.uid} className="flex justify-between">
+              <span>{idx + 1}. {entry.displayName}</span>
+              <span>{entry.chants} 🪔</span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  );
+}

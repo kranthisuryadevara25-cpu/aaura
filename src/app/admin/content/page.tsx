@@ -69,7 +69,7 @@ function DeitiesTabContent() {
                 <CardTitle>{deity.name[language] || deity.name.en}</CardTitle>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" asChild>
-                        <Link href={`/admin/deities/edit/${deity.slug}`}>
+                        <Link href={`/admin/deities/edit/${deity.id}`}>
                             <Edit className="h-4 w-4" />
                         </Link>
                     </Button>
@@ -152,7 +152,7 @@ function StoriesTabContent() {
                 <CardTitle>{story.title[language] || story.title.en}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/stories/edit/${story.slug}`}>
+                    <Link href={`/admin/stories/edit/${story.id}`}>
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -236,7 +236,7 @@ function CharactersTabContent() {
                 <CardTitle>{character.name[language] || character.name.en}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/characters/edit/${character.slug}`}>
+                    <Link href={`/admin/characters/edit/${character.id}`}>
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>
@@ -319,7 +319,7 @@ function TemplesTabContent() {
                 <CardTitle>{temple.name[language] || temple.name.en}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/temples/edit/${temple.slug}`}>
+                    <Link href={`/admin/temples/edit/${temple.id}`}>
                       <Edit className="h-4 w-4" />
                     </Link>
                   </Button>

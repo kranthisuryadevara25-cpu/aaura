@@ -35,7 +35,7 @@ function RecentChants({ contestId }: { contestId: string }) {
             limit(5)
         ), [db, contestId]
     );
-    const [recentChants, loading] = useCollectionData(recentChantsQuery);
+    const [recentChants, loading] = useCollectionData(recentChantsQuery, { idField: 'id' });
 
     if (loading) {
         return <div className="flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
@@ -45,7 +45,7 @@ function RecentChants({ contestId }: { contestId: string }) {
         <div className="space-y-3 mt-6">
             <h4 className="font-semibold text-center text-muted-foreground">Recent Activity</h4>
             {recentChants && recentChants.map((chant, index) => (
-                <div key={index} className="flex items-center gap-3 text-sm">
+                <div key={chant.id} className="flex items-center gap-3 text-sm">
                     <Avatar className="h-8 w-8">
                          <AvatarImage src={`https://picsum.photos/seed/${chant.userId}/40`} />
                         <AvatarFallback>{chant.displayName?.[0] || 'A'}</AvatarFallback>
@@ -97,12 +97,16 @@ function ContestContent({ contestId }: { contestId: string, }) {
                     const userProgressRef = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
                     const contestLeaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, user.uid);
                     
-                    transaction.update(contestRef, { totalChants: increment(1) });
+                    // Client no longer updates the global contest document.
+                    // This will be handled by a backend function for security.
+                    // transaction.update(contestRef, { totalChants: increment(1) });
+
                     transaction.set(userProgressRef, {
                         chants: increment(1),
                         lastChantedAt: serverTimestamp(),
                         displayName: user.displayName || 'Anonymous',
                     }, { merge: true });
+
                      transaction.set(contestLeaderboardRef, {
                         userId: user.uid,
                         chants: increment(1),
@@ -114,9 +118,11 @@ function ContestContent({ contestId }: { contestId: string, }) {
                 });
                  form.reset({ mantra: "Jai Shri Ram" });
              } catch (error: any) {
+                // This will catch transaction errors, including permission denied on subcollections
                  const permissionError = new FirestorePermissionError({
-                    path: contestRef.path,
+                    path: `users/${user.uid}/contestProgress/${activeContest.id}`,
                     operation: 'write',
+                    requestResourceData: { mantra: data.mantra }
                  });
                 errorEmitter.emit('permission-error', permissionError);
              }

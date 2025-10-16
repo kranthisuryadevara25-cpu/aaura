@@ -1,144 +1,75 @@
+
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-  
-    // --------------------------------
-    //  Helper Functions
-    // --------------------------------
+    
     function isSignedIn() {
       return request.auth != null;
     }
-
-    function isOwner(userId) {
-      return isSignedIn() && request.auth.uid == userId;
-    }
     
-    function isAdmin() {
-      // In a real app, this would check a 'roles' claim on the user's token
-      // For now, we'll use a hardcoded UID for the super admin
-      return request.auth.uid == "Woko2C4S62Rif59aH1Vt2pC5dF32";
+    function isOwner(userId) {
+      return request.auth.uid == userId;
     }
 
-    // --------------------------------
-    //  Collection: users
-    // --------------------------------
     match /users/{userId} {
       allow read: if true;
-      allow create: if isOwner(userId);
-      allow update: if isOwner(userId);
-
-      // Subcollections
-      match /preferences/default {
-        allow read, write: if isOwner(userId);
-      }
+      allow write: if isOwner(userId);
+      
       match /horoscopes/{horoscopeId} {
         allow read, write: if isOwner(userId);
       }
-      match /badges/{badgeId} {
-        allow read: if true;
-        allow write: if isOwner(userId);
+
+      match /preferences/{prefId} {
+        allow read, write: if isOwner(userId);
       }
-      match /followers/{followerId} {
-        allow read: if true;
-        allow write: if isOwner(followerId); // A user can add themselves as a follower
-        allow delete: if isOwner(followerId); // A user can remove themselves
-      }
-      match /following/{followedId} {
-        allow read: if true;
-        allow write: if isOwner(userId); // A user can follow others
-        allow delete: if isOwner(userId); // A user can unfollow
-      }
+
       match /cart/{productId} {
         allow read, write, delete: if isOwner(userId);
       }
+
       match /orders/{orderId} {
         allow read, create: if isOwner(userId);
-        allow update: if false; // Orders should be immutable from the client
       }
-       match /contestProgress/{contestId} {
+
+      match /followers/{followerId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isSignedIn() && request.auth.uid == followerId;
+      }
+      
+      match /following/{followedId} {
+        allow read, delete: if isOwner(userId);
+        allow create: if isOwner(userId);
+      }
+      
+      match /contestProgress/{contestId} {
+        allow create: if isOwner(userId) && request.resource.data.authorId == userId;
+        allow read, update, delete: if isOwner(userId);
+      }
+
+      match /{subcollection}/{docId} {
         allow read, write: if isOwner(userId);
       }
-       match /challenges/{challengeId} {
-        allow read, write: if isOwner(userId);
-       }
     }
 
-    // --------------------------------
-    //  Public & Semi-Public Collections
-    // --------------------------------
-
-    // Generic rule for read-only public content
-    match /{collectionName}/{docId} 
-      where collectionName in ['deities', 'stories', 'epicHeroes', 'temples', 'rituals', 'festivals', 'products', 'shops', 'panchang'] {
-      allow read: if true;
-      allow write: if isAdmin(); // Only admins can modify core content
-    }
-    
-     // Specific rules for contests
     match /contests/{contestId} {
       allow read: if true;
-      allow create: if isAdmin();
-      allow update: if isSignedIn() || isAdmin(); // Allow users to update chant counts, admins for other changes
-      
-      // Chants subcollection
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+
+      // Allow users to add their chants
       match /chants/{chantId} {
-        allow read, list: if true;
-        allow create: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+        allow read: if true;
       }
     }
-    
-    // Specific rules for user-generated content like media and posts
-    match /media/{mediaId} {
-        allow read: if true;
-        allow create: if isSignedIn();
-        allow update: if isOwner(resource.data.userId) || isAdmin();
-        
-        match /comments/{commentId} {
-            allow read, list: if true;
-            allow create: if isSignedIn();
-        }
-        match /likes/{userId} {
-            allow read: if true;
-            allow create, delete: if isOwner(userId);
-        }
-    }
-    
-    match /posts/{postId} {
-        allow read: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isOwner(resource.data.authorId) || isAdmin();
 
-         match /comments/{commentId} {
-            allow read, list: if true;
-            allow create: if isSignedIn();
-        }
-        match /likes/{userId} {
-            allow read: if true;
-            allow create, delete: if isOwner(userId);
-        }
-    }
-    
-    match /groups/{groupId} {
-        allow read: if true;
-        allow create: if isSignedIn();
-        allow update: if isAdmin();
+    match /{collectionName}/{docId} {
+      allow read: if true;
+      allow list: if true;
 
-        match /members/{userId} {
-            allow read: if true;
-            allow create, delete: if isOwner(userId);
-        }
-    }
-    
-    match /channels/{channelId} {
-        allow read: if true;
-        allow create, update: if isOwner(channelId);
-    }
-    
-    match /playlists/{playlistId} {
-        allow read: if resource.data.isPublic == true || isOwner(resource.data.creatorId);
-        allow create: if isSignedIn();
-        allow update: if isOwner(resource.data.creatorId);
+      // Allow write access only for super admins for top-level content
+      allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSuperAdmin == true;
     }
   }
 }

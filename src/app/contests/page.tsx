@@ -67,7 +67,7 @@ function RecentChants({ contestId }: { contestId: string }) {
 function ContestContent({ contestId }: { contestId: string, }) {
     const db = useFirestore();
     const auth = useAuth();
-    const [user, loadingUser] = useAuthState(auth);
+    const [user] = useAuthState(auth);
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
 
@@ -81,7 +81,8 @@ function ContestContent({ contestId }: { contestId: string, }) {
 
 
     const handleChant = (data: ChantFormValues) => {
-         if (!user) {
+         const currentUser = auth.currentUser;
+         if (!currentUser) {
             toast({ variant: 'destructive', title: 'You must be logged in to chant.' });
             return;
         }
@@ -92,31 +93,22 @@ function ContestContent({ contestId }: { contestId: string, }) {
         }
         
         startChantTransition(async () => {
-             const userProgressRef = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
-             const contestLeaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, user.uid);
-             const requestData = {
-                chants: increment(1),
-                lastChantedAt: serverTimestamp(),
-                displayName: user.displayName || 'Anonymous',
-                mantra: data.mantra,
-             }
-
+             const userProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, activeContest.id);
+             const contestLeaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, currentUser.uid);
+             
              try {
                 await runTransaction(db, async (transaction) => {
-                    transaction.set(userProgressRef, {
+                    const requestData = {
                         chants: increment(1),
                         lastChantedAt: serverTimestamp(),
-                        displayName: user.displayName || 'Anonymous',
-                    }, { merge: true });
-
-                     transaction.set(contestLeaderboardRef, {
-                        userId: user.uid,
-                        chants: increment(1),
-                        lastChantedAt: serverTimestamp(),
-                        displayName: user.displayName || 'Anonymous',
+                        displayName: currentUser.displayName || 'Anonymous',
                         mantra: data.mantra,
-                    }, { merge: true });
+                    };
+                    transaction.set(userProgressRef, requestData, { merge: true });
+                    transaction.set(contestLeaderboardRef, requestData, { merge: true });
+                    transaction.update(contestRef, { totalChants: increment(1) });
                 });
+
                  form.reset({ mantra: "Jai Shri Ram" });
              } catch (error: any) {
                 // This will catch transaction errors, including permission denied on subcollections

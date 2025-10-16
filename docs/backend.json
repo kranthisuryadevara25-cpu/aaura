@@ -155,26 +155,20 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
-        "description": { "type": "string" },
-        "goal": { "type": "number", "description": "The target number of chants." },
-        "currentCount": { "type": "number", "description": "The current number of chants." },
-        "startDate": { "type": "string", "format": "date-time" },
-        "endDate": { "type": "string", "format": "date-time" },
-        "status": { "type": "string", "enum": ["active", "completed", "archived"] }
+        "totalChants": { "type": "number", "description": "The current number of total chants." }
       },
-      "required": ["id", "title", "goal", "startDate", "endDate", "status"]
+      "required": ["id", "title", "totalChants"]
     },
     "UserContestProgress": {
       "title": "User Contest Progress",
       "type": "object",
       "description": "Tracks a user's contribution to a specific contest.",
       "properties": {
-        "contestId": { "type": "string" },
-        "userId": { "type": "string" },
-        "chantCount": { "type": "number" },
-        "lastChanted": { "type": "string", "format": "date-time" }
+        "chants": { "type": "number" },
+        "lastChantedAt": { "type": "string", "format": "date-time" },
+        "displayName": { "type": "string" }
       },
-      "required": ["contestId", "userId", "chantCount"]
+      "required": ["chants", "lastChantedAt", "displayName"]
     },
     "Media": {
       "$schema": "http://json-schema.org/draft-07/schema#",

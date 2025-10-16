@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -30,7 +30,11 @@ export default function ContestsPage() {
     const activeContest = contests?.[0];
 
     // Correctly define userProgressRef only when user and activeContest are available
-    const userProgressRef = user && activeContest ? doc(db, `users/${user.uid}/contestProgress`, activeContest.id) : undefined;
+    const userProgressRef = useMemo(() => {
+        if (!user || !activeContest) return undefined;
+        return doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
+    }, [db, user, activeContest]);
+
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
 
     const handleChant = () => {
@@ -44,27 +48,20 @@ export default function ContestsPage() {
                 await runTransaction(db, async (transaction) => {
                     const contestRef = doc(db, 'contests', activeContest.id);
                     
-                    transaction.update(contestRef, { currentCount: increment(1) });
+                    transaction.update(contestRef, { totalChants: increment(1) });
                     
                     const userProgressDoc = await transaction.get(userProgressRef);
-                    const progressData = {
-                        contestId: activeContest.id,
-                        userId: user.uid,
-                        chantCount: increment(1),
-                        lastChanted: serverTimestamp(),
-                    };
-
+                    
                     if (userProgressDoc.exists()) {
                         transaction.update(userProgressRef, {
-                            chantCount: increment(1),
-                            lastChanted: serverTimestamp(),
+                            chants: increment(1),
+                            lastChantedAt: serverTimestamp(),
                         });
                     } else {
                          transaction.set(userProgressRef, {
-                            contestId: activeContest.id,
-                            userId: user.uid,
-                            chantCount: 1,
-                            lastChanted: serverTimestamp(),
+                            chants: 1,
+                            lastChantedAt: serverTimestamp(),
+                            displayName: user.displayName || 'Anonymous',
                         });
                     }
                 });
@@ -73,9 +70,9 @@ export default function ContestsPage() {
                     path: userProgressRef.path,
                     operation: 'write',
                     requestResourceData: {
-                         contestId: activeContest.id,
-                         userId: user.uid,
-                         chantCount: userProgress ? userProgress.chantCount + 1 : 1,
+                         chants: userProgress ? userProgress.chants + 1 : 1,
+                         lastChantedAt: new Date(),
+                         displayName: user.displayName,
                     }
                 });
                 errorEmitter.emit('permission-error', permissionError);
@@ -101,7 +98,7 @@ export default function ContestsPage() {
          )
     }
 
-    const progressPercentage = (activeContest.currentCount / activeContest.goal) * 100;
+    const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
 
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
@@ -114,7 +111,7 @@ export default function ContestsPage() {
                 <CardContent className="space-y-6">
                     <div>
                         <p className="text-5xl font-bold tracking-tighter text-foreground">
-                            {activeContest.currentCount.toLocaleString()}
+                            {(activeContest.totalChants || 0).toLocaleString()}
                         </p>
                         <p className="text-muted-foreground">
                            of {activeContest.goal.toLocaleString()} chants
@@ -135,7 +132,7 @@ export default function ContestsPage() {
 
                     {user && !loadingUserProgress && (
                          <p className="text-muted-foreground">
-                            You have contributed {userProgress?.chantCount || 0} times.
+                            You have contributed {userProgress?.chants || 0} times.
                         </p>
                     )}
                 </CardContent>

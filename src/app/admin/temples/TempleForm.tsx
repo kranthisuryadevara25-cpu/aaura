@@ -59,11 +59,11 @@ const formSchema = z.object({
       poojaGuidelines: z.object({ en: z.string().optional() }),
   }),
   nearbyInfo: z.object({
-      placesToVisit: z.object({ en: z.string().optional() }),
-      accommodation: z.object({ en: z.string().optional() }),
-      food: z.object({ en: z.string().optional() }),
-      transport: z.object({ en: z.string().optional() }),
-      guides: z.object({ en: z.string().optional() }),
+      placesToVisit: z.array(z.object({ name: z.string().optional(), description: z.string().optional() })).optional(),
+      accommodation: z.array(z.object({ name: z.string().optional(), phone: z.string().optional() })).optional(),
+      food: z.array(z.object({ name: z.string().optional(), phone: z.string().optional() })).optional(),
+      transport: z.array(z.object({ name: z.string().optional(), phone: z.string().optional() })).optional(),
+      guides: z.array(z.object({ name: z.string().optional(), phone: z.string().optional() })).optional(),
   }),
 });
 
@@ -89,14 +89,23 @@ export function TempleForm({ temple }: TempleFormProps) {
       importance: { mythological: { en: '' }, historical: { en: '' } },
       media: { images: [{ url: '', hint: '' }] },
       visitingInfo: { timings: { en: '' } },
-      nearbyInfo: {},
+      nearbyInfo: {
+        placesToVisit: [{name: '', description: ''}],
+        accommodation: [{name: '', phone: ''}],
+        food: [{name: '', phone: ''}],
+        transport: [{name: '', phone: ''}],
+        guides: [{name: '', phone: ''}],
+      },
     },
   });
 
-  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
-    control: form.control,
-    name: "media.images",
-  });
+  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({ control: form.control, name: "media.images" });
+  const { fields: guideFields, append: appendGuide, remove: removeGuide } = useFieldArray({ control: form.control, name: "nearbyInfo.guides" });
+  const { fields: transportFields, append: appendTransport, remove: removeTransport } = useFieldArray({ control: form.control, name: "nearbyInfo.transport" });
+  const { fields: foodFields, append: appendFood, remove: removeFood } = useFieldArray({ control: form.control, name: "nearbyInfo.food" });
+  const { fields: accommodationFields, append: appendAccommodation, remove: removeAccommodation } = useFieldArray({ control: form.control, name: "nearbyInfo.accommodation" });
+  const { fields: placesToVisitFields, append: appendPlaceToVisit, remove: removePlaceToVisit } = useFieldArray({ control: form.control, name: "nearbyInfo.placesToVisit" });
+
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
@@ -221,21 +230,111 @@ export function TempleForm({ temple }: TempleFormProps) {
 
             <Separator />
             <h3 className="text-xl font-semibold text-primary">Nearby Information & Suggestions</h3>
-             <FormField control={form.control} name="nearbyInfo.accommodation.en" render={({ field }) => (
-                <FormItem><FormLabel>Suggested Accommodation</FormLabel><FormControl><Textarea placeholder="List suggested hotels, dharamshalas, etc." {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-             <FormField control={form.control} name="nearbyInfo.food.en" render={({ field }) => (
-                <FormItem><FormLabel>Suggested Food/Restaurants</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-             <FormField control={form.control} name="nearbyInfo.transport.en" render={({ field }) => (
-                <FormItem><FormLabel>Suggested Transport/Travel Agents</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-             <FormField control={form.control} name="nearbyInfo.guides.en" render={({ field }) => (
-                <FormItem><FormLabel>Suggested Tourist Guides</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
-             <FormField control={form.control} name="nearbyInfo.placesToVisit.en" render={({ field }) => (
-                <FormItem><FormLabel>Other Places to Visit Nearby</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
-            )} />
+            
+            {/* Guides */}
+            <div>
+              <h4 className="text-lg font-medium mb-2">Suggested Guides</h4>
+              {guideFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
+                   <FormField control={form.control} name={`nearbyInfo.guides.${index}.name`} render={({ field }) => (
+                      <FormItem><FormLabel>Guide Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`nearbyInfo.guides.${index}.phone`} render={({ field }) => (
+                      <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => removeGuide(index)} className="mt-8">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => appendGuide({ name: '', phone: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Guide
+              </Button>
+            </div>
+            
+            {/* Transport */}
+            <div className="mt-4">
+              <h4 className="text-lg font-medium mb-2">Suggested Transport / Travel Agents</h4>
+              {transportFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
+                   <FormField control={form.control} name={`nearbyInfo.transport.${index}.name`} render={({ field }) => (
+                      <FormItem><FormLabel>Agent/Service Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`nearbyInfo.transport.${index}.phone`} render={({ field }) => (
+                      <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => removeTransport(index)} className="mt-8">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => appendTransport({ name: '', phone: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Transport
+              </Button>
+            </div>
+
+            {/* Food */}
+            <div className="mt-4">
+              <h4 className="text-lg font-medium mb-2">Suggested Food / Restaurants</h4>
+              {foodFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
+                   <FormField control={form.control} name={`nearbyInfo.food.${index}.name`} render={({ field }) => (
+                      <FormItem><FormLabel>Restaurant Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`nearbyInfo.food.${index}.phone`} render={({ field }) => (
+                      <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => removeFood(index)} className="mt-8">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => appendFood({ name: '', phone: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Restaurant
+              </Button>
+            </div>
+
+            {/* Accommodation */}
+            <div className="mt-4">
+              <h4 className="text-lg font-medium mb-2">Suggested Accommodation</h4>
+              {accommodationFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
+                   <FormField control={form.control} name={`nearbyInfo.accommodation.${index}.name`} render={({ field }) => (
+                      <FormItem><FormLabel>Hotel/Dharamshala Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`nearbyInfo.accommodation.${index}.phone`} render={({ field }) => (
+                      <FormItem><FormLabel>Mobile Number</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => removeAccommodation(index)} className="mt-8">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => appendAccommodation({ name: '', phone: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Accommodation
+              </Button>
+            </div>
+
+            {/* Places to Visit */}
+            <div className="mt-4">
+              <h4 className="text-lg font-medium mb-2">Other Places to Visit</h4>
+              {placesToVisitFields.map((field, index) => (
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
+                   <FormField control={form.control} name={`nearbyInfo.placesToVisit.${index}.name`} render={({ field }) => (
+                      <FormItem><FormLabel>Place Name</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <FormField control={form.control} name={`nearbyInfo.placesToVisit.${index}.description`} render={({ field }) => (
+                      <FormItem><FormLabel>Description</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+                    <Button type="button" variant="destructive" size="icon" onClick={() => removePlaceToVisit(index)} className="mt-8">
+                        <Trash2 className="h-4 w-4" />
+                    </Button>
+                </div>
+              ))}
+              <Button type="button" variant="outline" size="sm" onClick={() => appendPlaceToVisit({ name: '', description: '' })}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Add Place
+              </Button>
+            </div>
 
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -247,3 +346,5 @@ export function TempleForm({ temple }: TempleFormProps) {
     </Card>
   );
 }
+
+    

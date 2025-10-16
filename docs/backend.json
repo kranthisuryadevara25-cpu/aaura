@@ -576,16 +576,26 @@
         "nearbyInfo": {
           "type": "object",
           "properties": {
-            "placesToVisit_en": { "type": "string" },
-            "placesToVisit_hi": { "type": "string" },
-            "accommodation_en": { "type": "string", "description": "Information on suggested hotels and dharamshalas." },
-            "accommodation_hi": { "type": "string" },
-            "food_en": { "type": "string" },
-            "food_hi": { "type": "string" },
-            "transport_en": { "type": "string", "description": "Information on suggested travel agents and transport options." },
-            "transport_hi": { "type": "string" },
-            "guides_en": { "type": "string", "description": "Information on suggested tourist guides." },
-            "guides_hi": { "type": "string" }
+            "placesToVisit": {
+              "type": "array",
+              "items": { "type": "object", "properties": { "name": { "type": "string" }, "description": { "type": "string" } } }
+            },
+            "accommodation": {
+              "type": "array",
+              "items": { "type": "object", "properties": { "name": { "type": "string" }, "phone": { "type": "string" } } }
+            },
+            "food": {
+              "type": "array",
+              "items": { "type": "object", "properties": { "name": { "type": "string" }, "phone": { "type": "string" } } }
+            },
+            "transport": {
+              "type": "array",
+              "items": { "type": "object", "properties": { "name": { "type": "string" }, "phone": { "type": "string" } } }
+            },
+            "guides": {
+              "type": "array",
+              "items": { "type": "object", "properties": { "name": { "type": "string" }, "phone": { "type": "string" } } }
+            }
           }
         }
       },
@@ -1157,3 +1167,5 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
+
+    

@@ -101,6 +101,9 @@ export function DeityForm({ deity }: DeityFormProps) {
     name: "stotras",
   });
 
+  const title = deity ? `Edit ${deity.name.en}` : 'Add a New Deity';
+  const description = deity ? 'Update the details for this deity.' : 'Fill out the form to add a new deity to the database.';
+
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       const deityId = deity ? deity.id : data.slug;
@@ -109,14 +112,14 @@ export function DeityForm({ deity }: DeityFormProps) {
       const saveData = { 
         id: deityId,
         ...data,
-        status: 'published',
+        status: 'pending', // Changed from 'published' to 'pending'
         updatedAt: serverTimestamp(),
         ...(deity.status === 'unclaimed' && { createdAt: serverTimestamp() }),
       };
 
       setDoc(deityRef, saveData, { merge: true })
         .then(() => {
-          toast({ title: `Deity ${deity ? 'Updated' : 'Created'}!`, description: 'The deity has been successfully saved.' });
+          toast({ title: `Deity Submitted!`, description: 'The deity has been sent for review.' });
           router.push('/admin/content');
         })
         .catch((serverError) => {
@@ -129,9 +132,6 @@ export function DeityForm({ deity }: DeityFormProps) {
         });
     });
   };
-  
-  const title = deity ? `Edit ${deity.name.en}` : 'Add a New Deity';
-  const description = deity ? 'Update the details for this deity.' : 'Fill out the form to add a new deity to the database.';
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -230,10 +230,9 @@ export function DeityForm({ deity }: DeityFormProps) {
                 </Button>
             </div>
 
-
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {deity ? 'Save Changes' : 'Create Deity'}
+              {deity ? 'Submit Changes for Review' : 'Submit for Review'}
             </Button>
           </form>
         </Form>

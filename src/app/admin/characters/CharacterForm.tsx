@@ -67,6 +67,9 @@ export function CharacterForm({ character }: CharacterFormProps) {
     },
   });
 
+  const title = character ? `Edit ${character.name.en}` : 'Add a New Epic Hero';
+  const description = character ? 'Update the details for this hero.' : 'Fill out the form to add a new hero to the database.';
+
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       const characterId = character ? character.id : data.slug;
@@ -76,6 +79,7 @@ export function CharacterForm({ character }: CharacterFormProps) {
           id: characterId,
           ...data,
           epicAssociation: data.epicAssociation.split(',').map(s => s.trim()),
+          status: 'pending', // Changed from 'published' to 'pending'
           // Add other fields with default values
           background: character?.background || { birth: '', earlyLife: '', family: { parents: [], siblings: [], spouses: [], children: [] } },
           prominence: character?.prominence || '',
@@ -93,7 +97,7 @@ export function CharacterForm({ character }: CharacterFormProps) {
 
       setDoc(characterRef, fullData, { merge: true })
       .then(() => {
-        toast({ title: `Character ${character ? 'Updated' : 'Created'}!`, description: `The character has been successfully saved.` });
+        toast({ title: `Character Submitted!`, description: `The character has been sent for review.` });
         router.push('/admin/content');
       })
       .catch((serverError) => {
@@ -107,9 +111,6 @@ export function CharacterForm({ character }: CharacterFormProps) {
     });
   };
   
-  const title = character ? `Edit ${character.name.en}` : 'Add a New Epic Hero';
-  const description = character ? 'Update the details for this hero.' : 'Fill out the form to add a new hero to the database.';
-
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -144,7 +145,7 @@ export function CharacterForm({ character }: CharacterFormProps) {
 
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {character ? 'Save Changes' : 'Create Hero'}
+              {character ? 'Submit Changes for Review' : 'Submit for Review'}
             </Button>
           </form>
         </Form>

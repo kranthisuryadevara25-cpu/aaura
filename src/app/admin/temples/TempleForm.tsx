@@ -106,6 +106,8 @@ export function TempleForm({ temple }: TempleFormProps) {
   const { fields: accommodationFields, append: appendAccommodation, remove: removeAccommodation } = useFieldArray({ control: form.control, name: "nearbyInfo.accommodation" });
   const { fields: placesToVisitFields, append: appendPlaceToVisit, remove: removePlaceToVisit } = useFieldArray({ control: form.control, name: "nearbyInfo.placesToVisit" });
 
+  const titleText = temple ? `Edit ${temple.name.en}` : 'Add a New Temple';
+  const descriptionText = temple ? 'Update the details for this temple.' : 'Fill out the form to add a new temple to the database.';
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
@@ -115,14 +117,14 @@ export function TempleForm({ temple }: TempleFormProps) {
       const fullData = { 
         id: templeId,
         ...data,
-        status: 'published',
+        status: 'pending', // Changed from 'published' to 'pending'
         updatedAt: serverTimestamp(),
         ...(temple.status === 'unclaimed' && { createdAt: serverTimestamp() }),
       };
 
       setDoc(templeRef, fullData, { merge: true })
       .then(() => {
-        toast({ title: `Temple ${temple ? 'Updated' : 'Created'}!`, description: 'The temple has been successfully saved.' });
+        toast({ title: `Temple Submitted!`, description: 'The temple has been sent for review.' });
         router.push('/admin/content');
       })
       .catch((serverError) => {
@@ -136,9 +138,6 @@ export function TempleForm({ temple }: TempleFormProps) {
     });
   };
   
-  const titleText = temple ? `Edit ${temple.name.en}` : 'Add a New Temple';
-  const descriptionText = temple ? 'Update the details for this temple.' : 'Fill out the form to add a new temple to the database.';
-
   return (
     <Card className="w-full max-w-4xl mx-auto">
       <CardHeader>
@@ -344,7 +343,7 @@ export function TempleForm({ temple }: TempleFormProps) {
 
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {temple ? 'Save Changes' : 'Create Temple'}
+              {temple ? 'Submit Changes for Review' : 'Submit for Review'}
             </Button>
           </form>
         </Form>

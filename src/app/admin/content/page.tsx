@@ -37,7 +37,9 @@ function DeitiesTabContent() {
   const deitiesRef = collection(db, 'deities');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [deities, isLoading] = useCollectionData(deitiesRef, { idField: 'id' });
+  const [deities, isLoading] = useCollectionData(deitiesRef, {
+    snapshotOptions: { idField: 'id' },
+  });
 
   const handleDelete = async (id: string) => {
     try {
@@ -129,7 +131,9 @@ function StoriesTabContent() {
   const storiesRef = collection(db, 'stories');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [stories, isLoading] = useCollectionData(storiesRef, { idField: 'id' });
+  const [stories, isLoading] = useCollectionData(storiesRef, {
+    snapshotOptions: { idField: 'id' },
+  });
 
   const handleDelete = async (id: string) => {
     try {
@@ -221,7 +225,9 @@ function CharactersTabContent() {
   const charactersRef = collection(db, 'epicHeroes');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [characters, isLoading] = useCollectionData(charactersRef, { idField: 'id' });
+  const [characters, isLoading] = useCollectionData(charactersRef, {
+    snapshotOptions: { idField: 'id' },
+  });
 
 
   const handleDelete = async (id: string) => {
@@ -314,7 +320,9 @@ function TemplesTabContent() {
   const templesRef = collection(db, 'temples');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [temples, isLoading] = useCollectionData(templesRef, { idField: 'id' });
+  const [temples, isLoading] = useCollectionData(templesRef, {
+    snapshotOptions: { idField: 'id' },
+  });
 
   const handleDelete = async (id: string) => {
     try {
@@ -405,7 +413,9 @@ function ContestsTabContent() {
     const db = useFirestore();
     const { toast } = useToast();
     const contestsRef = collection(db, 'contests');
-    const [contests, isLoading] = useCollectionData(contestsRef, { idField: 'id' });
+    const [contests, isLoading] = useCollectionData(contestsRef, {
+        snapshotOptions: { idField: 'id' },
+    });
 
     const handleDelete = async (id: string) => {
         try {

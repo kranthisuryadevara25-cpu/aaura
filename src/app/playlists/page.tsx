@@ -10,7 +10,6 @@ import type { DocumentData } from 'firebase/firestore';
 
 async function getPublicPlaylists() {
   try {
-    // Correctly use the Admin SDK's query methods
     const playlistsQuery = adminDb.collection('playlists').where('isPublic', '==', true);
     
     const querySnapshot = await playlistsQuery.get();
@@ -18,7 +17,6 @@ async function getPublicPlaylists() {
     const playlists = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),
-      // Firestore Timestamps need to be converted for client-side usage
       createdAt: doc.data().createdAt?.toDate().toISOString() || new Date().toISOString(),
       updatedAt: doc.data().updatedAt?.toDate().toISOString() || new Date().toISOString(),
     }));
@@ -30,7 +28,7 @@ async function getPublicPlaylists() {
 }
 
 export default async function PlaylistsPage() {
-  const initialPlaylists = await getPublicPlaylists();
+  const initialPublicPlaylists = await getPublicPlaylists();
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -52,7 +50,7 @@ export default async function PlaylistsPage() {
         </Button>
       </div>
 
-      <PlaylistClientPage initialPlaylists={initialPlaylists as DocumentData[]} />
+      <PlaylistClientPage initialPublicPlaylists={initialPublicPlaylists as DocumentData[]} />
     </main>
   );
 }

@@ -20,7 +20,7 @@ export function Feed({ items, isLoading }: { items: FeedItem[], isLoading: boole
     <>
         {items.length > 0 ? (
             items.map((item) => (
-                <FeedCard key={`${item.kind}-${item.id}`} item={item} />
+                <FeedCard key={item.id} item={item} />
             ))
         ) : (
              <div className="flex justify-center items-center h-96">

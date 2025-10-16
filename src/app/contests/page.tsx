@@ -93,28 +93,21 @@ function ContestContent({ contestId }: { contestId: string, }) {
         
         startChantTransition(async () => {
             const userProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, activeContest.id);
-            const leaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, currentUser.uid);
-
-            const chantData = { 
-                mantra: data.mantra, 
-                displayName: currentUser.displayName || 'Anonymous User',
+            const requestData = {
+                chants: increment(1),
                 lastChantedAt: serverTimestamp(),
+                displayName: currentUser.displayName || 'Anonymous User',
+                mantra: data.mantra
             };
 
             try {
-                // Perform two separate, simple writes.
-                await setDoc(userProgressRef, {
-                    ...chantData,
-                    chants: increment(1)
-                }, { merge: true });
-
-                await setDoc(leaderboardRef, chantData, { merge: true });
+                await setDoc(userProgressRef, requestData, { merge: true });
                 
                 toast({ title: 'Chant Submitted!', description: 'Your contribution has been counted.' });
                 form.reset({ mantra: "Jai Shri Ram" });
             } catch (error: any) {
                 const permissionError = new FirestorePermissionError({
-                   path: `users/${currentUser.uid}/contestProgress/${activeContest.id}`,
+                   path: userProgressRef.path,
                    operation: 'write',
                    requestResourceData: { mantra: data.mantra }
                 });

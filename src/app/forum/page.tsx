@@ -16,7 +16,6 @@ import { useState, useEffect } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
-
 function GroupCard({ group }: { group: any }) {
     const { t } = useLanguage();
     const auth = useAuth();

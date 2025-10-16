@@ -12,7 +12,7 @@ import { useFirestore } from '@/lib/firebase/provider';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { products as mockProducts } from '@/lib/products';
 import { Badge } from '@/components/ui/badge';
 
@@ -22,7 +22,7 @@ export default function ShopPage() {
   const auth = useAuth();
   const [user] = useAuthState(auth);
   const { toast } = useToast();
-  const [isAdding, startTransition] = useTransition();
+  const [addingProductId, setAddingProductId] = useState<string | null>(null);
 
   const products = mockProducts;
   const isLoading = false;
@@ -37,46 +37,45 @@ export default function ShopPage() {
       });
       return;
     }
+    
+    setAddingProductId(productId);
 
-    startTransition(async () => {
-        try {
-            const cartRef = doc(db, 'users', user.uid, 'cart', productId);
+    runTransaction(db, async (transaction) => {
+        const cartRef = doc(db, 'users', user.uid, 'cart', productId);
+        const cartDoc = await transaction.get(cartRef);
+        const productFromMock = products.find(p => p.id === productId);
 
-            await runTransaction(db, async (transaction) => {
-                const cartDoc = await transaction.get(cartRef);
-                const productFromMock = products.find(p => p.id === productId);
-
-                if (!productFromMock) {
-                    throw new Error("Product not found");
-                }
-                const productData = productFromMock;
-
-                if (cartDoc.exists()) {
-                    transaction.update(cartRef, { quantity: increment(1) });
-                } else {
-                     transaction.set(cartRef, {
-                        productId: productId,
-                        quantity: 1,
-                        addedAt: serverTimestamp(),
-                        price: productData.price,
-                        name_en: productData.name_en,
-                        imageUrl: productData.imageUrl,
-                    });
-                }
-            });
-
-            toast({
-                title: "Added to Cart",
-                description: `${name} has been added to your shopping cart.`,
-            });
-        } catch (error) {
-             console.error("Error adding to cart: ", error);
-             toast({
-                variant: "destructive",
-                title: "Failed to Add",
-                description: "Could not add the item to your cart. Please try again.",
-             });
+        if (!productFromMock) {
+            throw new Error("Product not found");
         }
+        const productData = productFromMock;
+
+        if (cartDoc.exists()) {
+            transaction.update(cartRef, { quantity: increment(1) });
+        } else {
+             transaction.set(cartRef, {
+                productId: productId,
+                quantity: 1,
+                addedAt: serverTimestamp(),
+                price: productData.price,
+                name_en: productData.name_en,
+                imageUrl: productData.imageUrl,
+            });
+        }
+    }).then(() => {
+        toast({
+            title: "Added to Cart",
+            description: `${name} has been added to your shopping cart.`,
+        });
+    }).catch((error) => {
+        console.error("Error adding to cart: ", error);
+         toast({
+            variant: "destructive",
+            title: "Failed to Add",
+            description: "Could not add the item to your cart. Please try again.",
+         });
+    }).finally(() => {
+        setAddingProductId(null);
     });
   };
 
@@ -99,6 +98,7 @@ export default function ShopPage() {
                 const name = product[`name_${language}`] || product.name_en;
                 const hasDiscount = product.originalPrice && product.originalPrice > product.price;
                 const discountPercent = hasDiscount ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
+                const isAdding = addingProductId === product.id;
 
                 return (
                 <Card key={product.id} className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">

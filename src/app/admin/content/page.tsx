@@ -37,8 +37,8 @@ function DeitiesTabContent() {
   const deitiesRef = collection(db, 'deities');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [deities, isLoading] = useCollectionData(deitiesRef, {
-    snapshotOptions: { idField: 'id' },
+  const [deities, isLoading] = useCollectionData<Deity>(deitiesRef, {
+    idField: 'id',
   });
 
   const handleDelete = async (id: string) => {
@@ -67,7 +67,7 @@ function DeitiesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(deities as Deity[] | undefined)?.map((deity) => {
+          {deities?.map((deity) => {
             const imageUrl = deity.images?.[0]?.url;
             const imageHint = deity.images?.[0]?.hint;
             return(
@@ -131,8 +131,8 @@ function StoriesTabContent() {
   const storiesRef = collection(db, 'stories');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [stories, isLoading] = useCollectionData(storiesRef, {
-    snapshotOptions: { idField: 'id' },
+  const [stories, isLoading] = useCollectionData<Story>(storiesRef, {
+    idField: 'id',
   });
 
   const handleDelete = async (id: string) => {
@@ -161,7 +161,7 @@ function StoriesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(stories as Story[] | undefined)?.map((story) => {
+          {stories?.map((story) => {
              const imageUrl = story.image?.url;
              const imageHint = story.image?.hint;
              return(
@@ -225,8 +225,8 @@ function CharactersTabContent() {
   const charactersRef = collection(db, 'epicHeroes');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [characters, isLoading] = useCollectionData(charactersRef, {
-    snapshotOptions: { idField: 'id' },
+  const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef, {
+    idField: 'id',
   });
 
 
@@ -256,7 +256,7 @@ function CharactersTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(characters as EpicHero[] | undefined)?.map((character) => {
+          {characters?.map((character) => {
             const imageUrl = character.imageUrl;
             const imageHint = character.imageHint;
             return (
@@ -320,8 +320,8 @@ function TemplesTabContent() {
   const templesRef = collection(db, 'temples');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [temples, isLoading] = useCollectionData(templesRef, {
-    snapshotOptions: { idField: 'id' },
+  const [temples, isLoading] = useCollectionData<Temple>(templesRef, {
+    idField: 'id',
   });
 
   const handleDelete = async (id: string) => {
@@ -350,7 +350,7 @@ function TemplesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(temples as Temple[] | undefined)?.map((temple) => {
+          {temples?.map((temple) => {
             const imageUrl = temple.media?.images?.[0]?.url;
             const imageHint = temple.media?.images?.[0]?.hint;
             return (
@@ -414,7 +414,7 @@ function ContestsTabContent() {
     const { toast } = useToast();
     const contestsRef = collection(db, 'contests');
     const [contests, isLoading] = useCollectionData(contestsRef, {
-        snapshotOptions: { idField: 'id' },
+        idField: 'id',
     });
 
     const handleDelete = async (id: string) => {
@@ -526,3 +526,5 @@ export default function ContentManagementPage() {
     </main>
   );
 }
+
+    

@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -399,6 +399,44 @@ function TemplesTabContent() {
   );
 }
 
+function ContestsTabContent() {
+    const db = useFirestore();
+    const contestsRef = collection(db, 'contests');
+    const [contests, isLoading] = useCollectionData(contestsRef, { idField: 'id' });
+
+    if (isLoading) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
+    }
+
+    return (
+        <div>
+            <div className="flex justify-between items-center mb-6">
+                <p className="text-muted-foreground">Manage global chanting contests.</p>
+                <Button asChild>
+                <Link href="/admin/contests/new">
+                    <PlusCircle className="mr-2" />
+                    Create New Contest
+                </Link>
+                </Button>
+            </div>
+             <div className="space-y-4">
+                {contests?.map((contest) => (
+                    <Card key={contest.id}>
+                        <CardHeader>
+                            <CardTitle>{contest.title}</CardTitle>
+                            <CardDescription>Goal: {Number(contest.goal).toLocaleString()} chants</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <p>Status: {contest.status}</p>
+                            <p>Current Count: {Number(contest.currentCount || 0).toLocaleString()}</p>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        </div>
+    )
+}
+
 export default function ContentManagementPage() {
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -412,11 +450,12 @@ export default function ContentManagementPage() {
       </div>
 
        <Tabs defaultValue="deities" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="deities"><Sparkles className="mr-2 h-4 w-4" />Deities</TabsTrigger>
             <TabsTrigger value="stories"><BookOpen className="mr-2 h-4 w-4" />Epic Sagas</TabsTrigger>
             <TabsTrigger value="characters"><UserSquare className="mr-2 h-4 w-4" />Epic Heroes</TabsTrigger>
             <TabsTrigger value="temples"><Palmtree className="mr-2 h-4 w-4" />Temples</TabsTrigger>
+            <TabsTrigger value="contests"><Trophy className="mr-2 h-4 w-4" />Contests</TabsTrigger>
         </TabsList>
         <TabsContent value="deities" className="mt-6">
             <DeitiesTabContent />
@@ -429,6 +468,9 @@ export default function ContentManagementPage() {
         </TabsContent>
          <TabsContent value="temples" className="mt-6">
             <TemplesTabContent />
+        </TabsContent>
+        <TabsContent value="contests" className="mt-6">
+            <ContestsTabContent />
         </TabsContent>
         </Tabs>
       

@@ -10,7 +10,7 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageSquare, ThumbsUp, Send } from 'lucide-react';
+import { Loader2, MessageCircle, ThumbsUp, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -238,7 +238,7 @@ export function Posts({ contextId, contextType }: PostsProps) {
             {loadingPosts && !posts ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
                 <div className="space-y-6">
                     {posts && posts.length > 0 ? (
-                        posts.map((post, index) => <PostCard key={post.id || `post-${index}`} post={post} />)
+                        posts.map((post, index) => <PostCard key={post.id || index} post={post} />)
                     ) : (
                         <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">No posts here yet.</p>

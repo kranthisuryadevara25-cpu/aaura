@@ -30,15 +30,20 @@ export default function ContestsPage() {
     const activeContest = useMemo(() => contests?.[0], [contests]);
 
     const userProgressRef = useMemo(() => {
-        if (!user || !activeContest?.id) return undefined;
+        if (!user || !activeContest) return undefined;
         return doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
     }, [db, user, activeContest]);
 
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
 
     const handleChant = () => {
-        if (!user || !activeContest || !userProgressRef) {
+        if (!user) {
             toast({ variant: 'destructive', title: 'You must be logged in to chant.' });
+            return;
+        }
+
+        if (!activeContest || !userProgressRef) {
+             toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
             return;
         }
 

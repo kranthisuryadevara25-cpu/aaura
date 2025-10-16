@@ -20,6 +20,7 @@ import { Comments } from './comments';
 import { collection, addDoc, serverTimestamp, query, where, orderBy, doc, DocumentData, writeBatch, increment } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { Skeleton } from './ui/skeleton';
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(1000, "Post must be less than 1000 characters."),
@@ -213,7 +214,7 @@ export function Posts({ contextId, contextType }: PostsProps) {
     
     const [fetchedPosts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
 
-    const [posts, setPosts] = useState<DocumentData[] | undefined>(undefined);
+    const [posts, setPosts] = useState<DocumentData[]>([]);
 
     useEffect(() => {
         if (fetchedPosts) {
@@ -222,7 +223,6 @@ export function Posts({ contextId, contextType }: PostsProps) {
     }, [fetchedPosts]);
 
     const handlePostCreated = (newPost: DocumentData) => {
-        // Mock the Firestore Timestamp object for immediate client-side rendering.
         const postWithMockTimestamp = {
             ...newPost,
             createdAt: {
@@ -235,7 +235,7 @@ export function Posts({ contextId, contextType }: PostsProps) {
     return (
         <div>
             <CreatePost contextId={contextId} contextType={contextType} onPostCreated={handlePostCreated} />
-            {loadingPosts && !posts ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
+            {loadingPosts && posts.length === 0 ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
                 <div className="space-y-6">
                     {posts && posts.length > 0 ? (
                         posts.map((post, index) => <PostCard key={post.id || index} post={post} />)

@@ -1,5 +1,4 @@
 
-
 "use client";
 import React, { useState, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -17,13 +16,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart } from "lucide-react";
+import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "./FollowListDialog";
 import { useLanguage } from "@/hooks/use-language";
-
+import { Sidebar } from "./Sidebar";
 
 const UserStats = () => {
     const auth = useAuth();
@@ -114,6 +118,23 @@ const CartButton = () => {
     )
 }
 
+const MobileNav = () => {
+  const [open, setOpen] = useState(false);
+  
+  return (
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu />
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0 w-64">
+        <Sidebar />
+      </SheetContent>
+    </Sheet>
+  )
+}
+
 export const TopNav = () => {
   const auth = useAuth();
   const [user] = useAuthState(auth);
@@ -125,12 +146,15 @@ export const TopNav = () => {
 
   return (
     <header className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
-      <div className="flex items-center gap-4">
-        <Link href="/" className="text-2xl font-serif">Aaura</Link>
+      <div className="flex items-center gap-2">
+        <MobileNav />
+        <Link href="/" className="text-2xl font-serif">Aura</Link>
       </div>
 
       <div className="flex items-center gap-3">
-        <UserStats />
+        <div className="hidden md:flex">
+          <UserStats />
+        </div>
         <LanguageSwitcher />
         <CartButton />
         {user ? (
@@ -189,5 +213,3 @@ export const TopNav = () => {
     </header>
   );
 };
-
-  

@@ -15,8 +15,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>aaura</title>
+        <title>Aura</title>
         <meta name="description" content="Your daily dose of spiritual wellness." />
+        <link rel="manifest" href="/manifest.json" />
+        <meta name="theme-color" content="#E6E6FA" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

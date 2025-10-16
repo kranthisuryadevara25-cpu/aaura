@@ -1,10 +1,12 @@
+
 // app/reels/page.tsx
 import { db } from '@/lib/firebase/admin';
 import ReelsClient from './ReelsClient';
 import type { FeedItem } from '@/types/feed';
 import type { DocumentData } from 'firebase-admin/firestore';
 
-export const revalidate = 60; // cache SSR for 1 minute
+export const revalidate = 0; // Disable caching for dynamic content
+export const dynamic = 'force-dynamic';
 
 const mapToFeedItem = (doc: DocumentData): FeedItem | null => {
     const data = doc.data();

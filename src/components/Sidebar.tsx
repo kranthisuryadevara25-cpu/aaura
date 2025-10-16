@@ -38,6 +38,7 @@ import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth } from '@/lib/firebase/provider';
+import { ScrollArea } from './ui/scroll-area';
 
 const mainNav = [
   { href: '/', label: 'home', icon: Home, exact: true },
@@ -165,19 +166,21 @@ export const Sidebar = () => {
   const isSuperAdmin = user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
 
   return (
-    <aside className="w-64 hidden md:block border-r p-4">
-      <nav className="space-y-2">
-        <div className="space-y-1">
-          {mainNav.map((item) => (
-            <NavLink key={item.label} {...item} />
-          ))}
-        </div>
-        <CollapsibleNavSection title="Library" items={libraryNav} />
-        <CollapsibleNavSection title="Community" items={communityNav} />
-        <CollapsibleNavSection title="Personal" items={personalNav} />
-        <CollapsibleNavSection title="Marketplace" items={marketplaceNav} />
-        {isSuperAdmin && <CollapsibleNavSection title="Manage" items={adminNav} />}
-      </nav>
+    <aside className="w-64 hidden md:block border-r">
+      <ScrollArea className="h-screen p-4">
+        <nav className="space-y-2">
+          <div className="space-y-1">
+            {mainNav.map((item) => (
+              <NavLink key={item.label} {...item} />
+            ))}
+          </div>
+          <CollapsibleNavSection title="Library" items={libraryNav} />
+          <CollapsibleNavSection title="Community" items={communityNav} />
+          <CollapsibleNavSection title="Personal" items={personalNav} />
+          <CollapsibleNavSection title="Marketplace" items={marketplaceNav} />
+          {isSuperAdmin && <CollapsibleNavSection title="Manage" items={adminNav} />}
+        </nav>
+      </ScrollArea>
     </aside>
   );
 };

@@ -7,6 +7,9 @@ import { useFeed } from '@/hooks/use-feed';
 import { useRouter, useParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useMemo } from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { ListMusic } from "lucide-react";
 
 export default function WatchPage() {
   const params = useParams();
@@ -37,13 +40,23 @@ export default function WatchPage() {
   }
 
   return (
-    <div className="flex w-full h-screen bg-background text-foreground">
+    <div className="flex flex-col md:flex-row w-full h-screen bg-background text-foreground">
       <div className="flex-1 p-4 lg:p-8 overflow-y-auto">
         <VideoPlayer contentId={id} onVideoEnd={handleVideoEnd} />
       </div>
-      <aside className="w-[400px] border-l border-border overflow-y-auto hidden lg:block">
+      <aside className="w-full md:w-[400px] border-t md:border-t-0 md:border-l border-border overflow-y-auto hidden lg:block">
         <FeedSidebar items={upNextItems} />
       </aside>
+       <div className="fixed bottom-4 right-4 lg:hidden">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button size="icon"><ListMusic /></Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px] sm:w-[400px] p-0">
+               <FeedSidebar items={upNextItems} />
+            </SheetContent>
+          </Sheet>
+        </div>
     </div>
   );
 }

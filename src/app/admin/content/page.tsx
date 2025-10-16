@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { collection, deleteDoc, doc, CollectionReference } from 'firebase/firestore';
+import { collection, deleteDoc, doc, FirestoreDataConverter, Query } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
@@ -31,13 +31,35 @@ import type { Temple } from '@/lib/temples';
 import { Badge } from '@/components/ui/badge';
 import type { DocumentData } from 'firebase/firestore';
 
+const deityConverter: FirestoreDataConverter<Deity> = {
+    toFirestore: (deity: Deity) => deity,
+    fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return { ...data } as Deity;
+    }
+};
+const storyConverter: FirestoreDataConverter<Story> = {
+    toFirestore: (story: Story) => story,
+    fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return { ...data } as Story;
+    }
+};
+const epicHeroConverter: FirestoreDataConverter<EpicHero> = {
+    toFirestore: (hero: EpicHero) => hero,
+    fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return { ...data } as EpicHero;
+    }
+};
 
 function DeitiesTabContent() {
   const db = useFirestore();
-  const deitiesRef = collection(db, 'deities') as CollectionReference<Deity>;
+  const deitiesRef = collection(db, 'deities').withConverter(deityConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [deities, isLoading] = useCollectionData<Deity>(deitiesRef, { idField: 'id' });
+  const [deities, isLoading] = useCollectionData<Deity>(deitiesRef as Query<Deity>, { idField: 'id' });
+
 
   const handleDelete = async (id: string) => {
     try {
@@ -127,10 +149,11 @@ function DeitiesTabContent() {
 
 function StoriesTabContent() {
   const db = useFirestore();
-  const storiesRef = collection(db, 'stories') as CollectionReference<Story>;
+  const storiesRef = collection(db, 'stories').withConverter(storyConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [stories, isLoading] = useCollectionData<Story>(storiesRef, { idField: 'id' });
+  const [stories, isLoading] = useCollectionData<Story>(storiesRef as Query<Story>, { idField: 'id' });
+
 
   const handleDelete = async (id: string) => {
     try {
@@ -220,10 +243,11 @@ function StoriesTabContent() {
 
 function CharactersTabContent() {
   const db = useFirestore();
-  const charactersRef = collection(db, 'epicHeroes') as CollectionReference<EpicHero>;
+  const charactersRef = collection(db, 'epicHeroes').withConverter(epicHeroConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef, { idField: 'id' });
+  const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef as Query<EpicHero>, { idField: 'id' });
+
 
   const handleDelete = async (id: string) => {
     try {
@@ -313,10 +337,10 @@ function CharactersTabContent() {
 
 function TemplesTabContent() {
   const db = useFirestore();
-  const templesRef = collection(db, 'temples') as CollectionReference<Temple>;
+  const templesRef = collection(db, 'temples');
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [temples, isLoading] = useCollectionData<Temple>(templesRef, { idField: 'id' });
+  const [temples, isLoading] = useCollectionData<Temple>(templesRef as Query<Temple>, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
     try {
@@ -406,7 +430,7 @@ function TemplesTabContent() {
 
 function ContestsTabContent() {
   const db = useFirestore();
-  const contestsRef = collection(db, 'contests') as CollectionReference<any>;
+  const contestsRef = collection(db, 'contests');
   const { toast } = useToast();
   const [contests, isLoading] = useCollectionData(contestsRef, { idField: 'id' });
 
@@ -511,5 +535,3 @@ export default function ContentManagementPage() {
     </main>
   );
 }
-
-    

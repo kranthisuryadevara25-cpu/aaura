@@ -12,8 +12,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useTransition, useEffect } from 'react';
@@ -26,6 +28,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const formSchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters."),
+  description: z.string().min(20, "Description must be at least 20 characters long."),
+  imageUrl: z.string().url("Must be a valid image URL."),
+  imageHint: z.string().optional(),
   goal: z.coerce.number().min(1, "Goal must be at least 1."),
   status: z.enum(['active', 'inactive']),
 });
@@ -51,6 +56,9 @@ export default function EditContestPage() {
     if (contest) {
       form.reset({
         title: contest.title,
+        description: contest.description,
+        imageUrl: contest.imageUrl,
+        imageHint: contest.imageHint,
         goal: contest.goal,
         status: contest.status,
       });
@@ -61,9 +69,7 @@ export default function EditContestPage() {
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       const contestData = {
-        title: data.title,
-        goal: data.goal,
-        status: data.status,
+        ...data,
         updatedAt: serverTimestamp(),
       };
       
@@ -108,6 +114,19 @@ export default function EditContestPage() {
                         <FormField control={form.control} name="title" render={({ field }) => (
                             <FormItem><FormLabel>Contest Title</FormLabel><FormControl><Input placeholder="E.g., Jai Shri Ram Global Chant Marathon" {...field} /></FormControl><FormMessage /></FormItem>
                         )} />
+
+                         <FormField control={form.control} name="description" render={({ field }) => (
+                            <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A short description of the contest's purpose." {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <FormField control={form.control} name="imageUrl" render={({ field }) => (
+                                <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name="imageHint" render={({ field }) => (
+                                <FormItem><FormLabel>Image Hint</FormLabel><FormControl><Input {...field} /></FormControl><FormDescription>E.g., 'praying hands'</FormDescription><FormMessage /></FormItem>
+                            )} />
+                        </div>
 
                         <FormField control={form.control} name="goal" render={({ field }) => (
                             <FormItem><FormLabel>Chant Goal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>

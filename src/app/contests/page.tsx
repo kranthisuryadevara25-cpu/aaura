@@ -2,9 +2,9 @@
 'use client';
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp, orderBy, setDoc, addDoc } from 'firebase/firestore';
-import { Loader2, Trophy, Heart, Send } from 'lucide-react';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc } from 'firebase/firestore';
+import { Loader2, Trophy, Send, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -19,7 +19,8 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { formatDistanceToNow } from 'date-fns';
+import { format, formatDistanceToNow } from 'date-fns';
+import Image from 'next/image';
 
 const chantSchema = z.object({
   mantra: z.string().min(1, "Mantra cannot be empty.").max(100, "Mantra is too long."),
@@ -97,8 +98,8 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                     transaction.set(doc(chantsCollectionRef), chantData);
                     transaction.update(contestRef, { totalChants: increment(1) });
                 });
-                toast({ title: 'Chant Submitted!', description: 'Your contribution has been counted.' });
-            } catch (error: any) {
+                form.reset({ mantra: "Jai Shri Ram" });
+             } catch (error: any) {
                  const permissionError = new FirestorePermissionError({
                     path: contestRef.path,
                     operation: 'write',
@@ -111,14 +112,28 @@ function ContestContent({ contest }: { contest: DocumentData }) {
     
     const progressPercentage = (contest.totalChants / contest.goal) * 100;
     const isCompleted = contest.status === 'completed' || progressPercentage >= 100;
+    const createdAtDate = contest.createdAt?.toDate ? format(contest.createdAt.toDate(), 'MMMM d, yyyy') : 'Recently';
+
     
     return (
-        <Card className="w-full max-w-2xl text-center shadow-2xl bg-gradient-to-br from-primary/10 to-background border-primary/20">
-            <CardHeader>
-                <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
-                <CardTitle className="text-3xl font-headline text-primary mt-2">{contest.title}</CardTitle>
+        <Card className="w-full max-w-3xl shadow-2xl overflow-hidden border-primary/20">
+            <div className="relative h-64 w-full">
+                <Image 
+                    src={contest.imageUrl || `https://picsum.photos/seed/${contest.id}/1200/400`} 
+                    alt={contest.title}
+                    data-ai-hint={contest.imageHint || "spiritual event"}
+                    layout="fill"
+                    objectFit="cover"
+                />
+                 <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
+                 <div className="absolute bottom-4 left-4 text-white">
+                    <h1 className="text-3xl font-headline font-bold tracking-tight text-white drop-shadow-md">{contest.title}</h1>
+                    <p className="text-sm text-white/90 drop-shadow-sm flex items-center gap-1"><Calendar size={14}/> Created on {createdAtDate}</p>
+                 </div>
+            </div>
+            <CardHeader className="text-center">
                 <CardDescription className="text-lg">
-                    Join the community in a collective chant!
+                    {contest.description || "Join the community in a collective chant!"}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -139,7 +154,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                     </div>
                  ) : auth.currentUser ? (
                     <Form {...form}>
-                        <form onSubmit={form.handleSubmit(handleChant)} className="flex items-start gap-2">
+                        <form onSubmit={form.handleSubmit(handleChant)} className="flex items-start gap-2 max-w-lg mx-auto">
                              <FormField
                                 control={form.control}
                                 name="mantra"

@@ -12,8 +12,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { useTransition } from 'react';
@@ -25,6 +27,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 const formSchema = z.object({
   title: z.string().min(10, "Title must be at least 10 characters."),
+  description: z.string().min(20, "Description must be at least 20 characters long."),
+  imageUrl: z.string().url("Must be a valid image URL."),
+  imageHint: z.string().optional(),
   goal: z.coerce.number().min(1, "Goal must be at least 1."),
   status: z.enum(['active', 'inactive']),
 });
@@ -42,7 +47,10 @@ export default function NewContestPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       title: '',
-      goal: 100000,
+      description: '',
+      imageUrl: `https://picsum.photos/seed/${Math.random().toString(36).substring(7)}/1200/800`,
+      imageHint: 'chanting people',
+      goal: 108000,
       status: 'inactive',
     },
   });
@@ -55,6 +63,9 @@ export default function NewContestPage() {
       const contestData = {
         id: contestId,
         title: data.title,
+        description: data.description,
+        imageUrl: data.imageUrl,
+        imageHint: data.imageHint,
         goal: data.goal,
         totalChants: 0,
         status: data.status,
@@ -94,6 +105,19 @@ export default function NewContestPage() {
                         <FormItem><FormLabel>Contest Title</FormLabel><FormControl><Input placeholder="E.g., Jai Shri Ram Global Chant Marathon" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
 
+                    <FormField control={form.control} name="description" render={({ field }) => (
+                        <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A short description of the contest's purpose." {...field} /></FormControl><FormMessage /></FormItem>
+                    )} />
+
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name="imageUrl" render={({ field }) => (
+                            <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
+                        <FormField control={form.control} name="imageHint" render={({ field }) => (
+                            <FormItem><FormLabel>Image Hint</FormLabel><FormControl><Input {...field} /></FormControl><FormDescription>E.g., 'praying hands'</FormDescription><FormMessage /></FormItem>
+                        )} />
+                    </div>
+
                     <FormField control={form.control} name="goal" render={({ field }) => (
                         <FormItem><FormLabel>Chant Goal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
@@ -128,5 +152,3 @@ export default function NewContestPage() {
     </main>
   );
 }
-
-    

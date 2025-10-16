@@ -92,25 +92,47 @@ function ContestContent({ contestId }: { contestId: string, }) {
         }
         
         startChantTransition(async () => {
-            const userProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, activeContest.id);
-            const requestData = {
-                chants: increment(1),
-                lastChantedAt: serverTimestamp(),
-                displayName: currentUser.displayName || 'Anonymous User',
-                mantra: data.mantra
-            };
-
             try {
-                await setDoc(userProgressRef, requestData, { merge: true });
-                
+                await runTransaction(db, async (transaction) => {
+                    const userProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, activeContest.id);
+                    const contestDocRef = doc(db, 'contests', activeContest.id);
+                    const leaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, currentUser.uid);
+
+                    const userProgressDoc = await transaction.get(userProgressRef);
+                    
+                    const currentChants = userProgressDoc.exists() ? userProgressDoc.data().chants : 0;
+                    const newChants = currentChants + 1;
+
+                    // Update user's personal progress
+                    transaction.set(userProgressRef, { 
+                        chants: newChants,
+                        lastChantedAt: serverTimestamp(),
+                        displayName: currentUser.displayName || 'Anonymous User',
+                    }, { merge: true });
+
+                    // Update the global contest count
+                    transaction.update(contestDocRef, {
+                        totalChants: increment(1)
+                    });
+                    
+                    // Update leaderboard
+                    transaction.set(leaderboardRef, {
+                        chants: newChants,
+                        displayName: currentUser.displayName || 'Anonymous User',
+                        mantra: data.mantra,
+                        lastChantedAt: serverTimestamp(),
+                    }, { merge: true });
+                });
+
                 toast({ title: 'Chant Submitted!', description: 'Your contribution has been counted.' });
                 form.reset({ mantra: "Jai Shri Ram" });
             } catch (error: any) {
-                const permissionError = new FirestorePermissionError({
-                   path: userProgressRef.path,
-                   operation: 'write',
-                   requestResourceData: { mantra: data.mantra }
-                });
+                // This will catch transaction errors, including permission denied on subcollections
+                 const permissionError = new FirestorePermissionError({
+                    path: `users/${currentUser.uid}/contestProgress/${activeContest.id}`,
+                    operation: 'write',
+                    requestResourceData: { mantra: data.mantra }
+                 });
               errorEmitter.emit('permission-error', permissionError);
             }
         });

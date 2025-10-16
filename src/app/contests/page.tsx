@@ -67,7 +67,6 @@ function RecentChants({ contestId }: { contestId: string }) {
 function ContestContent({ contestId }: { contestId: string, }) {
     const db = useFirestore();
     const auth = useAuth();
-    const [user] = useAuthState(auth);
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
 
@@ -94,26 +93,33 @@ function ContestContent({ contestId }: { contestId: string, }) {
         
         startChantTransition(async () => {
             const userProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, activeContest.id);
-            const requestData = { 
+            const leaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, currentUser.uid);
+
+            const chantData = { 
                 mantra: data.mantra, 
                 displayName: currentUser.displayName || 'Anonymous User',
                 lastChantedAt: serverTimestamp(),
             };
 
-            // Simplified write operation to only update user progress
-            setDoc(userProgressRef, requestData, { merge: true })
-            .then(() => {
+            try {
+                // Perform two separate, simple writes.
+                await setDoc(userProgressRef, {
+                    ...chantData,
+                    chants: increment(1)
+                }, { merge: true });
+
+                await setDoc(leaderboardRef, chantData, { merge: true });
+                
+                toast({ title: 'Chant Submitted!', description: 'Your contribution has been counted.' });
                 form.reset({ mantra: "Jai Shri Ram" });
-            })
-            .catch((error: any) => {
-                // This will catch transaction errors, including permission denied on subcollections
-                 const permissionError = new FirestorePermissionError({
-                    path: `users/${currentUser.uid}/contestProgress/${activeContest.id}`,
-                    operation: 'write',
-                    requestResourceData: { mantra: data.mantra }
-                 });
-               errorEmitter.emit('permission-error', permissionError);
-            });
+            } catch (error: any) {
+                const permissionError = new FirestorePermissionError({
+                   path: `users/${currentUser.uid}/contestProgress/${activeContest.id}`,
+                   operation: 'write',
+                   requestResourceData: { mantra: data.mantra }
+                });
+              errorEmitter.emit('permission-error', permissionError);
+            }
         });
     };
     
@@ -159,7 +165,7 @@ function ContestContent({ contestId }: { contestId: string, }) {
                     <div className="font-semibold text-green-600">
                         Contest Completed!
                     </div>
-                 ) : user ? (
+                 ) : auth.currentUser ? (
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleChant)} className="flex items-start gap-2">
                              <FormField
@@ -228,4 +234,3 @@ export default function ContestsPage() {
         </main>
     );
 }
-

@@ -53,6 +53,12 @@ export default function UploadPage() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      title_en: '',
+      title_hi: '',
+      title_te: '',
+      description_en: '',
+      description_hi: '',
+      description_te: '',
       mediaType: 'video',
     }
   });

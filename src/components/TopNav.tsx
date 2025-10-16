@@ -1,8 +1,8 @@
 
+
 "use client";
 import React, { useState, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
-import { SearchBar, type SearchBarProps } from "@/components/SearchBar";
 import Link from "next/link";
 import { Button } from "./ui/button";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
@@ -112,7 +112,7 @@ const CartButton = () => {
     )
 }
 
-export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) => {
+export const TopNav = () => {
   const auth = useAuth();
   const [user] = useAuthState(auth);
 
@@ -124,7 +124,6 @@ export const TopNav = ({ onSearch }: { onSearch?: SearchBarProps['onSearch'] }) 
     <header className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
       <div className="flex items-center gap-4">
         <Link href="/" className="text-2xl font-serif">Aaura</Link>
-        <SearchBar onSearch={onSearch} />
       </div>
 
       <div className="flex items-center gap-3">

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription }
 import { Loader2, ShoppingCart, Trash2, Plus, Minus } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition, useEffect } from 'react';
+import { useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createRazorpayOrder } from '@/ai/flows/create-razorpay-order';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
@@ -33,7 +33,11 @@ export default function CartPage() {
   const [isUpdating, startUpdateTransition] = useTransition();
   const [isCheckingOut, startCheckoutTransition] = useTransition();
 
-  const cartRef = user ? collection(db, 'users', user.uid, 'cart') : undefined;
+  const cartRef = useMemo(() => {
+    if (!user || !db) return undefined;
+    return collection(db, 'users', user.uid, 'cart');
+  }, [user, db]);
+
   const [cartItems, cartLoading] = useCollectionData(cartRef, { idField: 'productId' });
 
   const totalAmount = cartItems?.reduce((total, item) => total + item.price * item.quantity, 0) || 0;
@@ -99,10 +103,11 @@ export default function CartPage() {
             order_id: order.id,
             handler: async function (response: any) {
                 const batch = writeBatch(db);
-                // Save order to the global /orders collection
-                const orderRef = doc(collection(db, 'orders'));
-                batch.set(orderRef, {
-                    id: orderRef.id,
+                
+                const newOrderRef = doc(collection(db, 'orders'));
+
+                batch.set(newOrderRef, {
+                    id: newOrderRef.id,
                     userId: user.uid,
                     items: cartItems,
                     totalAmount: totalAmount,

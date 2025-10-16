@@ -14,21 +14,17 @@ import { useTransition, useState, useEffect } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
-function ContestContent({ activeContest, user }: { activeContest: DocumentData, user: any }) {
+function ContestContent({ contestId }: { contestId: string, }) {
     const db = useFirestore();
+    const auth = useAuth();
+    const [user, loadingUser] = useAuthState(auth);
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
-    const [userProgressRef, setUserProgressRef] = useState<any>(null);
 
-    useEffect(() => {
-        if (user && activeContest?.id) {
-            const ref = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
-            setUserProgressRef(ref);
-        } else {
-            setUserProgressRef(null);
-        }
-    }, [db, user, activeContest]);
-    
+    const contestRef = doc(db, 'contests', contestId);
+    const [activeContest, loadingContest] = useDocumentData(contestRef);
+
+    const userProgressRef = user ? doc(db, `users/${user.uid}/contestProgress`, contestId) : undefined;
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
 
     const handleChant = () => {
@@ -37,7 +33,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
             return;
         }
 
-        if (!activeContest?.id) {
+        if (!activeContest) {
             toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
             return;
         }
@@ -47,10 +43,6 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
         startChantTransition(async () => {
              try {
                 await runTransaction(db, async (transaction) => {
-                    const contestRef = doc(db, 'contests', activeContest.id);
-                    
-                    transaction.update(contestRef, { totalChants: increment(1) });
-                    
                     const userProgressDoc = await transaction.get(currentUserProgressRef);
                     
                     if (userProgressDoc.exists()) {
@@ -81,6 +73,20 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
         });
     };
     
+    if (loadingContest) {
+        return <div className="flex justify-center items-center h-64"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
+    }
+
+    if (!activeContest) {
+         return (
+             <main className="flex-grow container mx-auto px-4 py-8 md:py-16 text-center">
+                <Trophy className="mx-auto h-24 w-24 text-muted-foreground/50" />
+                <h1 className="mt-6 text-2xl font-semibold text-foreground">No Active Contests</h1>
+                <p className="mt-2 text-muted-foreground">Check back soon for the next global chant challenge!</p>
+            </main>
+         )
+    }
+
     const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
     const isCompleted = activeContest.status === 'completed';
     
@@ -167,9 +173,8 @@ export default function ContestsPage() {
 
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
-            <ContestContent activeContest={activeContest} user={user} />
+            <ContestContent contestId={activeContest.id} />
         </main>
     );
 }
 
-    

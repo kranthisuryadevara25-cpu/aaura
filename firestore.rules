@@ -3,73 +3,166 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
+  
+    // Helper Functions
     function isSignedIn() {
       return request.auth != null;
     }
-    
+
     function isOwner(userId) {
       return request.auth.uid == userId;
     }
 
+    // AUTH: A user can read/write to their own user document.
     match /users/{userId} {
-      allow read: if true;
-      allow write: if isOwner(userId);
+      allow read, write: if isOwner(userId);
       
-      match /horoscopes/{horoscopeId} {
+      // Subcollections
+      match /horoscopes/{docId} {
         allow read, write: if isOwner(userId);
       }
-
-      match /preferences/{prefId} {
+       match /badges/{docId} {
         allow read, write: if isOwner(userId);
       }
-
-      match /cart/{productId} {
-        allow read, write, delete: if isOwner(userId);
+      match /preferences/{docId} {
+        allow read, write: if isOwner(userId);
       }
-
-      match /orders/{orderId} {
-        allow read, create: if isOwner(userId);
+      match /cart/{docId} {
+        allow read, write: if isOwner(userId);
       }
-
-      match /followers/{followerId} {
-        allow read, delete: if isOwner(userId);
-        allow create: if isSignedIn() && request.auth.uid == followerId;
+       match /orders/{docId} {
+        allow read, write: if isOwner(userId);
       }
-      
-      match /following/{followedId} {
-        allow read, delete: if isOwner(userId);
-        allow create: if isOwner(userId);
+       match /playlists/{docId} {
+        allow read, write: if isOwner(userId);
       }
-      
-      match /contestProgress/{contestId} {
-        allow create: if isOwner(userId) && request.resource.data.authorId == userId;
+       match /bookmarks/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+       match /virtualOfferings/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+      match /followers/{docId} {
+        allow read, write: if isSignedIn();
+      }
+       match /following/{docId} {
+        allow read, write: if isSignedIn();
+      }
+       match /challenges/{docId} {
+        allow read, write: if isOwner(userId);
+      }
+       match /contestProgress/{contestId} {
+        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
         allow read, update, delete: if isOwner(userId);
       }
-
-      match /{subcollection}/{docId} {
-        allow read, write: if isOwner(userId);
-      }
     }
 
-    match /contests/{contestId} {
+    // PUBLIC: Deities, stories, characters, temples, rituals, festivals, and panchang data is public.
+    // WRITE: Only admins can write to this content.
+    match /deities/{deityId} {
+      allow read: if true;
+      allow write: if false; // To be replaced by admin check
+    }
+    match /stories/{storyId} {
+      allow read: if true;
+      allow write: if false;
+    }
+     match /epicHeroes/{heroId} {
+      allow read: if true;
+      allow write: if false;
+    }
+    match /temples/{templeId} {
+      allow read: if true;
+      allow write: if false;
+    }
+     match /rituals/{ritualId} {
+      allow read: if true;
+      allow write: if false;
+    }
+     match /festivals/{festivalId} {
+      allow read: if true;
+      allow write: if false;
+    }
+     match /panchang/{date} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // MEDIA: Publicly readable, but only the creator can write/delete.
+    match /media/{mediaId} {
       allow read: if true;
       allow create: if isSignedIn();
-      allow update: if isSignedIn();
+      allow update, delete: if isSignedIn() && resource.data.userId == request.auth.uid;
 
-      // Allow users to add their chants
-      match /chants/{chantId} {
-        allow create: if isSignedIn() && request.resource.data.authorId == request.auth.uid;
+      match /comments/{commentId} {
         allow read: if true;
+        allow create: if isSignedIn();
+      }
+       match /likes/{userId} {
+        allow read: if true;
+        allow create, delete: if isOwner(userId);
+      }
+    }
+    
+    // CHANNELS: Publicly readable, but only owner can create/update.
+    match /channels/{channelId} {
+        allow read: if true;
+        allow create, update: if isOwner(channelId);
+    }
+    
+    // PLAYLISTS: Public playlists are readable by all. User can only edit their own.
+    match /playlists/{playlistId} {
+        allow read: if resource.data.isPublic == true || (isSignedIn() && resource.data.creatorId == request.auth.uid);
+        allow create: if isSignedIn();
+        allow update, delete: if isSignedIn() && resource.data.creatorId == request.auth.uid;
+    }
+
+    // GROUPS & POSTS
+    match /groups/{groupId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        
+        match /members/{userId} {
+            allow create, delete: if isOwner(userId);
+            allow read: if isSignedIn();
+        }
+    }
+    
+    match /posts/{postId} {
+        allow read: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+
+        match /comments/{commentId} {
+            allow read: if true;
+            allow create: if isSignedIn();
+        }
+        match /likes/{userId} {
+            allow read: if true;
+            allow create, delete: if isOwner(userId);
+        }
+    }
+
+    // CONTESTS
+    match /contests/{contestId} {
+      allow read: if true;
+      allow create: if false; // Managed by admin
+      allow update: if isSignedIn() && request.resource.data.totalChants == resource.data.totalChants + 1;
+
+      match /chants/{chantId} {
+        allow create: if isSignedIn();
+        allow read: if true;
+      }
+      match /leaderboard/{userId} {
+        allow read: if true;
+        allow create, update: if isOwner(userId);
       }
     }
 
-    match /{collectionName}/{docId} {
+    // CHALLENGES
+    match /challenges/{challengeId} {
       allow read: if true;
-      allow list: if true;
-
-      // Allow write access only for super admins for top-level content
-      allow write: if get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSuperAdmin == true;
+      allow create, write: if false; // Managed by admin
     }
   }
 }

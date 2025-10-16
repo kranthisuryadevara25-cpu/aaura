@@ -23,7 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { collection, deleteDoc, doc, DocumentData } from 'firebase/firestore';
+import { collection, deleteDoc, doc, DocumentData, type FirestoreDataConverter } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
@@ -31,13 +31,20 @@ import type { Temple } from '@/lib/temples';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
+const getTypedConverter = <T,>() => {
+    return {
+        toFirestore: (data: T): DocumentData => data as DocumentData,
+        fromFirestore: (snapshot: any, options: any) => snapshot.data(options) as T,
+    } as FirestoreDataConverter<T>;
+}
+
 
 function DeitiesTabContent() {
   const db = useFirestore();
-  const deitiesRef = collection(db, 'deities');
+  const deitiesRef = collection(db, 'deities').withConverter(getTypedConverter<Deity>());
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [deities, isLoading] = useCollectionData<Deity>(deitiesRef, {
+  const [deities, isLoading] = useCollectionData(deitiesRef, {
     idField: 'id',
   });
 
@@ -128,10 +135,10 @@ function DeitiesTabContent() {
 
 function StoriesTabContent() {
   const db = useFirestore();
-  const storiesRef = collection(db, 'stories');
+  const storiesRef = collection(db, 'stories').withConverter(getTypedConverter<Story>());
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [stories, isLoading] = useCollectionData<Story>(storiesRef, {
+  const [stories, isLoading] = useCollectionData(storiesRef, {
     idField: 'id',
   });
 
@@ -222,10 +229,10 @@ function StoriesTabContent() {
 
 function CharactersTabContent() {
   const db = useFirestore();
-  const charactersRef = collection(db, 'epicHeroes');
+  const charactersRef = collection(db, 'epicHeroes').withConverter(getTypedConverter<EpicHero>());
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef, {
+  const [characters, isLoading] = useCollectionData(charactersRef, {
     idField: 'id',
   });
 
@@ -317,10 +324,10 @@ function CharactersTabContent() {
 
 function TemplesTabContent() {
   const db = useFirestore();
-  const templesRef = collection(db, 'temples');
+  const templesRef = collection(db, 'temples').withConverter(getTypedConverter<Temple>());
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [temples, isLoading] = useCollectionData<Temple>(templesRef, {
+  const [temples, isLoading] = useCollectionData(templesRef, {
     idField: 'id',
   });
 

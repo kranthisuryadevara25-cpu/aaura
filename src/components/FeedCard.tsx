@@ -52,13 +52,13 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const [isLiking, startLikeTransition] = useTransition();
   const [showComments, setShowComments] = React.useState(false);
 
-  const contentCollection = item.kind === 'post' ? 'posts' : 'media';
-  const contentId = item.id.replace(`${item.kind}-`, '');
+  const contentCollection = useMemo(() => item.kind === 'post' ? 'posts' : 'media', [item.kind]);
+  const contentId = useMemo(() => item.id.replace(`${item.kind}-`, ''), [item.id, item.kind]);
   
-  const contentRef = doc(db, contentCollection, contentId);
+  const contentRef = useMemo(() => doc(db, contentCollection, contentId), [db, contentCollection, contentId]);
   const [contentData, contentLoading] = useDocumentData(contentRef);
   
-  const likeRef = user ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined;
+  const likeRef = useMemo(() => user ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined, [user, db, contentCollection, contentId]);
 
   const [like, likeLoading] = useDocumentData(likeRef);
   const isLiked = !!like;
@@ -124,10 +124,12 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const engagement = contentLoading ? item.meta : (currentItemData.meta || currentItemData);
   const thumbnail = currentItemData.thumbnail || "https://picsum.photos/seed/placeholder/800/450";
   const hint = currentItemData.meta?.imageHint || "image";
-  const createdAt = currentItemData.createdAt?.toDate ? currentItemData.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : new Date());
-
+  const createdAtDate = currentItemData.createdAt?.toDate ? currentItemData.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : undefined);
+  const createdAt = createdAtDate ? formatDistanceToNow(createdAtDate, { addSuffix: true }) : 'a while ago';
 
   const canInteract = item.kind === 'post' || item.kind === 'media' || item.kind === 'video';
+  const commentContentType = useMemo(() => (item.kind === 'video' ? 'media' : item.kind) as 'post' | 'media', [item.kind]);
+
 
   return (
     <Card className="p-4 border-none shadow-none">
@@ -149,7 +151,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                     <span>{engagement.views ? `${engagement.views.toLocaleString()} views` : "New"}</span>
                     &bull;
-                    <span>{formatDistanceToNow(createdAt, { addSuffix: true })}</span>
+                    <span>{createdAt}</span>
                 </div>
                  {canInteract && (
                     <div className="flex items-center gap-2 mt-2 text-muted-foreground">
@@ -166,7 +168,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
         </div>
          {showComments && canInteract && (
             <div className="mt-4">
-                <Comments contentId={contentId} contentType={contentCollection as 'post' | 'media'} />
+                <Comments contentId={contentId} contentType={commentContentType} />
             </div>
         )}
     </Card>

@@ -82,10 +82,12 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
   
+  const commentsCollectionName = contentType === 'post' ? 'posts' : 'media';
+
   const commentsQuery = useMemo(() => {
-      const commentsCollectionRef = collection(db, `${contentType}s/${contentId}/comments`);
+      const commentsCollectionRef = collection(db, `${commentsCollectionName}/${contentId}/comments`);
       return query(commentsCollectionRef, orderBy('createdAt', 'desc'));
-  }, [db, contentType, contentId]);
+  }, [db, commentsCollectionName, contentId]);
   
   const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
 
@@ -101,10 +103,10 @@ export function Comments({ contentId, contentType }: CommentsProps) {
     }
 
     startTransition(async () => {
-        const commentsCollectionRef = collection(db, `${contentType}s/${contentId}/comments`);
+        const commentsCollectionRef = collection(db, `${commentsCollectionName}/${contentId}/comments`);
         const commentData = {
           contentId,
-          contentType,
+          contentType: contentType,
           authorId: user.uid,
           text: data.text,
           createdAt: serverTimestamp(),
@@ -113,7 +115,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
         try {
             await addDoc(commentsCollectionRef, commentData);
             
-            const parentDocRef = doc(db, `${contentType}s`, contentId);
+            const parentDocRef = doc(db, commentsCollectionName, contentId);
             await updateDoc(parentDocRef, {
                 commentsCount: increment(1)
             });

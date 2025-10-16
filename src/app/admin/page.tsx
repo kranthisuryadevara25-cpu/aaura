@@ -2,7 +2,7 @@
 'use client';
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Users, FileCheck, DollarSign, UserPlus, Loader2 } from "lucide-react";
+import { Users, FileCheck, DollarSign, UserPlus, Loader2, ListPlus } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -10,6 +10,8 @@ import { collection, query, where } from "firebase/firestore";
 import { useFirestore } from "@/lib/firebase/provider";
 import { useMemo } from "react";
 import { subMonths, format, startOfMonth, endOfMonth } from 'date-fns';
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 const chartData = [
   { month: "January", users: 186 },
@@ -58,6 +60,15 @@ export default function AdminDashboardPage() {
               An overview of your application's activity and health.
           </p>
       </div>
+
+       <div className="flex justify-end mb-4">
+        <Button asChild>
+            <Link href="/admin/stubs">
+                <ListPlus className="mr-2 h-4 w-4" />
+                Content Planning
+            </Link>
+        </Button>
+    </div>
 
       <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
         <Card>

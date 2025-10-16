@@ -356,6 +356,11 @@
         "name_hi": { "type": "string", "description": "Name of the deity in Hindi." },
         "description_en": { "type": "string", "description": "Description in English." },
         "description_hi": { "type": "string", "description": "Description in Hindi." },
+        "status": {
+            "type": "string",
+            "description": "The publication status of the content.",
+            "enum": ["unclaimed", "published", "archived"]
+        },
         "images": {
           "type": "array",
           "description": "A list of image URLs for the deity.",
@@ -394,7 +399,7 @@
       "required": [
         "id",
         "name_en",
-        "description_en"
+        "status"
       ]
     },
     "Shop": {
@@ -511,6 +516,11 @@
         "id": { "type": "string" },
         "name_en": { "type": "string", "description": "Name of the temple in English." },
         "name_hi": { "type": "string", "description": "Name of the temple in Hindi." },
+        "status": {
+            "type": "string",
+            "description": "The publication status of the content.",
+            "enum": ["unclaimed", "published", "archived"]
+        },
         "officialWebsite": { "type": "string", "format": "uri", "description": "The official website of the temple." },
         "deity": {
           "type": "object",
@@ -599,7 +609,7 @@
           }
         }
       },
-      "required": ["id", "name_en", "deity", "location", "importance"]
+      "required": ["id", "name_en", "status"]
     },
     "Review": {
       "title": "Review",
@@ -648,6 +658,11 @@
         "title_hi": { "type": "string" },
         "summary_en": { "type": "string" },
         "summary_hi": { "type": "string" },
+        "status": {
+            "type": "string",
+            "description": "The publication status of the content.",
+            "enum": ["unclaimed", "published", "archived"]
+        },
         "image": { "type": "string", "format": "uri" },
         "tags": { "type": "array", "items": { "type": "string" } },
         "relatedCharacters": { "type": "array", "items": { "type": "string" } },
@@ -668,12 +683,11 @@
               "videoId": { "type": "string", "description": "Identifier for the video (e.g., YouTube ID)." },
               "thumbnailUrl": { "type": "string", "format": "uri" },
               "duration": { "type": "number", "description": "Duration in seconds." }
-            },
-            "required": ["episodeNumber", "title_en", "videoId"]
+            }
           }
         }
       },
-      "required": ["id", "title_en", "summary_en", "createdAt", "updatedAt"]
+      "required": ["id", "title_en", "status", "createdAt", "updatedAt"]
     },
     "EpicHero": {
       "title": "Epic Hero",
@@ -1167,5 +1181,3 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
-
-    

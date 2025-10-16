@@ -1510,7 +1510,7 @@ export const translations = {
       dailyReading: "ನಿಮ್ಮ ದೈನಂದಿನ ಓದುವಿಕೆ",
       loginTitle: "ನಿಮ್ಮ ಜಾತಕವನ್ನು ಪ್ರವೇಶಿಸಿ",
       loginDescription: "ನಿಮ್ಮ ವೈಯಕ್ತಿಕಗೊಳಿಸಿದ ದೈನಂದಿನ ಜಾತಕವನ್ನು ವೀಕ್ಷಿಸಲು ದಯವಿಟ್ಟು ಲಾಗ್ ಇನ್ ಮಾಡಿ.",
-      loginButton: "ಲಾಗ್ ಇన్ ಮಾಡಿ",
+      loginButton: "ಲಾಗ್ ಇನ್ ಮಾಡಿ",
       noHoroscopeTitle: "ಜಾತಕ ಕಂಡುಬಂದಿಲ್ಲ",
       noHoroscopeDescription: "ನಿಮಗಾಗಿ ನಾವು ಜಾತಕವನ್ನು ಕಂಡುಹಿಡಿಯಲಾಗಲಿಲ್ಲ. ನಿಮ್ಮ ಮೊದಲ ಓದುವಿಕೆಯನ್ನು ರಚಿಸಲು ದಯವಿಟ್ಟು ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಅನ್ನು ಪೂರ್ಣಗೊಳಿಸಿ.",
       setupProfileButton: "ಪ್ರೊಫೈಲ್ ಪೂರ್ಣಗೊಳಿಸಿ",

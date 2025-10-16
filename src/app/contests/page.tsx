@@ -71,7 +71,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
 
     const form = useForm<ChantFormValues>({
         resolver: zodResolver(chantSchema),
-        defaultValues: { mantra: "Jai Shri Ram" },
+        defaultValues: { mantra: "" },
     });
 
     const handleChant = (data: ChantFormValues) => {
@@ -147,7 +147,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                                     <FormItem className="w-full">
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Type 'Jai Shri Ram' to participate..."
+                                            placeholder="Jai Shri Ram"
                                             className="resize-none text-center text-lg"
                                             {...field}
                                         />

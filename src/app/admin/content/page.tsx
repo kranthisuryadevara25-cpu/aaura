@@ -466,7 +466,7 @@ function ContestsTabContent() {
                             <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                 <Badge variant={contest.status === 'active' ? 'default' : 'secondary'}>{contest.status}</Badge>
                                 <span>Total: {Number(contest.totalChants || 0).toLocaleString()}</span>
-                                <span>Dates: {format(contest.startDate.toDate(), 'PPP')} - {format(contest.endDate.toDate(), 'PPP')}</span>
+                                <span>Dates: {format(contest.startDate, 'PPP')} - {format(contest.endDate, 'PPP')}</span>
                             </div>
                         </CardContent>
                     </Card>
@@ -516,5 +516,3 @@ export default function ContentManagementPage() {
     </main>
   );
 }
-
-    

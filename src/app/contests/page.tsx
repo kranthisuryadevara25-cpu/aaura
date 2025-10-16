@@ -10,7 +10,7 @@ import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition, useMemo, useState, useEffect } from 'react';
+import { useTransition, useState, useEffect } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -18,11 +18,8 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     const db = useFirestore();
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
-    
-    // State to hold the reference, ensuring it's only set when safe.
     const [userProgressRef, setUserProgressRef] = useState<DocumentData | undefined>(undefined);
 
-    // This effect safely creates the document reference once contest and user are available.
     useEffect(() => {
         if (user && activeContest?.id) {
             const ref = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
@@ -30,9 +27,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
         }
     }, [db, user, activeContest]);
 
-    // This hook will only run when userProgressRef is a valid reference.
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
-
 
     const handleChant = () => {
         if (!user) {
@@ -40,10 +35,14 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
             return;
         }
 
-        if (!userProgressRef) {
-             toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
+        if (!activeContest?.id) {
+            toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
             return;
         }
+
+        // Now we know we have a user and an active contest.
+        // We can safely create the reference for the transaction.
+        const currentUserProgressRef = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
 
         startChantTransition(async () => {
              try {
@@ -52,15 +51,15 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
                     
                     transaction.update(contestRef, { totalChants: increment(1) });
                     
-                    const userProgressDoc = await transaction.get(userProgressRef);
+                    const userProgressDoc = await transaction.get(currentUserProgressRef);
                     
                     if (userProgressDoc.exists()) {
-                        transaction.update(userProgressRef, {
+                        transaction.update(currentUserProgressRef, {
                             chants: increment(1),
                             lastChantedAt: serverTimestamp(),
                         });
                     } else {
-                         transaction.set(userProgressRef, {
+                         transaction.set(currentUserProgressRef, {
                             chants: 1,
                             lastChantedAt: serverTimestamp(),
                             displayName: user.displayName || 'Anonymous',
@@ -69,7 +68,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
                 });
              } catch (error: any) {
                  const permissionError = new FirestorePermissionError({
-                    path: userProgressRef.path,
+                    path: currentUserProgressRef.path,
                     operation: 'write',
                     requestResourceData: {
                          chants: userProgress ? userProgress.chants + 1 : 1,

@@ -27,11 +27,10 @@ export default function ContestsPage() {
         limit(1)
     );
     const [contests, loadingContests] = useCollectionData(contestsQuery, { idField: 'id' });
-    const activeContest = contests?.[0];
+    const activeContest = useMemo(() => contests?.[0], [contests]);
 
-    // Correctly define userProgressRef only when user and activeContest are available
     const userProgressRef = useMemo(() => {
-        if (!user || !activeContest) return undefined;
+        if (!user || !activeContest?.id) return undefined;
         return doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
     }, [db, user, activeContest]);
 
@@ -106,7 +105,7 @@ export default function ContestsPage() {
                 <CardHeader>
                     <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
                     <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
-                    <CardDescription className="text-lg">{activeContest.description}</CardDescription>
+                    <CardDescription className="text-lg">Join the global chant and feel the divine energy!</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                     <div>
@@ -140,3 +139,4 @@ export default function ContestsPage() {
         </main>
     );
 }
+

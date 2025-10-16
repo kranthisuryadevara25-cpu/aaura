@@ -26,6 +26,7 @@ export const translations = {
       adminDashboard: "Dashboard",
       adminContent: "Content",
       adminReview: "Review Queue",
+      adminOrders: "Orders",
     },
     topnav: {
       searchPlaceholder: "Search temples, stories, rituals...",
@@ -301,6 +302,7 @@ export const translations = {
       adminDashboard: "డాష్‌బోర్డ్",
       adminContent: "కంటెంట్",
       adminReview: "సమీక్ష క్యూ",
+      adminOrders: "ఆర్డర్లు",
     },
     topnav: {
       searchPlaceholder: "దేవాలయాలు, కథలు, పూజలు శోధించండి...",
@@ -576,6 +578,7 @@ export const translations = {
       adminDashboard: "tableau de bord",
       adminContent: "कंटेंट",
       adminReview: "समीक्षा कतार",
+      adminOrders: "आदेश",
     },
     topnav: {
       searchPlaceholder: "मंदिर, देवता, कहानियाँ, अनुष्ठान खोजें...",
@@ -851,6 +854,7 @@ export const translations = {
       adminDashboard: "डॅशबोर्ड",
       adminContent: "सामग्री",
       adminReview: "पुनरावलोकन रांग",
+      adminOrders: "ऑर्डर",
     },
     topnav: { 
       searchPlaceholder: "मंदिरे, कथा, विधी शोधा...",
@@ -1123,6 +1127,7 @@ export const translations = {
       adminDashboard: "டாஷ்போர்டு",
       adminContent: "உள்ளடக்கம்",
       adminReview: "மதிப்பாய்வு வரிசை",
+      adminOrders: "ஆர்டர்கள்",
     },
     topnav: { 
       searchPlaceholder: "கோயில்கள், கதைகள், சடங்குகளைத் தேடுங்கள்...",
@@ -1395,6 +1400,7 @@ export const translations = {
       adminDashboard: "ಡ್ಯಾಶ್‌ಬೋರ್ಡ್",
       adminContent: "ವಿಷಯ",
       adminReview: "ವಿಮರ್ಶೆ ಸರದಿ",
+      adminOrders: "ಆರ್ಡರ್‌ಗಳು",
     },
     topnav: { 
       searchPlaceholder: "ದೇವಾಲಯಗಳು, ಕಥೆಗಳು, ಆಚರಣೆಗಳನ್ನು ಹುಡುಕಿ...",
@@ -1667,6 +1673,7 @@ export const translations = {
       adminDashboard: "ড্যাশবোর্ড",
       adminContent: "বিষয়বস্তু",
       adminReview: "পর্যালোচনা সারি",
+      adminOrders: "অর্ডার",
     },
     topnav: { 
       searchPlaceholder: "মন্দির, গল্প, আচার-অনুষ্ঠান অনুসন্ধান করুন...",

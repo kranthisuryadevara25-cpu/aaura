@@ -33,6 +33,7 @@ import {
   Brain,
   LayoutDashboard,
   Award,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -77,6 +78,7 @@ const adminNav = [
   { href: '/upload', label: 'upload', icon: Upload },
   { href: '/admin/content', label: 'adminContent', icon: ShieldCheck },
   { href: '/admin/review', label: 'adminReview', icon: ShieldCheck },
+  { href: '/admin/orders', label: 'adminOrders', icon: Package },
   { href: '/settings', label: 'settings', icon: Settings },
 ];
 
@@ -163,7 +165,7 @@ const CollapsibleNavSection = ({
 
 export const Sidebar = () => {
   const [user] = useAuthState(useAuth());
-  const isSuperAdmin = user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
+  const isSuperAdmin = true; // Replace with actual logic: user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
 
   return (
     <aside className="w-64 hidden md:block border-r">

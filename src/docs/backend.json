@@ -522,10 +522,12 @@
         "properties": {
             "id": { "type": "string", "description": "Unique identifier for the order." },
             "userId": { "type": "string", "description": "The ID of the user who placed the order." },
+            "shopId": { "type": "string", "description": "The ID of the shop fulfilling the order." },
             "items": { "type": "array", "items": { "$ref": "#/entities/CartItem" } },
             "totalAmount": { "type": "number", "description": "The total amount paid for the order." },
             "status": { "type": "string", "enum": ["created", "paid", "shipped", "delivered", "cancelled"] },
             "createdAt": { "type": "string", "format": "date-time" },
+            "updatedAt": { "type": "string", "format": "date-time" },
             "paymentDetails": {
                 "type": "object",
                 "properties": {
@@ -987,14 +989,6 @@
         }
       },
       {
-          "path": "/users/{userId}/orders/{orderId}",
-          "definition": {
-              "entityName": "Order",
-              "schema": { "$ref": "#/entities/Order" },
-              "description": "Stores a user's past orders."
-          }
-      },
-      {
         "path": "/users/{userId}/playlists/{playlistId}",
         "definition": {
           "schema": { "type": "object", "properties": { "playlistId": { "type": "string" }, "createdAt": { "type": "string", "format": "date-time" } } },
@@ -1007,6 +1001,14 @@
             "entityName": "UserChallengeProgress",
             "schema": { "$ref": "#/entities/UserChallengeProgress" },
             "description": "Tracks user progress in community challenges."
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "definition": {
+            "entityName": "Order",
+            "schema": { "$ref": "#/entities/Order" },
+            "description": "Stores all user orders globally for easier admin access."
         }
       },
       {

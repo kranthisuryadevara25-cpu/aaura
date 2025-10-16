@@ -41,7 +41,7 @@ export function PlaylistClientPage({ initialPlaylists }: { initialPlaylists: Doc
       );
     }
 
-    return items;
+    return items.filter(item => item && item.id); // Ensure item and id are valid
   }, [searchQuery, filterCategory, playlists]);
 
   return (

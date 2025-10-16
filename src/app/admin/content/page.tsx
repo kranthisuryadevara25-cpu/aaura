@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -23,42 +24,53 @@ import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { collection, deleteDoc, doc, FirestoreDataConverter, Query } from 'firebase/firestore';
+import { collection, deleteDoc, doc, FirestoreDataConverter, Query, type DocumentData } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
 import type { Temple } from '@/lib/temples';
 import { Badge } from '@/components/ui/badge';
-import type { DocumentData } from 'firebase/firestore';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+
 
 const deityConverter: FirestoreDataConverter<Deity> = {
     toFirestore: (deity: Deity) => deity,
     fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
-        return { ...data } as Deity;
+        return { id: snapshot.id, ...data } as Deity;
     }
 };
 const storyConverter: FirestoreDataConverter<Story> = {
     toFirestore: (story: Story) => story,
     fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
-        return { ...data } as Story;
+        return { id: snapshot.id, ...data } as Story;
     }
 };
 const epicHeroConverter: FirestoreDataConverter<EpicHero> = {
     toFirestore: (hero: EpicHero) => hero,
     fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
-        return { ...data } as EpicHero;
+        return { id: snapshot.id, ...data } as EpicHero;
     }
 };
+
+const templeConverter: FirestoreDataConverter<Temple> = {
+    toFirestore: (temple: Temple) => temple,
+    fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return { id: snapshot.id, ...data } as Temple;
+    }
+};
+
 
 function DeitiesTabContent() {
   const db = useFirestore();
   const deitiesRef = collection(db, 'deities').withConverter(deityConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [deities, isLoading] = useCollectionData<Deity>(deitiesRef as Query<Deity>, { idField: 'id' });
+  const [deities, isLoading] = useCollectionData(deitiesRef);
 
 
   const handleDelete = async (id: string) => {
@@ -152,7 +164,7 @@ function StoriesTabContent() {
   const storiesRef = collection(db, 'stories').withConverter(storyConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [stories, isLoading] = useCollectionData<Story>(storiesRef as Query<Story>, { idField: 'id' });
+  const [stories, isLoading] = useCollectionData(storiesRef);
 
 
   const handleDelete = async (id: string) => {
@@ -246,7 +258,7 @@ function CharactersTabContent() {
   const charactersRef = collection(db, 'epicHeroes').withConverter(epicHeroConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef as Query<EpicHero>, { idField: 'id' });
+  const [characters, isLoading] = useCollectionData(charactersRef);
 
 
   const handleDelete = async (id: string) => {
@@ -337,10 +349,10 @@ function CharactersTabContent() {
 
 function TemplesTabContent() {
   const db = useFirestore();
-  const templesRef = collection(db, 'temples');
+  const templesRef = collection(db, 'temples').withConverter(templeConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [temples, isLoading] = useCollectionData<Temple>(templesRef as Query<Temple>, { idField: 'id' });
+  const [temples, isLoading] = useCollectionData(templesRef);
 
   const handleDelete = async (id: string) => {
     try {
@@ -430,17 +442,23 @@ function TemplesTabContent() {
 
 function ContestsTabContent() {
   const db = useFirestore();
-  const contestsRef = collection(db, 'contests');
   const { toast } = useToast();
+  const contestsRef = collection(db, 'contests');
   const [contests, isLoading] = useCollectionData(contestsRef, { idField: 'id' });
 
-  const handleDelete = async (id: string) => {
-    try {
-      await deleteDoc(doc(db, 'contests', id));
-      toast({ title: 'Contest Deleted', description: 'The contest has been removed.' });
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete contest.' });
-    }
+  const handleDelete = (id: string) => {
+    const contestDocRef = doc(db, 'contests', id);
+    deleteDoc(contestDocRef)
+      .then(() => {
+        toast({ title: 'Contest Deleted', description: 'The contest has been removed.' });
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: contestDocRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   if (isLoading) {
@@ -459,7 +477,7 @@ function ContestsTabContent() {
         </Button>
       </div>
       <div className="space-y-4">
-        {contests?.map((contest) => (
+        {contests?.map((contest: DocumentData) => (
           <Card key={contest.id}>
             <CardHeader>
               <div className="flex justify-between items-start">

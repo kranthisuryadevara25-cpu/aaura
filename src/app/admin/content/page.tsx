@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy } from 'lucide-react';
@@ -67,13 +67,14 @@ const templeConverter: FirestoreDataConverter<Temple> = {
 
 function DeitiesTabContent() {
   const db = useFirestore();
-  const deitiesRef = collection(db, 'deities').withConverter(deityConverter);
+  const deitiesRef = useMemo(() => db ? collection(db, 'deities').withConverter(deityConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
   const [deities, isLoading] = useCollectionData<Deity>(deitiesRef, { idField: 'id' });
 
 
   const handleDelete = async (id: string) => {
+    if (!db) return;
     try {
       await deleteDoc(doc(db, 'deities', id));
       toast({ title: 'Deity Deleted', description: 'The deity has been removed from the database.' });
@@ -161,13 +162,14 @@ function DeitiesTabContent() {
 
 function StoriesTabContent() {
   const db = useFirestore();
-  const storiesRef = collection(db, 'stories').withConverter(storyConverter);
+  const storiesRef = useMemo(() => db ? collection(db, 'stories').withConverter(storyConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
   const [stories, isLoading] = useCollectionData<Story>(storiesRef, { idField: 'id' });
 
 
   const handleDelete = async (id: string) => {
+    if (!db) return;
     try {
       await deleteDoc(doc(db, 'stories', id));
       toast({ title: 'Story Deleted', description: 'The story has been removed.' });
@@ -255,13 +257,14 @@ function StoriesTabContent() {
 
 function CharactersTabContent() {
   const db = useFirestore();
-  const charactersRef = collection(db, 'epicHeroes').withConverter(epicHeroConverter);
+  const charactersRef = useMemo(() => db ? collection(db, 'epicHeroes').withConverter(epicHeroConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
   const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef, { idField: 'id' });
 
 
   const handleDelete = async (id: string) => {
+    if (!db) return;
     try {
       await deleteDoc(doc(db, 'epicHeroes', id));
       toast({ title: 'Character Deleted', description: 'The character has been removed.' });
@@ -349,12 +352,13 @@ function CharactersTabContent() {
 
 function TemplesTabContent() {
   const db = useFirestore();
-  const templesRef = collection(db, 'temples').withConverter(templeConverter);
+  const templesRef = useMemo(() => db ? collection(db, 'temples').withConverter(templeConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
   const [temples, isLoading] = useCollectionData<Temple>(templesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
+    if (!db) return;
     try {
       await deleteDoc(doc(db, 'temples', id));
       toast({ title: 'Temple Deleted', description: 'The temple has been removed.' });
@@ -443,11 +447,12 @@ function TemplesTabContent() {
 function ContestsTabContent() {
   const db = useFirestore();
   const { toast } = useToast();
-  const contestsRef = collection(db, 'contests');
+  const contestsRef = useMemo(() => db ? collection(db, 'contests') : undefined, [db]);
   const [snapshot, isLoading] = useCollection(contestsRef);
   const contests = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   const handleDelete = (id: string) => {
+    if (!db) return;
     const contestDocRef = doc(db, 'contests', id);
     deleteDoc(contestDocRef)
       .then(() => {

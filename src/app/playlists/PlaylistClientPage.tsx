@@ -54,11 +54,12 @@ const PlaylistGrid = ({ playlists }: { playlists: DocumentData[] }) => {
 
 export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPlaylists: DocumentData[] }) {
   const db = useFirestore();
-  const [user] = useAuthState(useAuth());
+  const auth = useAuth();
+  const [user] = useAuthState(auth);
   const { t } = useLanguage();
   
   const playlistsQuery = useMemo(() => {
-    if (!user) {
+    if (!user || !db) {
       return null;
     }
     // Fetch public playlists OR playlists created by the current user

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -11,7 +12,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 
 type ContentType = 'media' | 'stories' | 'deities' | 'temples' | 'epicHeroes';
 
@@ -32,6 +33,7 @@ function ReviewCard({ item, collectionName }: { item: ReviewItem, collectionName
 
   const handleUpdateStatus = (status: 'published' | 'unclaimed') => {
     startTransition(async () => {
+        if (!db) return;
         try {
             const itemRef = doc(db, collectionName, item.id);
             await updateDoc(itemRef, { status: status });
@@ -83,7 +85,11 @@ function ReviewCard({ item, collectionName }: { item: ReviewItem, collectionName
 
 function ReviewTabContent({ collectionName, icon: Icon }: { collectionName: ContentType, icon: React.ElementType }) {
     const db = useFirestore();
-    const pendingQuery = query(collection(db, collectionName), where('status', '==', 'pending'));
+    const pendingQuery = useMemo(() => {
+        if (!db) return undefined;
+        return query(collection(db, collectionName), where('status', '==', 'pending'))
+    }, [db, collectionName]);
+
     const [pendingItems, isLoading] = useCollectionData(pendingQuery, { idField: 'id' });
 
     return (

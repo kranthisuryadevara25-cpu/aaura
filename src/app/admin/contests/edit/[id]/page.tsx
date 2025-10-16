@@ -83,7 +83,7 @@ export default function EditContestPage() {
       return <div className="flex h-screen items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>
   }
   
-  if (!contest) {
+  if (!loadingContest && !contest) {
       notFound();
   }
 
@@ -95,52 +95,52 @@ export default function EditContestPage() {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Content Management
             </Button>
-            <Card className="w-full">
-            <CardHeader>
-                <CardTitle>Edit Contest</CardTitle>
-                <CardDescription>Update the details for the &quot;{contest.title}&quot; contest.</CardDescription>
-            </CardHeader>
-            <CardContent>
-                <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                    
-                    <FormField control={form.control} name="title" render={({ field }) => (
-                        <FormItem><FormLabel>Contest Title</FormLabel><FormControl><Input placeholder="E.g., Jai Shri Ram Global Chant Marathon" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+            {contest && (
+                <Card className="w-full">
+                <CardHeader>
+                    <CardTitle>Edit Contest</CardTitle>
+                    <CardDescription>Update the details for the &quot;{contest.title}&quot; contest.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Form {...form}>
+                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                        
+                        <FormField control={form.control} name="title" render={({ field }) => (
+                            <FormItem><FormLabel>Contest Title</FormLabel><FormControl><Input placeholder="E.g., Jai Shri Ram Global Chant Marathon" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
 
-                    <FormField control={form.control} name="goal" render={({ field }) => (
-                        <FormItem><FormLabel>Chant Goal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                        <FormField control={form.control} name="goal" render={({ field }) => (
+                            <FormItem><FormLabel>Chant Goal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
+                        )} />
 
-                     <FormField control={form.control} name="status" render={({ field }) => (
-                        <FormItem>
-                            <FormLabel>Status</FormLabel>
-                            <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Set contest status" />
-                                    </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                    <SelectItem value="active">Active</SelectItem>
-                                    <SelectItem value="inactive">Inactive</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                        </FormItem>
-                    )} />
-                    
-                    <Button type="submit" disabled={isPending} className="w-full">
-                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Save Changes
-                    </Button>
-                </form>
-                </Form>
-            </CardContent>
-            </Card>
+                        <FormField control={form.control} name="status" render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Status</FormLabel>
+                                <Select onValueChange={field.onChange} value={field.value}>
+                                    <FormControl>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Set contest status" />
+                                        </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                        <SelectItem value="active">Active</SelectItem>
+                                        <SelectItem value="inactive">Inactive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )} />
+                        
+                        <Button type="submit" disabled={isPending} className="w-full">
+                            {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                            Save Changes
+                        </Button>
+                    </form>
+                    </Form>
+                </CardContent>
+                </Card>
+            )}
         </div>
     </main>
   );
 }
-
-    

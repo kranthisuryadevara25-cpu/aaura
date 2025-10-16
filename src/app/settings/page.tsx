@@ -145,11 +145,17 @@ export default function SettingsPage() {
                 zodiacSign: data.zodiacSign,
                 birthDate: formattedBirthDate,
             });
+
+            // Combine the structured horoscope into a single string for storage
+            const horoscopeText = `Love: ${horoscopeResult.horoscope.love}\nCareer: ${horoscopeResult.horoscope.career}\nHealth: ${horoscopeResult.horoscope.health}`;
+
             horoscopeData = {
                 userId: user.uid,
                 date: format(new Date(), 'yyyy-MM-dd'),
                 zodiacSign: data.zodiacSign,
-                text: horoscopeResult.horoscope,
+                text_en: horoscopeText,
+                // In a real app, you might generate translations here
+                text_hi: horoscopeText, 
             };
         } catch (aiError) {
              toast({
@@ -179,14 +185,12 @@ export default function SettingsPage() {
                 const isPermissionError = serverError.code === 'permission-denied';
 
                 if (isPermissionError) {
-                    // This logic assumes one of the writes failed. We create an error for the most likely one first.
-                    // A more robust solution might try to determine which write failed.
-                    const userProfilePermissionError = new FirestorePermissionError({
+                    const permissionError = new FirestorePermissionError({
                         path: userProfileRef.path,
                         operation: 'update',
                         requestResourceData: userProfileData,
                     });
-                    errorEmitter.emit('permission-error', userProfilePermissionError);
+                    errorEmitter.emit('permission-error', permissionError);
                 } else {
                     toast({
                         variant: "destructive",
@@ -343,5 +347,3 @@ export default function SettingsPage() {
     </main>
   );
 }
-
-    

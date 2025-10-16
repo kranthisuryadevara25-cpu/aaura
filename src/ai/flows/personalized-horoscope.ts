@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -19,8 +20,14 @@ const PersonalizedHoroscopeInputSchema = z.object({
 export type PersonalizedHoroscopeInput = z.infer<typeof PersonalizedHoroscopeInputSchema>;
 
 const PersonalizedHoroscopeOutputSchema = z.object({
-  horoscope: z.string().describe('The generated personalized horoscope.'),
-  disclaimer: z.string().describe('A disclaimer for entertainment purposes only.'),
+  horoscope: z.object({
+      love: z.string().describe("The user's love and relationship forecast for the day. Provide 1-2 sentences."),
+      career: z.string().describe("The user's career and finance forecast for the day. Provide 1-2 sentences."),
+      health: z.string().describe("The user's health and wellness forecast for the day. Provide 1-2 sentences."),
+  }),
+  luckyNumber: z.number().describe("A lucky number for the day between 1 and 100."),
+  luckyColor: z.string().describe("A lucky color for the day."),
+  disclaimer: z.string().default("This horoscope is for entertainment purposes only."),
 });
 export type PersonalizedHoroscopeOutput = z.infer<typeof PersonalizedHoroscopeOutputSchema>;
 
@@ -32,19 +39,25 @@ const prompt = ai.definePrompt({
   name: 'personalizedHoroscopePrompt',
   input: {schema: PersonalizedHoroscopeInputSchema},
   output: {schema: PersonalizedHoroscopeOutputSchema},
-  prompt: `You are a personal horoscope generator. Your job is to generate a personalized horoscope for the user, based on their zodiac sign and birth date.
+  prompt: `You are a Vedic Astrologer providing a personalized daily horoscope.
 
-  Zodiac Sign: {{{zodiacSign}}}
-  Birth Date: {{{birthDate}}}
-  Time Zone: {{{timeZone}}}
+  **User Details:**
+  - Zodiac Sign: {{{zodiacSign}}}
+  - Birth Date: {{{birthDate}}}
+  - Current Date: ${new Date().toDateString()}
 
-  Make sure the horoscope is positive and uplifting. Include a disclaimer that it is for entertainment purposes only.
+  **Your Task:**
+  Generate a positive, uplifting, and insightful horoscope for the user. The response must be in JSON format and include the following fields:
 
-  Output:
-  {{
-    "horoscope": "<generated horoscope>",
-    "disclaimer": "This horoscope is for entertainment purposes only."
-  }}
+  1.  **horoscope**: An object with three sub-fields:
+      *   `love`: A 1-2 sentence forecast for relationships and personal connections.
+      *   `career`: A 1-2 sentence forecast for work, finance, and professional life.
+      *   `health`: A 1-2 sentence forecast for physical and mental well-being.
+  2.  **luckyNumber**: A single lucky number for the day.
+  3.  **luckyColor**: A single lucky color for the day.
+  4.  **disclaimer**: Include the default disclaimer.
+  
+  Keep the tone encouraging and provide actionable, gentle advice.
   `,
 });
 

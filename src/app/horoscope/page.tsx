@@ -5,7 +5,7 @@ import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
-import { Loader2, Star } from 'lucide-react';
+import { Loader2, Star, Sparkles, Heart, Briefcase, Activity } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
@@ -23,7 +23,19 @@ export default function HoroscopePage() {
 
   const isLoading = authLoading || horoscopeLoading;
   
-  const horoscopeText = horoscope?.[`text_${language}`] || horoscope?.text_en || horoscope?.text;
+  const horoscopeText = horoscope?.[`text_${language}`] || horoscope?.text_en;
+  
+  // A simple function to parse the structured text
+  const parseHoroscope = (text: string) => {
+    const lines = text?.split('\n');
+    const love = lines?.find(l => l.startsWith('Love:'))?.replace('Love:', '').trim();
+    const career = lines?.find(l => l.startsWith('Career:'))?.replace('Career:', '').trim();
+    const health = lines?.find(l => l.startsWith('Health:'))?.replace('Health:', '').trim();
+    return { love, career, health, raw: text };
+  }
+
+  const parsedHoroscope = parseHoroscope(horoscopeText);
+
 
   if (isLoading) {
     return (
@@ -82,13 +94,42 @@ export default function HoroscopePage() {
         <Card className="bg-gradient-to-br from-primary/10 to-background border-primary/20 shadow-lg">
           <CardHeader>
             <CardTitle className="flex items-center justify-between">
-              <span>{horoscope.zodiacSign}</span>
+              <span className="flex items-center gap-2"><Sparkles className="h-5 w-5 text-yellow-400" />{horoscope.zodiacSign}</span>
               <span className="text-sm font-normal text-muted-foreground">{new Date(horoscope.date).toLocaleDateString()}</span>
             </CardTitle>
             <CardDescription>{t.horoscope.dailyReading}</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p className="text-lg text-foreground/90 leading-relaxed">{horoscopeText}</p>
+          <CardContent className="space-y-6">
+             {parsedHoroscope.love && (
+                <div className="flex items-start gap-3">
+                    <Heart className="h-5 w-5 text-red-400 mt-1" />
+                    <div>
+                        <h3 className="font-semibold text-red-500">Love</h3>
+                        <p className="text-foreground/90">{parsedHoroscope.love}</p>
+                    </div>
+                </div>
+             )}
+             {parsedHoroscope.career && (
+                <div className="flex items-start gap-3">
+                    <Briefcase className="h-5 w-5 text-blue-400 mt-1" />
+                    <div>
+                        <h3 className="font-semibold text-blue-500">Career</h3>
+                        <p className="text-foreground/90">{parsedHoroscope.career}</p>
+                    </div>
+                </div>
+             )}
+              {parsedHoroscope.health && (
+                <div className="flex items-start gap-3">
+                    <Activity className="h-5 w-5 text-green-400 mt-1" />
+                    <div>
+                        <h3 className="font-semibold text-green-500">Health</h3>
+                        <p className="text-foreground/90">{parsedHoroscope.health}</p>
+                    </div>
+                </div>
+              )}
+               {!parsedHoroscope.love && (
+                 <p className="text-lg text-foreground/90 leading-relaxed">{parsedHoroscope.raw}</p>
+               )}
           </CardContent>
         </Card>
       </div>

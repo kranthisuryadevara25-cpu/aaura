@@ -5,18 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { TempleForm } from '../../TempleForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { getTempleBySlug } from '@/lib/temples';
 
 export default function EditTemplePage() {
   const params = useParams();
   const router = useRouter();
-  const db = useFirestore();
   const id = params.id as string;
   
-  const templeRef = doc(db, 'temples', id);
-  const [temple, isLoading] = useDocumentData(templeRef, { idField: 'id' });
+  // Use local mock data instead of Firestore
+  const temple = getTempleBySlug(id);
+  const isLoading = false;
 
   if (isLoading) {
     return (

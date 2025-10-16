@@ -6,21 +6,19 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronsUpDown, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
+import { temples as allTemples } from '@/lib/temples';
 
 export default function NewTemplePage() {
   const router = useRouter();
-  const db = useFirestore();
   const { language } = useLanguage();
   
-  const unclaimedTemplesQuery = query(collection(db, 'temples'), where('status', '==', 'unclaimed'));
-  const [temples, isLoading] = useCollectionData(unclaimedTemplesQuery, { idField: 'id' });
+  // Use local mock data instead of Firestore
+  const temples = allTemples;
+  const isLoading = false;
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');

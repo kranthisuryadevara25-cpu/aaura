@@ -6,21 +6,19 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronsUpDown, Check, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from '@/components/ui/command';
 import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
+import { deities as allDeities } from '@/lib/deities';
 
 export default function NewDeityPage() {
   const router = useRouter();
-  const db = useFirestore();
   const { language } = useLanguage();
   
-  const unclaimedDeitiesQuery = query(collection(db, 'deities'), where('status', '==', 'unclaimed'));
-  const [deities, isLoading] = useCollectionData(unclaimedDeitiesQuery, { idField: 'id' });
+  // Use local mock data instead of Firestore
+  const deities = allDeities;
+  const isLoading = false; // Data is now local, so no loading state needed.
 
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState('');

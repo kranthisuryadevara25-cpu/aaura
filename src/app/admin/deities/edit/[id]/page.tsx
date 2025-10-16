@@ -5,18 +5,16 @@ import { useParams, useRouter } from 'next/navigation';
 import { DeityForm } from '../../DeityForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc } from 'firebase/firestore';
-import { useFirestore } from '@/lib/firebase/provider';
+import { getDeityBySlug } from '@/lib/deities';
 
 export default function EditDeityPage() {
   const params = useParams();
   const router = useRouter();
-  const db = useFirestore();
   const id = params.id as string;
 
-  const deityRef = doc(db, 'deities', id);
-  const [deity, isLoading] = useDocumentData(deityRef, { idField: 'id' });
+  // Use local mock data instead of Firestore
+  const deity = getDeityBySlug(id);
+  const isLoading = false;
 
   if (isLoading) {
     return (

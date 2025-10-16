@@ -55,7 +55,7 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
   
   const playlistsQuery = useMemo(() => {
     if (!user) {
-      return query(collection(db, 'playlists'), where('isPublic', '==', true));
+      return null;
     }
     // Fetch public playlists OR playlists created by the current user
     return query(collection(db, 'playlists'), or(where('isPublic', '==', true), where('creatorId', '==', user.uid)));
@@ -67,15 +67,19 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
   const [activeTab, setActiveTab] = useState('public');
 
   const myPlaylists = useMemo(() => {
-    return allPlaylists?.filter(p => p.creatorId === user?.uid) || [];
+    return allPlaylists?.filter(p => p.creatorId === user?.uid && p.id) || [];
   }, [allPlaylists, user]);
 
   const publicPlaylists = useMemo(() => {
-     if (!allPlaylists) return initialPublicPlaylists;
-     // De-duplicate in case a user's playlist is also public
-     const uniqueIds = new Set(myPlaylists.map(p => p.id));
-     return allPlaylists.filter(p => p.isPublic && !uniqueIds.has(p.id));
-  }, [allPlaylists, myPlaylists, initialPublicPlaylists]);
+    const serverPlaylists = initialPublicPlaylists.filter(p => p.id);
+     if (!allPlaylists) return serverPlaylists;
+
+     // Combine server and client public playlists and de-duplicate
+     const combined = [...serverPlaylists, ...allPlaylists.filter(p => p.isPublic && p.id)];
+     const uniquePlaylists = Array.from(new Map(combined.map(item => [item.id, item])).values());
+     
+     return uniquePlaylists;
+  }, [allPlaylists, initialPublicPlaylists]);
 
   const filteredPlaylists = useMemo(() => {
     let itemsToFilter = activeTab === 'my-playlists' ? myPlaylists : publicPlaylists;
@@ -83,11 +87,13 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
     if (searchQuery.trim() !== '') {
       const lowercasedQuery = searchQuery.toLowerCase();
       itemsToFilter = itemsToFilter.filter(playlist =>
-        playlist.title.toLowerCase().includes(lowercasedQuery)
+        playlist.title?.toLowerCase().includes(lowercasedQuery)
       );
     }
     return itemsToFilter;
   }, [searchQuery, activeTab, myPlaylists, publicPlaylists]);
+
+  const displayLoading = isLoading && (activeTab === 'my-playlists' || (activeTab === 'public' && !initialPublicPlaylists));
 
   return (
     <>
@@ -109,7 +115,7 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
           <TabsTrigger value="my-playlists" disabled={!user}>My Playlists</TabsTrigger>
         </TabsList>
         <TabsContent value="public">
-          {isLoading ? (
+          {displayLoading ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>
@@ -118,7 +124,7 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
           )}
         </TabsContent>
         <TabsContent value="my-playlists">
-          {isLoading ? (
+          {displayLoading ? (
             <div className="flex justify-center items-center h-64">
               <Loader2 className="h-16 w-16 animate-spin text-primary" />
             </div>

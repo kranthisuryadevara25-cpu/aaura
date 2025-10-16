@@ -69,8 +69,8 @@ function GroupCard({ group }: { group: any }) {
     };
 
     return (
-        <Link href={`/forum/${group.id}`} className="group block">
-            <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
+        <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
+            <Link href={`/forum/${group.id}`} className="group block flex flex-col flex-grow">
                 <div className="relative aspect-video bg-secondary">
                     <Image src={group.coverImageUrl || `https://picsum.photos/seed/${group.id}/600/400`} alt={group.name} fill className="object-cover" />
                 </div>
@@ -87,16 +87,18 @@ function GroupCard({ group }: { group: any }) {
                         <Users className="h-4 w-4" />
                         <span>{group.memberCount || 0} Members</span>
                     </div>
-                    {user && (
-                         <Button variant={isMember ? 'secondary' : 'default'} size="sm" onClick={handleJoinLeave} disabled={loadingMembership}>
-                            {loadingMembership ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-                                isMember ? <><CheckCircle className="mr-2 h-4 w-4" /> Joined</> : <><PlusCircle className="mr-2 h-4 w-4" /> Join</>
-                            )}
-                        </Button>
-                    )}
                 </CardFooter>
-            </Card>
-        </Link>
+            </Link>
+             {user && (
+                <CardFooter>
+                     <Button variant={isMember ? 'secondary' : 'default'} size="sm" onClick={handleJoinLeave} disabled={loadingMembership} className="w-full">
+                        {loadingMembership ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                            isMember ? <><CheckCircle className="mr-2 h-4 w-4" /> Joined</> : <><PlusCircle className="mr-2 h-4 w-4" /> Join</>
+                        )}
+                    </Button>
+                </CardFooter>
+            )}
+        </Card>
     );
 }
 

@@ -18,12 +18,12 @@ export default function RootLayout({
         <title>Aaura</title>
         <meta name="description" content="Your daily dose of spiritual wellness." />
         <link rel="manifest" href="/manifest.json" />
-        <meta name="theme-color" content="#E6E6FA" />
+        <meta name="theme-color" content="#FF6F00" />
         <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Laila:wght@400;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@700&family=Mukta:wght@400;700&family=Tangerine:wght@700&display=swap"
           rel="stylesheet"
         />
       </head>
@@ -32,15 +32,15 @@ export default function RootLayout({
             <FirebaseProvider>
                 <div className="min-h-screen bg-background text-foreground">
                   <TopNav />
-                  <div className="flex">
+                  <main className="flex">
                     <Sidebar />
-                    <main className="flex-1 lg:p-6">
+                    <div className="flex-1 lg:p-6">
                       {children}
-                    </main>
+                    </div>
                     <aside className="hidden xl:block w-80 border-l p-4 shrink-0">
                         <RightSidebar />
                     </aside>
-                  </div>
+                  </main>
                 </div>
             </FirebaseProvider>
           </LanguageProvider>

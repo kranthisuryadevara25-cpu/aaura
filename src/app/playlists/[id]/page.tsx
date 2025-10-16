@@ -2,7 +2,7 @@
 
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
-import { doc, collection, query, where } from 'firebase/firestore';
+import { doc, collection, query, where, DocumentData } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { Loader2, Music, PlayCircle, ListMusic } from 'lucide-react';
 import Image from 'next/image';
@@ -32,21 +32,25 @@ export default function PlaylistDetailPage() {
 
   const mediaIds = useMemo(() => playlist?.items?.map((item: any) => item.contentId) || [], [playlist]);
   
-  const mediaQuery = mediaIds.length > 0 ? query(collection(db, 'media'), where('__name__', 'in', mediaIds)) : undefined;
-  const [mediaItems, loadingMedia] = useCollectionData(mediaQuery);
+  // Firestore 'in' queries are limited to 30 items. For longer playlists, pagination or a different approach would be needed.
+  const mediaQuery = mediaIds.length > 0 ? query(collection(db, 'media'), where('__name__', 'in', mediaIds.slice(0,30))) : undefined;
+  const [mediaItems, loadingMedia] = useCollectionData(mediaQuery, { idField: 'id' });
 
   const orderedMediaItems = useMemo(() => {
     if (!mediaItems || !playlist?.items) return [];
+    const mediaMap = new Map(mediaItems.map(item => [item.id, item]));
     return playlist.items
-      .map((item: any) => mediaItems.find(media => media.id === item.contentId))
-      .filter(Boolean); // Filter out any undefined items
+      .map((item: any) => mediaMap.get(item.contentId))
+      .filter(Boolean); // Filter out any undefined items if media hasn't loaded yet
   }, [playlist, mediaItems]);
 
   const handleVideoEnd = () => {
-    const currentIndex = orderedMediaItems.findIndex(item => item.id === activeVideoId);
+    const currentIndex = orderedMediaItems.findIndex(item => item?.id === activeVideoId);
     if (currentIndex !== -1 && currentIndex < orderedMediaItems.length - 1) {
       const nextVideo = orderedMediaItems[currentIndex + 1];
-      setActiveVideoId(nextVideo.id);
+      if (nextVideo) {
+        setActiveVideoId(nextVideo.id);
+      }
     }
   };
 
@@ -74,7 +78,7 @@ export default function PlaylistDetailPage() {
             ) : (
                 <div className="aspect-video bg-black rounded-lg flex flex-col items-center justify-center text-white">
                     <Music className="h-16 w-16 text-muted-foreground" />
-                    <p className="mt-4">This playlist is empty.</p>
+                    <p className="mt-4">This playlist is empty or the videos are still loading.</p>
                 </div>
             )}
         </div>
@@ -88,7 +92,8 @@ export default function PlaylistDetailPage() {
                 <CardContent className="space-y-2">
                     {loadingMedia ? (
                         <div className="flex justify-center"><Loader2 className="animate-spin" /></div>
-                    ) : orderedMediaItems.map((item: any, index) => {
+                    ) : orderedMediaItems.map((item: DocumentData | undefined, index: number) => {
+                        if (!item) return null;
                         const title = item[`title_${language}`] || item.title_en;
                         return (
                              <div

@@ -93,36 +93,27 @@ function ContestContent({ contestId }: { contestId: string, }) {
         }
         
         startChantTransition(async () => {
-            const contestDocRef = doc(db, 'contests', activeContest.id);
             const userProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, activeContest.id);
-            const leaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, currentUser.uid);
+            const requestData = { 
+                mantra: data.mantra, 
+                displayName: currentUser.displayName || 'Anonymous User',
+                lastChantedAt: serverTimestamp(),
+            };
 
-            try {
-                 await runTransaction(db, async (transaction) => {
-                    const userProgressDoc = await transaction.get(userProgressRef);
-                    const newChantCount = (userProgressDoc.data()?.chants || 0) + 1;
-
-                    const userProgressData = {
-                        chants: newChantCount,
-                        lastChantedAt: serverTimestamp(),
-                        displayName: currentUser.displayName || 'Anonymous',
-                        mantra: data.mantra,
-                    };
-
-                    transaction.set(userProgressRef, userProgressData, { merge: true });
-                    transaction.set(leaderboardRef, userProgressData, { merge: true });
-                    transaction.update(contestDocRef, { totalChants: increment(1) });
-                });
-
+            // Simplified write operation to only update user progress
+            setDoc(userProgressRef, requestData, { merge: true })
+            .then(() => {
                 form.reset({ mantra: "Jai Shri Ram" });
-            } catch (error: any) {
-                const permissionError = new FirestorePermissionError({
-                   path: `users/${currentUser.uid}/contestProgress/${activeContest.id}`,
-                   operation: 'write',
-                   requestResourceData: { mantra: data.mantra }
-                });
+            })
+            .catch((error: any) => {
+                // This will catch transaction errors, including permission denied on subcollections
+                 const permissionError = new FirestorePermissionError({
+                    path: `users/${currentUser.uid}/contestProgress/${activeContest.id}`,
+                    operation: 'write',
+                    requestResourceData: { mantra: data.mantra }
+                 });
                errorEmitter.emit('permission-error', permissionError);
-            }
+            });
         });
     };
     

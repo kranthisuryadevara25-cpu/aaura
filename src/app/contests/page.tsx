@@ -4,7 +4,7 @@
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc } from 'firebase/firestore';
-import { Loader2, Trophy, Send, Calendar } from 'lucide-react';
+import { Loader2, Trophy, Send, Calendar, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -93,11 +93,11 @@ function ContestContent({ contest }: { contest: DocumentData }) {
             };
 
             try {
-                // We use a transaction to ensure both writes happen or neither do.
-                await runTransaction(db, async (transaction) => {
-                    transaction.set(doc(chantsCollectionRef), chantData);
-                    transaction.update(contestRef, { totalChants: increment(1) });
-                });
+                const batch = writeBatch(db);
+                batch.set(doc(chantsCollectionRef), chantData);
+                batch.update(contestRef, { totalChants: increment(1) });
+                await batch.commit();
+
                 form.reset({ mantra: "Jai Shri Ram" });
              } catch (error: any) {
                  const permissionError = new FirestorePermissionError({
@@ -108,6 +108,14 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                  errorEmitter.emit('permission-error', permissionError);
             }
         });
+    };
+
+    const handleShare = () => {
+        if (typeof window === 'undefined') return;
+        const pageUrl = window.location.href;
+        const message = `Join the "${contest.title}" on Aaura! Let's chant together for a cause. ${pageUrl}`;
+        const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+        window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
     };
     
     const progressPercentage = (contest.totalChants / contest.goal) * 100;
@@ -130,6 +138,11 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                     <h1 className="text-3xl font-headline font-bold tracking-tight text-white drop-shadow-md">{contest.title}</h1>
                     <p className="text-sm text-white/90 drop-shadow-sm flex items-center gap-1"><Calendar size={14}/> Created on {createdAtDate}</p>
                  </div>
+                 <div className="absolute top-4 right-4">
+                    <Button onClick={handleShare} variant="secondary" size="sm">
+                        <Share2 className="mr-2 h-4 w-4" /> Share
+                    </Button>
+                </div>
             </div>
             <CardHeader className="text-center">
                 <CardDescription className="text-lg">

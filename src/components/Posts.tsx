@@ -147,9 +147,10 @@ function CreatePost({ contextId, contextType, onPostCreated }: { contextId: stri
         };
         
         try {
-            await addDoc(postsCollection, newPost);
+            const docRef = await addDoc(postsCollection, newPost);
             form.reset();
             toast({ title: 'Post created successfully!' });
+            onPostCreated({ id: docRef.id, ...newPost, createdAt: new Date() });
         } catch (error) {
              const permissionError = new FirestorePermissionError({
                 path: postsCollection.path,
@@ -210,12 +211,24 @@ export function Posts({ contextId, contextType }: PostsProps) {
         orderBy('createdAt', 'desc')
     ), [db, contextId, contextType]);
     
-    const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
+    const [fetchedPosts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
+
+    const [posts, setPosts] = useState<DocumentData[] | undefined>(undefined);
+
+    useEffect(() => {
+        if (fetchedPosts) {
+            setPosts(fetchedPosts);
+        }
+    }, [fetchedPosts]);
+
+    const handlePostCreated = (newPost: DocumentData) => {
+        setPosts(prevPosts => [newPost, ...(prevPosts || [])]);
+    };
 
     return (
         <div>
-            <CreatePost contextId={contextId} contextType={contextType} onPostCreated={() => {}} />
-            {loadingPosts ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
+            <CreatePost contextId={contextId} contextType={contextType} onPostCreated={handlePostCreated} />
+            {loadingPosts && !posts ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
                 <div className="space-y-6">
                     {posts && posts.length > 0 ? (
                         posts.map((post, index) => <PostCard key={post.id || index} post={post} />)

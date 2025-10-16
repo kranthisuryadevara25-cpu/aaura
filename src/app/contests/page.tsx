@@ -1,9 +1,10 @@
 
+
 'use client';
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc } from 'firebase/firestore';
+import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc, writeBatch } from 'firebase/firestore';
 import { Loader2, Trophy, Send, Calendar, Share2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -206,7 +207,7 @@ export default function ContestsPage() {
         where('status', '==', 'active'),
         limit(1)
     );
-    const [contests, loadingContests] = useCollectionData(contestsQuery, { idField: 'id' });
+    const [contests, loadingContests] = useCollectionData(contestsQuery);
     
     if (loadingContests) {
         return (
@@ -234,3 +235,4 @@ export default function ContestsPage() {
         </main>
     );
 }
+

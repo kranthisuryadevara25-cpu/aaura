@@ -3,36 +3,26 @@
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment } from 'firebase/firestore';
+import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentReference, DocumentData } from 'firebase/firestore';
 import { Loader2, Trophy, Heart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition, useMemo } from 'react';
+import { useTransition, useMemo, useState, useEffect } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
-export default function ContestsPage() {
+function ContestContent({ activeContest, user }: { activeContest: DocumentData, user: any }) {
     const db = useFirestore();
-    const auth = useAuth();
-    const [user] = useAuthState(auth);
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
 
-    const contestsQuery = query(
-        collection(db, 'contests'), 
-        where('status', '==', 'active'),
-        limit(1)
-    );
-    const [contests, loadingContests] = useCollectionData(contestsQuery, { idField: 'id' });
-    const activeContest = useMemo(() => contests?.[0], [contests]);
-
     const userProgressRef = useMemo(() => {
-        if (!user || !activeContest) return undefined;
+        if (!user) return undefined;
         return doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
-    }, [db, user, activeContest]);
+    }, [db, user, activeContest.id]);
 
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
 
@@ -42,7 +32,7 @@ export default function ContestsPage() {
             return;
         }
 
-        if (!activeContest || !userProgressRef) {
+        if (!userProgressRef) {
              toast({ variant: 'destructive', title: 'Contest not active', description: "There doesn't seem to be an active contest right now." });
             return;
         }
@@ -83,7 +73,61 @@ export default function ContestsPage() {
              }
         });
     };
+    
+    const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
 
+    return (
+        <Card className="w-full max-w-2xl text-center shadow-2xl bg-gradient-to-br from-primary/10 to-background border-primary/20">
+            <CardHeader>
+                <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
+                <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
+                <CardDescription className="text-lg">Join the global chant and feel the divine energy!</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+                <div>
+                    <p className="text-5xl font-bold tracking-tighter text-foreground">
+                        {(activeContest.totalChants || 0).toLocaleString()}
+                    </p>
+                    <p className="text-muted-foreground">
+                       of {activeContest.goal.toLocaleString()} chants
+                    </p>
+                </div>
+
+                <Progress value={progressPercentage} className="h-4" />
+                
+                <Button 
+                    size="lg" 
+                    className="w-full h-16 text-2xl font-bold rounded-full shadow-lg transform active:scale-95 transition-transform duration-150"
+                    onClick={handleChant}
+                    disabled={!user || isChanting}
+                >
+                    {isChanting ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Heart className="mr-3 h-6 w-6 fill-current" />}
+                    Jai Shri Ram
+                </Button>
+
+                {user && !loadingUserProgress && (
+                     <p className="text-muted-foreground">
+                        You have contributed {userProgress?.chants || 0} times.
+                    </p>
+                )}
+                 {user && loadingUserProgress && <Loader2 className="mx-auto h-4 w-4 animate-spin" />}
+            </CardContent>
+        </Card>
+    )
+}
+
+export default function ContestsPage() {
+    const db = useFirestore();
+    const auth = useAuth();
+    const [user] = useAuthState(auth);
+
+    const contestsQuery = query(
+        collection(db, 'contests'), 
+        where('status', '==', 'active'),
+        limit(1)
+    );
+    const [contests, loadingContests] = useCollectionData(contestsQuery, { idField: 'id' });
+    
     if (loadingContests) {
         return (
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
@@ -92,6 +136,8 @@ export default function ContestsPage() {
         );
     }
     
+    const activeContest = contests?.[0];
+
     if (!activeContest) {
          return (
              <main className="flex-grow container mx-auto px-4 py-8 md:py-16 text-center">
@@ -102,46 +148,9 @@ export default function ContestsPage() {
          )
     }
 
-    const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
-
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
-            <Card className="w-full max-w-2xl text-center shadow-2xl bg-gradient-to-br from-primary/10 to-background border-primary/20">
-                <CardHeader>
-                    <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
-                    <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
-                    <CardDescription className="text-lg">Join the global chant and feel the divine energy!</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div>
-                        <p className="text-5xl font-bold tracking-tighter text-foreground">
-                            {(activeContest.totalChants || 0).toLocaleString()}
-                        </p>
-                        <p className="text-muted-foreground">
-                           of {activeContest.goal.toLocaleString()} chants
-                        </p>
-                    </div>
-
-                    <Progress value={progressPercentage} className="h-4" />
-                    
-                    <Button 
-                        size="lg" 
-                        className="w-full h-16 text-2xl font-bold rounded-full shadow-lg transform active:scale-95 transition-transform duration-150"
-                        onClick={handleChant}
-                        disabled={!user || isChanting}
-                    >
-                        {isChanting ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Heart className="mr-3 h-6 w-6 fill-current" />}
-                        Jai Shri Ram
-                    </Button>
-
-                    {user && !loadingUserProgress && (
-                         <p className="text-muted-foreground">
-                            You have contributed {userProgress?.chants || 0} times.
-                        </p>
-                    )}
-                </CardContent>
-            </Card>
+            <ContestContent activeContest={activeContest} user={user} />
         </main>
     );
 }
-

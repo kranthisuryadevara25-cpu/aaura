@@ -63,10 +63,13 @@ function DeitiesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(deities as Deity[] | undefined)?.map((deity) => (
+          {(deities as Deity[] | undefined)?.map((deity) => {
+            const imageUrl = deity.images?.[0]?.url;
+            const imageHint = deity.images?.[0]?.hint;
+            return(
             <Card key={deity.id}>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{deity.name[language] || deity.name.en}</CardTitle>
+                <CardTitle>{deity.name?.[language] || deity.name?.en || 'Unnamed Deity'}</CardTitle>
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" asChild>
                         <Link href={`/admin/deities/edit/${deity.id}`}>
@@ -81,7 +84,7 @@ function DeitiesTabContent() {
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure you want to delete {deity.name.en}?</AlertDialogTitle>
+                            <AlertDialogTitle>Are you sure you want to delete {deity.name?.en || 'this deity'}?</AlertDialogTitle>
                             <AlertDialogDescription>
                               This action cannot be undone. This will permanently delete the deity.
                             </AlertDialogDescription>
@@ -95,18 +98,24 @@ function DeitiesTabContent() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="relative aspect-video rounded-md overflow-hidden">
+                <div className="relative aspect-video rounded-md overflow-hidden bg-secondary">
+                  {imageUrl ? (
                     <Image 
-                        src={deity.images[0].url} 
-                        alt={deity.name.en}
-                        data-ai-hint={deity.images[0].hint}
+                        src={imageUrl} 
+                        alt={deity.name?.en || 'Deity image'}
+                        data-ai-hint={imageHint}
                         fill
                         className="object-cover"
                     />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No Image
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )})}
         </div>
       )}
     </div>
@@ -146,10 +155,13 @@ function StoriesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(stories as Story[] | undefined)?.map((story) => (
+          {(stories as Story[] | undefined)?.map((story) => {
+             const imageUrl = story.image?.url;
+             const imageHint = story.image?.hint;
+             return(
             <Card key={story.id}>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{story.title[language] || story.title.en}</CardTitle>
+                <CardTitle>{story.title?.[language] || story.title?.en || 'Untitled Saga'}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" asChild>
                     <Link href={`/admin/stories/edit/${story.id}`}>
@@ -178,18 +190,24 @@ function StoriesTabContent() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="relative aspect-video rounded-md overflow-hidden">
+                <div className="relative aspect-video rounded-md overflow-hidden bg-secondary">
+                  {imageUrl ? (
                   <Image
-                    src={story.image.url}
-                    alt={story.title.en}
-                    data-ai-hint={story.image.hint}
+                    src={imageUrl}
+                    alt={story.title?.en || 'Story Image'}
+                    data-ai-hint={imageHint}
                     fill
                     className="object-cover"
                   />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No Image
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          ))}
+             )})}
         </div>
       )}
     </div>
@@ -230,10 +248,13 @@ function CharactersTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(characters as EpicHero[] | undefined)?.map((character) => (
+          {(characters as EpicHero[] | undefined)?.map((character) => {
+            const imageUrl = character.imageUrl;
+            const imageHint = character.imageHint;
+            return (
             <Card key={character.id}>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{character.name[language] || character.name.en}</CardTitle>
+                <CardTitle>{character.name?.[language] || character.name?.en || 'Unnamed Hero'}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" asChild>
                     <Link href={`/admin/characters/edit/${character.id}`}>
@@ -262,18 +283,24 @@ function CharactersTabContent() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="relative aspect-video rounded-md overflow-hidden">
+                <div className="relative aspect-video rounded-md overflow-hidden bg-secondary">
+                  {imageUrl ? (
                   <Image
-                    src={character.imageUrl}
-                    alt={character.name.en}
-                    data-ai-hint={character.imageHint}
+                    src={imageUrl}
+                    alt={character.name?.en || 'Character Image'}
+                    data-ai-hint={imageHint}
                     fill
                     className="object-cover"
                   />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No Image
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )})}
         </div>
       )}
     </div>
@@ -313,10 +340,13 @@ function TemplesTabContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {(temples as Temple[] | undefined)?.map((temple) => (
+          {(temples as Temple[] | undefined)?.map((temple) => {
+            const imageUrl = temple.media?.images?.[0]?.url;
+            const imageHint = temple.media?.images?.[0]?.hint;
+            return (
             <Card key={temple.id}>
               <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{temple.name[language] || temple.name.en}</CardTitle>
+                <CardTitle>{temple.name?.[language] || temple.name?.en || 'Unnamed Temple'}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" asChild>
                     <Link href={`/admin/temples/edit/${temple.id}`}>
@@ -345,18 +375,24 @@ function TemplesTabContent() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="relative aspect-video rounded-md overflow-hidden">
+                <div className="relative aspect-video rounded-md overflow-hidden bg-secondary">
+                  {imageUrl ? (
                   <Image
-                    src={temple.media.images[0].url}
-                    alt={temple.name.en}
-                    data-ai-hint={temple.media.images[0].hint}
+                    src={imageUrl}
+                    alt={temple.name?.en || 'Temple Image'}
+                    data-ai-hint={imageHint}
                     fill
                     className="object-cover"
                   />
+                  ) : (
+                    <div className="flex items-center justify-center h-full text-muted-foreground">
+                      No Image
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>
-          ))}
+          )})}
         </div>
       )}
     </div>

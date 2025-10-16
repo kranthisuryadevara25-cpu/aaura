@@ -43,6 +43,12 @@ export default function ForumPage() {
             return;
         }
 
+        if (!group || !group.id) {
+            console.error("handleJoinLeave called with invalid group:", group);
+            toast({ variant: 'destructive', title: 'Error', description: 'Could not process group action.' });
+            return;
+        }
+
         setLoadingStates(prev => ({ ...prev, [group.id]: true }));
         
         const groupRef = doc(db, 'groups', group.id);

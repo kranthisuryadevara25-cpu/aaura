@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Button } from '@/components/ui/button';
@@ -12,22 +12,23 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition } from 'react';
-import { useRouter } from 'next/navigation';
-import { Loader2, PlusCircle, ArrowLeft, Calendar as CalendarIcon } from 'lucide-react';
+import { useTransition, useEffect } from 'react';
+import { useRouter, useParams, notFound } from 'next/navigation';
+import { Loader2, Save, ArrowLeft, Calendar as CalendarIcon } from 'lucide-react';
 import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
 const formSchema = z.object({
-  id: z.string().min(3, "Contest ID is required").regex(/^[a-z0-9-]+$/, "Slug must be lowercase with hyphens."),
   title: z.string().min(10, "Title must be at least 10 characters."),
   goal: z.coerce.number().min(1, "Goal must be at least 1."),
   startDate: z.date({ required_error: "A start date is required." }),
@@ -36,54 +37,63 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-export default function CreateContestPage() {
+export default function EditContestPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const params = useParams();
   const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
+  const id = params.id as string;
+  const contestRef = doc(db, 'contests', id);
+  const [contest, loadingContest] = useDocumentData(contestRef);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      id: '',
-      title: '',
-      goal: 10000000,
-    },
   });
+
+  useEffect(() => {
+    if (contest) {
+      form.reset({
+        title: contest.title,
+        goal: contest.goal,
+        startDate: contest.startDate?.toDate(),
+        endDate: contest.endDate?.toDate(),
+      });
+    }
+  }, [contest, form]);
+
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
-      const contestRef = doc(db, 'contests', data.id);
-      
-      const now = new Date();
-      let status = 'upcoming';
-      if (now >= data.startDate && now <= data.endDate) {
-          status = 'active';
-      } else if (now > data.endDate) {
-          status = 'completed';
-      }
-
       const contestData = {
         title: data.title,
         goal: data.goal,
-        totalChants: 0,
         startDate: data.startDate,
         endDate: data.endDate,
-        status: status,
-        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
       };
       
-      setDoc(contestRef, contestData)
+      await updateDoc(contestRef, contestData)
         .then(() => {
-          toast({ title: 'Contest Created!', description: `The "${data.title}" contest is now scheduled.` });
+          toast({ title: 'Contest Updated!', description: `The "${data.title}" contest has been updated.` });
           router.push('/admin/content?tab=contests');
         })
         .catch((error) => {
-          console.error("Error creating contest: ", error);
-          toast({ variant: 'destructive', title: 'Error', description: 'Failed to create contest.' });
+          console.error("Error updating contest: ", error);
+          toast({ variant: 'destructive', title: 'Error', description: 'Failed to update contest.' });
         });
     });
   };
+
+  if (loadingContest) {
+      return <div className="flex h-screen items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>
+  }
+  
+  if (!contest) {
+      notFound();
+  }
+
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -94,17 +104,13 @@ export default function CreateContestPage() {
             </Button>
             <Card className="w-full">
             <CardHeader>
-                <CardTitle>Create a New Contest</CardTitle>
-                <CardDescription>Fill out the details below to launch a new global chanting contest.</CardDescription>
+                <CardTitle>Edit Contest</CardTitle>
+                <CardDescription>Update the details for the &quot;{contest.title}&quot; contest.</CardDescription>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                     
-                    <FormField control={form.control} name="id" render={({ field }) => (
-                        <FormItem><FormLabel>Contest ID</FormLabel><FormControl><Input placeholder="e.g., jai-shri-ram-2025" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-
                     <FormField control={form.control} name="title" render={({ field }) => (
                         <FormItem><FormLabel>Contest Title</FormLabel><FormControl><Input placeholder="E.g., Jai Shri Ram Global Chant Marathon" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
@@ -113,7 +119,7 @@ export default function CreateContestPage() {
                         <FormItem><FormLabel>Chant Goal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <FormField control={form.control} name="startDate" render={({ field }) => (
                             <FormItem className="flex flex-col">
                                 <FormLabel>Start Date</FormLabel>
@@ -145,8 +151,8 @@ export default function CreateContestPage() {
                     </div>
                     
                     <Button type="submit" disabled={isPending} className="w-full">
-                    {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
-                    Create Contest
+                        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Save Changes
                     </Button>
                 </form>
                 </Form>

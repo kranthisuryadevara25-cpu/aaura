@@ -3,16 +3,17 @@
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData } from 'firebase/firestore';
+import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp } from 'firebase/firestore';
 import { Loader2, Trophy, Heart } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useState, useEffect, useMemo } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { differenceInDays, format } from 'date-fns';
 
 function ContestContent({ activeContest, user }: { activeContest: DocumentData, user: any }) {
     const db = useFirestore();
@@ -26,7 +27,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
             setUserProgressRef(ref);
         }
     }, [db, user, activeContest]);
-
+    
     const [userProgress, loadingUserProgress] = useDocumentData(userProgressRef);
 
     const handleChant = () => {
@@ -40,8 +41,6 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
             return;
         }
 
-        // Now we know we have a user and an active contest.
-        // We can safely create the reference for the transaction.
         const currentUserProgressRef = doc(db, `users/${user.uid}/contestProgress`, activeContest.id);
 
         startChantTransition(async () => {
@@ -82,13 +81,19 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     };
     
     const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
+    const isCompleted = activeContest.status === 'completed';
+    const achievementDays = isCompleted && activeContest.achievedAt && activeContest.startDate
+        ? differenceInDays(activeContest.achievedAt.toDate(), activeContest.startDate.toDate()) + 1
+        : null;
 
     return (
         <Card className="w-full max-w-2xl text-center shadow-2xl bg-gradient-to-br from-primary/10 to-background border-primary/20">
             <CardHeader>
                 <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
                 <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
-                <CardDescription className="text-lg">Join the global chant and feel the divine energy!</CardDescription>
+                <CardDescription className="text-lg">
+                    {format(activeContest.startDate.toDate(), 'PPP')} - {format(activeContest.endDate.toDate(), 'PPP')}
+                </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
                 <div>
@@ -101,16 +106,23 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
                 </div>
 
                 <Progress value={progressPercentage} className="h-4" />
-                
-                <Button 
-                    size="lg" 
-                    className="w-full h-16 text-2xl font-bold rounded-full shadow-lg transform active:scale-95 transition-transform duration-150"
-                    onClick={handleChant}
-                    disabled={!user || isChanting}
-                >
-                    {isChanting ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Heart className="mr-3 h-6 w-6 fill-current" />}
-                    Jai Shri Ram
-                </Button>
+
+                 {isCompleted ? (
+                    <div className="font-semibold text-green-600">
+                        Goal achieved! {achievementDays && `Completed in ${achievementDays} days.`}
+                    </div>
+                 ) : (
+                    <Button 
+                        size="lg" 
+                        className="w-full h-16 text-2xl font-bold rounded-full shadow-lg transform active:scale-95 transition-transform duration-150"
+                        onClick={handleChant}
+                        disabled={!user || isChanting}
+                    >
+                        {isChanting ? <Loader2 className="mr-2 h-6 w-6 animate-spin" /> : <Heart className="mr-3 h-6 w-6 fill-current" />}
+                        Jai Shri Ram
+                    </Button>
+                 )}
+
 
                 {user && !loadingUserProgress && (
                      <p className="text-muted-foreground">
@@ -161,3 +173,5 @@ export default function ContestsPage() {
         </main>
     );
 }
+
+    

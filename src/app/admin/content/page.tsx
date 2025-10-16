@@ -28,6 +28,8 @@ import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
 import type { Temple } from '@/lib/temples';
+import { format } from 'date-fns';
+import { Badge } from '@/components/ui/badge';
 
 
 function DeitiesTabContent() {
@@ -401,8 +403,18 @@ function TemplesTabContent() {
 
 function ContestsTabContent() {
     const db = useFirestore();
+    const { toast } = useToast();
     const contestsRef = collection(db, 'contests');
     const [contests, isLoading] = useCollectionData(contestsRef, { idField: 'id' });
+
+    const handleDelete = async (id: string) => {
+        try {
+            await deleteDoc(doc(db, 'contests', id));
+            toast({ title: 'Contest Deleted', description: 'The contest has been removed.' });
+        } catch {
+            toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete contest.' });
+        }
+    };
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-64"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
@@ -422,21 +434,40 @@ function ContestsTabContent() {
              <div className="space-y-4">
                 {contests?.map((contest) => (
                     <Card key={contest.id}>
-                        <CardHeader className="flex-row justify-between items-start">
-                            <div>
-                                <CardTitle>{contest.title}</CardTitle>
-                                <CardDescription>Goal: {Number(contest.goal).toLocaleString()} chants</CardDescription>
+                        <CardHeader>
+                            <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle>{contest.title}</CardTitle>
+                                    <CardDescription>Goal: {Number(contest.goal).toLocaleString()} chants</CardDescription>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                     <Button variant="outline" size="sm" asChild>
+                                        <Link href={`/admin/contests/edit/${contest.id}`}>
+                                            <Edit className="mr-2 h-4 w-4" /> Edit
+                                        </Link>
+                                    </Button>
+                                    <AlertDialog>
+                                        <AlertDialogTrigger asChild><Button variant="destructive" size="sm"><Trash2 className="mr-2 h-4 w-4" />Delete</Button></AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                <AlertDialogDescription>This action cannot be undone. This will permanently delete the contest.</AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(contest.id)}>Delete</AlertDialogAction>
+                                            </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                    </AlertDialog>
+                                </div>
                             </div>
-                            <Button variant="outline" size="sm" asChild>
-                                <Link href={`/admin/contests/edit/${contest.id}`}>
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit
-                                </Link>
-                            </Button>
                         </CardHeader>
                         <CardContent>
-                            <p>Status: {contest.status}</p>
-                            <p>Current Count: {Number(contest.totalChants || 0).toLocaleString()}</p>
+                            <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                <Badge variant={contest.status === 'active' ? 'default' : 'secondary'}>{contest.status}</Badge>
+                                <span>Total: {Number(contest.totalChants || 0).toLocaleString()}</span>
+                                <span>Dates: {format(contest.startDate.toDate(), 'PPP')} - {format(contest.endDate.toDate(), 'PPP')}</span>
+                            </div>
                         </CardContent>
                     </Card>
                 ))}
@@ -485,3 +516,5 @@ export default function ContentManagementPage() {
     </main>
   );
 }
+
+    

@@ -1,10 +1,10 @@
 
 'use client';
 
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useRouter } from 'next/navigation';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, collection, query, orderBy, serverTimestamp, addDoc, updateDoc, increment, deleteDoc, setDoc, writeBatch } from 'firebase/firestore';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc, collection, query, where, orderBy, serverTimestamp, addDoc, updateDoc, increment, deleteDoc, setDoc, writeBatch } from 'firebase/firestore';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageCircle, ThumbsUp, Send, Users, CheckCircle, PlusCircle } from 'lucide-react';
@@ -18,19 +18,23 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useMemo } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { getGroupById } from '@/lib/groups';
-import { getPostsByGroupId, type Post } from '@/lib/posts';
 import { Posts } from '@/components/Posts';
 
 
 export default function GroupDetailPage() {
   const params = useParams();
-  const groupId = params.postId as string; // Route uses [postId] but it's the groupId
+  const groupId = params.postId as string; 
+  const db = useFirestore();
+
+  const groupRef = useMemo(() => doc(db, 'groups', groupId), [db, groupId]);
+  const [group, loadingGroup] = useDocumentData(groupRef);
   
-  const group = getGroupById(groupId);
-  
+  if (loadingGroup) {
+      return <div className="flex h-screen items-center justify-center"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
+  }
+
   if (!group) {
     notFound();
   }

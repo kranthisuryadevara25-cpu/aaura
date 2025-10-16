@@ -24,6 +24,11 @@ import { Loader2, PlusCircle, ArrowLeft } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { deities } from '@/lib/deities';
 import { temples } from '@/lib/temples';
+import { useFirestore, useAuth } from '@/lib/firebase/provider';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   name: z.string().min(5, "Group name must be at least 5 characters."),
@@ -38,6 +43,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function CreateGroupPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -54,15 +60,28 @@ export default function CreateGroupPage() {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
-      // Mock creation logic
-      console.log("Creating new group (mock):", data);
-      toast({ 
-        title: 'Group Created! (Mock)', 
-        description: 'The new community group has been added to the mock data.' 
-      });
-      // In a real app, you would add the new group to Firestore
-      // and then redirect. For now, just go back to the forum page.
-      router.push('/forum');
+      const groupsCollection = collection(db, 'groups');
+      const groupData = {
+          ...data,
+          memberCount: 0,
+          createdAt: serverTimestamp(),
+      }
+      addDoc(groupsCollection, groupData)
+      .then(() => {
+        toast({ 
+            title: 'Group Created!', 
+            description: 'The new community group has been successfully created.' 
+        });
+        router.push('/forum');
+      })
+      .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+                path: groupsCollection.path,
+                operation: 'create',
+                requestResourceData: groupData
+            });
+            errorEmitter.emit('permission-error', permissionError);
+      })
     });
   };
 

@@ -1,23 +1,25 @@
 
 'use client';
 
-import { useTransition, useState, useEffect } from 'react';
+import { useTransition, useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useAuth } from '@/lib/firebase/provider';
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageCircle, ThumbsUp, Send } from 'lucide-react';
+import { Loader2, MessageSquare, ThumbsUp, Send } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { getPostsByTempleId, type TemplePost } from '@/lib/temple-posts';
-import { getPostsByGroupId, type Post as GroupPost } from '@/lib/posts';
 import { Comments } from './comments';
+import { collection, addDoc, serverTimestamp, query, where, orderBy, doc, DocumentData, writeBatch, increment } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const postSchema = z.object({
   content: z.string().min(10, "Post must be at least 10 characters.").max(1000, "Post must be less than 1000 characters."),
@@ -25,37 +27,56 @@ const postSchema = z.object({
 
 type PostFormValues = z.infer<typeof postSchema>;
 
-type AnyPost = TemplePost | GroupPost;
-
 interface PostsProps {
     contextId: string;
     contextType: 'temple' | 'group';
 }
 
-function PostCard({ post }: { post: AnyPost }) {
+function PostCard({ post }: { post: DocumentData }) {
   const { toast } = useToast();
   const auth = useAuth();
+  const db = useFirestore();
   const [user] = useAuthState(auth);
-  // MOCK: In a real app, this would fetch the author details
-  const author = { displayName: 'User ' + post.authorId.slice(0, 4), photoURL: `https://picsum.photos/seed/${post.authorId}/100/100` };
-  const authorIsLoading = false;
+  const [isLiking, startLikeTransition] = useTransition();
+
+  const authorRef = useMemo(() => post.authorId ? doc(db, 'users', post.authorId) : undefined, [db, post.authorId]);
+  const [author, authorIsLoading] = useDocumentData(authorRef);
   
-  // MOCK: Like state is local
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeCount, setLikeCount] = useState(post.likes || 0);
+  const postRef = useMemo(() => doc(db, 'posts', post.id), [db, post.id]);
+  const likeRef = useMemo(() => user ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined, [db, post.id, user]);
+  
+  const [likeDoc, likeLoading] = useDocumentData(likeRef);
+  const isLiked = !!likeDoc;
+
   const [showComments, setShowComments] = useState(false);
   
   const handleLike = () => {
-    if (!user) {
-      toast({ variant: 'destructive', title: "You must be logged in to like a post." });
-      return;
+    if (!user || !postRef || !likeRef) {
+        toast({ variant: "destructive", title: "Please log in to like posts." });
+        return;
     }
-    if (isLiked) {
-        setLikeCount(prev => prev - 1);
-    } else {
-        setLikeCount(prev => prev + 1);
-    }
-    setIsLiked(prev => !prev);
+    startLikeTransition(() => {
+        const batch = writeBatch(db);
+        const likeData = { createdAt: serverTimestamp() };
+
+        if (isLiked) {
+            batch.delete(likeRef);
+            batch.update(postRef, { likes: increment(-1) });
+        } else {
+            batch.set(likeRef, likeData);
+            batch.update(postRef, { likes: increment(1) });
+        }
+        
+        batch.commit().catch(async (serverError) => {
+            const operation = isLiked ? 'delete' : 'create';
+            const permissionError = new FirestorePermissionError({
+                path: likeRef.path,
+                operation: operation,
+                requestResourceData: operation === 'create' ? likeData : undefined,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+    });
   };
 
   return (
@@ -71,7 +92,7 @@ function PostCard({ post }: { post: AnyPost }) {
           <div className="flex items-center justify-between">
             <p className="font-semibold">{author?.displayName || 'Anonymous'}</p>
             <p className="text-xs text-muted-foreground">
-              {post.createdAt ? formatDistanceToNow(new Date(post.createdAt), { addSuffix: true }) : 'Just now'}
+              {post.createdAt ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
             </p>
           </div>
         </div>
@@ -80,8 +101,9 @@ function PostCard({ post }: { post: AnyPost }) {
         <p className="whitespace-pre-wrap">{post.content}</p>
       </CardContent>
       <CardFooter className="flex justify-between border-t pt-4">
-         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user}>
-            <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> {likeCount}
+         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
+            <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> 
+            {isLiking || likeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : post.likes || 0}
         </Button>
         <Button variant="ghost" size="sm" onClick={() => setShowComments(prev => !prev)}>
             <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} comments
@@ -96,9 +118,9 @@ function PostCard({ post }: { post: AnyPost }) {
   );
 }
 
-
 function CreatePost({ contextId, contextType, onPostCreated }: { contextId: string, contextType: 'temple' | 'group', onPostCreated: (newPost: any) => void }) {
   const [user] = useAuthState(useAuth());
+  const db = useFirestore();
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   
@@ -113,20 +135,29 @@ function CreatePost({ contextId, contextType, onPostCreated }: { contextId: stri
       return;
     }
     startTransition(async () => {
-        // Mock post creation
-        const newPost: AnyPost = {
-            id: `post-${Date.now()}`,
+        const postsCollection = collection(db, 'posts');
+        const newPost = {
             authorId: user.uid,
             content: data.content,
-            createdAt: new Date().toISOString(),
+            createdAt: serverTimestamp(),
+            contextId: contextId,
+            contextType: contextType,
             likes: 0,
             commentsCount: 0,
-            ...(contextType === 'temple' && { templeId: contextId }),
-            ...(contextType === 'group' && { groupId: contextId }),
         };
-        onPostCreated(newPost);
-        form.reset();
-        toast({ title: 'Post created successfully! (Mock)' });
+        
+        try {
+            await addDoc(postsCollection, newPost);
+            form.reset();
+            toast({ title: 'Post created successfully!' });
+        } catch (error) {
+             const permissionError = new FirestorePermissionError({
+                path: postsCollection.path,
+                operation: 'create',
+                requestResourceData: newPost,
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
     });
   };
 
@@ -171,33 +202,31 @@ function CreatePost({ contextId, contextType, onPostCreated }: { contextId: stri
 }
 
 export function Posts({ contextId, contextType }: PostsProps) {
-    const [posts, setPosts] = useState<AnyPost[]>([]);
+    const db = useFirestore();
+    const postsQuery = useMemo(() => query(
+        collection(db, 'posts'),
+        where('contextId', '==', contextId),
+        where('contextType', '==', contextType),
+        orderBy('createdAt', 'desc')
+    ), [db, contextId, contextType]);
     
-    useEffect(() => {
-        if (contextType === 'temple') {
-            setPosts(getPostsByTempleId(contextId));
-        } else if (contextType === 'group') {
-            setPosts(getPostsByGroupId(contextId));
-        }
-    }, [contextId, contextType]);
+    const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
 
-    const handlePostCreated = (newPost: AnyPost) => {
-        setPosts(prevPosts => [newPost, ...prevPosts]);
-    }
-  
     return (
         <div>
-            <CreatePost contextId={contextId} contextType={contextType} onPostCreated={handlePostCreated} />
-            <div className="space-y-6">
-                {posts && posts.length > 0 ? (
-                    posts.map(post => <PostCard key={post.id} post={post} />)
-                ) : (
-                    <div className="text-center py-10 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">No posts here yet.</p>
-                        <p className="text-sm text-muted-foreground mt-1">Be the first one to start a discussion!</p>
-                    </div>
-                )}
-            </div>
+            <CreatePost contextId={contextId} contextType={contextType} onPostCreated={() => {}} />
+            {loadingPosts ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
+                <div className="space-y-6">
+                    {posts && posts.length > 0 ? (
+                        posts.map(post => <PostCard key={post.id} post={post} />)
+                    ) : (
+                        <div className="text-center py-10 border-2 border-dashed rounded-lg">
+                            <p className="text-muted-foreground">No posts here yet.</p>
+                            <p className="text-sm text-muted-foreground mt-1">Be the first one to start a discussion!</p>
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 }

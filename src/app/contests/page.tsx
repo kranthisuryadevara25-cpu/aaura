@@ -85,7 +85,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
     const isCompleted = activeContest.status === 'completed';
     const achievementDays = isCompleted && activeContest.achievedAt && activeContest.startDate
-        ? differenceInDays(activeContest.achievedAt.toDate(), activeContest.startDate.toDate()) + 1
+        ? differenceInDays(activeContest.achievedAt, activeContest.startDate) + 1
         : null;
 
     return (
@@ -94,7 +94,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
                 <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
                 <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
                 <CardDescription className="text-lg">
-                    {format(activeContest.startDate.toDate(), 'PPP')} - {format(activeContest.endDate.toDate(), 'PPP')}
+                    {format(activeContest.startDate, 'PPP')} - {format(activeContest.endDate, 'PPP')}
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">

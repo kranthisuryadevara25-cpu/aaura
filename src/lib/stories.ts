@@ -103,9 +103,76 @@ export const stories: Story[] = [
                 duration: 723
             }
         ]
+    },
+    {
+        id: "3",
+        slug: "samudra-manthan",
+        title: { en: "Samudra Manthan: The Churning of the Ocean", hi: "समुद्र मंथन", te: "సముద్ర మథనం" },
+        summary: { en: "The story of the great churning of the cosmic ocean by the devas and asuras to obtain the nectar of immortality.", hi: "", te: "" },
+        image: { url: "https://picsum.photos/seed/samudra/800/600", hint: "cosmic ocean" },
+        tags: ["Vishnu", "Kurma Avatar", "Amrita"],
+        relatedCharacters: ["vishnu"],
+        relatedTemples: [],
+        episodes: [
+            { episodeNumber: 1, title: { en: "The Churning Begins", hi: "" }, description: { en: "The gods and demons begin their epic task.", hi: "" }, videoId: "example", thumbnailUrl: "https://picsum.photos/seed/samudra1/400/225", duration: 600 }
+        ]
+    },
+    {
+        id: "4",
+        slug: "ganges-descent",
+        title: { en: "The Descent of the Ganga", hi: "गंगा का अवतरण", te: "గంగా అవతరణం" },
+        summary: { en: "How the celestial river Ganga was brought down to Earth through the penance of King Bhagiratha and the help of Lord Shiva.", hi: "", te: "" },
+        image: { url: "https://picsum.photos/seed/ganga-river/800/600", hint: "river mountains" },
+        tags: ["Ganga", "Shiva", "Bhagiratha"],
+        relatedCharacters: ["shiva"],
+        relatedTemples: [],
+        episodes: [
+             { episodeNumber: 1, title: { en: "Bhagiratha's Penance", hi: "" }, description: { en: "King Bhagiratha undertakes immense austerities.", hi: "" }, videoId: "example", thumbnailUrl: "https://picsum.photos/seed/ganga1/400/225", duration: 600 }
+        ]
+    },
+    {
+        id: "5",
+        slug: "narasimha-avatar",
+        title: { en: "The Story of Narasimha", hi: "नरसिंह की कथा", te: "నరసింహ కథ" },
+        summary: { en: "The tale of how Lord Vishnu took the form of a man-lion to vanquish the demon king Hiranyakashipu and protect his devotee Prahlada.", hi: "", te: "" },
+        image: { url: "https://picsum.photos/seed/narasimha/800/600", hint: "man lion" },
+        tags: ["Vishnu", "Narasimha", "Prahlada"],
+        relatedCharacters: ["vishnu"],
+        relatedTemples: [],
+        episodes: [
+             { episodeNumber: 1, title: { en: "The Demon King's Boon", hi: "" }, description: { en: "Hiranyakashipu obtains a boon of near-invincibility.", hi: "" }, videoId: "example", thumbnailUrl: "https://picsum.photos/seed/narasimha1/400/225", duration: 600 }
+        ]
+    },
+    {
+        id: "6",
+        slug: "birth-of-ganesha",
+        title: { en: "The Birth of Ganesha", hi: "गणेश का जन्म", te: "గణేశుని జననం" },
+        summary: { en: "The popular story of how Lord Ganesha was created by Goddess Parvati and acquired his elephant head from Lord Shiva.", hi: "", te: "" },
+        image: { url: "https://picsum.photos/seed/ganesha-birth/800/600", hint: "Ganesha child" },
+        tags: ["Ganesha", "Shiva", "Parvati"],
+        relatedCharacters: ["ganesha", "shiva"],
+        relatedTemples: [],
+        episodes: [
+             { episodeNumber: 1, title: { en: "Parvati's Creation", hi: "" }, description: { en: "Goddess Parvati creates a son from her own being.", hi: "" }, videoId: "example", thumbnailUrl: "https://picsum.photos/seed/ganesha-birth1/400/225", duration: 600 }
+        ]
+    },
+    {
+        id: "7",
+        slug: "savitri-satyavan",
+        title: { en: "Savitri and Satyavan", hi: "सावित्री और सत्यवान", te: "సావిత్రి మరియు సత్యవంతుడు" },
+        summary: { en: "The legendary tale of Savitri, a princess who uses her intelligence and devotion to win back her husband's life from Yama, the god of death.", hi: "", te: "" },
+        image: { url: "https://picsum.photos/seed/savitri/800/600", hint: "woman devotion" },
+        tags: ["Savitri", "Yama", "Devotion"],
+        relatedCharacters: [],
+        relatedTemples: [],
+        episodes: [
+            { episodeNumber: 1, title: { en: "The Prophecy", hi: "" }, description: { en: "Savitri chooses Satyavan despite a prophecy of his early death.", hi: "" }, videoId: "example", thumbnailUrl: "https://picsum.photos/seed/savitri1/400/225", duration: 600 }
+        ]
     }
 ];
 
 export const getStoryBySlug = (slug: string) => {
     return stories.find(s => s.slug === slug);
 }
+
+    

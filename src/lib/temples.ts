@@ -34,11 +34,11 @@ export type Temple = {
     dressCode: { [key: string]: string };
   };
   nearbyInfo: {
-    placesToVisit: { [key: string]: string };
-    accommodation: { [key: string]: string };
-    food: { [key: string]: string };
-    transport: { [key: string]: string };
-    guides: { [key: string]: string };
+    placesToVisit?: { name?: string, description?: string }[];
+    accommodation?: { name?: string, phone?: string }[];
+    food?: { name?: string, phone?: string }[];
+    transport?: { name?: string, phone?: string }[];
+    guides?: { name?: string, phone?: string }[];
   };
 };
 
@@ -63,7 +63,7 @@ export const temples: Temple[] = [
         te: "రామ్ లల్లా (బాల రాముడు)",
         mr: "राम लल्ला (बालक भगवान राम)",
         ta: "ராம் லல்லா (குழந்தை ராமர்)",
-        kn: "ರಾಮ ಲಲ್ಲಾ (ಶಿಶು ಭಗವಾನ್ ರಾಮ)",
+        kn: "ರಾಮ ಲಲ್ಲಾ (ಶಿಶು ಭಗವಾన్ ರಾಮ)",
         bn: "রাম লল্লা (শিশু ভগবান রাম)",
       },
       significance: {
@@ -146,48 +146,16 @@ export const temples: Temple[] = [
         te: "సాధారణ దుస్తులు అవసరం. భుజాలు మరియు మోకాళ్లు కప్పి ఉండాలి.",
         mr: "साधा पोशाख आवश्यक आहे. खांदे आणि गुडघे झाकलेले असावेत.",
         ta: "சாதாரண உடை தேவை. தோள்கள் மற்றும் முழங்கால்கள் மூடப்பட்டிருக்க வேண்டும்.",
-        kn: "ಸರಳ ಉಡುಪು ಅಗತ್ಯ. ಭುಜಗಳು ಮತ್ತು ಮೊಣಕಾಲುಗಳು ಮುಚ್ಚಿರಬೇಕು.",
+        kn: "ಸರಳ ಉಡುಪು ಅಗತ್ಯ. ಭುజಗಳು ಮತ್ತು ಮೊಣಕಾಲುಗಳು ಮುಚ್ಚಿರಬೇಕು.",
         bn: "শালীন পোশাক প্রয়োজন। কাঁধ এবং হাঁটু ঢাকা উচিত।",
       },
     },
     nearbyInfo: {
-      placesToVisit: {
-        en: "Hanuman Garhi, Kanak Bhawan, Sarayu River Ghats.",
-        hi: "हनुमान गढ़ी, कनक भवन, सरयू नदी के घाट।",
-        te: "హనుమాన్ గర్హి, కనక్ భవన్, సరయు నది ఘాట్లు.",
-        mr: "हनुमान गढी, कनक भवन, शरयू नदीचे घाट.",
-        ta: "ஹனுமான் கர்ஹி, கனக் பவன், சரயு நதி ಘાట్లు.",
-        kn: "ಹನುಮಾನ್ ಗರ್ಹಿ, ಕನಕ್ ಭವನ, ಸರಯು ನದಿ ಘಟ್ಟಗಳು.",
-        bn: "হনুমানগড়ী, কনক ভবন, সরযূ নদীর ঘাট।",
-      },
-      accommodation: {
-        en: "Various hotels, guesthouses, and dharamshalas are available in Ayodhya. Booking in advance is recommended.",
-        hi: "अयोध्या में विभिन्न होटल, गेस्टहाउस और धर्मशालाएं उपलब्ध हैं। अग्रिम बुकिंग की सिफारिश की जाती है।",
-        te: "అయోధ్యలో వివిధ హోటళ్లు, అతిథి గృహాలు మరియు ధర్మశాలలు అందుబాటులో ఉన్నాయి. ముందుగా బుక్ చేసుకోవడం మంచిది.",
-        mr: "अयोध्येत विविध हॉटेल्स, गेस्टहाऊस आणि धर्मशाळा उपलब्ध आहेत. आगाऊ बुकिंग करण्याची शिफारस केली जाते.",
-        ta: "அயோத்தியில் பல்வேறு ஹோட்டல்கள், விருந்தினர் இல்லங்கள் மற்றும் தர்மசாலைகள் உள்ளன. முன்கூட்டியே முன்பதிவு செய்வது பரிந்துரைக்கப்படுகிறது.",
-        kn: "ಅಯೋಧ್ಯೆಯಲ್ಲಿ ವಿವಿಧ ಹೋಟೆಲ್‌ಗಳು, ಅತಿಥಿಗೃಹಗಳು ಮತ್ತು ಧರ್ಮಶಾಲೆಗಳು ಲಭ್ಯವಿದೆ. ಮುಂಚಿತವಾಗಿ ಬುಕ್ ಮಾಡಲು ಶಿಫಾರಸು ಮಾಡಲಾಗಿದೆ.",
-        bn: "অযোধ্যায় বিভিন্ন হোটেল, গেস্টহাউস এবং ধর্মশালা পাওয়া যায়। অগ্রিম বুকিং করার পরামর্শ দেওয়া হয়।",
-      },
-      food: {
-        en: "Local vegetarian cuisine is widely available. Temple trust provides 'Prasadam'.",
-        hi: "स्थानीय शाकाहारी भोजन व्यापक रूप से उपलब्ध है। मंदिर ट्रस्ट 'प्रसादम' प्रदान करता है।",
-        te: "స్థానిక శాకాహార వంటకాలు విస్తృతంగా అందుబాటులో ఉన్నాయి. ఆలయ ట్రస్ట్ 'ప్రసాదం' అందిస్తుంది.",
-        mr: "स्थानिक शाकाहारी जेवण मोठ्या प्रमाणावर उपलब्ध आहे. मंदिर ट्रस्ट 'प्रसादम' प्रदान करते.",
-        ta: "உள்ளூர் சைவ உணவு பரவலாகக் கிடைக்கிறது. கோயில் அறக்கட்டளை 'பிரசாதம்' வழங்குகிறது.",
-        kn: "ಸ್ಥಳೀಯ ಸಸ್ಯಾಹಾರಿ ಪಾಕಪದ್ಧತಿ ವ್ಯಾಪಕವಾಗಿ ಲಭ್ಯವಿದೆ. ದೇವಾಲಯದ ಟ್ರಸ್ಟ್ 'ಪ್ರಸಾದ' ನೀಡುತ್ತದೆ.",
-        bn: "স্থানীয় নিরামিষ খাবার ব্যাপকভাবে পাওয়া যায়। মন্দির ট্রাস্ট 'প্রসাদম' প্রদান করে।",
-      },
-      transport: {
-        en: "Nearest Airport: Ayodhya (AYJ). Well-connected by rail (Ayodhya Dham Jn) and road.",
-        hi: "निकटतम हवाई अड्डा: अयोध्या (AYJ)। रेल (अयोध्या धाम जंक्शन) और सड़क मार्ग से अच्छी तरह जुड़ा हुआ है।",
-        te: "సమీప విమానాశ్రయం: అయోధ్య (AYJ). రైలు (అయోధ్య ధామ్ జం) మరియు రోడ్డు మార్గం ద్వారా బాగా అనుసంధానించబడింది.",
-        mr: "जवळचे विमानतळ: अयोध्या (AYJ). रेल्वे (अयोध्या धाम जं) आणि रस्त्याने चांगले जोडलेले आहे.",
-        ta: "அருகிலுள்ள விமான நிலையம்: அயோத்தி (AYJ). ரயில் (அயோத்தி தாம் ஜங்) மற்றும் சாலை வழியாக நன்கு இணைக்கப்பட்டுள்ளது.",
-        kn: "ಹತ್ತಿರದ ವಿಮಾನ ನಿಲ್ದಾಣ: ಅಯೋಧ್ಯೆ (AYJ). ರೈಲು (ಅಯೋಧ್ಯೆ ಧಾಮ ಜಂ) ಮತ್ತು ರಸ್ತೆಯ ಮೂಲಕ ಉತ್ತಮವಾಗಿ ಸಂಪರ್ಕ ಹೊಂದಿದೆ.",
-        bn: "নিকটতম বিমানবন্দর: অযোধ্যা (AYJ)। রেল (অযোধ্যা ধাম জং) এবং সড়কপথে ভালভাবে সংযুক্ত।",
-      },
-      guides: { en: "", hi: "", te: "", mr: "", ta: "", kn: "", bn: "" },
+      placesToVisit: [ {name: "Hanuman Garhi"}, {name: "Kanak Bhawan"}, {name: "Sarayu River Ghats"} ],
+      accommodation: [ {name: "Various hotels, guesthouses, and dharamshalas are available in Ayodhya. Booking in advance is recommended."} ],
+      food: [ {name: "Local vegetarian cuisine is widely available. Temple trust provides 'Prasadam'."} ],
+      transport: [ {name: "Nearest Airport: Ayodhya (AYJ). Well-connected by rail (Ayodhya Dham Jn) and road."} ],
+      guides: [ ],
     },
   },
   {
@@ -216,7 +184,7 @@ export const temples: Temple[] = [
         en: "One of the twelve Jyotirlingas of Lord Shiva. It is one of the most sacred pilgrimage sites for Hindus.",
         hi: "भगवान शिव के बारह ज्योतिर्लिंगों में से एक। यह हिंदुओं के लिए सबसे पवित्र तीर्थ स्थलों में से एक है।",
         te: "శివుని పన్నెండు జ్యోతిర్లింగాలలో ఒకటి. ఇది హిందువులకు అత్యంత పవిత్రమైన పుణ్యక్షేత్రాలలో ఒకటి.",
-        mr: "भगवान शिवाच्या बारा ज्योतिर्लिंगांपैकी एक. हे हिंदूंच्या सर्वात पवित्र तीर्थक्षेत्रांपैकी एक आहे.",
+        mr: "भगवान शिवाच्या बारा ज्योतिर्lingaंपैकी एक. हे हिंदूंच्या सर्वात पवित्र तीर्थक्षेत्रांपैकी एक आहे.",
         ta: "சிவனின் பன்னிரண்டு ஜோதிர்லிங்கங்களில் ஒன்று. ఇది இந்துக்களுக்கு மிகவும் புனிதமான तीर्थத்தலங்களில் ஒன்றாகும்.",
         kn: "ಶಿವನ ಹನ್ನೆರಡು ಜ್ಯೋತಿರ್ಲಿಂಗಗಳಲ್ಲಿ ಒಂದು. ಇದು ಹಿಂದೂಗಳಿಗೆ ಅತ್ಯಂತ ಪವಿತ್ರವಾದ ಯಾತ್ರಾ ಸ್ಥಳಗಳಲ್ಲಿ ಒಂದಾಗಿದೆ.",
         bn: "ভগবান শিবের বারোটি জ্যোতির্লিঙ্গের মধ্যে একটি। এটি হিন্দুদের জন্য সবচেয়ে পবিত্র তীর্থস্থানগুলির মধ্যে একটি।",
@@ -297,55 +265,72 @@ export const temples: Temple[] = [
       },
     },
     nearbyInfo: {
-      placesToVisit: {
-        en: "Bhairavnath Temple, Vasuki Tal, Chorabari Tal (Gandhi Sarovar).",
-        hi: "भैरवनाथ मंदिर, वासुकी ताल, चोराबारी ताल (गांधी सरोवर)।",
-        te: "భైరవనాథ్ ఆలయం, వాసుకి తాల్, చోరాబరి తాల్ (గాంధీ సరోవర్).",
-        mr: "भैरवनाथ मंदिर, वासुकी ताल, चोराबारी ताल (गांधी सरोवर).",
-        ta: "பைரவநாத் கோயில், வாசுகி தால், சோராபரி தால் (காந்தி சரோவர்).",
-        kn: "ಭೈರವನಾಥ ದೇವಾಲಯ, ವಾಸುಕಿ ತಾಲ್, ಚೋರಾಬರಿ ತಾಲ್ (ಗಾಂಧಿ ಸರೋವರ).",
-        bn: "ভৈরবনাথ মন্দির, বাসুকি তাল, চোরাবাড়ি তাল (গান্ধী সরোবর)।",
-      },
-      accommodation: {
-        en: "Guesthouses by GMVN, private lodges, and tents are available in Kedarnath. Booking is essential.",
-        hi: "केदारनाथ में जीएमवीएन द्वारा गेस्टहाउस, निजी लॉज और टेंट उपलब्ध हैं। बुकिंग आवश्यक है।",
-        te: "కేదార్‌నాథ్‌లో జిఎంవిఎన్ ద్వారా గెస్ట్‌హౌస్‌లు, ప్రైవేట్ లాడ్జీలు మరియు టెంట్లు అందుబాటులో ఉన్నాయి. బుకింగ్ అవసరం.",
-        mr: "केदारनाथमध्ये जीएमव्हीएनची गेस्टहाऊस, खाजगी लॉज आणि तंबू उपलब्ध आहेत. बुकिंग आवश्यक आहे.",
-        ta: "கேதார்நாத்தில் ஜிஎம்விஎன் மூலம் விருந்தினர் இல்லங்கள், தனியார் தங்கும் விடுதிகள் மற்றும் கூடாரங்கள் கிடைக்கின்றன. முன்பதிவு அவசியம்.",
-        kn: "ಕೇದಾರನಾಥದಲ್ಲಿ ಜಿಎಂವಿಎನ್‌ನ ಅತಿಥಿಗೃಹಗಳು, ಖಾಸಗಿ ಲಾಡ್ಜ್‌ಗಳು ಮತ್ತು ಟೆಂಟ್‌ಗಳು ಲಭ್ಯವಿದೆ. ಬುಕಿಂಗ್ ಅತ್ಯಗತ್ಯ.",
-        bn: "কেদারনাথে জিএমভিএন দ্বারা গেস্টহাউস, প্রাইভেট লজ এবং তাঁবু পাওয়া যায়। বুকিং অপরিহার্য।",
-      },
-      food: {
-        en: "Basic vegetarian food is available. It's advisable to carry some energy bars and snacks.",
-        hi: "बुनियादी शाकाहारी भोजन उपलब्ध है। कुछ एनर्जी बार और स्नैक्स ले जाने की सलाह दी जाती है।",
-        te: "ప్రాథమిక శాకాహార భోజనం అందుబాటులో ఉంది. కొన్ని ఎనర్జీ బార్‌లు మరియు స్నాక్స్ తీసుకువెళ్లడం మంచిది.",
-        mr: "मूलभूत शाकाहारी जेवण उपलब्ध आहे. काही एनर्जी बार आणि स्नॅक्स सोबत ठेवण्याचा सल्ला दिला जातो.",
-        ta: "அடிப்படை சைவ உணவு கிடைக்கிறது. சில ஆற்றல் பார்கள் மற்றும் தின்பண்டங்களை எடுத்துச் செல்வது நல்லது.",
-        kn: "ಮೂಲಭೂತ ಸಸ್ಯಾಹಾರಿ ಆಹಾರ ಲಭ್ಯವಿದೆ. ಕೆಲವು ಶಕ್ತಿ ಬಾರ್‌ಗಳು ಮತ್ತು ತಿಂಡಿಗಳನ್ನು ಕೊಂಡೊಯ್ಯಲು ಸಲಹೆ ನೀಡಲಾಗುತ್ತದೆ.",
-        bn: "মৌলিক নিরামিষ খাবার পাওয়া যায়। কিছু এনার্জি বার এবং স্ন্যাক্স বহন করার পরামর্শ দেওয়া হয়।",
-      },
-      transport: {
-        en: "Nearest motorable road is Gaurikund. From there, it's a 16 km trek. Pony and helicopter services are available.",
-        hi: "निकटतम मोटर योग्य सड़क गौरीकुंड है। वहां से, यह 16 किमी का ट्रेक है। पोनी और हेलीकॉप्टर सेवाएं उपलब्ध हैं।",
-        te: "సమీప మోటారు రహదారి గౌరికుండ్. అక్కడ నుండి, ఇది 16 కిలోమీటర్ల ట్రెక్. పోనీ మరియు హెలికాప్టర్ సేవలు అందుబాటులో ఉన్నాయి.",
-        mr: "सर्वात जवळचा मोटार रस्ता गौरीकुंड आहे. तिथून १६ किलोमीटरचा ट्रेक आहे. पोनी आणि हेलिकॉप्टर सेवा उपलब्ध आहेत.",
-        ta: "அருகிலுள்ள மோட்டார் செல்லக்கூடிய சாலை கௌரிகுண்ட் ஆகும். அங்கிருந்து, இது 16 கிமீ மலையேற்றம். குதிரை மற்றும் ஹெலிகாப்டர் சேவைகள் கிடைக்கின்றன.",
-        kn: "ಹತ್ತಿರದ ಮೋಟಾರು ರಸ್ತೆ ಗೌರಿಕುಂಡ್ ಆಗಿದೆ. ಅಲ್ಲಿಂದ, ಇದು 16 ಕಿಮೀ ಟ್ರೆಕ್ ಆಗಿದೆ. ಕುದುರೆ ಮತ್ತು ಹೆಲಿಕಾಪ್ಟರ್ ಸೇವೆಗಳು ಲಭ್ಯವಿದೆ.",
-        bn: "নিকটতম মোটরযোগ্য রাস্তা গৌরিকুণ্ড। সেখান থেকে এটি ১৬ কিলোমিটারের একটি ট্রেক। টাট্টু এবং হেলিকপ্টার পরিষেবা উপলব্ধ।",
-      },
-       guides: {
-        en: "Local guides can be hired at Gaurikund or Sonprayag for the trek.",
-        hi: "ट्रेक के लिए गौरीकुंड या सोनप्रयाग में स्थानीय गाइड किराए पर लिए जा सकते हैं।",
-        te: "ట్రెక్ కోసం గౌరికుండ్ లేదా సోన్‌ప్రయాగ్‌లో స్థానిక గైడ్‌లను నియమించుకోవచ్చు.",
-        mr: "ट्रेकसाठी गौरीकुंड किंवा सोनप्रयाग येथे स्थानिक मार्गदर्शक भाड्याने घेऊ शकता.",
-        ta: "மலையேற்றத்திற்காக கௌரிகுண்ட் அல்லது சோன்பிரயாக்கில் உள்ளூர் வழிகாட்டிகளை அமர்த்தலாம்.",
-        kn: "ಟ್ರೆಕ್‌ಗಾಗಿ ಗೌರಿಕುಂಡ್ ಅಥವಾ ಸೋನಪ್ರಯಾಗದಲ್ಲಿ ಸ್ಥಳೀಯ ಮಾರ್ಗದರ್ಶಕರನ್ನು ನೇಮಿಸಿಕೊಳ್ಳಬಹುದು.",
-        bn: "ট্রেকের জন্য গৌরিকুণ্ড বা সোনপ্রয়াগে স্থানীয় গাইড ভাড়া করা যেতে পারে।",
-      },
+      placesToVisit: [ {name: "Bhairavnath Temple"}, {name: "Vasuki Tal"}, {name: "Chorabari Tal (Gandhi Sarovar)"} ],
+      accommodation: [ {name: "Guesthouses by GMVN, private lodges, and tents are available in Kedarnath. Booking is essential."} ],
+      food: [ {name: "Basic vegetarian food is available. It's advisable to carry some energy bars and snacks."} ],
+      transport: [ {name: "Nearest motorable road is Gaurikund. From there, it's a 16 km trek. Pony and helicopter services are available."} ],
+      guides: [ {name: "Local guides can be hired at Gaurikund or Sonprayag for the trek."} ],
     },
   },
+  {
+    id: "3",
+    slug: "badrinath-temple",
+    name: { en: "Badrinath Temple" },
+    deity: { name: { en: "Lord Vishnu" }, significance: { en: "" } },
+    location: { city: "Badrinath", state: "Uttarakhand", pincode: "246422", address: "Badrinath", district: "Chamoli", geo: { lat: 30.7433, lng: 79.4938 } },
+    importance: { historical: { en: "" }, mythological: { en: "" } },
+    media: { images: [{ url: "https://picsum.photos/seed/badrinath1/800/600", hint: "colorful temple mountain" }], videos: [] },
+    visitingInfo: { timings: { en: "" }, festivals: { en: "" }, poojaGuidelines: { en: "" }, dressCode: { en: "" } },
+    nearbyInfo: {}
+  },
+  {
+    id: "4",
+    slug: "somnath-temple",
+    name: { en: "Somnath Temple" },
+    deity: { name: { en: "Lord Shiva" }, significance: { en: "" } },
+    location: { city: "Somnath", state: "Gujarat", pincode: "362268", address: "Somnath", district: "Gir Somnath", geo: { lat: 20.8880, lng: 70.4013 } },
+    importance: { historical: { en: "" }, mythological: { en: "" } },
+    media: { images: [{ url: "https://picsum.photos/seed/somnath1/800/600", hint: "temple sea" }], videos: [] },
+    visitingInfo: { timings: { en: "" }, festivals: { en: "" }, poojaGuidelines: { en: "" }, dressCode: { en: "" } },
+    nearbyInfo: {}
+  },
+  {
+    id: "5",
+    slug: "vaishno-devi",
+    name: { en: "Vaishno Devi Temple" },
+    deity: { name: { en: "Goddess Vaishnavi" }, significance: { en: "" } },
+    location: { city: "Katra", state: "Jammu and Kashmir", pincode: "182301", address: "Katra", district: "Reasi", geo: { lat: 33.0308, lng: 74.9497 } },
+    importance: { historical: { en: "" }, mythological: { en: "" } },
+    media: { images: [{ url: "https://picsum.photos/seed/vaishno1/800/600", hint: "mountain shrine" }], videos: [] },
+    visitingInfo: { timings: { en: "" }, festivals: { en: "" }, poojaGuidelines: { en: "" }, dressCode: { en: "" } },
+    nearbyInfo: {}
+  },
+  {
+    id: "6",
+    slug: "golden-temple",
+    name: { en: "Golden Temple (Harmandir Sahib)" },
+    deity: { name: { en: "Guru Granth Sahib (Sikhism)" }, significance: { en: "" } },
+    location: { city: "Amritsar", state: "Punjab", pincode: "143001", address: "Amritsar", district: "Amritsar", geo: { lat: 31.6200, lng: 74.8765 } },
+    importance: { historical: { en: "" }, mythological: { en: "" } },
+    media: { images: [{ url: "https://picsum.photos/seed/golden-temple/800/600", hint: "golden temple water" }], videos: [] },
+    visitingInfo: { timings: { en: "" }, festivals: { en: "" }, poojaGuidelines: { en: "" }, dressCode: { en: "" } },
+    nearbyInfo: {}
+  },
+  {
+    id: "7",
+    slug: "jagannath-puri",
+    name: { en: "Jagannath Temple, Puri" },
+    deity: { name: { en: "Lord Jagannath (Krishna)" }, significance: { en: "" } },
+    location: { city: "Puri", state: "Odisha", pincode: "752001", address: "Puri", district: "Puri", geo: { lat: 19.8048, lng: 85.8181 } },
+    importance: { historical: { en: "" }, mythological: { en: "" } },
+    media: { images: [{ url: "https://picsum.photos/seed/jagannath1/800/600", hint: "temple chariot" }], videos: [] },
+    visitingInfo: { timings: { en: "" }, festivals: { en: "" }, poojaGuidelines: { en: "" }, dressCode: { en: "" } },
+    nearbyInfo: {}
+  }
 ];
 
 export const getTempleBySlug = (slug: string) => {
     return temples.find(t => t.slug === slug);
 }
+
+    

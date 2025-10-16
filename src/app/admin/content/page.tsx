@@ -459,7 +459,7 @@ function ContestsTabContent() {
         </Button>
       </div>
       <div className="space-y-4">
-        {contests?.map((contest: DocumentData) => (
+        {contests?.map((contest) => (
           <Card key={contest.id}>
             <CardHeader>
               <div className="flex justify-between items-start">

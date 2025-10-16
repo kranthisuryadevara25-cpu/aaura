@@ -37,18 +37,21 @@ export function RightSidebar() {
           <CardTitle className="flex items-center gap-2"><Trophy className="text-primary"/> Active Contests</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {contestsLoading ? <Loader2 className="mx-auto animate-spin" /> : activeContests?.map((contest: DocumentData) => (
-            <Link href={`/contests`} key={contest.id} className="block group">
-              <div className="flex items-center gap-3">
-                 <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
-                    <Image src={contest.imageUrl} alt={contest.title} data-ai-hint={contest.imageHint} fill className="object-cover" />
-                 </div>
-                 <div>
-                    <p className="font-semibold text-sm group-hover:text-primary line-clamp-2">{contest.title}</p>
-                 </div>
-              </div>
-            </Link>
-          ))}
+          {contestsLoading ? <Loader2 className="mx-auto animate-spin" /> : activeContests?.map((contest: DocumentData) => {
+            const imageUrl = contest.imageUrl;
+            return (
+              <Link href={`/contests`} key={contest.id} className="block group">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 bg-secondary">
+                    {imageUrl && <Image src={imageUrl} alt={contest.title} data-ai-hint={contest.imageHint} fill className="object-cover" />}
+                  </div>
+                  <div>
+                      <p className="font-semibold text-sm group-hover:text-primary line-clamp-2">{contest.title}</p>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
           <Button variant="outline" size="sm" className="w-full" asChild>
             <Link href="/contests">{t.rightSidebar.viewAll}</Link>
           </Button>
@@ -62,11 +65,12 @@ export function RightSidebar() {
         <CardContent className="space-y-4">
           {sagasLoading ? <Loader2 className="mx-auto animate-spin" /> : featuredSagas?.map((saga: DocumentData) => {
             const title = saga.title?.[language] || saga.title?.en;
+            const imageUrl = saga.image?.url;
             return (
               <Link href={`/stories/${saga.slug}`} key={saga.id} className="block group">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
-                      <Image src={saga.image.url} alt={title} data-ai-hint={saga.image.hint} fill className="object-cover" />
+                  <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 bg-secondary">
+                      {imageUrl && <Image src={imageUrl} alt={title} data-ai-hint={saga.image.hint} fill className="object-cover" />}
                   </div>
                   <div>
                       <p className="font-semibold text-sm group-hover:text-primary line-clamp-2">{title}</p>
@@ -88,11 +92,12 @@ export function RightSidebar() {
         <CardContent className="space-y-4">
           {templesLoading ? <Loader2 className="mx-auto animate-spin" /> : popularTemples?.map((temple: DocumentData) => {
             const title = temple.name?.[language] || temple.name?.en;
+            const imageUrl = temple.media?.images?.[0]?.url;
             return (
               <Link href={`/temples/${temple.slug}`} key={temple.id} className="block group">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
-                      <Image src={temple.media.images[0].url} alt={title} data-ai-hint={temple.media.images[0].hint} fill className="object-cover" />
+                  <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 bg-secondary">
+                      {imageUrl && <Image src={imageUrl} alt={title} data-ai-hint={temple.media.images[0].hint} fill className="object-cover" />}
                   </div>
                   <div>
                       <p className="font-semibold text-sm group-hover:text-primary line-clamp-2">{title}</p>
@@ -113,19 +118,22 @@ export function RightSidebar() {
           <CardTitle>{t.rightSidebar.trendingFestivals}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {festivalsLoading ? <Loader2 className="mx-auto animate-spin" /> : upcomingFestivals?.map((festival: DocumentData) => (
-            <Link href={`/festivals/${festival.slug}`} key={festival.id} className="block group">
-              <div className="flex items-center gap-3">
-                 <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
-                    <Image src={festival.image.url} alt={festival.name[language] || festival.name.en} fill className="object-cover" />
-                 </div>
-                 <div>
-                    <p className="font-semibold text-sm group-hover:text-primary">{festival.name[language] || festival.name.en}</p>
-                    <p className="text-xs text-muted-foreground">{new Date(festival.date).toLocaleDateString(language, { month: 'long', day: 'numeric' })}</p>
-                 </div>
-              </div>
-            </Link>
-          ))}
+          {festivalsLoading ? <Loader2 className="mx-auto animate-spin" /> : upcomingFestivals?.map((festival: DocumentData) => {
+            const imageUrl = festival.image?.url;
+            return (
+              <Link href={`/festivals/${festival.slug}`} key={festival.id} className="block group">
+                <div className="flex items-center gap-3">
+                  <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 bg-secondary">
+                    {imageUrl && <Image src={imageUrl} alt={festival.name[language] || festival.name.en} fill className="object-cover" />}
+                  </div>
+                  <div>
+                      <p className="font-semibold text-sm group-hover:text-primary">{festival.name[language] || festival.name.en}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(festival.date).toLocaleDateString(language, { month: 'long', day: 'numeric' })}</p>
+                  </div>
+                </div>
+              </Link>
+            )
+          })}
           <Button variant="outline" size="sm" className="w-full" asChild>
             <Link href="/festivals">{t.rightSidebar.viewAll}</Link>
           </Button>
@@ -137,19 +145,22 @@ export function RightSidebar() {
           <CardTitle>{t.rightSidebar.suggestedDeities}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          {deitiesLoading ? <Loader2 className="mx-auto animate-spin" /> : suggestedDeities?.map((deity: DocumentData) => (
-            <Link href={`/deities/${deity.slug}`} key={deity.id} className="block group">
-                <div className="flex items-center gap-3">
-                    <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
-                        <Image src={deity.images[0].url} alt={deity.name[language] || deity.name.en} fill className="object-cover" />
-                    </div>
-                    <div>
-                        <p className="font-semibold text-sm group-hover:text-primary">{deity.name[language] || deity.name.en}</p>
-                         <p className="text-xs text-muted-foreground line-clamp-1">{deity.description[language] || deity.description.en}</p>
-                    </div>
-                </div>
-            </Link>
-          ))}
+          {deitiesLoading ? <Loader2 className="mx-auto animate-spin" /> : suggestedDeities?.map((deity: DocumentData) => {
+            const imageUrl = deity.images?.[0]?.url;
+            return (
+              <Link href={`/deities/${deity.slug}`} key={deity.id} className="block group">
+                  <div className="flex items-center gap-3">
+                      <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 bg-secondary">
+                          {imageUrl && <Image src={imageUrl} alt={deity.name[language] || deity.name.en} fill className="object-cover" />}
+                      </div>
+                      <div>
+                          <p className="font-semibold text-sm group-hover:text-primary">{deity.name[language] || deity.name.en}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{deity.description[language] || deity.description.en}</p>
+                      </div>
+                  </div>
+              </Link>
+            )
+          })}
            <Button variant="outline" size="sm" className="w-full" asChild>
             <Link href="/deities">{t.rightSidebar.viewAll}</Link>
           </Button>

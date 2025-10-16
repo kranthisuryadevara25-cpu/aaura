@@ -31,12 +31,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope';
 import { zodiacSigns } from '@/lib/zodiac';
 import { useTransition, useEffect } from 'react';
 import { updateProfile } from 'firebase/auth';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
@@ -124,44 +126,75 @@ export default function SettingsPage() {
     }
 
     startTransition(async () => {
-      try {
+      
         const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
         
-        await updateProfile(auth.currentUser, { displayName: data.fullName });
+        await updateProfile(auth.currentUser!, { displayName: data.fullName });
 
+        const userProfileRef = doc(db, `users/${user.uid}`);
         const userProfileData = {
-          ...userData, // Preserve existing fields like followerCount
+          ...userData, 
           ...data,
           birthDate: formattedBirthDate,
           profileComplete: true,
         };
-        await setDoc(doc(db, `users/${user.uid}`), userProfileData, { merge: true });
-
-        const horoscopeResult = await generatePersonalizedHoroscope({
-          zodiacSign: data.zodiacSign,
-          birthDate: formattedBirthDate,
-        });
         
-        const horoscopeData = {
-          userId: user.uid,
-          date: format(new Date(), 'yyyy-MM-dd'),
-          zodiacSign: data.zodiacSign,
-          text: horoscopeResult.horoscope,
-        };
-        await setDoc(doc(db, `users/${user.uid}/horoscopes/daily`), horoscopeData, { merge: true });
+        let horoscopeData: any;
+        try {
+            const horoscopeResult = await generatePersonalizedHoroscope({
+                zodiacSign: data.zodiacSign,
+                birthDate: formattedBirthDate,
+            });
+            horoscopeData = {
+                userId: user.uid,
+                date: format(new Date(), 'yyyy-MM-dd'),
+                zodiacSign: data.zodiacSign,
+                text: horoscopeResult.horoscope,
+            };
+        } catch (aiError) {
+             toast({
+                variant: 'destructive',
+                title: 'Horoscope Failed',
+                description: 'Could not generate horoscope, but profile was saved.',
+             });
+        }
+        
+        const batch = writeBatch(db);
 
-        toast({
-          title: 'Settings Saved!',
-          description: 'Your profile has been updated and your horoscope generated.',
-        });
-      } catch (error) {
-        console.error('Failed to save settings:', error);
-        toast({
-          variant: 'destructive',
-          title: 'An Error Occurred',
-          description: 'Could not save your settings. Please try again.',
-        });
-      }
+        batch.set(userProfileRef, userProfileData, { merge: true });
+        
+        if (horoscopeData) {
+            const horoscopeRef = doc(db, `users/${user.uid}/horoscopes/daily`);
+            batch.set(horoscopeRef, horoscopeData, { merge: true });
+        }
+
+        batch.commit()
+            .then(() => {
+                 toast({
+                    title: 'Settings Saved!',
+                    description: 'Your profile has been updated.',
+                });
+            })
+            .catch(async (serverError: any) => {
+                const isPermissionError = serverError.code === 'permission-denied';
+
+                if (isPermissionError) {
+                    // This logic assumes one of the writes failed. We create an error for the most likely one first.
+                    // A more robust solution might try to determine which write failed.
+                    const userProfilePermissionError = new FirestorePermissionError({
+                        path: userProfileRef.path,
+                        operation: 'update',
+                        requestResourceData: userProfileData,
+                    });
+                    errorEmitter.emit('permission-error', userProfilePermissionError);
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Save Failed",
+                        description: "An unexpected error occurred while saving your profile.",
+                    });
+                }
+            });
     });
   };
 

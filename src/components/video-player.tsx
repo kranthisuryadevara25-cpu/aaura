@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Comments } from './comments';
 import { Separator } from './ui/separator';
+import { SaveToPlaylistDialog } from './SaveToPlaylistDialog';
 
 export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVideoEnd: () => void }) {
   const { language, t } = useLanguage();
@@ -213,6 +214,7 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
           <Button variant="outline" onClick={handleShare}>
             <Share2 className="mr-2 h-4 w-4" /> {t.buttons.share}
           </Button>
+          {user && <SaveToPlaylistDialog mediaId={contentId} />}
         </div>
       </div>
       
@@ -226,5 +228,3 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
     </div>
   );
 }
-
-    

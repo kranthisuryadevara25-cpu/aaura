@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useTransition } from 'react';
@@ -21,11 +20,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
-import { Loader2, PlusCircle } from 'lucide-react';
+import { Loader2, PlusCircle, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters long.'),
@@ -61,9 +62,8 @@ export default function CreatePlaylistPage() {
     }
 
     startTransition(async () => {
-      try {
-        const playlistCollection = collection(db, 'playlists');
-        await addDoc(playlistCollection, {
+      const playlistCollection = collection(db, 'playlists');
+      const playlistData = {
           ...data,
           creatorId: user.uid,
           items: [],
@@ -71,21 +71,24 @@ export default function CreatePlaylistPage() {
           updatedAt: serverTimestamp(),
           likesCount: 0,
           viewCount: 0,
-        });
+      };
 
-        toast({
-          title: 'Playlist Created!',
-          description: 'Your new playlist has been successfully created.',
-        });
-        router.push('/playlists');
-      } catch (error) {
-        console.error('Playlist creation failed:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Creation Failed',
-          description: 'Something went wrong while creating your playlist.',
-        });
-      }
+      addDoc(playlistCollection, playlistData)
+      .then((docRef) => {
+           toast({
+            title: 'Playlist Created!',
+            description: 'Your new playlist has been successfully created.',
+          });
+          router.push(`/playlists/${docRef.id}`);
+      })
+      .catch((serverError) => {
+          const permissionError = new FirestorePermissionError({
+              path: playlistCollection.path,
+              operation: 'create',
+              requestResourceData: playlistData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+      });
     });
   };
 
@@ -190,5 +193,3 @@ export default function CreatePlaylistPage() {
     </main>
   );
 }
-
-    

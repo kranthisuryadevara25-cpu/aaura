@@ -218,7 +218,7 @@ export function Posts({ contextId, contextType }: PostsProps) {
             {loadingPosts ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
                 <div className="space-y-6">
                     {posts && posts.length > 0 ? (
-                        posts.map(post => <PostCard key={post.id} post={post} />)
+                        posts.map((post, index) => <PostCard key={post.id || index} post={post} />)
                     ) : (
                         <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">No posts here yet.</p>

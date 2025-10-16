@@ -24,7 +24,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 
 const chantSchema = z.object({
-  mantra: z.string().min(1, "Mantra cannot be empty.").max(100, "Mantra is too long."),
+  mantra: z.literal("Jai Shri Ram", { errorMap: () => ({ message: 'Mantra must be "Jai Shri Ram".' }) }),
 });
 type ChantFormValues = z.infer<typeof chantSchema>;
 
@@ -73,7 +73,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
 
     const form = useForm<ChantFormValues>({
         resolver: zodResolver(chantSchema),
-        defaultValues: { mantra: "" },
+        defaultValues: { mantra: "Jai Shri Ram" },
     });
 
     const handleChant = (data: ChantFormValues) => {
@@ -82,10 +82,17 @@ function ContestContent({ contest }: { contest: DocumentData }) {
             toast({ variant: 'destructive', title: 'You must be logged in to chant.' });
             return;
         }
+
+        // Client-side validation
+        if (data.mantra !== 'Jai Shri Ram') {
+            toast({ variant: 'destructive', title: 'Only "Jai Shri Ram" is allowed.' });
+            return;
+        }
         
         startChantTransition(async () => {
             const contestRef = doc(db, 'contests', contest.id);
             const chantsCollectionRef = collection(db, `contests/${contest.id}/chants`);
+            const contestProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, contest.id);
             const chantData = {
                 authorId: currentUser.uid,
                 displayName: currentUser.displayName || 'Anonymous User',
@@ -95,12 +102,23 @@ function ContestContent({ contest }: { contest: DocumentData }) {
 
             try {
                 const batch = writeBatch(db);
+                // Add chant
                 batch.set(doc(chantsCollectionRef), chantData);
+                // Increment totalChants
                 batch.update(contestRef, { totalChants: increment(1) });
+                // Update contest progress
+                batch.set(contestProgressRef, {
+                    submissionCount: increment(1),
+                    lastSubmissionTime: serverTimestamp(),
+                }, { merge: true });
+
                 await batch.commit();
 
                 form.reset({ mantra: "Jai Shri Ram" });
+                toast({ title: 'Chant submitted successfully!' });
              } catch (error: any) {
+                 console.error('Firestore Error:', error);
+                 toast({ variant: 'destructive', title: 'Failed to submit chant.', description: error.message });
                  const permissionError = new FirestorePermissionError({
                     path: contestRef.path,
                     operation: 'write',
@@ -235,4 +253,3 @@ export default function ContestsPage() {
         </main>
     );
 }
-

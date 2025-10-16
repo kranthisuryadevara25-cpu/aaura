@@ -72,7 +72,7 @@ export default function NewTemplePage() {
                                     <CommandItem
                                     key={temple.id}
                                     value={temple.slug}
-                                    onSelect={handleSelect}
+                                    onSelect={() => handleSelect(temple.slug)}
                                     >
                                     <Check
                                         className={cn(

@@ -72,7 +72,7 @@ export default function NewDeityPage() {
                                     <CommandItem
                                     key={deity.id}
                                     value={deity.slug}
-                                    onSelect={handleSelect}
+                                    onSelect={() => handleSelect(deity.slug)}
                                     >
                                     <Check
                                         className={cn(

@@ -72,7 +72,7 @@ export default function NewStoryPage() {
                                     <CommandItem
                                     key={story.id}
                                     value={story.slug}
-                                    onSelect={handleSelect}
+                                    onSelect={() => handleSelect(story.slug)}
                                     >
                                     <Check
                                         className={cn(

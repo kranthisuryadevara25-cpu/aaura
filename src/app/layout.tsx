@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <title>Aura</title>
+        <title>Aaura</title>
         <meta name="description" content="Your daily dose of spiritual wellness." />
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#E6E6FA" />

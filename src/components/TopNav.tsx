@@ -133,7 +133,7 @@ const MobileNav = () => {
       </SheetTrigger>
       <SheetContent side="left" className="p-0 w-64">
         <SheetHeader className="p-4 border-b">
-          <SheetTitle className="text-2xl font-serif">Aura</SheetTitle>
+          <SheetTitle className="text-2xl font-serif">Aaura</SheetTitle>
           <SheetDescription className="sr-only">Main Navigation</SheetDescription>
         </SheetHeader>
         <Sidebar />
@@ -155,7 +155,7 @@ export const TopNav = () => {
     <header className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
       <div className="flex items-center gap-2">
         <MobileNav />
-        <Link href="/" className="text-2xl font-serif">Aura</Link>
+        <Link href="/" className="text-2xl font-serif">Aaura</Link>
       </div>
 
       <div className="flex items-center gap-3">

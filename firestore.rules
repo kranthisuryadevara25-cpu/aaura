@@ -1,12 +1,660 @@
+/**
+ * @fileoverview Firestore Security Rules for the aaura app.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model for private user data
+ * while allowing public read access to certain top-level collections.
+ *
+ * Data Structure:
+ * - User-specific data (profile, preferences, badges, bookmarks, cart, orders, horoscopes, playlists, challenges, virtual offerings)
+ *   is nested under `/users/{userId}`.
+ * - Public content (media, channels, playlists, deities, shops, products, temples, stories, epic heroes, rituals, panchang, festivals, groups, posts, comments, challenges, contests, manifestations)
+ *   is stored in top-level collections.
+ *
+ * Key Security Decisions:
+ * - Users can only read and write their own data under `/users/{userId}`.
+ * - Public content is generally readable by anyone, but write access is restricted.
+ * - User listing is generally disallowed.
+ * - When an ownership field is missing from a public entity, write access is denied.
+ *
+ * Denormalization for Authorization:
+ *  - The current rules rely on path-based authorization and do not require denormalization.
+ */
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow read/write access to all documents for any signed-in user.
-    // This is a common rule for development. For production, you would
-    // implement more granular rules.
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+
+    /**
+     * @description Allows users to read and write their own profile data.
+     * @path /users/{userId}
+     * @allow (create) User with matching UID can create their profile.
+     * @allow (get, list, update, delete) User with matching UID can read and modify their profile.
+     * @deny (create) User cannot create a profile with a mismatched UID.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
     }
+
+    /**
+     * @description Allows a user to read and update their progress for a specific contest.
+     * @path /users/{userId}/contestProgress/{contestId}
+     * @allow (create) User with matching UID can create their contest progress.
+     * @allow (get, list, update, delete) User with matching UID can read and modify their contest progress.
+     * @deny (create) User cannot create contest progress with a mismatched UID.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/contestProgress/{contestId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+     /**
+      * @description Allows a user to read and write their followers (who is following them).
+      * @path /users/{userId}/followers/{followerId}
+      * @allow (create) User with matching UID can create a follower entry.
+      * @allow (get, list, update, delete) User with matching UID can read and modify their follower entry.
+      * @deny (create) User cannot create a follower entry with a mismatched UID.
+      * @principle Enforces document ownership for writes.
+      */
+    match /users/{userId}/followers/{followerId} {
+        function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+        }
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if false;
+        allow delete: if false;
+    }
+
+    /**
+     * @description Allows a user to read and write their followings (who they are following).
+     * @path /users/{userId}/following/{followedId}
+     * @allow (create) User with matching UID can create a following entry.
+     * @allow (get, list, update, delete) User with matching UID can read and modify their following entry.
+     * @deny (create) User cannot create a following entry with a mismatched UID.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/following/{followedId} {
+        function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+        }
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if false;
+        allow delete: if isOwner(userId) && resource != null;
+    }
+
+
+    /**
+     * @description Allows a user to read and write their preferences.
+     * @path /users/{userId}/preferences/default
+     * @allow (get, list, update, delete) User with matching UID can read and modify their preferences.
+     * @deny (create) No one can create a document here, it should be created via backend.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/preferences/default {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if false;
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to read and write their badges.
+     * @path /users/{userId}/badges/{badgeId}
+     * @allow (get, list, update, delete) User with matching UID can read their badges.
+     * @deny (create) User cannot create a badge themselves; badges should be created by backend.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/badges/{badgeId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows a user to read and write their bookmarks.
+     * @path /users/{userId}/bookmarks/{bookmarkId}
+     * @allow (create) User with matching UID can create their bookmark.
+     * @allow (get, list, update, delete) User with matching UID can read and modify their bookmark.
+     * @deny (create) User cannot create a bookmark with a mismatched UID.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/bookmarks/{bookmarkId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to record their virtual offerings.
+     * @path /users/{userId}/virtualOfferings/{offeringId}
+     * @allow (create) User with matching UID can create a virtual offering.
+     * @allow (get, list, update, delete) User with matching UID can read and modify their virtual offering.
+     * @deny (create) User cannot create a virtual offering with a mismatched UID.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/virtualOfferings/{offeringId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage items in their shopping cart.
+     * @path /users/{userId}/cart/{productId}
+     * @allow (create) User with matching UID can add items to their cart.
+     * @allow (get, list, update, delete) User with matching UID can read and modify their cart.
+     * @deny (create) User cannot add items to cart with a mismatched UID.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/cart/{productId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to view their order history. Orders can only be created via backend.
+     * @path /users/{userId}/orders/{orderId}
+     * @allow (get, list) User with matching UID can read their order history.
+     * @deny (create, update, delete) Orders can only be created and managed via backend.
+     * @principle Enforces document ownership for reads, backend-only writes.
+     */
+    match /users/{userId}/orders/{orderId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+     /**
+      * @description Allows a user to store a reference to their playlists.
+      * @path /users/{userId}/playlists/{playlistId}
+      * @allow (create) User with matching UID can create a playlist reference.
+      * @allow (get, list, update, delete) User with matching UID can read and modify their playlist reference.
+      * @deny (create) User cannot create a playlist reference with a mismatched UID.
+      * @principle Enforces document ownership for writes.
+      */
+    match /users/{userId}/playlists/{playlistId} {
+        function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+        }
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId) && resource != null;
+        allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to track their progress in community challenges.
+     * @path /users/{userId}/challenges/{challengeId}
+     * @allow (create) User with matching UID can create their challenge progress.
+     * @allow (get, list, update, delete) User with matching UID can read and modify their challenge progress.
+     * @deny (create) User cannot create challenge progress with a mismatched UID.
+     * @principle Enforces document ownership for writes.
+     */
+    match /users/{userId}/challenges/{challengeId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+
+    /**
+     * @description Allows anyone to read media content, but restricts write access.
+     * @path /media/{mediaId}
+     * @allow (get, list) Anyone can read media.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /media/{mediaId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false; 
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read comments on media, but restricts write access.
+     * @path /media/{mediaId}/comments/{commentId}
+     * @allow (get, list) Anyone can read comments.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /media/{mediaId}/comments/{commentId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+     /**
+     * @description Allows anyone to read likes on media items, but restricts write access.
+     * @path /media/{mediaId}/likes/{userId}
+     * @allow (get, list) Anyone can read likes.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /media/{mediaId}/likes/{userId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read channel information, but restricts write access.
+     * @path /channels/{channelId}
+     * @allow (get, list) Anyone can read channel information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /channels/{channelId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read playlist information, but restricts write access.
+     * @path /playlists/{playlistId}
+     * @allow (get, list) Anyone can read playlist information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /playlists/{playlistId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows a user to read their horoscopes.
+     * @path /users/{userId}/horoscopes/{horoscopeId}
+     * @allow (get, list) User with matching UID can read their horoscopes.
+     * @deny (create, update, delete) Horoscopes can only be generated via backend.
+     * @principle Enforces document ownership for reads, backend-only writes.
+     */
+    match /users/{userId}/horoscopes/{horoscopeId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read deity information, but restricts write access.
+     * @path /deities/{deityId}
+     * @allow (get, list) Anyone can read deity information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /deities/{deityId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read shop information, but restricts write access.
+     * @path /shops/{shopId}
+     * @allow (get, list) Anyone can read shop information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /shops/{shopId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read product information, but restricts write access.
+     * @path /products/{productId}
+     * @allow (get, list) Anyone can read product information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /products/{productId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read temple information, but restricts write access.
+     * @path /temples/{templeId}
+     * @allow (get, list) Anyone can read temple information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /temples/{templeId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read reviews for a specific temple, but restricts write access.
+     * @path /temples/{templeId}/reviews/{reviewId}
+     * @allow (get, list) Anyone can read reviews.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /temples/{templeId}/reviews/{reviewId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+     /**
+      * @description Allows anyone to read posts for a specific temple, but restricts write access.
+      * @path /temples/{templeId}/posts/{postId}
+      * @allow (get, list) Anyone can read posts.
+      * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+      * @principle Public read access with restricted writes.
+      */
+    match /temples/{templeId}/posts/{postId} {
+        allow get: if true;
+        allow list: if true;
+        allow create: if false;
+        allow update: if false;
+        allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read story content, but restricts write access.
+     * @path /stories/{storyId}
+     * @allow (get, list) Anyone can read stories.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /stories/{storyId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read epic hero content, but restricts write access.
+     * @path /epicHeroes/{heroId}
+     * @allow (get, list) Anyone can read epic heroes.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /epicHeroes/{heroId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read ritual content, but restricts write access.
+     * @path /rituals/{ritualId}
+     * @allow (get, list) Anyone can read rituals.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /rituals/{ritualId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read panchang data, but restricts write access.
+     * @path /panchang/{date}
+     * @allow (get, list) Anyone can read panchang data.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /panchang/{date} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read festival content, but restricts write access.
+     * @path /festivals/{festivalId}
+     * @allow (get, list) Anyone can read festivals.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /festivals/{festivalId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read group information, but restricts write access.
+     * @path /groups/{groupId}
+     * @allow (get, list) Anyone can read group information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /groups/{groupId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+   /**
+     * @description Allows anyone to read group member information, but restricts write access.
+     * @path /groups/{groupId}/members/{userId}
+     * @allow (get, list) Anyone can read group member information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /groups/{groupId}/members/{userId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read post information, but restricts write access.
+     * @path /posts/{postId}
+     * @allow (get, list) Anyone can read post information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /posts/{postId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read comments on a post, but restricts write access.
+     * @path /posts/{postId}/comments/{commentId}
+     * @allow (get, list) Anyone can read comments.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /posts/{postId}/comments/{commentId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+     /**
+     * @description Allows anyone to read likes on a post, but restricts write access.
+     * @path /posts/{postId}/likes/{userId}
+     * @allow (get, list) Anyone can read likes.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /posts/{postId}/likes/{userId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+    /**
+     * @description Allows anyone to read community challenges, but restricts write access.
+     * @path /challenges/{challengeId}
+     * @allow (get, list) Anyone can read challenges.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /challenges/{challengeId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read contest information, but restricts write access.
+     * @path /contests/{contestId}
+     * @allow (get, list) Anyone can read contest information.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /contests/{contestId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read manifestation techniques and stories, but restricts write access.
+     * @path /manifestations/{manifestationId}
+     * @allow (get, list) Anyone can read manifestations.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /manifestations/{manifestationId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read comments on a manifestation post, but restricts write access.
+     * @path /manifestations/{manifestationId}/comments/{commentId}
+     * @allow (get, list) Anyone can read comments.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /manifestations/{manifestationId}/comments/{commentId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    /**
+     * @description Allows anyone to read likes on a manifestation post, but restricts write access.
+     * @path /manifestations/{manifestationId}/likes/{userId}
+     * @allow (get, list) Anyone can read likes.
+     * @deny (create, update, delete) Write access is not defined for the prototyping stage.
+     * @principle Public read access with restricted writes.
+     */
+    match /manifestations/{manifestationId}/likes/{userId} {
+      allow get: if true;
+      allow list: if true;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
+    }
+
   }
 }

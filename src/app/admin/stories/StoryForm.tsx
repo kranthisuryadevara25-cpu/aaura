@@ -153,7 +153,7 @@ export function StoryForm({ story }: StoryFormProps) {
                 <FormItem><FormLabel>Related Characters</FormLabel><FormDescription>Comma-separated character slugs (e.g., rama, sita, hanuman).</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
              <FormField control={form.control} name="relatedTemples" render={({ field }) => (
-                <FormItem><FormLabel>Related Temples</FormLabel><FormDescription>Comma-separated temple slugs (e.g., ram-mandir-ayodhya).</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
+                <FormItem><FormLabel>Related Temples</FormLabel><FormDescription>Comma-separated temple slugs (e.g., ram-mandir-ayodhya).</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage ></FormMessage>
             )} />
 
 

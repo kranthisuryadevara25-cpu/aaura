@@ -1,3 +1,4 @@
+npx eslint src/app/admin/stories/StoryForm.tsx
 
 # Firebase Studio
 

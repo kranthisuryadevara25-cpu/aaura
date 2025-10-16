@@ -16,7 +16,7 @@ export default function EditTemplePage() {
   const id = params.id as string;
   
   const templeRef = doc(db, 'temples', id);
-  const [temple, isLoading] = useDocumentData(templeRef);
+  const [temple, isLoading] = useDocumentData(templeRef, { idField: 'id' });
 
   if (isLoading) {
     return (
@@ -30,7 +30,7 @@ export default function EditTemplePage() {
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <Button variant="outline" onClick={() => router.back()} className="mb-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Content
+            Back
         </Button>
         <TempleForm temple={temple} />
     </main>

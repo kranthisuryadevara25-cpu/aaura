@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -106,7 +106,13 @@ export function DeityForm({ deity }: DeityFormProps) {
       const deityId = deity ? deity.id : data.slug;
       const deityRef = doc(db, 'deities', deityId);
       
-      const saveData = { id: deityId, ...data };
+      const saveData = { 
+        id: deityId,
+        ...data,
+        status: 'published',
+        updatedAt: serverTimestamp(),
+        ...(deity.status === 'unclaimed' && { createdAt: serverTimestamp() }),
+      };
 
       setDoc(deityRef, saveData, { merge: true })
         .then(() => {
@@ -141,7 +147,7 @@ export function DeityForm({ deity }: DeityFormProps) {
               <FormItem>
                 <FormLabel>Slug</FormLabel>
                 <FormDescription>A unique identifier for the URL (e.g., 'sri-ganesha').</FormDescription>
-                <FormControl><Input {...field} /></FormControl>
+                <FormControl><Input {...field} disabled /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

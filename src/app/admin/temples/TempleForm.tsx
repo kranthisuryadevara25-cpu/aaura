@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -112,7 +112,13 @@ export function TempleForm({ temple }: TempleFormProps) {
       const templeId = temple ? temple.id : data.slug;
       const templeRef = doc(db, 'temples', templeId);
 
-      const fullData = { id: templeId, ...data };
+      const fullData = { 
+        id: templeId,
+        ...data,
+        status: 'published',
+        updatedAt: serverTimestamp(),
+        ...(temple.status === 'unclaimed' && { createdAt: serverTimestamp() }),
+      };
 
       setDoc(templeRef, fullData, { merge: true })
       .then(() => {
@@ -144,7 +150,7 @@ export function TempleForm({ temple }: TempleFormProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <h3 className="text-xl font-semibold text-primary">Basic Information</h3>
             <FormField control={form.control} name="slug" render={({ field }) => (
-              <FormItem><FormLabel>Slug</FormLabel><FormDescription>Unique identifier for the URL (e.g., 'ram-mandir-ayodhya').</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Slug</FormLabel><FormDescription>Unique identifier for the URL (e.g., 'ram-mandir-ayodhya').</FormDescription><FormControl><Input {...field} disabled /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="name.en" render={({ field }) => (
               <FormItem><FormLabel>Name (English)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -346,5 +352,3 @@ export function TempleForm({ temple }: TempleFormProps) {
     </Card>
   );
 }
-
-    

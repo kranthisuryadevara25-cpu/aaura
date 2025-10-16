@@ -16,7 +16,7 @@ export default function EditStoryPage() {
   const id = params.id as string;
 
   const storyRef = doc(db, 'stories', id);
-  const [story, isLoading] = useDocumentData(storyRef);
+  const [story, isLoading] = useDocumentData(storyRef, { idField: 'id' });
 
   if (isLoading) {
     return (
@@ -30,7 +30,7 @@ export default function EditStoryPage() {
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
         <Button variant="outline" onClick={() => router.back()} className="mb-4">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Content
+            Back
         </Button>
         <StoryForm story={story} />
     </main>

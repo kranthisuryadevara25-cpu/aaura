@@ -95,8 +95,9 @@ export function StoryForm({ story }: StoryFormProps) {
           tags: data.tags.split(',').map(s => s.trim()),
           relatedCharacters: data.relatedCharacters ? data.relatedCharacters.split(',').map(s => s.trim()) : [],
           relatedTemples: data.relatedTemples ? data.relatedTemples.split(',').map(s => s.trim()) : [],
+          status: 'published',
           updatedAt: serverTimestamp(),
-          ...(story ? {} : { createdAt: serverTimestamp() }),
+          ...(story.status === 'unclaimed' && { createdAt: serverTimestamp() }),
       };
 
       setDoc(storyRef, fullData, { merge: true })
@@ -115,7 +116,7 @@ export function StoryForm({ story }: StoryFormProps) {
     });
   };
   
-  const title = story ? `Edit ${story.title.en}` : 'Add a New Story';
+  const title = story ? `Edit ${story.title?.en || story.name.en}` : 'Add a New Story';
   const description = story ? 'Update the details for this story.' : 'Fill out the form to add a new story to the database.';
 
   return (
@@ -129,7 +130,7 @@ export function StoryForm({ story }: StoryFormProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             {/* Basic Info */}
             <FormField control={form.control} name="slug" render={({ field }) => (
-              <FormItem><FormLabel>Slug</FormLabel><FormDescription>A unique identifier for the URL (e.g., 'ramayana-summary').</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Slug</FormLabel><FormDescription>A unique identifier for the URL (e.g., 'ramayana-summary').</FormDescription><FormControl><Input {...field} disabled /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="title.en" render={({ field }) => (
               <FormItem><FormLabel>Title (English)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -152,7 +153,7 @@ export function StoryForm({ story }: StoryFormProps) {
                 <FormItem><FormLabel>Related Characters</FormLabel><FormDescription>Comma-separated character slugs (e.g., rama, sita, hanuman).</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
             )} />
              <FormField control={form.control} name="relatedTemples" render={({ field }) => (
-                <FormItem><FormLabel>Related Temples</FormLabel><FormDescription>Comma-separated temple slugs (e.g., ram-mandir-ayodhya).</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                <FormItem><FormLabel>Related Temples</FormLabel><FormDescription>Comma-separated temple slugs (e.g., ram-mandir-ayodhya).</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormMessage>
             )} />
 
 

@@ -35,6 +35,8 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { useAuth } from '@/lib/firebase/provider';
 
 const mainNav = [
   { href: '/', label: 'home', icon: Home, exact: true },
@@ -157,6 +159,9 @@ const CollapsibleNavSection = ({
 };
 
 export const Sidebar = () => {
+  const [user] = useAuthState(useAuth());
+  const isSuperAdmin = user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
+
   return (
     <aside className="w-64 hidden md:block border-r p-4">
       <nav className="space-y-2">
@@ -169,7 +174,7 @@ export const Sidebar = () => {
         <CollapsibleNavSection title="Community" items={communityNav} />
         <CollapsibleNavSection title="Personal" items={personalNav} />
         <CollapsibleNavSection title="Marketplace" items={marketplaceNav} />
-        <CollapsibleNavSection title="Manage" items={adminNav} />
+        {isSuperAdmin && <CollapsibleNavSection title="Manage" items={adminNav} />}
       </nav>
     </aside>
   );

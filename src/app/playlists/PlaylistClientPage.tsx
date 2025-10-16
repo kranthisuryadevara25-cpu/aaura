@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -12,15 +13,17 @@ import { ListMusic, Loader2, Search } from 'lucide-react';
 import Image from 'next/image';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useLanguage } from '@/hooks/use-language';
 
 const PlaylistGrid = ({ playlists }: { playlists: DocumentData[] }) => {
+  const { t } = useLanguage();
   if (playlists.length === 0) {
     return (
       <div className="text-center py-16 border-2 border-dashed rounded-lg">
         <ListMusic className="mx-auto h-24 w-24 text-muted-foreground/50" />
-        <h2 className="mt-6 text-2xl font-semibold text-foreground">No Playlists Found</h2>
+        <h2 className="mt-6 text-2xl font-semibold text-foreground">{t.playlists.noPlaylists}</h2>
         <p className="mt-2 text-muted-foreground">
-          No playlists match your current filters.
+          {t.playlists.noPlaylistsDescription}
         </p>
       </div>
     );
@@ -52,6 +55,7 @@ const PlaylistGrid = ({ playlists }: { playlists: DocumentData[] }) => {
 export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPlaylists: DocumentData[] }) {
   const db = useFirestore();
   const [user] = useAuthState(useAuth());
+  const { t } = useLanguage();
   
   const playlistsQuery = useMemo(() => {
     if (!user) {
@@ -90,7 +94,7 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
         playlist.title?.toLowerCase().includes(lowercasedQuery)
       );
     }
-    return itemsToFilter;
+    return itemsToFilter.filter(p => p.id); // Ensure items have an ID before rendering
   }, [searchQuery, activeTab, myPlaylists, publicPlaylists]);
 
   const displayLoading = isLoading && (activeTab === 'my-playlists' || (activeTab === 'public' && !initialPublicPlaylists));
@@ -101,7 +105,7 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
         <div className="relative flex-grow">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
           <Input
-            placeholder="Search playlists..."
+            placeholder={t.playlists.searchPlaceholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10 h-12 text-lg"
@@ -111,8 +115,8 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto mb-6">
-          <TabsTrigger value="public">Public Playlists</TabsTrigger>
-          <TabsTrigger value="my-playlists" disabled={!user}>My Playlists</TabsTrigger>
+          <TabsTrigger value="public">{t.playlists.publicPlaylists}</TabsTrigger>
+          <TabsTrigger value="my-playlists" disabled={!user}>{t.playlists.myPlaylists}</TabsTrigger>
         </TabsList>
         <TabsContent value="public">
           {displayLoading ? (
@@ -136,3 +140,5 @@ export function PlaylistClientPage({ initialPublicPlaylists }: { initialPublicPl
     </>
   );
 }
+
+  

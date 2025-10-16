@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useTransition } from 'react';
@@ -27,6 +28,7 @@ import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { useLanguage } from '@/hooks/use-language';
 
 const formSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters long.'),
@@ -44,6 +46,7 @@ export default function CreatePlaylistPage() {
   const db = useFirestore();
   const [user] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
+  const { t } = useLanguage();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -76,7 +79,7 @@ export default function CreatePlaylistPage() {
       addDoc(playlistCollection, playlistData)
       .then((docRef) => {
            toast({
-            title: 'Playlist Created!',
+            title: t.playlists.createPlaylistTitle,
             description: 'Your new playlist has been successfully created.',
           });
           router.push(`/playlists/${docRef.id}`);
@@ -96,9 +99,9 @@ export default function CreatePlaylistPage() {
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>Create a New Playlist</CardTitle>
+          <CardTitle>{t.playlists.createPlaylistTitle}</CardTitle>
           <CardDescription>
-            Organize your favorite spiritual content into personalized collections.
+            {t.playlists.createPlaylistDescription}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -109,9 +112,9 @@ export default function CreatePlaylistPage() {
                 name="title"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Playlist Title</FormLabel>
+                    <FormLabel>{t.playlists.playlistTitleLabel}</FormLabel>
                     <FormControl>
-                      <Input placeholder="E.g., Morning Devotion" {...field} />
+                      <Input placeholder={t.playlists.playlistTitlePlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -122,9 +125,9 @@ export default function CreatePlaylistPage() {
                 name="description"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description (Optional)</FormLabel>
+                    <FormLabel>{t.playlists.playlistDescriptionLabel}</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="A brief description of this playlist's theme or purpose." {...field} />
+                      <Textarea placeholder={t.playlists.playlistDescriptionPlaceholder} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -135,11 +138,11 @@ export default function CreatePlaylistPage() {
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>{t.playlists.categoryLabel}</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a category" />
+                            <SelectValue placeholder={t.playlists.categoryPlaceholder} />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -152,7 +155,7 @@ export default function CreatePlaylistPage() {
                         </SelectContent>
                       </Select>
                     <FormDescription>
-                      Choosing a category helps others discover your playlist.
+                      {t.playlists.categoryDescription}
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -164,9 +167,9 @@ export default function CreatePlaylistPage() {
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
-                      <FormLabel>Make Playlist Public</FormLabel>
+                      <FormLabel>{t.playlists.publicLabel}</FormLabel>
                       <FormDescription>
-                        Allow other users to discover and follow your playlist.
+                        {t.playlists.publicDescription}
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -184,7 +187,7 @@ export default function CreatePlaylistPage() {
                 ) : (
                   <PlusCircle className="mr-2 h-4 w-4" />
                 )}
-                Create Playlist
+                {t.playlists.createButton}
               </Button>
             </form>
           </Form>
@@ -193,3 +196,5 @@ export default function CreatePlaylistPage() {
     </main>
   );
 }
+
+  

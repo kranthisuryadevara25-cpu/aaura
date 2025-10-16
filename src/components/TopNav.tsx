@@ -22,10 +22,12 @@ import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart } from "luc
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "./FollowListDialog";
+import { useLanguage } from "@/hooks/use-language";
 
 
 const UserStats = () => {
     const auth = useAuth();
+    const { t } = useLanguage();
     const db = useFirestore();
     const [user] = useAuthState(auth);
     const userRef = user ? doc(db, 'users', user.uid) : undefined;
@@ -65,7 +67,7 @@ const UserStats = () => {
                 trigger={
                     <div className="text-center cursor-pointer hover:bg-secondary p-2 rounded-md">
                         <p className="font-bold">{userData.followerCount || 0}</p>
-                        <p className="text-xs text-muted-foreground">Followers</p>
+                        <p className="text-xs text-muted-foreground">{t.topnav.followers}</p>
                     </div>
                 }
             />
@@ -75,7 +77,7 @@ const UserStats = () => {
                 trigger={
                     <div className="text-center cursor-pointer hover:bg-secondary p-2 rounded-md">
                         <p className="font-bold">{userData.followingCount || 0}</p>
-                        <p className="text-xs text-muted-foreground">Following</p>
+                        <p className="text-xs text-muted-foreground">{t.topnav.following}</p>
                     </div>
                 }
             />
@@ -115,6 +117,7 @@ const CartButton = () => {
 export const TopNav = () => {
   const auth = useAuth();
   const [user] = useAuthState(auth);
+  const { t } = useLanguage();
 
   const handleSignOut = () => {
     auth.signOut();
@@ -155,20 +158,20 @@ export const TopNav = () => {
                  <DropdownMenuItem asChild>
                     <Link href="/upload">
                         <Upload className="mr-2 h-4 w-4" />
-                        <span>Upload Content</span>
+                        <span>{t.sidebar.upload}</span>
                     </Link>
                  </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/forum">
                         <MessageSquare className="mr-2 h-4 w-4" />
-                        <span>Create Post</span>
+                        <span>{t.forum.createPostTitle}</span>
                     </Link>
                  </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                     <Link href="/settings">
                         <Settings className="mr-2 h-4 w-4" />
-                        <span>Settings</span>
+                        <span>{t.sidebar.settings}</span>
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleSignOut}>
@@ -186,3 +189,5 @@ export const TopNav = () => {
     </header>
   );
 };
+
+  

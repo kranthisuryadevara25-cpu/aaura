@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -181,7 +182,7 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
           </Avatar>
           <div>
             <p className="font-semibold">{author?.displayName || 'Creator'}</p>
-            <p className="text-sm text-muted-foreground">{author?.followerCount || 0} followers</p> 
+            <p className="text-sm text-muted-foreground">{author?.followerCount || 0} {t.topnav.followers}</p> 
           </div>
            {user && user.uid !== authorId && (
             <AlertDialog>
@@ -193,15 +194,15 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
                 <AlertDialogContent>
                     <AlertDialogHeader>
                         <AlertDialogTitle>
-                            {isFollowing ? "Unfollow" : "Follow"} {author?.displayName || 'this creator'}?
+                            {isFollowing ? t.channelDetail.unfollowConfirmation : t.channelDetail.followConfirmation} {author?.displayName || 'this creator'}?
                         </AlertDialogTitle>
                         <AlertDialogDescription>
-                            You can always change your mind later.
+                            {t.channelDetail.confirmationPrompt}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleFollow}>{isFollowing ? 'Unfollow' : 'Follow'}</AlertDialogAction>
+                        <AlertDialogCancel>{t.buttons.cancel}</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleFollow}>{isFollowing ? t.channelDetail.unfollowConfirmation : t.channelDetail.followConfirmation}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
@@ -228,3 +229,5 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
     </div>
   );
 }
+
+  

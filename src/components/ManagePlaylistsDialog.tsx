@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -19,6 +20,7 @@ import { useFirestore } from '@/lib/firebase/provider';
 import { doc, updateDoc } from 'firebase/firestore';
 import { Loader2, Edit } from 'lucide-react';
 import type { DocumentData } from 'firebase/firestore';
+import { useLanguage } from '@/hooks/use-language';
 
 interface ManagePlaylistsDialogProps {
   allPlaylists: DocumentData[];
@@ -27,6 +29,7 @@ interface ManagePlaylistsDialogProps {
 }
 
 export function ManagePlaylistsDialog({ allPlaylists, featuredIds, channelId }: ManagePlaylistsDialogProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const db = useFirestore();
   const [isOpen, setIsOpen] = useState(false);
@@ -44,7 +47,7 @@ export function ManagePlaylistsDialog({ allPlaylists, featuredIds, channelId }: 
       setIsOpen(false);
     } catch (error) {
       console.error('Failed to update playlists:', error);
-      toast({ variant: 'destructive', title: 'Error', description: 'Could not update your playlists.' });
+      toast({ variant: 'destructive', title: 'Error', description: t.playlists.updateFailed });
     } finally {
       setIsSaving(false);
     }
@@ -61,14 +64,14 @@ export function ManagePlaylistsDialog({ allPlaylists, featuredIds, channelId }: 
       <DialogTrigger asChild>
         <Button variant="outline">
           <Edit className="mr-2 h-4 w-4" />
-          Manage Playlists
+          {t.channelDetail.managePlaylists}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Manage Featured Playlists</DialogTitle>
+          <DialogTitle>{t.playlists.managePlaylistsTitle}</DialogTitle>
           <DialogDescription>
-            Select the playlists you want to feature on your channel page.
+            {t.playlists.managePlaylistsDescription}
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto">
@@ -86,19 +89,21 @@ export function ManagePlaylistsDialog({ allPlaylists, featuredIds, channelId }: 
               </div>
             ))
           ) : (
-            <p className="text-sm text-muted-foreground text-center">You haven't created any public playlists yet.</p>
+            <p className="text-sm text-muted-foreground text-center">{t.playlists.noPlaylistsCreated}</p>
           )}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
+            {t.buttons.cancel}
           </Button>
           <Button onClick={handleSave} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Save Changes
+            {t.buttons.saveChanges}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+  

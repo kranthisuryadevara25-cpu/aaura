@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useTransition } from 'react';
@@ -22,12 +23,14 @@ import { Loader2, Save } from 'lucide-react';
 import type { DocumentData } from 'firebase/firestore';
 import { ScrollArea } from './ui/scroll-area';
 import Link from 'next/link';
+import { useLanguage } from '@/hooks/use-language';
 
 interface SaveToPlaylistDialogProps {
   mediaId: string;
 }
 
 export function SaveToPlaylistDialog({ mediaId }: SaveToPlaylistDialogProps) {
+  const { t } = useLanguage();
   const { toast } = useToast();
   const db = useFirestore();
   const auth = useAuth();
@@ -56,16 +59,16 @@ export function SaveToPlaylistDialog({ mediaId }: SaveToPlaylistDialogProps) {
           await updateDoc(playlistRef, {
             items: arrayUnion(videoItem)
           });
-          toast({ title: 'Video added to playlist!' });
+          toast({ title: t.playlists.videoAdded });
         } else {
           await updateDoc(playlistRef, {
             items: arrayRemove(videoItem) // Note: This removes all instances matching the object.
           });
-           toast({ title: 'Video removed from playlist.' });
+           toast({ title: t.playlists.videoRemoved });
         }
       } catch (error) {
         console.error('Failed to update playlist:', error);
-        toast({ variant: 'destructive', title: 'Error', description: 'Could not update your playlist.' });
+        toast({ variant: 'destructive', title: 'Error', description: t.playlists.updateFailed });
       }
     });
   };
@@ -75,14 +78,14 @@ export function SaveToPlaylistDialog({ mediaId }: SaveToPlaylistDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline">
           <Save className="mr-2 h-4 w-4" />
-          Save
+          {t.buttons.save}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Save to Playlist</DialogTitle>
+          <DialogTitle>{t.playlists.saveToPlaylistTitle}</DialogTitle>
           <DialogDescription>
-            Add this video to one or more of your playlists.
+            {t.playlists.saveToPlaylistDescription}
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="h-72 w-full rounded-md border">
@@ -108,18 +111,20 @@ export function SaveToPlaylistDialog({ mediaId }: SaveToPlaylistDialogProps) {
             })
           ) : (
              <div className="text-center text-muted-foreground p-4">
-                <p>You haven't created any playlists yet.</p>
-                <Button variant="link" asChild><Link href="/playlists/create">Create one now</Link></Button>
+                <p>{t.playlists.noPlaylistsCreated}</p>
+                <Button variant="link" asChild><Link href="/playlists/create">{t.playlists.createOneNow}</Link></Button>
              </div>
           )}
         </div>
         </ScrollArea>
         <DialogFooter>
           <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Close
+            {t.buttons.close}
           </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
   );
 }
+
+  

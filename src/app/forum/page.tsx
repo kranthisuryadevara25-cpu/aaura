@@ -133,8 +133,8 @@ export default function ForumPage() {
                 </div>
             ) : groups && groups.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {groups.map((group) => (
-                       <GroupCard key={group.id} group={group} />
+                    {groups.map((group, index) => (
+                       <GroupCard key={group.id || `group-${index}`} group={group} />
                     ))}
                 </div>
             ) : (

@@ -28,7 +28,6 @@ type ChantFormValues = z.infer<typeof chantSchema>;
 
 function RecentChants({ contestId }: { contestId: string }) {
     const db = useFirestore();
-    // In a real app, this query would need a composite index on the 'leaderboard' subcollection.
     const recentChantsQuery = useMemo(() => 
         query(
             collection(db, `contests/${contestId}/leaderboard`), 
@@ -45,7 +44,7 @@ function RecentChants({ contestId }: { contestId: string }) {
     return (
         <div className="space-y-3 mt-6">
             <h4 className="font-semibold text-center text-muted-foreground">Recent Activity</h4>
-            {recentChants && recentChants.map((chant, index) => (
+            {recentChants && recentChants.length > 0 ? recentChants.map((chant, index) => (
                 <div key={chant.userId || index} className="flex items-center gap-3 text-sm">
                     <Avatar className="h-8 w-8">
                          <AvatarImage src={`https://picsum.photos/seed/${chant.userId}/40`} />
@@ -59,7 +58,7 @@ function RecentChants({ contestId }: { contestId: string }) {
                         {chant.lastChantedAt ? formatDistanceToNow(chant.lastChantedAt.toDate(), { addSuffix: true }) : 'just now'}
                     </p>
                 </div>
-            ))}
+            )) : <p className="text-sm text-muted-foreground text-center">No chants yet. Be the first!</p>}
         </div>
     )
 }
@@ -94,28 +93,36 @@ function ContestContent({ contestId }: { contestId: string, }) {
         }
         
         startChantTransition(async () => {
+            const contestDocRef = doc(db, 'contests', activeContest.id);
             const userProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, activeContest.id);
-            const requestData = {
-                chants: increment(1),
-                lastChantedAt: serverTimestamp(),
-                displayName: currentUser.displayName || 'Anonymous',
-                mantra: data.mantra,
-            };
+            const leaderboardRef = doc(db, `contests/${activeContest.id}/leaderboard`, currentUser.uid);
 
-            setDoc(userProgressRef, requestData, { merge: true })
-            .then(() => {
+            try {
+                 await runTransaction(db, async (transaction) => {
+                    const userProgressDoc = await transaction.get(userProgressRef);
+                    const newChantCount = (userProgressDoc.data()?.chants || 0) + 1;
+
+                    const userProgressData = {
+                        chants: newChantCount,
+                        lastChantedAt: serverTimestamp(),
+                        displayName: currentUser.displayName || 'Anonymous',
+                        mantra: data.mantra,
+                    };
+
+                    transaction.set(userProgressRef, userProgressData, { merge: true });
+                    transaction.set(leaderboardRef, userProgressData, { merge: true });
+                    transaction.update(contestDocRef, { totalChants: increment(1) });
+                });
+
                 form.reset({ mantra: "Jai Shri Ram" });
-                // In a real app, a Cloud Function would aggregate these writes to update the global count.
-                // For now, the user's contribution is saved securely.
-            })
-            .catch((error: any) => {
-                 const permissionError = new FirestorePermissionError({
-                    path: userProgressRef.path,
-                    operation: 'write',
-                    requestResourceData: { mantra: data.mantra }
-                 });
-                errorEmitter.emit('permission-error', permissionError);
-            });
+            } catch (error: any) {
+                const permissionError = new FirestorePermissionError({
+                   path: `users/${currentUser.uid}/contestProgress/${activeContest.id}`,
+                   operation: 'write',
+                   requestResourceData: { mantra: data.mantra }
+                });
+               errorEmitter.emit('permission-error', permissionError);
+            }
         });
     };
     
@@ -230,3 +237,4 @@ export default function ContestsPage() {
         </main>
     );
 }
+

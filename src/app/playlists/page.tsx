@@ -26,7 +26,7 @@ export default function PlaylistsPage() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [filteredPlaylists, setFilteredPlaylists] = useState<DocumentData[] | undefined>(undefined);
+  const [filteredPlaylists, setFilteredPlaylists] = useState<DocumentData[]>([]);
 
   useEffect(() => {
     if (playlists) {
@@ -130,4 +130,5 @@ export default function PlaylistsPage() {
     </main>
   );
 }
+
 

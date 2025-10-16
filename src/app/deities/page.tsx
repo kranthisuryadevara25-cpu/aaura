@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Loader2, Search } from 'lucide-react';
+import { ArrowRight, Loader2, PlusCircle, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { Input } from '@/components/ui/input';
@@ -38,11 +38,21 @@ export default function DeitiesPage() {
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">{t.deities.title}</h1>
-            <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                {t.deities.description}
-            </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
+            <div className="text-left">
+                <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center gap-3">
+                    <Sparkles className="h-10 w-10" /> {t.deities.title}
+                </h1>
+                <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+                    {t.deities.description}
+                </p>
+            </div>
+             <Button asChild>
+                <Link href="/admin/deities/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Deity
+                </Link>
+            </Button>
         </div>
 
         <div className="mb-8 max-w-lg mx-auto relative">

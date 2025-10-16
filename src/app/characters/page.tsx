@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, UserSquare, Loader2 } from 'lucide-react';
+import { ArrowRight, UserSquare, Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
@@ -20,13 +20,21 @@ export default function CharactersPage() {
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                <UserSquare className="h-10 w-10" /> {t.sidebar.characters}
-            </h1>
-            <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                Discover the heroes, villains, gods, and sages of Hindu mythology.
-            </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
+            <div className="text-left">
+                <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                    <UserSquare className="h-10 w-10" /> {t.sidebar.characters}
+                </h1>
+                <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+                    Discover the heroes, villains, gods, and sages of Hindu mythology.
+                </p>
+            </div>
+             <Button asChild>
+                <Link href="/admin/characters/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Hero
+                </Link>
+            </Button>
         </div>
 
         {isLoading ? (

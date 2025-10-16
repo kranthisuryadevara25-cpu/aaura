@@ -4,7 +4,7 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, ScrollText, Loader2 } from 'lucide-react';
+import { ArrowRight, ScrollText, Loader2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -20,15 +20,23 @@ export default function StoriesPage() {
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-        <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
-                <ScrollText className="h-10 w-10" /> {t.stories.title}
-            </h1>
-            <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
-                {t.stories.description}
-            </p>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
+            <div className="text-left">
+                <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center gap-3">
+                    <ScrollText className="h-10 w-10" /> {t.stories.title}
+                </h1>
+                <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+                    {t.stories.description}
+                </p>
+            </div>
+            <Button asChild>
+                <Link href="/admin/stories/new">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Saga
+                </Link>
+            </Button>
         </div>
-
+        
         {isLoading ? (
              <div className="flex justify-center items-center h-64">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />

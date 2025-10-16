@@ -1,6 +1,6 @@
+
 'use server';
 
-import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db as adminDb } from '@/lib/firebase/admin';
 import { Button } from '@/components/ui/button';
 import { ListMusic, PlusCircle } from 'lucide-react';
@@ -10,11 +10,11 @@ import type { DocumentData } from 'firebase/firestore';
 
 async function getPublicPlaylists() {
   try {
-    const playlistsQuery = query(
-      adminDb.collection('playlists'),
-      where('isPublic', '==', true)
-    );
-    const querySnapshot = await getDocs(playlistsQuery);
+    // Correctly use the Admin SDK's query methods
+    const playlistsQuery = adminDb.collection('playlists').where('isPublic', '==', true);
+    
+    const querySnapshot = await playlistsQuery.get();
+    
     const playlists = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data(),

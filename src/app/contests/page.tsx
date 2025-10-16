@@ -13,7 +13,6 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { useTransition, useState, useEffect } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
-import { differenceInDays, format } from 'date-fns';
 
 function ContestContent({ activeContest, user }: { activeContest: DocumentData, user: any }) {
     const db = useFirestore();
@@ -85,21 +84,13 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
     const progressPercentage = (activeContest.totalChants / activeContest.goal) * 100;
     const isCompleted = activeContest.status === 'completed';
     
-    const startDate = activeContest.startDate ? (activeContest.startDate instanceof Timestamp ? activeContest.startDate.toDate() : new Date(activeContest.startDate)) : new Date();
-    const endDate = activeContest.endDate ? (activeContest.endDate instanceof Timestamp ? activeContest.endDate.toDate() : new Date(activeContest.endDate)) : new Date();
-    const achievedAt = activeContest.achievedAt ? (activeContest.achievedAt instanceof Timestamp ? activeContest.achievedAt.toDate() : new Date(activeContest.achievedAt)) : null;
-
-    const achievementDays = isCompleted && achievedAt
-        ? differenceInDays(achievedAt, startDate) + 1
-        : null;
-
     return (
         <Card className="w-full max-w-2xl text-center shadow-2xl bg-gradient-to-br from-primary/10 to-background border-primary/20">
             <CardHeader>
                 <Trophy className="mx-auto h-12 w-12 text-yellow-400" />
                 <CardTitle className="text-3xl font-headline text-primary mt-2">{activeContest.title}</CardTitle>
                 <CardDescription className="text-lg">
-                    {format(startDate, 'PPP')} - {format(endDate, 'PPP')}
+                    Chant to contribute to the global goal!
                 </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -116,7 +107,7 @@ function ContestContent({ activeContest, user }: { activeContest: DocumentData, 
 
                  {isCompleted ? (
                     <div className="font-semibold text-green-600">
-                        Goal achieved! {achievementDays && `Completed in ${achievementDays} days.`}
+                        Contest Completed!
                     </div>
                  ) : (
                     <Button 
@@ -180,3 +171,5 @@ export default function ContestsPage() {
         </main>
     );
 }
+
+    

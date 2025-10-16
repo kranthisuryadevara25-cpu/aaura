@@ -198,7 +198,17 @@
         { "fieldPath": "status", "order": "ASCENDING" },
         { "fieldPath": "uploadDate", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "contests",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
 }
+
+    

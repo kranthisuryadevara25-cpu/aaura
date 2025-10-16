@@ -34,7 +34,7 @@ const formSchema = z.object({
   description_en: z.string().min(10, { message: 'English description must be at least 10 characters.' }),
   description_hi: z.string().min(10, { message: 'Hindi description must be at least 10 characters.' }),
   description_te: z.string().min(10, { message: 'Telugu description must be at least 10 characters.' }),
-  media: z.instanceof(FileList).refine((files) => files?.length === 1, 'A media file is required.'),
+  media: z.any().refine((files) => files?.length === 1, 'A media file is required.'),
   mediaType: z.enum(['video', 'short', 'bhajan', 'podcast', 'pravachan', 'audiobook']),
 });
 

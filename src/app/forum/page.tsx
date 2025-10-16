@@ -2,7 +2,7 @@
 'use client';
 
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, doc, writeBatch, increment } from 'firebase/firestore';
+import { collection, query, doc, writeBatch, increment, where, serverTimestamp } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -12,102 +12,68 @@ import { useLanguage } from '@/hooks/use-language';
 import Image from 'next/image';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
-function GroupCard({ group }: { group: any }) {
+export default function ForumPage() {
     const { t } = useLanguage();
     const auth = useAuth();
     const db = useFirestore();
     const [user] = useAuthState(auth);
     const { toast } = useToast();
     
-    const [loadingMembership, setLoadingMembership] = useState(false);
+    const groupsQuery = query(collection(db, 'groups'));
+    const [groups, isLoading] = useCollectionData(groupsQuery, { idField: 'id' });
+
+    const userGroupsQuery = user ? query(collection(db, `users/${user.uid}/groups`)) : undefined;
+    const [userGroupMemberships] = useCollectionData(userGroupsQuery);
     
-    const memberRef = user ? doc(db, `groups/${group.id}/members/${user.uid}`) : undefined;
-    const [memberDoc] = useCollectionData(memberRef ? collection(db, `groups/${group.id}/members`) : undefined);
-    const isMember = memberDoc?.some((m: any) => m.id === user?.uid);
+    const userJoinedGroups = useMemo(() => {
+      if (!userGroupMemberships) return new Set();
+      return new Set(userGroupMemberships.map(g => g.groupId));
+    }, [userGroupMemberships]);
 
 
-    const handleJoinLeave = async (e: React.MouseEvent) => {
-        e.preventDefault();
-        e.stopPropagation();
+    const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
 
-        if (!user || !memberRef) {
+    const handleJoinLeave = async (group: any) => {
+        if (!user) {
             toast({ variant: 'destructive', title: 'You must be logged in to join a group.' });
             return;
         }
+
+        setLoadingStates(prev => ({ ...prev, [group.id]: true }));
         
-        setLoadingMembership(true);
-        const batch = writeBatch(db);
         const groupRef = doc(db, 'groups', group.id);
+        const userGroupRef = doc(db, `users/${user.uid}/groups`, group.id);
+
+        const batch = writeBatch(db);
+        const isMember = userJoinedGroups.has(group.id);
 
         try {
             if (isMember) {
-                // Leave group
-                batch.delete(memberRef);
+                batch.delete(userGroupRef);
                 batch.update(groupRef, { memberCount: increment(-1) });
+                await batch.commit();
                 toast({ title: `You have left the "${group.name}" group.` });
             } else {
-                // Join group
-                batch.set(memberRef, { joinedAt: new Date() });
+                batch.set(userGroupRef, { groupId: group.id, joinedAt: serverTimestamp() });
                 batch.update(groupRef, { memberCount: increment(1) });
+                await batch.commit();
                 toast({ title: `Welcome to the "${group.name}" group!` });
             }
-            await batch.commit();
         } catch (error) {
-            const permissionError = new FirestorePermissionError({
-                path: memberRef.path,
+             const permissionError = new FirestorePermissionError({
+                path: groupRef.path,
                 operation: isMember ? 'delete' : 'create',
             });
             errorEmitter.emit('permission-error', permissionError);
         } finally {
-            setLoadingMembership(false);
+            setLoadingStates(prev => ({ ...prev, [group.id]: false }));
         }
     };
-
-    return (
-        <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
-            <Link href={`/forum/${group.id}`} className="group block flex flex-col flex-grow">
-                <div className="relative aspect-video bg-secondary">
-                    <Image src={group.coverImageUrl || `https://picsum.photos/seed/${group.id}/600/400`} alt={group.name} fill className="object-cover" />
-                </div>
-                <CardHeader>
-                    <CardTitle className="text-md font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-primary">
-                        {group.name}
-                    </CardTitle>
-                    <CardDescription className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                        {group.description}
-                    </CardDescription>
-                </CardHeader>
-                <CardFooter className="mt-auto flex justify-between items-center">
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Users className="h-4 w-4" />
-                        <span>{group.memberCount || 0} Members</span>
-                    </div>
-                </CardFooter>
-            </Link>
-             {user && (
-                <CardFooter>
-                     <Button variant={isMember ? 'secondary' : 'default'} size="sm" onClick={handleJoinLeave} disabled={loadingMembership} className="w-full">
-                        {loadingMembership ? <Loader2 className="h-4 w-4 animate-spin" /> : (
-                            isMember ? <><CheckCircle className="mr-2 h-4 w-4" /> Joined</> : <><PlusCircle className="mr-2 h-4 w-4" /> Join</>
-                        )}
-                    </Button>
-                </CardFooter>
-            )}
-        </Card>
-    );
-}
-
-
-export default function ForumPage() {
-    const { t } = useLanguage();
-    const db = useFirestore();
-    const groupsQuery = query(collection(db, 'groups'));
-    const [groups, isLoading] = useCollectionData(groupsQuery, { idField: 'id' });
-
+    
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
@@ -133,9 +99,43 @@ export default function ForumPage() {
                 </div>
             ) : groups && groups.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {groups.map((group, index) => (
-                       <GroupCard key={group.id || `group-${index}`} group={group} />
-                    ))}
+                    {groups.map((group) => {
+                        const isMember = user ? userJoinedGroups.has(group.id) : false;
+                        const loadingMembership = loadingStates[group.id] || false;
+                        
+                        return (
+                             <Card key={group.id} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
+                                <Link href={`/forum/${group.id}`} className="group block flex flex-col flex-grow">
+                                    <div className="relative aspect-video bg-secondary">
+                                        <Image src={group.coverImageUrl || `https://picsum.photos/seed/${group.id}/600/400`} alt={group.name} fill className="object-cover" />
+                                    </div>
+                                    <CardHeader>
+                                        <CardTitle className="text-md font-semibold leading-tight line-clamp-2 text-foreground group-hover:text-primary">
+                                            {group.name}
+                                        </CardTitle>
+                                        <CardDescription className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                                            {group.description}
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardFooter className="mt-auto flex justify-between items-center">
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <Users className="h-4 w-4" />
+                                            <span>{group.memberCount || 0} Members</span>
+                                        </div>
+                                    </CardFooter>
+                                </Link>
+                                {user && (
+                                    <CardFooter>
+                                        <Button variant={isMember ? 'secondary' : 'default'} size="sm" onClick={() => handleJoinLeave(group)} disabled={loadingMembership} className="w-full">
+                                            {loadingMembership ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                                                isMember ? <><CheckCircle className="mr-2 h-4 w-4" /> Joined</> : <><PlusCircle className="mr-2 h-4 w-4" /> Join</>
+                                            )}
+                                        </Button>
+                                    </CardFooter>
+                                )}
+                            </Card>
+                        );
+                    })}
                 </div>
             ) : (
                 <div className="text-center py-16 border-2 border-dashed rounded-lg">

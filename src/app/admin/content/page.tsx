@@ -422,13 +422,21 @@ function ContestsTabContent() {
              <div className="space-y-4">
                 {contests?.map((contest) => (
                     <Card key={contest.id}>
-                        <CardHeader>
-                            <CardTitle>{contest.title}</CardTitle>
-                            <CardDescription>Goal: {Number(contest.goal).toLocaleString()} chants</CardDescription>
+                        <CardHeader className="flex-row justify-between items-start">
+                            <div>
+                                <CardTitle>{contest.title}</CardTitle>
+                                <CardDescription>Goal: {Number(contest.goal).toLocaleString()} chants</CardDescription>
+                            </div>
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href={`/admin/contests/edit/${contest.id}`}>
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit
+                                </Link>
+                            </Button>
                         </CardHeader>
                         <CardContent>
                             <p>Status: {contest.status}</p>
-                            <p>Current Count: {Number(contest.currentCount || 0).toLocaleString()}</p>
+                            <p>Current Count: {Number(contest.totalChants || 0).toLocaleString()}</p>
                         </CardContent>
                     </Card>
                 ))}

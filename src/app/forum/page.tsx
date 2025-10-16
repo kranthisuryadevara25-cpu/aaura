@@ -17,7 +17,7 @@ import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 
-function GroupCard({ group }: { group: any }) {
+function GroupCard({ group, ...props }: { group: any, key: string }) {
     const { t } = useLanguage();
     const auth = useAuth();
     const db = useFirestore();
@@ -69,7 +69,7 @@ function GroupCard({ group }: { group: any }) {
     };
 
     return (
-        <Card className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
+        <Card {...props} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">
             <Link href={`/forum/${group.id}`} className="group block flex flex-col flex-grow">
                 <div className="relative aspect-video bg-secondary">
                     <Image src={group.coverImageUrl || `https://picsum.photos/seed/${group.id}/600/400`} alt={group.name} fill className="object-cover" />

@@ -11,6 +11,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useTransition } from 'react';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 export default function ContestsPage() {
     const db = useFirestore();
@@ -44,6 +46,12 @@ export default function ContestsPage() {
                     transaction.update(contestRef, { currentCount: increment(1) });
                     
                     const userProgressDoc = await transaction.get(userProgressRef);
+                    const progressData = {
+                        contestId: activeContest.id,
+                        userId: user.uid,
+                        chantCount: increment(1),
+                        lastChanted: serverTimestamp(),
+                    };
 
                     if (userProgressDoc.exists()) {
                         transaction.update(userProgressRef, {
@@ -59,9 +67,17 @@ export default function ContestsPage() {
                         });
                     }
                 });
-             } catch (error) {
-                 console.error("Chant transaction failed: ", error);
-                 toast({ variant: 'destructive', title: 'Chant failed', description: 'Could not record your chant. Please try again.' });
+             } catch (error: any) {
+                 const permissionError = new FirestorePermissionError({
+                    path: userProgressRef.path,
+                    operation: 'write',
+                    requestResourceData: {
+                         contestId: activeContest.id,
+                         userId: user.uid,
+                         chantCount: userProgress ? userProgress.chantCount + 1 : 1,
+                    }
+                });
+                errorEmitter.emit('permission-error', permissionError);
              }
         });
     };

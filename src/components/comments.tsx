@@ -188,8 +188,8 @@ export function Comments({ contentId, contentType }: CommentsProps) {
       ) : (
         <div className="space-y-6">
             {comments && comments.length > 0 ? (
-                comments.map(comment => (
-                <CommentCard key={comment.id} comment={comment} />
+                comments.map((comment, index) => (
+                <CommentCard key={comment.id || index} comment={comment} />
                 ))
             ) : (
                 <p className="text-muted-foreground text-sm text-center py-4">{t.forum.noComments}</p>

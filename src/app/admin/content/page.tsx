@@ -22,9 +22,9 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { collection, deleteDoc, doc, FirestoreDataConverter, Query, type DocumentData } from 'firebase/firestore';
+import { collection, deleteDoc, doc, FirestoreDataConverter, Query, type DocumentData, where } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
@@ -70,7 +70,7 @@ function DeitiesTabContent() {
   const deitiesRef = collection(db, 'deities').withConverter(deityConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [deities, isLoading] = useCollectionData(deitiesRef);
+  const [deities, isLoading] = useCollectionData<Deity>(deitiesRef, { idField: 'id' });
 
 
   const handleDelete = async (id: string) => {
@@ -164,7 +164,7 @@ function StoriesTabContent() {
   const storiesRef = collection(db, 'stories').withConverter(storyConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [stories, isLoading] = useCollectionData(storiesRef);
+  const [stories, isLoading] = useCollectionData<Story>(storiesRef, { idField: 'id' });
 
 
   const handleDelete = async (id: string) => {
@@ -258,7 +258,7 @@ function CharactersTabContent() {
   const charactersRef = collection(db, 'epicHeroes').withConverter(epicHeroConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [characters, isLoading] = useCollectionData(charactersRef);
+  const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef, { idField: 'id' });
 
 
   const handleDelete = async (id: string) => {
@@ -352,7 +352,7 @@ function TemplesTabContent() {
   const templesRef = collection(db, 'temples').withConverter(templeConverter);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [temples, isLoading] = useCollectionData(templesRef);
+  const [temples, isLoading] = useCollectionData<Temple>(templesRef, { idField: 'id' });
 
   const handleDelete = async (id: string) => {
     try {
@@ -444,7 +444,8 @@ function ContestsTabContent() {
   const db = useFirestore();
   const { toast } = useToast();
   const contestsRef = collection(db, 'contests');
-  const [contests, isLoading] = useCollectionData(contestsRef, { idField: 'id' });
+  const [snapshot, isLoading] = useCollection(contestsRef);
+  const contests = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
   const handleDelete = (id: string) => {
     const contestDocRef = doc(db, 'contests', id);
@@ -477,7 +478,7 @@ function ContestsTabContent() {
         </Button>
       </div>
       <div className="space-y-4">
-        {contests?.map((contest: DocumentData) => (
+        {contests?.map((contest) => (
           <Card key={contest.id}>
             <CardHeader>
               <div className="flex justify-between items-start">

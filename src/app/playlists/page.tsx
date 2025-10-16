@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { collection, query, where } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
@@ -26,27 +26,27 @@ export default function PlaylistsPage() {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
-  const [filteredPlaylists, setFilteredPlaylists] = useState<DocumentData[]>([]);
 
-  useEffect(() => {
-    if (playlists) {
-        let updatedPlaylists = playlists;
+  const filteredPlaylists = useMemo(() => {
+    if (!playlists) return [];
+    
+    let updatedPlaylists = playlists;
 
-        if (searchQuery.trim() !== '') {
-            const lowercasedQuery = searchQuery.toLowerCase();
-            updatedPlaylists = updatedPlaylists.filter(playlist => 
-                playlist.title.toLowerCase().includes(lowercasedQuery)
-            );
-        }
-
-        if (filterCategory !== 'all') {
-            updatedPlaylists = updatedPlaylists.filter(playlist => 
-                playlist.category === filterCategory
-            );
-        }
-        
-        setFilteredPlaylists(updatedPlaylists);
+    if (searchQuery.trim() !== '') {
+        const lowercasedQuery = searchQuery.toLowerCase();
+        updatedPlaylists = updatedPlaylists.filter(playlist => 
+            playlist.title.toLowerCase().includes(lowercasedQuery)
+        );
     }
+
+    if (filterCategory !== 'all') {
+        updatedPlaylists = updatedPlaylists.filter(playlist => 
+            playlist.category === filterCategory
+        );
+    }
+    
+    return updatedPlaylists;
+
   }, [searchQuery, filterCategory, playlists]);
 
 
@@ -130,6 +130,3 @@ export default function PlaylistsPage() {
     </main>
   );
 }
-
-
-

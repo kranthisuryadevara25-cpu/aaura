@@ -32,6 +32,7 @@ import {
   Clapperboard,
   Brain,
   LayoutDashboard,
+  Award,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
@@ -65,6 +66,7 @@ const personalNav = [
   { href: '/manifestation', label: 'manifestation', icon: Brain },
   { href: '/playlists', label: 'playlists', icon: ListMusic },
   { href: '/challenges', label: 'challenges', icon: Trophy },
+  { href: '/contests', label: 'contests', icon: Award },
 ];
 
 const marketplaceNav = [{ href: '/shop', label: 'shop', icon: ShoppingCart }];

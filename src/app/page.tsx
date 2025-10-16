@@ -41,7 +41,7 @@ export default async function Page() {
   return (
     <div className="max-w-3xl mx-auto px-4 py-4 space-y-8">
       <CreateContent />
-      <Feed items={feed} />
+      <Feed items={feed} isLoading={false} />
     </div>
   );
 }

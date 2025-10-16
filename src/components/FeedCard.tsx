@@ -107,7 +107,8 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
         case 'deity':
              return `/deities/${item.meta?.slug}`;
         case 'post':
-            return `/forum/${item.meta?.contextId || contentId}`;
+            // A post belongs to a context (group or temple), so link to that context's page.
+            return `/forum/${item.meta?.contextId}`;
         default:
             return '#';
     }

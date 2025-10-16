@@ -222,7 +222,14 @@ export function Posts({ contextId, contextType }: PostsProps) {
     }, [fetchedPosts]);
 
     const handlePostCreated = (newPost: DocumentData) => {
-        setPosts(prevPosts => [newPost, ...(prevPosts || [])]);
+        // Mock the Firestore Timestamp object for immediate client-side rendering.
+        const postWithMockTimestamp = {
+            ...newPost,
+            createdAt: {
+                toDate: () => newPost.createdAt,
+            },
+        };
+        setPosts(prevPosts => [postWithMockTimestamp, ...(prevPosts || [])]);
     };
 
     return (
@@ -231,7 +238,7 @@ export function Posts({ contextId, contextType }: PostsProps) {
             {loadingPosts && !posts ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
                 <div className="space-y-6">
                     {posts && posts.length > 0 ? (
-                        posts.map((post, index) => <PostCard key={post.id || index} post={post} />)
+                        posts.map((post, index) => <PostCard key={post.id || `post-${index}`} post={post} />)
                     ) : (
                         <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">No posts here yet.</p>

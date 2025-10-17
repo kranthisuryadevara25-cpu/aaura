@@ -12,7 +12,8 @@ import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, runTransaction, increment, serverTimestamp } from 'firebase/firestore';
 import { useTransition, useState } from 'react';
-import { getProductById } from '@/lib/products';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { productConverter, type Product } from '@/lib/products';
 import { Badge } from '@/components/ui/badge';
 
 export default function ProductDetailPage() {
@@ -26,7 +27,8 @@ export default function ProductDetailPage() {
   const [isAdding, startTransition] = useTransition();
   const [quantity, setQuantity] = useState(1);
 
-  const product = getProductById(productId);
+  const productRef = doc(db, 'products', productId).withConverter(productConverter);
+  const [product, isLoading] = useDocumentData<Product>(productRef);
 
   const handleAddToCart = () => {
     if (!user) {
@@ -55,6 +57,7 @@ export default function ProductDetailPage() {
                         price: product.price,
                         name_en: product.name_en,
                         imageUrl: product.imageUrl,
+                        shopId: product.shopId,
                     });
                 }
             });
@@ -73,6 +76,10 @@ export default function ProductDetailPage() {
         }
     });
   };
+  
+  if(isLoading) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+  }
 
   if (!product) {
     return notFound();

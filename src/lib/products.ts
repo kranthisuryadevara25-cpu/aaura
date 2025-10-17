@@ -1,4 +1,6 @@
 
+import type { FirestoreDataConverter } from "firebase/firestore";
+
 export type Product = {
     id: string;
     shopId: string;
@@ -114,6 +116,14 @@ export type Product = {
       imageHint: "dancing Shiva statue",
     }
   ];
+
+  export const productConverter: FirestoreDataConverter<Product> = {
+    toFirestore: (product: Product) => product,
+    fromFirestore: (snapshot, options) => {
+        const data = snapshot.data(options);
+        return { id: snapshot.id, ...data } as Product;
+    }
+};
   
   export const getProductById = (id: string) => {
     return products.find(p => p.id === id);

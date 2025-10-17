@@ -7,14 +7,15 @@ import { Button } from '@/components/ui/button';
 import { ShoppingCart, Loader2 } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
-import { doc, setDoc, serverTimestamp, runTransaction, increment } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, runTransaction, increment, collection } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useState, useTransition } from 'react';
-import { products as mockProducts } from '@/lib/products';
+import { productConverter, type Product } from '@/lib/products';
 import { Badge } from '@/components/ui/badge';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 
 export default function ShopPage() {
   const { t, language } = useLanguage();
@@ -24,11 +25,11 @@ export default function ShopPage() {
   const { toast } = useToast();
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
 
-  const products = mockProducts;
-  const isLoading = false;
+  const productsRef = collection(db, 'products').withConverter(productConverter);
+  const [products, isLoading] = useCollectionData<Product>(productsRef);
 
 
-  const handleAddToCart = (productId: string, name: string) => {
+  const handleAddToCart = (product: Product) => {
     if (!user) {
       toast({
         variant: 'destructive',
@@ -38,34 +39,29 @@ export default function ShopPage() {
       return;
     }
     
-    setAddingProductId(productId);
+    setAddingProductId(product.id);
 
     runTransaction(db, async (transaction) => {
-        const cartRef = doc(db, 'users', user.uid, 'cart', productId);
+        const cartRef = doc(db, 'users', user.uid, 'cart', product.id);
         const cartDoc = await transaction.get(cartRef);
-        const productFromMock = products.find(p => p.id === productId);
-
-        if (!productFromMock) {
-            throw new Error("Product not found");
-        }
-        const productData = productFromMock;
-
+        
         if (cartDoc.exists()) {
             transaction.update(cartRef, { quantity: increment(1) });
         } else {
              transaction.set(cartRef, {
-                productId: productId,
+                productId: product.id,
                 quantity: 1,
                 addedAt: serverTimestamp(),
-                price: productData.price,
-                name_en: productData.name_en,
-                imageUrl: productData.imageUrl,
+                price: product.price,
+                name_en: product.name_en,
+                imageUrl: product.imageUrl,
+                shopId: product.shopId,
             });
         }
     }).then(() => {
         toast({
             title: "Added to Cart",
-            description: `${name} has been added to your shopping cart.`,
+            description: `${product.name_en} has been added to your shopping cart.`,
         });
     }).catch((error) => {
         console.error("Error adding to cart: ", error);
@@ -130,7 +126,7 @@ export default function ShopPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="mt-auto flex flex-col gap-2">
-                    <Button onClick={() => handleAddToCart(product.id, name)} disabled={isAdding}>
+                    <Button onClick={() => handleAddToCart(product)} disabled={isAdding}>
                       {isAdding ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
                       {t.buttons.addToCart}
                     </Button>

@@ -114,7 +114,7 @@ export default function CartPage() {
                     status: 'paid',
                     createdAt: serverTimestamp(),
                     updatedAt: serverTimestamp(),
-                    shopId: cartItems[0].shopId || 'default_shop', // Assuming single shop for now
+                    shopId: cartItems[0].shopId || 'default_shop',
                     paymentDetails: {
                         razorpay_order_id: response.razorpay_order_id,
                         razorpay_payment_id: response.razorpay_payment_id,
@@ -138,8 +138,8 @@ export default function CartPage() {
             },
             prefill: {
                 name: user.displayName || 'Aaura User',
-                email: user.email,
-                contact: user.phoneNumber
+                email: user.email || '',
+                contact: user.phoneNumber || ''
             },
             theme: {
                 color: '#E6E6FA', // Soft Lavender

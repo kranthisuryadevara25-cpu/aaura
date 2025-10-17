@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import {
@@ -36,7 +37,7 @@ function UserRow({ userId }: { userId: string }) {
     if (!userData) return null;
 
     return (
-        <Link href={`/channels/${userId}`} className="flex items-center gap-3 p-2 rounded-md hover:bg-secondary">
+        <Link href={`/profile/${userId}`} className="flex items-center gap-3 p-2 rounded-md hover:bg-secondary">
             <Avatar>
                 <AvatarImage src={userData.photoURL} />
                 <AvatarFallback>{userData.fullName?.[0] || 'U'}</AvatarFallback>

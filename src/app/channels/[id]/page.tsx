@@ -370,19 +370,21 @@ export default function ChannelDetailPage() {
         <CardContent className="p-6">
           <div className="flex flex-col sm:flex-row gap-6 -mt-20">
             <div className="relative h-32 w-32 shrink-0 rounded-full border-4 border-background bg-secondary mx-auto sm:mx-0">
-              <Image
-                src={`https://picsum.photos/seed/${channelId}/200/200`}
-                alt={channel.name}
-                data-ai-hint="spiritual teacher"
-                layout="fill"
-                objectFit="cover"
-                className="rounded-full"
-              />
+               <Link href={`/profile/${channelId}`}>
+                <Image
+                    src={`https://picsum.photos/seed/${channelId}/200/200`}
+                    alt={channel.name}
+                    data-ai-hint="spiritual teacher"
+                    layout="fill"
+                    objectFit="cover"
+                    className="rounded-full"
+                />
+               </Link>
             </div>
             <div className="flex-grow">
                 <div className="flex flex-col sm:flex-row justify-between items-center">
                     <CardTitle className="text-3xl font-bold flex items-center justify-center sm:justify-start gap-2">
-                        {channel.name} <CheckCircle className="h-6 w-6 text-blue-500" />
+                       <Link href={`/profile/${channelId}`}>{channel.name}</Link> <CheckCircle className="h-6 w-6 text-blue-500" />
                     </CardTitle>
                     <div className="flex items-center gap-2 mt-4 sm:mt-0">
                         {isOwner && (
@@ -395,22 +397,22 @@ export default function ChannelDetailPage() {
                                 <AlertDialogTrigger asChild>
                                     <Button variant={isSubscribed ? 'secondary' : 'default'} size="lg" disabled={loadingSubscription} >
                                         {loadingSubscription ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
-                                            isSubscribed ? <><CheckCircle className="mr-2 h-4 w-4" /> Subscribed</> : <><PlusCircle className="mr-2 h-4 w-4" /> Subscribe</>
+                                            isSubscribed ? <><CheckCircle className="mr-2 h-4 w-4" /> {t.buttons.subscribed}</> : <><PlusCircle className="mr-2 h-4 w-4" /> {t.buttons.subscribe}</>
                                         )}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>
-                                            {isSubscribed ? "Unsubscribe from" : "Subscribe to"} {channel.name}?
+                                            {isSubscribed ? t.channelDetail.unfollowConfirmation : t.channelDetail.followConfirmation} {channel.name}?
                                         </AlertDialogTitle>
                                         <AlertDialogDescription>
-                                            You can always change your mind later.
+                                            {t.channelDetail.confirmationPrompt}
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleSubscribe}>{isSubscribed ? 'Unsubscribe' : 'Subscribe'}</AlertDialogAction>
+                                        <AlertDialogCancel>{t.buttons.cancel}</AlertDialogCancel>
+                                        <AlertDialogAction onClick={handleSubscribe}>{isSubscribed ? t.channelDetail.unfollowConfirmation : t.channelDetail.followConfirmation}</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

@@ -1,4 +1,5 @@
 
+
 "use client";
 import React, { useState, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
@@ -236,5 +237,3 @@ export const TopNav = () => {
     </header>
   );
 };
-
-    

@@ -45,7 +45,7 @@ export default function UserProfilePage() {
   const [profile, loadingProfile] = useDocumentData(profileRef);
 
   const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc'));
-  const [posts, loadingPosts] = useCollectionData(postsQuery);
+  const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
 
   const followingRef = currentUser ? doc(db, `users/${currentUser.uid}/following`, userId) : undefined;
   const [following, loadingFollowing] = useDocumentData(followingRef);

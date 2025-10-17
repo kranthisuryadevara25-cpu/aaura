@@ -25,16 +25,16 @@ export function PostCard({ post }: { post: DocumentData; }) {
   const [user] = useAuthState(auth);
   const [isLiking, startLikeTransition] = useTransition();
 
-  const authorRef = useMemo(() => post.authorId ? doc(db, 'users', post.authorId) : undefined, [db, post.authorId]);
+  const authorRef = useMemo(() => post.authorId && db ? doc(db, 'users', post.authorId) : undefined, [db, post.authorId]);
   const [author, authorIsLoading] = useDocumentData(authorRef);
   
   // Guard against rendering if post.id is not yet available from optimistic update
   const postRef = useMemo(() => {
-    if (!post.id) return undefined;
+    if (!post.id || !db) return undefined;
     return doc(db, 'posts', post.id);
   }, [db, post.id]);
 
-  const likeRef = useMemo(() => (user && post.id) ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined, [db, post.id, user]);
+  const likeRef = useMemo(() => (user && post.id && db) ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined, [db, post.id, user]);
   const [likeDoc, likeLoading] = useDocumentData(likeRef);
   const isLiked = !!likeDoc;
 
@@ -101,7 +101,7 @@ export function PostCard({ post }: { post: DocumentData; }) {
               <p className="font-semibold group-hover:text-primary">{author?.displayName || 'Anonymous'}</p>
             </Link>
             <p className="text-xs text-muted-foreground">
-              {post.createdAt ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+              {post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
             </p>
           </div>
         </div>

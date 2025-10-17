@@ -80,6 +80,16 @@
         },
         "required": ["userId", "followedAt"]
     },
+    "Subscription": {
+        "title": "Subscription",
+        "type": "object",
+        "description": "Represents a subscription to a channel.",
+        "properties": {
+            "channelId": { "type": "string", "description": "ID of the channel." },
+            "subscribedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the subscription occurred." }
+        },
+        "required": ["channelId", "subscribedAt"]
+    },
     "Preference": {
       "title": "Preference",
       "type": "object",
@@ -155,11 +165,16 @@
       "properties": {
         "id": { "type": "string" },
         "title": { "type": "string" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string", "format": "uri" },
+        "imageHint": { "type": "string" },
         "goal": { "type": "number" },
         "totalChants": { "type": "number", "description": "The current number of total chants." },
-        "status": { "type": "string", "enum": ["active", "inactive"] }
+        "status": { "type": "string", "enum": ["active", "inactive", "completed"] },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "title", "totalChants", "status"]
+      "required": ["id", "title", "totalChants", "status", "createdAt"]
     },
     "UserContestProgress": {
       "title": "User Contest Progress",
@@ -307,7 +322,7 @@
           "description": "Date the channel was created.",
           "format": "date-time"
         },
-        "followerCount": {
+        "subscriberCount": {
           "type": "number",
           "description": "Number of subscribers to the channel."
         },
@@ -878,7 +893,7 @@
       "properties": {
         "id": { "type": "string" },
         "contentId": { "type": "string", "description": "The ID of the content being commented on." },
-        "contentType": { "type": "string", "description": "The type of content (e.g., 'post', 'media')." },
+        "contentType": { "type": "string", "description": "The type of content (e.g., 'post', 'media', 'manifestation')." },
         "authorId": { "type": "string" },
         "text": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }
@@ -943,6 +958,14 @@
             "description": "A subcollection storing the users this user is following. The document ID is the UID of the user being followed."
         }
       },
+       {
+        "path": "/users/{userId}/subscriptions/{channelId}",
+        "definition": {
+            "entityName": "Subscription",
+            "schema": { "$ref": "#/entities/Subscription" },
+            "description": "A subcollection storing the channels this user is subscribed to."
+        }
+      },
       {
         "path": "/users/{userId}/preferences/default",
         "definition": {
@@ -984,14 +1007,6 @@
         }
       },
       {
-          "path": "/orders/{orderId}",
-          "definition": {
-              "entityName": "Order",
-              "schema": { "$ref": "#/entities/Order" },
-              "description": "Stores all user orders globally for easier admin access."
-          }
-      },
-      {
         "path": "/users/{userId}/playlists/{playlistId}",
         "definition": {
           "schema": { "type": "object", "properties": { "playlistId": { "type": "string" }, "createdAt": { "type": "string", "format": "date-time" } } },
@@ -1004,6 +1019,14 @@
             "entityName": "UserChallengeProgress",
             "schema": { "$ref": "#/entities/UserChallengeProgress" },
             "description": "Tracks user progress in community challenges."
+        }
+      },
+      {
+        "path": "/orders/{orderId}",
+        "definition": {
+            "entityName": "Order",
+            "schema": { "$ref": "#/entities/Order" },
+            "description": "Stores all user orders globally for easier admin access."
         }
       },
       {
@@ -1035,6 +1058,13 @@
           "entityName": "Channel",
           "schema": { "$ref": "#/entities/Channel" },
           "description": "Stores all channels on the platform."
+        }
+      },
+      {
+        "path": "/channels/{channelId}/subscribers/{userId}",
+        "definition": {
+            "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
+            "description": "Subcollection to track subscribers of a channel."
         }
       },
       {
@@ -1223,3 +1253,5 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
+
+    

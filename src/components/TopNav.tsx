@@ -25,7 +25,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X } from "lucide-react";
+import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X, Users } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "./FollowListDialog";
@@ -39,6 +39,10 @@ const UserStats = () => {
     const [user] = useAuthState(auth);
     const userRef = user ? doc(db, 'users', user.uid) : undefined;
     const [userData, loading] = useDocumentData(userRef);
+    
+    const channelRef = user ? doc(db, 'channels', user.uid) : undefined;
+    const [channelData, loadingChannel] = useDocumentData(channelRef);
+
     const [isClient, setIsClient] = useState(false);
 
     useEffect(() => {
@@ -46,7 +50,7 @@ const UserStats = () => {
     }, []);
 
     if (!isClient) {
-        return <div className="flex items-center gap-4"><Skeleton className="h-8 w-16" /><Skeleton className="h-8 w-16" /></div>; 
+        return <div className="flex items-center gap-4"><Skeleton className="h-8 w-24" /><Skeleton className="h-8 w-24" /></div>; 
     }
 
     if (!user) {
@@ -56,8 +60,8 @@ const UserStats = () => {
     if (loading) {
         return (
             <div className="flex items-center gap-4">
-                <Skeleton className="h-8 w-16" />
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-8 w-24" />
+                <Skeleton className="h-8 w-24" />
             </div>
         )
     }
@@ -88,6 +92,12 @@ const UserStats = () => {
                     </div>
                 }
             />
+            {channelData && (
+                 <div className="text-center p-2 rounded-md">
+                    <p className="font-bold">{channelData.subscriberCount || 0}</p>
+                    <p className="text-xs text-muted-foreground">Subscribers</p>
+                </div>
+            )}
         </div>
     )
 }
@@ -186,6 +196,12 @@ export const TopNav = () => {
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href={`/profile/${user.uid}`}>
+                        <User className="mr-2 h-4 w-4" />
+                        <span>My Profile</span>
+                    </Link>
+                 </DropdownMenuItem>
                  <DropdownMenuItem asChild>
                     <Link href="/upload">
                         <Upload className="mr-2 h-4 w-4" />
@@ -220,3 +236,5 @@ export const TopNav = () => {
     </header>
   );
 };
+
+    

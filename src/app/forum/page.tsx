@@ -75,7 +75,7 @@ export default function ForumPage() {
             }
         } catch (error) {
              const permissionError = new FirestorePermissionError({
-                path: groupRef.path,
+                path: userGroupRef.path, // Correctly point to the subcollection path that failed
                 operation: isMember ? 'delete' : 'create',
             });
             errorEmitter.emit('permission-error', permissionError);

@@ -5,7 +5,7 @@
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy } from 'lucide-react';
+import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -32,6 +32,7 @@ import type { Temple } from '@/lib/temples';
 import { Badge } from '@/components/ui/badge';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { productConverter, type Product } from '@/lib/products';
 
 
 const deityConverter: FirestoreDataConverter<Deity> = {
@@ -530,6 +531,90 @@ function ContestsTabContent() {
   );
 }
 
+function ProductsTabContent() {
+  const db = useFirestore();
+  const productsRef = useMemo(() => db ? collection(db, 'products').withConverter(productConverter) : undefined, [db]);
+  const { toast } = useToast();
+  const { language } = useLanguage();
+  const [products, isLoading] = useCollectionData<Product>(productsRef);
+
+  const handleDelete = async (id: string) => {
+    if (!db) return;
+    try {
+      await deleteDoc(doc(db, 'products', id));
+      toast({ title: 'Product Deleted', description: 'The product has been removed.' });
+    } catch {
+      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
+    }
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-muted-foreground">Manage the items in your marketplace.</p>
+        <Button asChild>
+          <Link href="/admin/products/new">
+            <PlusCircle className="mr-2" />
+            Add New Product
+          </Link>
+        </Button>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {products?.map((product) => (
+            <Card key={product.id}>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle>{product.name_en}</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="icon" asChild>
+                    <Link href={`/admin/products/edit/${product.id}`}>
+                      <Edit className="h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button variant="ghost" size="icon">
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogDescription>This will permanently delete the product.</AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleDelete(product.id)}>Delete</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="relative aspect-square rounded-md overflow-hidden bg-secondary">
+                  <Image
+                    src={product.imageUrl}
+                    alt={product.name_en}
+                    data-ai-hint={product.imageHint || 'product image'}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <p className="mt-2 font-bold text-lg text-primary">₹{product.price.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground">{product.category}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function ContentManagementPage() {
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -543,19 +628,22 @@ export default function ContentManagementPage() {
       </div>
 
       <Tabs defaultValue="deities" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="deities"><Sparkles className="mr-2 h-4 w-4" />Deities</TabsTrigger>
           <TabsTrigger value="stories"><BookOpen className="mr-2 h-4 w-4" />Epic Sagas</TabsTrigger>
           <TabsTrigger value="characters"><UserSquare className="mr-2 h-4 w-4" />Epic Heroes</TabsTrigger>
           <TabsTrigger value="temples"><Palmtree className="mr-2 h-4 w-4" />Temples</TabsTrigger>
+          <TabsTrigger value="products"><ShoppingCart className="mr-2 h-4 w-4" />Products</TabsTrigger>
           <TabsTrigger value="contests"><Trophy className="mr-2 h-4 w-4" />Contests</TabsTrigger>
         </TabsList>
         <TabsContent value="deities" className="mt-6"><DeitiesTabContent /></TabsContent>
         <TabsContent value="stories" className="mt-6"><StoriesTabContent /></TabsContent>
         <TabsContent value="characters" className="mt-6"><CharactersTabContent /></TabsContent>
         <TabsContent value="temples" className="mt-6"><TemplesTabContent /></TabsContent>
+        <TabsContent value="products" className="mt-6"><ProductsTabContent /></TabsContent>
         <TabsContent value="contests" className="mt-6"><ContestsTabContent /></TabsContent>
       </Tabs>
     </main>
   );
 }
+

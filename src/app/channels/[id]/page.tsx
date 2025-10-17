@@ -404,15 +404,12 @@ export default function ChannelDetailPage() {
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>
-                                            {isSubscribed ? t.channelDetail.unfollowConfirmation : t.channelDetail.followConfirmation} {channel.name}?
+                                            {isSubscribed ? `Unsubscribe from ${channel.name}?` : `Subscribe to ${channel.name}?`}
                                         </AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            {t.channelDetail.confirmationPrompt}
-                                        </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>{t.buttons.cancel}</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleSubscribe}>{isSubscribed ? t.channelDetail.unfollowConfirmation : t.channelDetail.followConfirmation}</AlertDialogAction>
+                                        <AlertDialogAction onClick={handleSubscribe}>{isSubscribed ? 'Unsubscribe' : 'Subscribe'}</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

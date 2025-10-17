@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
@@ -213,4 +214,5 @@ export default function UserProfilePage() {
     </main>
   );
 }
+
 

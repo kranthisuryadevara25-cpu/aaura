@@ -13,10 +13,10 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
     return field[lang] || field["en"] || "";
 };
 
-export const useFeed = (initialItems: FeedItem[] = [], pageSize: number = 20) => {
+export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number = 20) => {
   const { language } = useLanguage();
   const [auth] = useAuthState(useAuth());
-  const [allItems, setAllItems] = useState<FeedItem[]>(initialItems);
+  const [allItems, setAllItems] = useState<FeedItem[]>(Array.isArray(initialItems) ? initialItems : []);
   const [loading, setLoading] = useState(false);
   const [canLoadMore, setCanLoadMore] = useState(true);
 
@@ -27,7 +27,7 @@ export const useFeed = (initialItems: FeedItem[] = [], pageSize: number = 20) =>
     try {
       const result = await getPersonalizedFeed({
         userId: auth?.uid,
-        pageSize: pageSize,
+        pageSize: typeof initialItems === 'number' ? initialItems : pageSize,
         // In a real app, you'd pass a cursor from the last item of `allItems`
       });
       
@@ -44,11 +44,11 @@ export const useFeed = (initialItems: FeedItem[] = [], pageSize: number = 20) =>
     } finally {
       setLoading(false);
     }
-  }, [loading, canLoadMore, auth?.uid, pageSize, allItems]);
+  }, [loading, canLoadMore, auth?.uid, pageSize, allItems, initialItems]);
   
   // If there are no initial items, load the first batch.
   useEffect(() => {
-    if (initialItems.length === 0) {
+    if (Array.isArray(initialItems) && initialItems.length === 0) {
       loadMore();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps

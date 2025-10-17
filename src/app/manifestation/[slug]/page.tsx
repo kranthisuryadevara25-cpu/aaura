@@ -153,7 +153,7 @@ export default function ManifestationDetailPage() {
             
             <Separator className="my-8" />
 
-            <Comments contentId={currentPostData.id} contentType="post" />
+            <Comments contentId={currentPostData.id} contentType="manifestation" />
 
         </article>
     </main>

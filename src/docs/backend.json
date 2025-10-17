@@ -160,7 +160,7 @@
         "imageHint": { "type": "string" },
         "goal": { "type": "number" },
         "totalChants": { "type": "number", "description": "The current number of total chants." },
-        "status": { "type": "string", "enum": ["active", "inactive"] },
+        "status": { "type": "string", "enum": ["active", "inactive", "completed"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
@@ -883,7 +883,7 @@
       "properties": {
         "id": { "type": "string" },
         "contentId": { "type": "string", "description": "The ID of the content being commented on." },
-        "contentType": { "type": "string", "description": "The type of content (e.g., 'post', 'media')." },
+        "contentType": { "type": "string", "description": "The type of content (e.g., 'post', 'media', 'manifestation')." },
         "authorId": { "type": "string" },
         "text": { "type": "string" },
         "createdAt": { "type": "string", "format": "date-time" }

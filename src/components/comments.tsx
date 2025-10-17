@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useTransition, useMemo } from 'react';
@@ -31,7 +32,7 @@ type CommentFormValues = z.infer<typeof commentSchema>;
 
 function CommentAuthor({ authorId }: { authorId: string }) {
     const db = useFirestore();
-    const authorRef = useMemo(() => doc(db, 'users', authorId), [db, authorId]);
+    const authorRef = useMemo(() => authorId && db ? doc(db, 'users', authorId) : undefined, [db, authorId]);
     const [author, loading] = useDocumentData(authorRef);
 
     if (loading) {
@@ -72,7 +73,7 @@ function CommentCard({ comment }: { comment: any; }) {
 
 interface CommentsProps {
   contentId: string;
-  contentType: 'media' | 'post';
+  contentType: 'media' | 'post' | 'manifestation';
 }
 
 export function Comments({ contentId, contentType }: CommentsProps) {
@@ -82,9 +83,10 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
   
-  const commentsCollectionName = contentType === 'post' ? 'posts' : 'media';
+  const commentsCollectionName = `${contentType}s`;
 
   const commentsQuery = useMemo(() => {
+      if (!db) return undefined;
       const commentsCollectionRef = collection(db, `${commentsCollectionName}/${contentId}/comments`);
       return query(commentsCollectionRef, orderBy('createdAt', 'desc'));
   }, [db, commentsCollectionName, contentId]);

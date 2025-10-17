@@ -2,12 +2,12 @@
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
+import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
+import { doc, writeBatch, increment, serverTimestamp, collection, query, where, orderBy } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Image from 'next/image';
-import { Loader2, User, CheckCircle, PlusCircle, UserPlus, Mail, Cake } from 'lucide-react';
+import { Loader2, User, CheckCircle, PlusCircle, UserPlus, Mail, Cake, List, UserMinus } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
@@ -27,6 +27,7 @@ import { format } from 'date-fns';
 import { FollowListDialog } from '@/components/FollowListDialog';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { PostCard } from '@/components/PostCard';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,6 +43,9 @@ export default function UserProfilePage() {
 
   const profileRef = doc(db, 'users', userId);
   const [profile, loadingProfile] = useDocumentData(profileRef);
+
+  const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc'));
+  const [posts, loadingPosts] = useCollectionData(postsQuery);
 
   const followingRef = currentUser ? doc(db, `users/${currentUser.uid}/following`, userId) : undefined;
   const [following, loadingFollowing] = useDocumentData(followingRef);
@@ -141,7 +145,7 @@ export default function UserProfilePage() {
                                 <AlertDialogTrigger asChild>
                                     <Button variant={isFollowing ? 'secondary' : 'default'} size="lg" disabled={loadingFollowing} >
                                         {loadingFollowing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
-                                            isFollowing ? <><CheckCircle className="mr-2 h-4 w-4" /> Following</> : <><UserPlus className="mr-2 h-4 w-4" /> Follow</>
+                                            isFollowing ? <><UserMinus className="mr-2 h-4 w-4" /> Unfollow</> : <><UserPlus className="mr-2 h-4 w-4" /> Follow</>
                                         )}
                                     </Button>
                                 </AlertDialogTrigger>
@@ -205,10 +209,19 @@ export default function UserProfilePage() {
         </div>
         <div className="md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">Activity Feed</h3>
-             <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                <h2 className="text-2xl font-semibold text-foreground">Coming Soon</h2>
-                <p className="mt-2 text-muted-foreground">This user's recent posts and manifestations will appear here.</p>
-            </div>
+             {loadingPosts ? (
+                <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+            ) : posts && posts.length > 0 ? (
+                <div className="space-y-6">
+                    {posts.map(post => <PostCard key={post.id} post={post} />)}
+                </div>
+            ) : (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                    <List className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                    <h2 className="mt-6 text-2xl font-semibold text-foreground">No Activity Yet</h2>
+                    <p className="mt-2 text-muted-foreground">This user hasn't posted anything yet.</p>
+                </div>
+            )}
         </div>
       </div>
 

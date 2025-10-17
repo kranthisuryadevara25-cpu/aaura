@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
@@ -7,7 +8,7 @@ import { doc, writeBatch, increment, serverTimestamp, collection, query, where, 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Image from 'next/image';
-import { Loader2, User, CheckCircle, PlusCircle, UserPlus, Mail, Cake, List, UserMinus } from 'lucide-react';
+import { Loader2, User, CheckCircle, PlusCircle, UserPlus, Mail, Cake, List, UserMinus, Phone, Palmtree } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
@@ -28,6 +29,8 @@ import { FollowListDialog } from '@/components/FollowListDialog';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { PostCard } from '@/components/PostCard';
+import { Badge } from '@/components/ui/badge';
+import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
 
@@ -42,7 +45,7 @@ export default function UserProfilePage() {
   const { toast } = useToast();
 
   const profileRef = doc(db, 'users', userId);
-  const [profile, loadingProfile] = useDocumentData(profileRef);
+  const [profile, loadingProfile] = useDocumentData(profileRef, { idField: 'id' });
 
   const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc'));
   const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
@@ -182,7 +185,7 @@ export default function UserProfilePage() {
       </Card>
 
       <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1">
+        <div className="md:col-span-1 space-y-6">
              <Card>
                 <CardHeader>
                     <CardTitle>About {profile.fullName}</CardTitle>
@@ -192,6 +195,12 @@ export default function UserProfilePage() {
                         <Mail className="h-4 w-4"/>
                         <span>{profile.email}</span>
                     </div>
+                    {profile.mobile && (
+                         <div className="flex items-center gap-3">
+                            <Phone className="h-4 w-4"/>
+                            <span>{profile.mobile}</span>
+                        </div>
+                    )}
                     {profile.birthDate && (
                          <div className="flex items-center gap-3">
                             <Cake className="h-4 w-4"/>
@@ -206,6 +215,36 @@ export default function UserProfilePage() {
                     )}
                 </CardContent>
             </Card>
+
+             {profile.templesVisited?.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Palmtree className="text-primary"/> Temples Visited</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                        {profile.templesVisited.map((slug: string) => (
+                            <Link href={`/temples/${slug}`} key={slug}>
+                                <Badge variant="secondary" className="hover:bg-primary/20">{slug.replace(/-/g, ' ')}</Badge>
+                            </Link>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
+
+            {profile.templesPlanning?.length > 0 && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2"><Palmtree className="text-primary"/> Planning to Visit</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex flex-wrap gap-2">
+                        {profile.templesPlanning.map((slug: string) => (
+                            <Link href={`/temples/${slug}`} key={slug}>
+                                <Badge variant="outline" className="hover:bg-primary/20">{slug.replace(/-/g, ' ')}</Badge>
+                            </Link>
+                        ))}
+                    </CardContent>
+                </Card>
+            )}
         </div>
         <div className="md:col-span-2">
             <h3 className="text-2xl font-bold mb-4">Activity Feed</h3>
@@ -228,3 +267,4 @@ export default function UserProfilePage() {
     </main>
   );
 }
+

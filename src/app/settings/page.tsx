@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -39,13 +40,19 @@ import { useTransition, useEffect } from 'react';
 import { updateProfile } from 'firebase/auth';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { temples } from '@/lib/temples';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
+import { Check } from 'lucide-react';
 
 const formSchema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
+  mobile: z.string().optional(),
   birthDate: z.date({ required_error: 'Please select your birth date.' }),
   timeOfBirth: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please use HH:MM format.'),
   placeOfBirth: z.string().min(1, 'Place of birth is required.'),
   zodiacSign: z.string({ required_error: 'Please select your zodiac sign.' }),
+  templesVisited: z.array(z.string()).optional(),
+  templesPlanning: z.array(z.string()).optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -81,6 +88,10 @@ export default function SettingsPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+      templesVisited: [],
+      templesPlanning: [],
+    }
   });
 
   const birthDateValue = form.watch('birthDate');
@@ -90,17 +101,23 @@ export default function SettingsPage() {
       const initialBirthDate = userData.birthDate ? parse(userData.birthDate, 'yyyy-MM-dd', new Date()) : undefined;
       form.reset({
         fullName: userData.fullName || user?.displayName || '',
+        mobile: userData.mobile || '',
         birthDate: initialBirthDate,
         timeOfBirth: userData.timeOfBirth || '12:00',
         placeOfBirth: userData.placeOfBirth || '',
         zodiacSign: userData.zodiacSign || '',
+        templesVisited: userData.templesVisited || [],
+        templesPlanning: userData.templesPlanning || [],
       });
     } else if (user) {
         form.reset({
              fullName: user.displayName || '',
+             mobile: '',
              timeOfBirth: '12:00',
              placeOfBirth: '',
              zodiacSign: '',
+             templesVisited: [],
+             templesPlanning: [],
         })
     }
   }, [userData, user, form]);
@@ -146,7 +163,6 @@ export default function SettingsPage() {
                 birthDate: formattedBirthDate,
             });
 
-            // Combine the structured horoscope into a single string for storage
             const horoscopeText = `Love: ${horoscopeResult.horoscope.love}\nCareer: ${horoscopeResult.horoscope.career}\nHealth: ${horoscopeResult.horoscope.health}`;
 
             horoscopeData = {
@@ -154,7 +170,6 @@ export default function SettingsPage() {
                 date: format(new Date(), 'yyyy-MM-dd'),
                 zodiacSign: data.zodiacSign,
                 text_en: horoscopeText,
-                // In a real app, you might generate translations here
                 text_hi: horoscopeText, 
             };
         } catch (aiError) {
@@ -227,6 +242,19 @@ export default function SettingsPage() {
                       <FormLabel>Full Name</FormLabel>
                       <FormControl>
                         <Input placeholder="Your full name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                 <FormField
+                  control={form.control}
+                  name="mobile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Mobile Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Your mobile number" {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -326,6 +354,34 @@ export default function SettingsPage() {
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name="templesVisited"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Temples You've Visited</FormLabel>
+                       <MultiSelectPopover options={temples.map(t => ({value: t.slug, label: t.name.en}))} selected={field.value || []} onChange={field.onChange} />
+                      <FormDescription>Select the temples you have already visited.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="templesPlanning"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Temples You Plan to Visit</FormLabel>
+                      <MultiSelectPopover options={temples.map(t => ({value: t.slug, label: t.name.en}))} selected={field.value || []} onChange={field.onChange} />
+                      <FormDescription>Select temples on your pilgrimage wishlist.</FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+
                 <Button type="submit" disabled={isPending}>
                 {isPending ? (
                     <>
@@ -345,5 +401,43 @@ export default function SettingsPage() {
         </CardContent>
         </Card>
     </main>
+  );
+}
+
+function MultiSelectPopover({ options, selected, onChange }: { options: {value: string, label: string}[], selected: string[], onChange: (selected: string[]) => void }) {
+  const [open, setOpen] = React.useState(false);
+
+  const handleSelect = (value: string) => {
+    const newSelected = selected.includes(value) ? selected.filter(s => s !== value) : [...selected, value];
+    onChange(newSelected);
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
+           <span className="line-clamp-1">{selected.length > 0 ? `${selected.length} selected` : "Select temples..."}</span>
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+        <Command>
+          <CommandInput placeholder="Search temples..." />
+          <CommandList>
+            <CommandEmpty>No temples found.</CommandEmpty>
+            <CommandGroup>
+              {options.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  onSelect={() => handleSelect(option.value)}
+                >
+                  <Check className={cn("mr-2 h-4 w-4", selected.includes(option.value) ? "opacity-100" : "opacity-0")} />
+                  {option.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
   );
 }

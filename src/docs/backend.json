@@ -1,4 +1,5 @@
 
+
 {
   "entities": {
     "User": {
@@ -79,6 +80,16 @@
             "followedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the follow occurred." }
         },
         "required": ["userId", "followedAt"]
+    },
+    "Subscription": {
+        "title": "Subscription",
+        "type": "object",
+        "description": "Represents a subscription to a channel.",
+        "properties": {
+            "channelId": { "type": "string", "description": "ID of the channel." },
+            "subscribedAt": { "type": "string", "format": "date-time", "description": "Timestamp when the subscription occurred." }
+        },
+        "required": ["channelId", "subscribedAt"]
     },
     "Preference": {
       "title": "Preference",
@@ -312,7 +323,7 @@
           "description": "Date the channel was created.",
           "format": "date-time"
         },
-        "followerCount": {
+        "subscriberCount": {
           "type": "number",
           "description": "Number of subscribers to the channel."
         },
@@ -948,6 +959,14 @@
             "description": "A subcollection storing the users this user is following. The document ID is the UID of the user being followed."
         }
       },
+       {
+        "path": "/users/{userId}/subscriptions/{channelId}",
+        "definition": {
+            "entityName": "Subscription",
+            "schema": { "$ref": "#/entities/Subscription" },
+            "description": "A subcollection storing the channels this user is subscribed to."
+        }
+      },
       {
         "path": "/users/{userId}/preferences/default",
         "definition": {
@@ -1040,6 +1059,13 @@
           "entityName": "Channel",
           "schema": { "$ref": "#/entities/Channel" },
           "description": "Stores all channels on the platform."
+        }
+      },
+      {
+        "path": "/channels/{channelId}/subscribers/{userId}",
+        "definition": {
+            "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
+            "description": "Subcollection to track subscribers of a channel."
         }
       },
       {
@@ -1228,3 +1254,4 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
+

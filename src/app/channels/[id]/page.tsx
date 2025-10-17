@@ -266,8 +266,8 @@ function AboutTab({ channel, language }: { channel: DocumentData, language: stri
                      <div className="flex items-center gap-3">
                         <Users className="h-6 w-6 text-primary" />
                         <div>
-                            <p className="font-bold text-lg">{channel.followerCount || 0}</p>
-                            <p className="text-sm text-muted-foreground">Followers</p>
+                            <p className="font-bold text-lg">{channel.subscriberCount || 0}</p>
+                            <p className="text-sm text-muted-foreground">Subscribers</p>
                         </div>
                     </div>
                  </div>
@@ -289,56 +289,52 @@ export default function ChannelDetailPage() {
   const channelRef = doc(db, 'channels', channelId);
   const [channel, loadingChannel] = useDocumentData(channelRef);
 
-  const followingRef = user ? doc(db, `users/${user.uid}/following`, channelId) : undefined;
-  const [following, loadingFollowing] = useDocumentData(followingRef);
-  const isFollowing = !!following;
+  const subscriptionRef = user ? doc(db, `users/${user.uid}/subscriptions`, channelId) : undefined;
+  const [subscription, loadingSubscription] = useDocumentData(subscriptionRef);
+  const isSubscribed = !!subscription;
   const isOwner = user?.uid === channelId;
 
 
-  const handleFollow = async () => {
+  const handleSubscribe = async () => {
     if (!user || !channel || !channel.userId) {
-      toast({ variant: 'destructive', title: 'You must be logged in to follow a channel.' });
+      toast({ variant: 'destructive', title: 'You must be logged in to subscribe to a channel.' });
       return;
     }
      if (user.uid === channel.userId) {
-        toast({ variant: 'destructive', title: "You cannot follow your own channel." });
+        toast({ variant: 'destructive', title: "You cannot subscribe to your own channel." });
         return;
     }
 
-    const currentUserRef = doc(db, 'users', user.uid);
-    const targetUserRef = doc(db, 'users', channel.userId);
-    const userFollowingRef = doc(db, `users/${user.uid}/following`, channelId);
-    const targetFollowerRef = doc(db, `users/${channel.userId}/followers`, user.uid);
+    const userSubscriptionRef = doc(db, `users/${user.uid}/subscriptions`, channelId);
+    const channelSubscriberRef = doc(db, `channels/${channelId}/subscribers`, user.uid);
     
     const batch = writeBatch(db);
 
-    if (isFollowing) {
-      batch.delete(userFollowingRef);
-      batch.delete(targetFollowerRef);
-      batch.update(currentUserRef, { followingCount: increment(-1) });
-      batch.update(targetUserRef, { followerCount: increment(-1) });
+    if (isSubscribed) {
+      batch.delete(userSubscriptionRef);
+      batch.delete(channelSubscriberRef);
+      batch.update(channelRef, { subscriberCount: increment(-1) });
     } else {
-      const followingData = { userId: channelId, followedAt: serverTimestamp() };
-      const followerData = { userId: user.uid, followedAt: serverTimestamp() };
-      batch.set(userFollowingRef, followingData);
-      batch.set(targetFollowerRef, followerData);
-      batch.update(currentUserRef, { followingCount: increment(1) });
-      batch.update(targetUserRef, { followerCount: increment(1) });
+      const subscriptionData = { channelId: channelId, subscribedAt: serverTimestamp() };
+      const subscriberData = { userId: user.uid, subscribedAt: serverTimestamp() };
+      batch.set(userSubscriptionRef, subscriptionData);
+      batch.set(channelSubscriberRef, subscriberData);
+      batch.update(channelRef, { subscriberCount: increment(1) });
     }
 
     batch.commit()
     .then(() => {
         toast({
-          title: isFollowing ? 'Unfollowed' : 'Followed!',
-          description: `You have ${isFollowing ? 'unfollowed' : 'started following'} ${channel.name}.`
+          title: isSubscribed ? 'Unsubscribed' : 'Subscribed!',
+          description: `You have ${isSubscribed ? 'unsubscribed from' : 'subscribed to'} ${channel.name}.`
         });
     })
     .catch((serverError) => {
-        const operation = isFollowing ? 'delete' : 'create';
+        const operation = isSubscribed ? 'delete' : 'create';
         const permissionError = new FirestorePermissionError({
-            path: userFollowingRef.path,
+            path: userSubscriptionRef.path,
             operation: operation,
-            requestResourceData: isFollowing ? undefined : { userId: channelId },
+            requestResourceData: isSubscribed ? undefined : { channelId: channelId },
         });
         errorEmitter.emit('permission-error', permissionError);
     });
@@ -397,16 +393,16 @@ export default function ChannelDetailPage() {
                         {user && !isOwner && (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>
-                                    <Button variant={isFollowing ? 'secondary' : 'default'} size="lg" disabled={loadingFollowing} >
-                                        {loadingFollowing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
-                                            isFollowing ? <><CheckCircle className="mr-2 h-4 w-4" /> Subscribed</> : <><PlusCircle className="mr-2 h-4 w-4" /> Subscribe</>
+                                    <Button variant={isSubscribed ? 'secondary' : 'default'} size="lg" disabled={loadingSubscription} >
+                                        {loadingSubscription ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : (
+                                            isSubscribed ? <><CheckCircle className="mr-2 h-4 w-4" /> Subscribed</> : <><PlusCircle className="mr-2 h-4 w-4" /> Subscribe</>
                                         )}
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent>
                                     <AlertDialogHeader>
                                         <AlertDialogTitle>
-                                            {isFollowing ? "Unfollow" : "Follow"} {channel.name}?
+                                            {isSubscribed ? "Unsubscribe from" : "Subscribe to"} {channel.name}?
                                         </AlertDialogTitle>
                                         <AlertDialogDescription>
                                             You can always change your mind later.
@@ -414,7 +410,7 @@ export default function ChannelDetailPage() {
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleFollow}>{isFollowing ? 'Unfollow' : 'Follow'}</AlertDialogAction>
+                                        <AlertDialogAction onClick={handleSubscribe}>{isSubscribed ? 'Unsubscribe' : 'Subscribe'}</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

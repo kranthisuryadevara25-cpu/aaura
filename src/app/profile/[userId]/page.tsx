@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
@@ -28,6 +27,8 @@ import { format } from 'date-fns';
 import { FollowListDialog } from '@/components/FollowListDialog';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+
+export const dynamic = 'force-dynamic';
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -168,8 +169,8 @@ export default function UserProfilePage() {
                     </div>
                 </div>
                  <div className="mt-4 flex justify-center sm:justify-start items-center gap-6 text-sm">
-                    <FollowListDialog userId={userId} type="followers" trigger={<div className="text-center cursor-pointer"><p className="font-bold text-lg">{profile.followerCount || 0}</p><p className="text-muted-foreground">{t.topnav.followers}</p></div>} />
-                    <FollowListDialog userId={userId} type="following" trigger={<div className="text-center cursor-pointer"><p className="font-bold text-lg">{profile.followingCount || 0}</p><p className="text-muted-foreground">{t.topnav.following}</p></div>} />
+                    <FollowListDialog userId={userId} type="followers" trigger={<div className="text-center cursor-pointer hover:bg-secondary p-2 rounded-md"><p className="font-bold text-lg">{profile.followerCount || 0}</p><p className="text-muted-foreground">{t.topnav.followers}</p></div>} />
+                    <FollowListDialog userId={userId} type="following" trigger={<div className="text-center cursor-pointer hover:bg-secondary p-2 rounded-md"><p className="font-bold text-lg">{profile.followingCount || 0}</p><p className="text-muted-foreground">{t.topnav.following}</p></div>} />
                 </div>
             </div>
           </div>
@@ -214,5 +215,3 @@ export default function UserProfilePage() {
     </main>
   );
 }
-
-

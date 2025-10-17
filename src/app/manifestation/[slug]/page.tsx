@@ -21,6 +21,7 @@ import { Comments } from '@/components/comments';
 import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import Link from 'next/link';
 
 export default function ManifestationDetailPage() {
   const params = useParams();
@@ -93,12 +94,16 @@ export default function ManifestationDetailPage() {
                 </div>
                 <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary">{currentPostData.title}</h1>
                 <div className="mt-4 flex items-center gap-4">
-                     <Avatar>
-                        <AvatarImage src={author.photoURL} />
-                        <AvatarFallback>{author.displayName[0]}</AvatarFallback>
-                    </Avatar>
+                     <Link href={`/profile/${currentPostData.authorId}`} className="group">
+                        <Avatar>
+                            <AvatarImage src={author.photoURL} />
+                            <AvatarFallback>{author.displayName[0]}</AvatarFallback>
+                        </Avatar>
+                     </Link>
                      <div>
-                        <p className="font-semibold text-foreground">{author.displayName}</p>
+                        <Link href={`/profile/${currentPostData.authorId}`} className="group">
+                            <p className="font-semibold text-foreground group-hover:text-primary">{author.displayName}</p>
+                        </Link>
                         <p className="text-sm text-muted-foreground">
                             Shared {formatDistanceToNow(new Date(currentPostData.createdAt), { addSuffix: true })}
                         </p>

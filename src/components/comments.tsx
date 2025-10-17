@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useTransition, useMemo } from 'react';
@@ -44,14 +43,25 @@ function CommentAuthor({ authorId }: { authorId: string }) {
         );
     }
     
-    return (
+    if (!author) {
+      return (
         <div className="flex items-center gap-2">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback>?</AvatarFallback>
+          </Avatar>
+          <p className="font-semibold text-sm text-muted-foreground">Unknown User</p>
+        </div>
+      );
+    }
+
+    return (
+        <Link href={`/profile/${authorId}`} className="flex items-center gap-2 group">
             <Avatar className="h-9 w-9">
                 <AvatarImage src={author?.photoURL} />
                 <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
             </Avatar>
-            <p className="font-semibold text-sm">{author?.displayName || 'Anonymous User'}</p>
-        </div>
+            <p className="font-semibold text-sm group-hover:text-primary transition-colors">{author?.displayName || 'Anonymous User'}</p>
+        </Link>
     )
 }
 
@@ -86,7 +96,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const commentsCollectionName = `${contentType}s`;
 
   const commentsQuery = useMemo(() => {
-      if (!db) return undefined;
+      if (!db || !contentId) return undefined;
       const commentsCollectionRef = collection(db, `${commentsCollectionName}/${contentId}/comments`);
       return query(commentsCollectionRef, orderBy('createdAt', 'desc'));
   }, [db, commentsCollectionName, contentId]);

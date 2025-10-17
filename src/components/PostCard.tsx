@@ -15,6 +15,7 @@ import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore'
 import type { DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import Link from 'next/link';
 
 export function PostCard({ post }: { post: DocumentData; }) {
   const { toast } = useToast();
@@ -64,14 +65,18 @@ export function PostCard({ post }: { post: DocumentData; }) {
     <Card className="w-full">
       <CardHeader className="flex flex-row items-start gap-4 space-y-0">
         {authorIsLoading ? <div className="h-10 w-10 rounded-full bg-muted animate-pulse" /> : (
-            <Avatar>
-            <AvatarImage src={author?.photoURL} />
-            <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
-            </Avatar>
+            <Link href={`/profile/${post.authorId}`}>
+              <Avatar>
+                <AvatarImage src={author?.photoURL} />
+                <AvatarFallback>{author?.displayName?.[0] || 'U'}</AvatarFallback>
+              </Avatar>
+            </Link>
         )}
         <div className="w-full">
           <div className="flex items-center justify-between">
-            <p className="font-semibold">{author?.displayName || 'Anonymous'}</p>
+            <Link href={`/profile/${post.authorId}`} className="group">
+              <p className="font-semibold group-hover:text-primary">{author?.displayName || 'Anonymous'}</p>
+            </Link>
             <p className="text-xs text-muted-foreground">
               {post.createdAt ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
             </p>

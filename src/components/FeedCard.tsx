@@ -1,4 +1,5 @@
 
+
 "use client";
 import React, { useTransition, useMemo } from "react";
 import { useLanguage } from "@/hooks/use-language";
@@ -27,19 +28,19 @@ const AuthorAvatar = ({ userId }: { userId: string }) => {
 
   if (loading || !author) {
     return (
-        <div className="w-10 h-10 shrink-0">
+        <Link href={`/profile/${userId}`} className="w-10 h-10 shrink-0">
             <Skeleton className="h-10 w-10 rounded-full" />
-        </div>
+        </Link>
     );
   }
 
   return (
-     <div className="w-10 h-10 shrink-0">
+     <Link href={`/profile/${userId}`} className="w-10 h-10 shrink-0">
         <Avatar>
             <AvatarImage src={author.photoURL} />
             <AvatarFallback>{author.displayName?.[0] || 'A'}</AvatarFallback>
         </Avatar>
-     </div>
+     </Link>
   )
 }
 

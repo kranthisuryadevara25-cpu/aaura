@@ -16,6 +16,7 @@ import type { DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import Link from 'next/link';
+import { Skeleton } from './ui/skeleton';
 
 export function PostCard({ post }: { post: DocumentData; }) {
   const { toast } = useToast();
@@ -27,8 +28,13 @@ export function PostCard({ post }: { post: DocumentData; }) {
   const authorRef = useMemo(() => post.authorId ? doc(db, 'users', post.authorId) : undefined, [db, post.authorId]);
   const [author, authorIsLoading] = useDocumentData(authorRef);
   
-  const postRef = useMemo(() => doc(db, 'posts', post.id), [db, post.id]);
-  const likeRef = useMemo(() => user ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined, [db, post.id, user]);
+  // Guard against rendering if post.id is not yet available from optimistic update
+  const postRef = useMemo(() => {
+    if (!post.id) return undefined;
+    return doc(db, 'posts', post.id);
+  }, [db, post.id]);
+
+  const likeRef = useMemo(() => (user && post.id) ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined, [db, post.id, user]);
   const [likeDoc, likeLoading] = useDocumentData(likeRef);
   const isLiked = !!likeDoc;
 
@@ -60,11 +66,28 @@ export function PostCard({ post }: { post: DocumentData; }) {
         });
     });
   };
+  
+  if (!post.id) {
+    return (
+      <Card className="w-full">
+        <CardHeader className="flex flex-row items-start gap-4 space-y-0">
+          <Skeleton className="h-10 w-10 rounded-full" />
+          <div className="w-full space-y-2">
+            <Skeleton className="h-4 w-1/4" />
+            <Skeleton className="h-4 w-1/5" />
+          </div>
+        </CardHeader>
+        <CardContent>
+           <Skeleton className="h-10 w-full" />
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-start gap-4 space-y-0">
-        {authorIsLoading ? <div className="h-10 w-10 rounded-full bg-muted animate-pulse" /> : (
+        {authorIsLoading ? <Skeleton className="h-10 w-10 rounded-full" /> : (
             <Link href={`/profile/${post.authorId}`}>
               <Avatar>
                 <AvatarImage src={author?.photoURL} />

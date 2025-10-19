@@ -23,6 +23,11 @@ export default function ForumPage() {
     const [user] = useAuthState(auth);
     const { toast } = useToast();
     
+    const [isClient, setIsClient] = useState(false);
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     const groupsQuery = query(collection(db, 'groups'));
     const [groupsSnapshot, isLoading] = useCollection(groupsQuery);
     
@@ -77,12 +82,23 @@ export default function ForumPage() {
              const permissionError = new FirestorePermissionError({
                 path: userGroupRef.path, // Correctly point to the subcollection path that failed
                 operation: isMember ? 'delete' : 'create',
+                requestResourceData: isMember ? undefined : { groupId: group.id }
             });
             errorEmitter.emit('permission-error', permissionError);
         } finally {
             setLoadingStates(prev => ({ ...prev, [group.id]: false }));
         }
     };
+    
+    if (!isClient || isLoading) {
+        return (
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+                 <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                </div>
+            </main>
+        );
+    }
     
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -103,11 +119,7 @@ export default function ForumPage() {
                 </Button>
             </div>
 
-            {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                    <Loader2 className="h-16 w-16 animate-spin text-primary" />
-                </div>
-            ) : groups && groups.length > 0 ? (
+            {groups && groups.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     {groups.map((group, index) => {
                         if (!group || !group.id) {

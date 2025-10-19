@@ -36,7 +36,7 @@ export default function ForumPage() {
     }, [groupsSnapshot]);
 
     const userGroupsQuery = user ? query(collection(db, `users/${user.uid}/groups`)) : undefined;
-    const [userGroupMemberships] = useCollection(userGroupsQuery);
+    const [userGroupMemberships, loadingUserGroups] = useCollection(userGroupsQuery);
     
     const userJoinedGroups = useMemo(() => {
       if (!userGroupMemberships) return new Set();
@@ -90,7 +90,17 @@ export default function ForumPage() {
         }
     };
     
-    if (!isClient || isLoading) {
+    if (!isClient) {
+        return (
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+                 <div className="flex justify-center items-center h-64">
+                    <Loader2 className="h-16 w-16 animate-spin text-primary" />
+                </div>
+            </main>
+        );
+    }
+    
+    if (isLoading) {
         return (
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
                  <div className="flex justify-center items-center h-64">
@@ -126,7 +136,7 @@ export default function ForumPage() {
                             return null;
                         }
                         const isMember = user ? userJoinedGroups.has(group.id) : false;
-                        const loadingMembership = loadingStates[group.id] || false;
+                        const loadingMembership = loadingStates[group.id] || loadingUserGroups;
                         
                         return (
                              <Card key={group.id || `group-${index}`} className="overflow-hidden border-primary/20 hover:border-primary/50 transition-colors duration-300 h-full flex flex-col">

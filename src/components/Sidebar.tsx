@@ -166,11 +166,12 @@ const CollapsibleNavSection = ({
 export const Sidebar = () => {
   const [user] = useAuthState(useAuth());
   const [isClient, setIsClient] = useState(false);
-  const isSuperAdmin = user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
-
+  
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const isSuperAdmin = user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
 
   return (
     <aside className="w-64 hidden md:block border-r">

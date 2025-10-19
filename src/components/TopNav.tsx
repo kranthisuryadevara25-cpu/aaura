@@ -155,8 +155,13 @@ const MobileNav = () => {
 
 export const TopNav = () => {
   const auth = useAuth();
-  const [user] = useAuthState(auth);
+  const [user, loading] = useAuthState(auth);
   const { t } = useLanguage();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleSignOut = () => {
     auth.signOut();
@@ -175,64 +180,70 @@ export const TopNav = () => {
         </div>
         <LanguageSwitcher />
         <CartButton />
-        {user ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                  <Avatar className="h-8 w-8">
-                    <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
-                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="w-56" align="end" forceMount>
-                <DropdownMenuLabel className="font-normal">
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">
-                      {user.displayName || 'User'}
-                    </p>
-                    <p className="text-xs leading-none text-muted-foreground">
-                      {user.email}
-                    </p>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+        {isClient && (
+          <>
+            {loading ? (
+              <Skeleton className="h-8 w-8 rounded-full" />
+            ) : user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
+                      <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {user.displayName || 'User'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href={`/profile/${user.uid}`}>
+                          <User className="mr-2 h-4 w-4" />
+                          <span>My Profile</span>
+                      </Link>
+                  </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link href={`/profile/${user.uid}`}>
-                        <User className="mr-2 h-4 w-4" />
-                        <span>My Profile</span>
-                    </Link>
-                 </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                    <Link href="/upload">
-                        <Upload className="mr-2 h-4 w-4" />
-                        <span>{t.sidebar.upload}</span>
-                    </Link>
-                 </DropdownMenuItem>
-                 <DropdownMenuItem asChild>
-                    <Link href="/forum">
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        <span>{t.forum.createPostTitle}</span>
-                    </Link>
-                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                    <Link href="/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>{t.sidebar.settings}</span>
-                    </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  <span>Log out</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          ) : (
-            <Button asChild>
-              <Link href="/login">Login</Link>
-            </Button>
-          )}
+                      <Link href="/upload">
+                          <Upload className="mr-2 h-4 w-4" />
+                          <span>{t.sidebar.upload}</span>
+                      </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                      <Link href="/forum">
+                          <MessageSquare className="mr-2 h-4 w-4" />
+                          <span>{t.forum.createPostTitle}</span>
+                      </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                      <Link href="/settings">
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>{t.sidebar.settings}</span>
+                      </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleSignOut}>
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Button asChild>
+                <Link href="/login">Login</Link>
+              </Button>
+            )}
+          </>
+        )}
       </div>
     </header>
   );

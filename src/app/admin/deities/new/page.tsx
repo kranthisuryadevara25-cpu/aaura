@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
 import { deities as allDeities } from '@/lib/deities';
 import { MultiSelect } from '@/components/ui/MultiSelect';
@@ -25,10 +24,8 @@ export default function NewDeityPage() {
   const handleSelect = (slugs: string[]) => {
     const slug = slugs[0];
     if (slug) {
-        setSelectedDeity(slugs);
+        // We only allow selecting one, so we redirect immediately.
         router.push(`/admin/deities/edit/${slug}`);
-    } else {
-        setSelectedDeity([]);
     }
   };
 

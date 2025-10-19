@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState } from 'react';
@@ -22,10 +23,8 @@ export default function NewTemplePage() {
   const handleSelect = (slugs: string[]) => {
     const slug = slugs[0];
     if (slug) {
-        setSelectedTemple(slugs); // Keep the selection visually consistent
+        // We only allow selecting one, so we redirect immediately.
         router.push(`/admin/temples/edit/${slug}`);
-    } else {
-        setSelectedTemple([]);
     }
   };
 

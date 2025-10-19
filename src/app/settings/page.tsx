@@ -217,6 +217,8 @@ export default function SettingsPage() {
     });
   };
 
+  const templeOptions = temples.map(t => ({value: t.slug, label: t.name.en}));
+
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center">
         <Card className="w-full max-w-2xl">
@@ -363,9 +365,10 @@ export default function SettingsPage() {
                         <FormLabel>Temples You've Visited</FormLabel>
                         <MultiSelect
                             placeholder="Select temples..."
-                            options={temples.map(t => ({value: t.slug, label: t.name.en}))}
+                            options={templeOptions}
                             selected={field.value || []}
                             onChange={field.onChange}
+                            className="w-full"
                         />
                         <FormDescription>Select the temples you have already visited.</FormDescription>
                         <FormMessage />
@@ -381,9 +384,10 @@ export default function SettingsPage() {
                         <FormLabel>Temples You Plan to Visit</FormLabel>
                          <MultiSelect
                             placeholder="Select temples..."
-                            options={temples.map(t => ({value: t.slug, label: t.name.en}))}
+                            options={templeOptions}
                             selected={field.value || []}
                             onChange={field.onChange}
+                            className="w-full"
                         />
                         <FormDescription>Select temples on your pilgrimage wishlist.</FormDescription>
                         <FormMessage />

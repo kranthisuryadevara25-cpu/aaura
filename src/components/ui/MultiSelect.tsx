@@ -30,7 +30,7 @@ export type MultiSelectOption = {
 interface MultiSelectProps {
   options: MultiSelectOption[];
   selected: string[];
-  onChange: React.Dispatch<React.SetStateAction<string[]>>;
+  onChange: (selected: string[]) => void;
   className?: string;
   placeholder?: string;
 }
@@ -49,6 +49,8 @@ function MultiSelect({
     onChange(selected.filter((i) => i !== item));
   };
 
+  // The `cmdk` library relies on the value of the Command.Item to be the filterable text.
+  // We can also provide an onSelect handler that has the actual value.
   return (
     <Popover open={open} onOpenChange={setOpen} {...props}>
       <PopoverTrigger asChild>
@@ -68,24 +70,19 @@ function MultiSelect({
                         variant="secondary"
                         key={option.value}
                         className="mr-1 mb-1"
-                        onClick={() => handleUnselect(option.value)}
+                        onClick={(e) => {
+                           e.preventDefault();
+                           handleUnselect(option.value);
+                        }}
                     >
                         {option.label}
-                        <button
-                        className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
-                        onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                            handleUnselect(option.value);
-                            }
-                        }}
-                        onMouseDown={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                        }}
-                        onClick={() => handleUnselect(option.value)}
-                        >
-                        <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                        </button>
+                        <X
+                            className="ml-1 h-3 w-3 text-muted-foreground hover:text-foreground"
+                            onClick={(e) => {
+                                e.preventDefault();
+                                handleUnselect(option.value);
+                            }}
+                         />
                     </Badge>
                  ))
             ) : (
@@ -96,7 +93,7 @@ function MultiSelect({
           <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-full p-0">
+      <PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
         <Command className={className}>
           <CommandInput placeholder="Search ..." />
           <CommandEmpty>No item found.</CommandEmpty>
@@ -104,6 +101,7 @@ function MultiSelect({
             {options.map((option) => (
               <CommandItem
                 key={option.value}
+                value={option.label} // This is what `cmdk` uses for filtering
                 onSelect={() => {
                   onChange(
                     selected.includes(option.value)

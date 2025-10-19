@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 const statusColors = {
   created: "bg-blue-500",
@@ -37,7 +37,10 @@ export default function AdminOrdersPage() {
   // This assumes you have superadmin custom claims set up for the user
   const isSuperAdmin = true; // Replace with actual claim check `user?.getIdTokenResult().claims.isSuperadmin`
 
-  const ordersQuery = query(collection(db, 'orders'), orderBy('createdAt', 'desc'));
+  const ordersQuery = useMemo(() => 
+    db ? query(collection(db, 'orders'), orderBy('createdAt', 'desc')) : undefined,
+    [db]
+  );
   const [orders, loadingOrders] = useCollectionData(ordersQuery, { idField: 'id' });
 
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);

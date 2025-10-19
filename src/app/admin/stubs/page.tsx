@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, ListPlus } from 'lucide-react';
@@ -50,6 +50,7 @@ function StubCreator({ collectionName, itemType }: StubCreatorProps) {
     });
 
     const onSubmit = async (data: StubFormValues) => {
+        if (!db) return;
         const collectionRef = collection(db, collectionName);
         const newStub = {
             name: { en: data.name },
@@ -98,7 +99,7 @@ interface StubListProps {
 
 function StubList({ collectionName }: StubListProps) {
     const db = useFirestore();
-    const stubsQuery = query(collection(db, collectionName));
+    const stubsQuery = useMemo(() => db ? query(collection(db, collectionName)) : undefined, [db, collectionName]);
     const [stubs, isLoading] = useCollectionData(stubsQuery, { idField: 'id' });
 
     return (
@@ -160,4 +161,3 @@ export default function ContentStubsPage() {
     </main>
   );
 }
-

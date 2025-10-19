@@ -31,6 +31,7 @@ import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { PostCard } from '@/components/PostCard';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,13 +45,13 @@ export default function UserProfilePage() {
   const [currentUser] = useAuthState(auth);
   const { toast } = useToast();
 
-  const profileRef = doc(db, 'users', userId);
+  const profileRef = useMemo(() => doc(db, 'users', userId), [db, userId]);
   const [profile, loadingProfile] = useDocumentData(profileRef, { idField: 'id' });
 
   const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc'));
   const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
 
-  const followingRef = currentUser ? doc(db, `users/${currentUser.uid}/following`, userId) : undefined;
+  const followingRef = useMemo(() => currentUser ? doc(db, `users/${currentUser.uid}/following`, userId) : undefined, [currentUser, db, userId]);
   const [following, loadingFollowing] = useDocumentData(followingRef);
   const isFollowing = !!following;
   const isOwner = currentUser?.uid === userId;
@@ -267,4 +268,3 @@ export default function UserProfilePage() {
     </main>
   );
 }
-

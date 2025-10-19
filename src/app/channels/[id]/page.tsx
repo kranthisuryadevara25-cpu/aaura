@@ -32,7 +32,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 import type { DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
@@ -286,10 +286,10 @@ export default function ChannelDetailPage() {
   const [user] = useAuthState(auth);
   const { toast } = useToast();
 
-  const channelRef = doc(db, 'channels', channelId);
+  const channelRef = useMemo(() => doc(db, 'channels', channelId), [db, channelId]);
   const [channel, loadingChannel] = useDocumentData(channelRef);
 
-  const subscriptionRef = user ? doc(db, `users/${user.uid}/subscriptions`, channelId) : undefined;
+  const subscriptionRef = useMemo(() => user ? doc(db, `users/${user.uid}/subscriptions`, channelId) : undefined, [user, db, channelId]);
   const [subscription, loadingSubscription] = useDocumentData(subscriptionRef);
   const isSubscribed = !!subscription;
   const isOwner = user?.uid === channelId;

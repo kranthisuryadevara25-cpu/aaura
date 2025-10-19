@@ -125,15 +125,21 @@ function CreatePost({ contextId, contextType, onPostCreated }: { contextId: stri
 
 export function Posts({ contextId, contextType }: PostsProps) {
     const db = useFirestore();
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
     const postsQuery = useMemo(() => {
-        if (!db) return undefined;
+        if (!db || !isClient) return undefined;
         return query(
             collection(db, 'posts'),
             where('contextId', '==', contextId),
             where('contextType', '==', contextType),
             orderBy('createdAt', 'desc')
         )
-    }, [db, contextId, contextType]);
+    }, [db, contextId, contextType, isClient]);
     
     const [fetchedPosts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
     const [optimisticPosts, setOptimisticPosts] = useState<DocumentData[]>([]);
@@ -148,6 +154,10 @@ export function Posts({ contextId, contextType }: PostsProps) {
     const handlePostCreated = (newPost: DocumentData) => {
         setOptimisticPosts(prevPosts => [newPost, ...prevPosts]);
     };
+
+    if (!isClient) {
+        return <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    }
 
     return (
         <div>

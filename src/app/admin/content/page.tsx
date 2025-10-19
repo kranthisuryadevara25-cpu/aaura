@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy, ShoppingCart } from 'lucide-react';
@@ -446,11 +446,16 @@ function TemplesTabContent() {
 }
 
 function ContestsTabContent() {
+  const [isClient, setIsClient] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
   const contestsRef = useMemo(() => db ? collection(db, 'contests') : undefined, [db]);
   const [snapshot, isLoading] = useCollection(contestsRef);
   const contests = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleDelete = (id: string) => {
     if (!db) return;
@@ -468,7 +473,7 @@ function ContestsTabContent() {
       });
   };
 
-  if (isLoading) {
+  if (!isClient || isLoading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
 
@@ -646,4 +651,3 @@ export default function ContentManagementPage() {
     </main>
   );
 }
-

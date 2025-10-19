@@ -123,7 +123,7 @@ function CreatePostCard({ channelId }: { channelId: string }) {
 function VideosTab({ channelId }: { channelId: string }) {
     const db = useFirestore();
     const { language } = useLanguage();
-    const mediaQuery = query(collection(db, 'media'), where('userId', '==', channelId), where('status', '==', 'approved'));
+    const mediaQuery = useMemo(() => query(collection(db, 'media'), where('userId', '==', channelId), where('status', '==', 'approved')), [db, channelId]);
     const [media, loading] = useCollectionData(mediaQuery, { idField: 'id' });
 
     if (loading) return <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />;
@@ -165,12 +165,12 @@ function VideosTab({ channelId }: { channelId: string }) {
 
 function PostsTab({ channelId, isOwner }: { channelId: string, isOwner: boolean }) {
     const db = useFirestore();
-    const postsQuery = query(
+    const postsQuery = useMemo(() => query(
         collection(db, 'posts'), 
         where('authorId', '==', channelId), 
         where('contextType', '==', 'channel'),
         orderBy('createdAt', 'desc')
-    );
+    ), [db, channelId]);
     const [posts, loading] = useCollectionData(postsQuery, { idField: 'id' });
 
     if (loading) return <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />;
@@ -195,7 +195,7 @@ function PlaylistsTab({ channel, isOwner }: { channel: DocumentData, isOwner: bo
      
      const featuredPlaylistIds = channel.featuredPlaylists || [];
 
-     const playlistsQuery = query(collection(db, 'playlists'), where('creatorId', '==', channel.userId), where('isPublic', '==', true));
+     const playlistsQuery = useMemo(() => query(collection(db, 'playlists'), where('creatorId', '==', channel.userId), where('isPublic', '==', true)), [db, channel.userId]);
      const [allPlaylists, loading] = useCollectionData(playlistsQuery, { idField: 'id' });
 
     if (loading) return <Loader2 className="mx-auto my-8 h-8 w-8 animate-spin" />;

@@ -1,6 +1,6 @@
 
 'use client';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import {
@@ -165,7 +165,12 @@ const CollapsibleNavSection = ({
 
 export const Sidebar = () => {
   const [user] = useAuthState(useAuth());
+  const [isClient, setIsClient] = useState(false);
   const isSuperAdmin = user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   return (
     <aside className="w-64 hidden md:block border-r">
@@ -180,7 +185,7 @@ export const Sidebar = () => {
           <CollapsibleNavSection title="Community" items={communityNav} />
           <CollapsibleNavSection title="Personal" items={personalNav} />
           <CollapsibleNavSection title="Marketplace" items={marketplaceNav} />
-          {isSuperAdmin && <CollapsibleNavSection title="Manage" items={adminNav} />}
+          {isClient && isSuperAdmin && <CollapsibleNavSection title="Manage" items={adminNav} />}
         </nav>
       </ScrollArea>
     </aside>

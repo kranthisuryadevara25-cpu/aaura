@@ -14,13 +14,13 @@ import { Form, FormControl, FormField, FormItem, FormMessage } from '@/component
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, Send } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { Skeleton } from './ui/skeleton';
+import { ClientOnlyTime } from './ClientOnlyTime';
 
 
 const commentSchema = z.object({
@@ -66,13 +66,14 @@ function CommentAuthor({ authorId }: { authorId: string }) {
 }
 
 function CommentCard({ comment }: { comment: any; }) {
+  const createdAtDate = comment.createdAt?.toDate ? comment.createdAt.toDate() : undefined;
   return (
     <div className="flex items-start gap-3 p-2 rounded-lg hover:bg-secondary/50">
       <div className="w-full">
         <div className="flex items-center justify-between">
             <CommentAuthor authorId={comment.authorId} />
           <p className="text-xs text-muted-foreground">
-            {comment.createdAt ? formatDistanceToNow(comment.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+            <ClientOnlyTime date={createdAtDate} />
           </p>
         </div>
         <p className="text-sm mt-2 text-foreground/90 pl-11">{comment.text}</p>

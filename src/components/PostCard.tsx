@@ -8,7 +8,7 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageCircle, ThumbsUp } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { Separator } from './ui/separator';
 import { Button } from '@/components/ui/button';
 import { useTransition, useState, useMemo } from 'react';
 import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
@@ -17,18 +17,47 @@ import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import Link from 'next/link';
 import { Skeleton } from './ui/skeleton';
+import { useLanguage } from '@/hooks/use-language';
+import { Comments } from './comments';
+import { ClientOnlyTime } from './ClientOnlyTime';
+
+
+const AuthorAvatar = ({ userId }: { userId: string }) => {
+  const db = useFirestore();
+  const authorRef = userId ? doc(db, 'users', userId) : undefined;
+  const [author, loading] = useDocumentData(authorRef);
+
+  if (loading || !author) {
+    return (
+        <Link href={`/profile/${userId}`} className="w-10 h-10 shrink-0">
+            <Skeleton className="h-10 w-10 rounded-full" />
+        </Link>
+    );
+  }
+
+  return (
+     <Link href={`/profile/${userId}`} className="w-10 h-10 shrink-0">
+        <Avatar>
+            <AvatarImage src={author.photoURL} />
+            <AvatarFallback>{author.displayName?.[0] || 'A'}</AvatarFallback>
+        </Avatar>
+     </Link>
+  )
+}
 
 export function PostCard({ post }: { post: DocumentData; }) {
+  const { language } = useLanguage();
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
   const [user] = useAuthState(auth);
   const [isLiking, startLikeTransition] = useTransition();
+  const [showComments, setShowComments] = useState(false);
 
-  const authorRef = useMemo(() => post.authorId && db ? doc(db, 'users', post.authorId) : undefined, [db, post.authorId]);
+  const authorId = post.authorId;
+  const authorRef = useMemo(() => authorId && db ? doc(db, 'users', authorId) : undefined, [db, authorId]);
   const [author, authorIsLoading] = useDocumentData(authorRef);
   
-  // Guard against rendering if post.id is not yet available from optimistic update
   const postRef = useMemo(() => {
     if (!post.id || !db) return undefined;
     return doc(db, 'posts', post.id);
@@ -84,6 +113,8 @@ export function PostCard({ post }: { post: DocumentData; }) {
     )
   }
 
+  const createdAtDate = post.createdAt?.toDate ? post.createdAt.toDate() : undefined;
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-row items-start gap-4 space-y-0">
@@ -101,7 +132,7 @@ export function PostCard({ post }: { post: DocumentData; }) {
               <p className="font-semibold group-hover:text-primary">{author?.displayName || 'Anonymous'}</p>
             </Link>
             <p className="text-xs text-muted-foreground">
-              {post.createdAt?.toDate ? formatDistanceToNow(post.createdAt.toDate(), { addSuffix: true }) : 'Just now'}
+              <ClientOnlyTime date={createdAtDate} />
             </p>
           </div>
         </div>

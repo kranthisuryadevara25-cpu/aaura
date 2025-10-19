@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/select";
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 
 const statusColors = {
   created: "bg-blue-500",
@@ -33,6 +33,11 @@ export default function AdminOrdersPage() {
   const db = useFirestore();
   const [user, loadingAuth] = useAuthState(auth);
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // This assumes you have superadmin custom claims set up for the user
   const isSuperAdmin = true; // Replace with actual claim check `user?.getIdTokenResult().claims.isSuperadmin`
@@ -46,6 +51,7 @@ export default function AdminOrdersPage() {
   const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
 
   const handleStatusChange = async (orderId: string, newStatus: string) => {
+    if (!db) return;
     setUpdatingStatus(orderId);
     try {
       const orderRef = doc(db, 'orders', orderId);
@@ -62,7 +68,7 @@ export default function AdminOrdersPage() {
     }
   };
 
-  if (loadingAuth || loadingOrders) {
+  if (!isClient || loadingAuth || loadingOrders) {
     return <div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>;
   }
 

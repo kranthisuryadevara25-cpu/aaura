@@ -180,7 +180,7 @@ export const TopNav = () => {
         </div>
         <LanguageSwitcher />
         <CartButton />
-        {isClient && (
+        {isClient ? (
           <>
             {loading ? (
               <Skeleton className="h-8 w-8 rounded-full" />
@@ -243,6 +243,8 @@ export const TopNav = () => {
               </Button>
             )}
           </>
+        ) : (
+          <Skeleton className="h-8 w-20" /> // Placeholder to prevent layout shift
         )}
       </div>
     </header>

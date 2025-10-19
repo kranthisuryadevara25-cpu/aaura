@@ -21,7 +21,7 @@ export default function NewTemplePage() {
   const [selectedTemple, setSelectedTemple] = useState<string[]>([]);
 
   const handleSelect = (slugs: string[]) => {
-    const slug = slugs[0];
+    const slug = slugs.at(-1);
     if (slug) {
         // We only allow selecting one, so we redirect immediately.
         router.push(`/admin/temples/edit/${slug}`);

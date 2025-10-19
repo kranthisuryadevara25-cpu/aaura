@@ -22,7 +22,8 @@ export default function NewDeityPage() {
   const [selectedDeity, setSelectedDeity] = useState<string[]>([]);
 
   const handleSelect = (slugs: string[]) => {
-    const slug = slugs[0];
+    // Since we only want to select one, we'll take the last selected item.
+    const slug = slugs.at(-1);
     if (slug) {
         // We only allow selecting one, so we redirect immediately.
         router.push(`/admin/deities/edit/${slug}`);

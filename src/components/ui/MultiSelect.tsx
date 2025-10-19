@@ -49,8 +49,6 @@ function MultiSelect({
     onChange(selected.filter((i) => i !== item));
   };
 
-  // The `cmdk` library relies on the value of the Command.Item to be the filterable text.
-  // We can also provide an onSelect handler that has the actual value.
   return (
     <Popover open={open} onOpenChange={setOpen} {...props}>
       <PopoverTrigger asChild>
@@ -97,30 +95,31 @@ function MultiSelect({
         <Command className={className}>
           <CommandInput placeholder="Search ..." />
           <CommandEmpty>No item found.</CommandEmpty>
-          <CommandGroup className="max-h-64 overflow-auto">
-            {options.map((option) => (
-              <CommandItem
-                key={option.value}
-                value={option.label} // This is what `cmdk` uses for filtering
-                onSelect={() => {
-                  onChange(
-                    selected.includes(option.value)
-                      ? selected.filter((item) => item !== option.value)
-                      : [...selected, option.value]
-                  );
-                  setOpen(true);
-                }}
-              >
-                <Check
-                  className={cn(
-                    "mr-2 h-4 w-4",
-                    selected.includes(option.value) ? "opacity-100" : "opacity-0"
-                  )}
-                />
-                {option.label}
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          <CommandList>
+            <CommandGroup className="max-h-64 overflow-auto">
+              {options.map((option) => (
+                <CommandItem
+                  key={option.value}
+                  onSelect={() => {
+                    onChange(
+                      selected.includes(option.value)
+                        ? selected.filter((item) => item !== option.value)
+                        : [...selected, option.value]
+                    );
+                    setOpen(true);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      selected.includes(option.value) ? "opacity-100" : "opacity-0"
+                    )}
+                  />
+                  {option.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
         </Command>
       </PopoverContent>
     </Popover>

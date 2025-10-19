@@ -22,7 +22,7 @@ export default function NewStoryPage() {
   const [selectedSaga, setSelectedSaga] = useState<string[]>([]);
 
   const handleSelect = (slugs: string[]) => {
-    const slug = slugs[0];
+    const slug = slugs.at(-1);
     if (slug) {
         // We only allow selecting one, so we redirect immediately.
         router.push(`/admin/stories/edit/${slug}`);

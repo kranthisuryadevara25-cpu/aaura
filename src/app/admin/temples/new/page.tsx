@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useState } from 'react';
@@ -10,7 +9,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useLanguage } from '@/hooks/use-language';
 import { temples as allTemples } from '@/lib/temples';
 import { MultiSelect } from '@/components/ui/MultiSelect';
-
 
 export default function NewTemplePage() {
   const router = useRouter();
@@ -24,7 +22,7 @@ export default function NewTemplePage() {
   const handleSelect = (slugs: string[]) => {
     const slug = slugs[0];
     if (slug) {
-        setSelectedTemple(slugs);
+        setSelectedTemple(slugs); // Keep the selection visually consistent
         router.push(`/admin/temples/edit/${slug}`);
     } else {
         setSelectedTemple([]);

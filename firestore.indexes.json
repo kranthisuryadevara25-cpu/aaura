@@ -5,88 +5,58 @@
       "collectionGroup": "temples",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "rating",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "rating", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "deities",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "stories",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "festivals",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "date",
-          "order": "ASCENDING"
-        }
+        { "fieldPath": "date", "order": "ASCENDING" }
       ]
     },
     {
       "collectionGroup": "media",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "uploadDate",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "uploadDate", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "posts",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "products",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "inventory",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "popularity",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "inventory", "order": "ASCENDING" },
+        { "fieldPath": "popularity", "order": "DESCENDING" }
       ]
     },
     {
       "collectionGroup": "temples",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "location.state",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "deity.name",
-          "order": "ASCENDING"
-        }
+        { "fieldPath": "location.state", "order": "ASCENDING" },
+        { "fieldPath": "deity.name", "order": "ASCENDING" }
       ]
     },
     {
@@ -110,14 +80,6 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "contentId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "comments",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "postId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
       ]
     },
@@ -147,14 +109,6 @@
       ]
     },
     {
-      "collectionGroup": "playlists",
-      "queryScope": "COLLECTION",
-      "fields": [
-        { "fieldPath": "creatorId", "order": "ASCENDING" },
-        { "fieldPath": "isPublic", "order": "ASCENDING" }
-      ]
-    },
-    {
       "collectionGroup": "virtualOfferings",
       "queryScope": "COLLECTION",
       "fields": [
@@ -166,10 +120,7 @@
       "collectionGroup": "channels",
       "queryScope": "COLLECTION",
       "fields": [
-        {
-          "fieldPath": "followerCount",
-          "order": "DESCENDING"
-        }
+        { "fieldPath": "followerCount", "order": "DESCENDING" }
       ]
     },
     {
@@ -180,7 +131,7 @@
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
-     {
+    {
       "collectionGroup": "media",
       "queryScope": "COLLECTION",
       "fields": [
@@ -193,16 +144,7 @@
       "queryScope": "COLLECTION",
       "fields": [
         { "fieldPath": "contextType", "order": "ASCENDING" },
-        { "fieldPath": "authorId", "order": "ASCENDING" },
-        { "fieldPath": "createdAt", "order": "DESCENDING" }
-      ]
-    },
-    {
-      "collectionGroup": "posts",
-      "queryScope": "COLLECTION",
-      "fields": [
         { "fieldPath": "contextId", "order": "ASCENDING" },
-        { "fieldPath": "contextType", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
@@ -229,8 +171,15 @@
       "fields": [
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "likes",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "contentId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
 }
-

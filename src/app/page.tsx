@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Feed } from "./components/feed";
 import { CreateContent } from "./components/CreateContent";
 import { getPersonalizedFeed, getTrendingContent } from '@/ai/flows/personalized-feed';
@@ -14,6 +14,11 @@ import type { FeedItem } from "@/types/feed";
 export default function Page() {
   const { allItems, loading } = useFeed();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const filteredItems = allItems.filter(item => {
     if (!searchQuery) return true;
@@ -25,7 +30,7 @@ export default function Page() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-4 space-y-8">
-      <CreateContent />
+      {isClient && <CreateContent />}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold font-headline text-primary">For You</h2>
         <SearchBar onSearch={setSearchQuery} />

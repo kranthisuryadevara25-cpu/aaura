@@ -1,16 +1,16 @@
 
+
 'use client';
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronsUpDown, Check, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { cn } from '@/lib/utils';
 import { useLanguage } from '@/hooks/use-language';
 import { stories as allSagas } from '@/lib/stories';
+import { MultiSelect } from '@/components/ui/MultiSelect';
+
 
 export default function NewStoryPage() {
   const router = useRouter();
@@ -19,16 +19,22 @@ export default function NewStoryPage() {
   const stories = allSagas;
   const isLoading = false;
 
-  const [open, setOpen] = useState(false);
-  const [value, setValue] = useState('');
+  const [selectedSaga, setSelectedSaga] = useState<string[]>([]);
 
-  const handleSelect = (slug: string) => {
-    setValue(slug);
-    setOpen(false);
+  const handleSelect = (slugs: string[]) => {
+    const slug = slugs[0];
     if (slug) {
-      router.push(`/admin/stories/edit/${slug}`);
+        setSelectedSaga(slugs);
+        router.push(`/admin/stories/edit/${slug}`);
+    } else {
+        setSelectedSaga([]);
     }
   };
+
+  const sagaOptions = stories.map(story => ({
+      value: story.slug,
+      label: story.title[language] || story.title.en,
+  }));
 
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -48,46 +54,13 @@ export default function NewStoryPage() {
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <Popover open={open} onOpenChange={setOpen}>
-                        <PopoverTrigger asChild>
-                            <Button
-                            variant="outline"
-                            role="combobox"
-                            aria-expanded={open}
-                            className="w-full justify-between h-12 text-lg"
-                            >
-                            {value
-                                ? stories?.find((story) => story.slug === value)?.title.en
-                                : "Select a saga to claim..."}
-                            <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                            </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                            <Command>
-                                <CommandInput placeholder="Search saga..." />
-                                <CommandList>
-                                    <CommandEmpty>No unclaimed sagas found.</CommandEmpty>
-                                    <CommandGroup>
-                                    {stories?.map((story) => (
-                                        <CommandItem
-                                        key={story.slug}
-                                        value={story.title.en}
-                                        onSelect={() => handleSelect(story.slug)}
-                                        >
-                                        <Check
-                                            className={cn(
-                                            "mr-2 h-4 w-4",
-                                            value === story.slug ? "opacity-100" : "opacity-0"
-                                            )}
-                                        />
-                                        {story.title[language] || story.title.en}
-                                        </CommandItem>
-                                    ))}
-                                    </CommandGroup>
-                                </CommandList>
-                            </Command>
-                        </PopoverContent>
-                    </Popover>
+                    <MultiSelect
+                        options={sagaOptions}
+                        selected={selectedSaga}
+                        onChange={handleSelect}
+                        className="w-full"
+                        placeholder="Select a saga to claim..."
+                    />
                 )}
                  <p className="text-sm text-muted-foreground mt-4">
                     If you don't see the saga you want to add, ask the super admin to add it to the Content Planning list.

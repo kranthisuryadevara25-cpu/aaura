@@ -41,8 +41,8 @@ import { updateProfile } from 'firebase/auth';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { temples } from '@/lib/temples';
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '@/components/ui/command';
-import { Check } from 'lucide-react';
+import { MultiSelect } from '@/components/ui/MultiSelect';
+
 
 const formSchema = z.object({
   fullName: z.string().min(1, 'Full name is required.'),
@@ -356,31 +356,40 @@ export default function SettingsPage() {
                 />
 
                 <FormField
-                  control={form.control}
-                  name="templesVisited"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Temples You've Visited</FormLabel>
-                       <MultiSelectPopover options={temples.map(t => ({value: t.slug, label: t.name.en}))} selected={field.value || []} onChange={field.onChange} />
-                      <FormDescription>Select the temples you have already visited.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                    control={form.control}
+                    name="templesVisited"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Temples You've Visited</FormLabel>
+                        <MultiSelect
+                            placeholder="Select temples..."
+                            options={temples.map(t => ({value: t.slug, label: t.name.en}))}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                        />
+                        <FormDescription>Select the temples you have already visited.</FormDescription>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                 />
 
                 <FormField
-                  control={form.control}
-                  name="templesPlanning"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Temples You Plan to Visit</FormLabel>
-                      <MultiSelectPopover options={temples.map(t => ({value: t.slug, label: t.name.en}))} selected={field.value || []} onChange={field.onChange} />
-                      <FormDescription>Select temples on your pilgrimage wishlist.</FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                    control={form.control}
+                    name="templesPlanning"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Temples You Plan to Visit</FormLabel>
+                         <MultiSelect
+                            placeholder="Select temples..."
+                            options={temples.map(t => ({value: t.slug, label: t.name.en}))}
+                            selected={field.value || []}
+                            onChange={field.onChange}
+                        />
+                        <FormDescription>Select temples on your pilgrimage wishlist.</FormDescription>
+                        <FormMessage />
+                        </FormItem>
+                    )}
                 />
-
 
                 <Button type="submit" disabled={isPending}>
                 {isPending ? (
@@ -401,43 +410,5 @@ export default function SettingsPage() {
         </CardContent>
         </Card>
     </main>
-  );
-}
-
-function MultiSelectPopover({ options, selected, onChange }: { options: {value: string, label: string}[], selected: string[], onChange: (selected: string[]) => void }) {
-  const [open, setOpen] = React.useState(false);
-
-  const handleSelect = (value: string) => {
-    const newSelected = selected.includes(value) ? selected.filter(s => s !== value) : [...selected, value];
-    onChange(newSelected);
-  }
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between">
-           <span className="line-clamp-1">{selected.length > 0 ? `${selected.length} selected` : "Select temples..."}</span>
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-        <Command>
-          <CommandInput placeholder="Search temples..." />
-          <CommandList>
-            <CommandEmpty>No temples found.</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  onSelect={() => handleSelect(option.value)}
-                >
-                  <Check className={cn("mr-2 h-4 w-4", selected.includes(option.value) ? "opacity-100" : "opacity-0")} />
-                  {option.label}
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
   );
 }

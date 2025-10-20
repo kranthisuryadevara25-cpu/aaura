@@ -81,7 +81,10 @@ export function TempleForm({ temple }: TempleFormProps) {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
-    defaultValues: temple || {
+    defaultValues: temple ? {
+        ...temple,
+        officialWebsite: temple.officialWebsite || '',
+    } : {
       slug: '',
       name: { en: '' },
       officialWebsite: '',

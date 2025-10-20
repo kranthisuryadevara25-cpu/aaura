@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useTransition, useState, useEffect, useMemo } from 'react';
@@ -146,7 +145,6 @@ export function Posts({ contextId, contextType }: PostsProps) {
 
     useEffect(() => {
         if(fetchedPosts) {
-            // This syncs the optimistic state with the real data once it loads.
             setOptimisticPosts(fetchedPosts);
         }
     }, [fetchedPosts]);

@@ -1,8 +1,7 @@
 
-
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useMemo } from 'react';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc, updateDoc, increment, setDoc, deleteDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
@@ -35,17 +34,17 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
   const [user] = useAuthState(auth);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const mediaRef = doc(db, 'media', contentId);
+  const mediaRef = useMemo(() => doc(db, 'media', contentId), [db, contentId]);
   const [media, loadingMedia] = useDocumentData(mediaRef);
   
   const authorId = media?.userId;
-  const authorRef = authorId ? doc(db, 'users', authorId) : undefined;
+  const authorRef = useMemo(() => (authorId ? doc(db, 'users', authorId) : undefined), [db, authorId]);
   const [author, loadingAuthor] = useDocumentData(authorRef);
   
-  const likeRef = user ? doc(db, `media/${contentId}/likes/${user.uid}`) : undefined;
+  const likeRef = useMemo(() => (user ? doc(db, `media/${contentId}/likes/${user.uid}`) : undefined), [db, contentId, user]);
   const [like, loadingLike] = useDocumentData(likeRef);
 
-  const followingRef = user && authorId ? doc(db, `users/${user.uid}/following`, authorId) : undefined;
+  const followingRef = useMemo(() => (user && authorId ? doc(db, `users/${user.uid}/following`, authorId) : undefined), [db, user, authorId]);
   const [following, loadingFollowing] = useDocumentData(followingRef);
 
 
@@ -229,5 +228,3 @@ export function VideoPlayer({ contentId, onVideoEnd }: { contentId: string, onVi
     </div>
   );
 }
-
-  

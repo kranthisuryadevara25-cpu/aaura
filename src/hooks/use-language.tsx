@@ -29,8 +29,10 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang);
-    localStorage.setItem("app-language", lang);
-    document.documentElement.lang = lang;
+    if (typeof window !== "undefined") {
+      localStorage.setItem("app-language", lang);
+      document.documentElement.lang = lang;
+    }
   };
 
   const value: LanguageContextType = {

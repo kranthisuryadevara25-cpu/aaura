@@ -8,6 +8,7 @@ import type { Firestore } from 'firebase/firestore';
 import type { Auth } from 'firebase/auth';
 import type { FirebaseStorage } from 'firebase/storage';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
+import { useToast } from '@/hooks/use-toast';
 
 interface FirebaseContextType {
   app: FirebaseApp;

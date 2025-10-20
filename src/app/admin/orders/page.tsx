@@ -69,7 +69,7 @@ export default function AdminOrdersPage() {
   };
 
   if (!isClient || loadingAuth || loadingOrders) {
-    return <div className="flex h-screen w-full items-center justify-center"><Loader2 className="h-16 w-16 animate-spin" /></div>;
+    return <main className="flex-grow container mx-auto px-4 py-8 md:py-12 flex justify-center items-center"><Loader2 className="h-16 w-16 animate-spin" /></main>;
   }
 
   if (!isSuperAdmin) {
@@ -111,7 +111,7 @@ export default function AdminOrdersPage() {
                     {order.id.slice(0, 8)}...
                   </TableCell>
                   <TableCell className="text-muted-foreground">{order.userId.slice(0,8)}...</TableCell>
-                  <TableCell>{format(order.createdAt.toDate(), 'PPP')}</TableCell>
+                  <TableCell>{order.createdAt ? format(order.createdAt.toDate(), 'PPP') : 'N/A'}</TableCell>
                   <TableCell>₹{order.totalAmount.toFixed(2)}</TableCell>
                   <TableCell>
                     <Select

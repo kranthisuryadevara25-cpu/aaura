@@ -17,6 +17,10 @@
           "description": "User's email address.",
           "format": "email"
         },
+        "mobile": {
+          "type": "string",
+          "description": "User's mobile phone number."
+        },
         "fullName": {
           "type": "string",
           "description": "User's full name."
@@ -64,6 +68,16 @@
         "welcomeMessage": {
             "type": "string",
             "description": "A personalized welcome message for new users."
+        },
+        "templesVisited": {
+          "type": "array",
+          "description": "A list of temple slugs the user has visited.",
+          "items": { "type": "string" }
+        },
+        "templesPlanning": {
+          "type": "array",
+          "description": "A list of temple slugs the user is planning to visit.",
+          "items": { "type": "string" }
         }
       },
       "required": [
@@ -1254,4 +1268,3 @@
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
-

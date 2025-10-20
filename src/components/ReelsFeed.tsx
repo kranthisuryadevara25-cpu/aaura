@@ -10,12 +10,10 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
   const { language } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // State for interaction feedback
   const [showLike, setShowLike] = useState<string | null>(null);
   const [showPlayPause, setShowPlayPause] = useState<{ id: string, state: 'play' | 'pause' } | null>(null);
   const [isLiked, setIsLiked] = useState(false);
 
-  // Ref for double-tap detection
   const lastTap = useRef(0);
   const tapTimeout = useRef<NodeJS.Timeout | null>(null);
 
@@ -46,16 +44,14 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
         tapTimeout.current = null;
     }
     
-    // Double tap
     if (now - lastTap.current < DOUBLE_TAP_DELAY) {
       handleLike(item.id);
     } 
-    // Single tap
     else {
         tapTimeout.current = setTimeout(() => {
             if (video) {
                 if (video.paused) {
-                    video.play();
+                    video.play().catch(()=>{});
                     setShowPlayPause({ id: item.id, state: 'play' });
                 } else {
                     video.pause();
@@ -74,7 +70,6 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
       setTimeout(() => setShowLike(null), 1000);
     }
     setIsLiked(prev => !prev);
-    // Here you would also update the like state/count via an API call
   };
 
   if (!items || items.length === 0) return null;
@@ -100,16 +95,13 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
         loading="lazy"
       />
 
-      {/* Overlays */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Double-tap Like Animation */}
         {showLike === item.id && (
             <div className="absolute inset-0 flex items-center justify-center">
                 <Heart className="w-24 h-24 text-white/90 animate-in fade-in zoom-in-50" fill="currentColor" />
             </div>
         )}
         
-        {/* Play/Pause Animation */}
         {showPlayPause?.id === item.id && (
             <div className="absolute inset-0 flex items-center justify-center">
                 <div className="bg-black/50 p-4 rounded-full">
@@ -122,13 +114,11 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
             </div>
         )}
         
-        {/* Info Overlay */}
         <div className="absolute bottom-4 left-4 text-white p-2 max-w-[calc(100%-6rem)]">
           <h3 className="font-bold drop-shadow-md">{getText(item.title)}</h3>
           <p className="text-sm mt-1 line-clamp-2 drop-shadow-sm">{getText(item.description)}</p>
         </div>
 
-        {/* Actions Overlay */}
         <div className="absolute bottom-4 right-2 flex flex-col items-center gap-4 text-white pointer-events-auto">
             <button onClick={(e) => { e.stopPropagation(); handleLike(item.id); }} className="flex flex-col items-center gap-1">
                 <Heart className={cn("w-8 h-8 drop-shadow-lg", isLiked && "text-red-500 fill-current")} />
@@ -136,7 +126,7 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
             </button>
             <button className="flex flex-col items-center gap-1">
                 <MessageCircle className="w-8 h-8 drop-shadow-lg" />
-                <span className="text-xs drop-shadow-md">{item.meta?.comments || 0}</span>
+                <span className="text-xs drop-shadow-md">{item.meta?.commentsCount || 0}</span>
             </button>
              <button className="flex flex-col items-center gap-1">
                 <Share2 className="w-8 h-8 drop-shadow-lg" />

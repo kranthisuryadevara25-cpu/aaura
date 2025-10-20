@@ -36,5 +36,3 @@ export function Feed({ items, isLoading }: { items: FeedItem[], isLoading: boole
     </>
   );
 }
-
-    

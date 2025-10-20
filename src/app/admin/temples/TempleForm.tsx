@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -84,6 +84,7 @@ export function TempleForm({ temple }: TempleFormProps) {
     defaultValues: temple || {
       slug: '',
       name: { en: '' },
+      officialWebsite: '',
       deity: { name: { en: '' } },
       location: { city: '', state: '', pincode: '', address: '', geo: { lat: 0, lng: 0 } },
       importance: { mythological: { en: '' }, historical: { en: '' } },
@@ -117,7 +118,8 @@ export function TempleForm({ temple }: TempleFormProps) {
       const fullData = { 
         id: templeId,
         ...data,
-        status: 'pending', // Changed from 'published' to 'pending'
+        officialWebsite: data.officialWebsite || null, // Ensure undefined is not sent to Firestore
+        status: 'pending',
         updatedAt: serverTimestamp(),
         ...(temple.status === 'unclaimed' && { createdAt: serverTimestamp() }),
       };

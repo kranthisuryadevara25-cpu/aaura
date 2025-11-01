@@ -21,9 +21,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { collection, deleteDoc, doc, FirestoreDataConverter, Query, type DocumentData, where, orderBy } from 'firebase/firestore';
+import { collection, deleteDoc, doc, FirestoreDataConverter, query, where, orderBy } from 'firebase/firestore';
+import type { DocumentData } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
@@ -565,10 +566,10 @@ function ProductsTabContent() {
     const db = useFirestore();
     const { toast } = useToast();
     
-    const productsQuery = useMemo(() => db ? collection(db, 'products').withConverter(productConverter) : null, [db]);
-    const [snapshot, isLoading] = useCollection(productsQuery);
+    const productsQuery = useMemo(() => db ? query(collection(db, 'products').withConverter(productConverter)) : undefined, [db]);
+    const [productsSnapshot, isLoading] = useCollection(productsQuery);
     
-    const products = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
+    const products = useMemo(() => productsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [productsSnapshot]);
 
     const handleDelete = (id: string) => {
         if (!db) return;

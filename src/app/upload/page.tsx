@@ -52,6 +52,7 @@ export default function UploadPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const { t } = useLanguage();
+  const [isModerating, startModerationTransition] = useTransition();
 
 
   const form = useForm<FormValues>({
@@ -83,17 +84,15 @@ export default function UploadPage() {
       return;
     }
 
-    setIsUploading(true);
-
     const mediaFile = data.media[0];
     if (!mediaFile) {
         toast({ variant: 'destructive', title: 'No file selected.' });
-        setIsUploading(false);
         return;
     }
     
     // Start the transition for AI moderation and Firestore doc creation
-    startTransition(async () => {
+    startModerationTransition(async () => {
+      setIsUploading(true);
       try {
         const mediaDataUri = await toBase64(mediaFile);
         
@@ -313,8 +312,8 @@ export default function UploadPage() {
                         </FormItem>
                     )}
                     />
-                    <Button type="submit" className="w-full" disabled={isUploading}>
-                        <Upload className="mr-2 h-4 w-4" />
+                    <Button type="submit" className="w-full" disabled={isUploading || isModerating}>
+                        {isModerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
                         Submit for Review
                     </Button>
                 </form>

@@ -30,6 +30,7 @@ const formSchema = z.object({
   description: z.string().min(20, "Description must be at least 20 characters long."),
   imageUrl: z.string().url("Must be a valid image URL."),
   imageHint: z.string().optional(),
+  mantra: z.string().min(3, "Mantra is required."),
   goal: z.coerce.number().min(1, "Goal must be at least 1."),
   status: z.enum(['active', 'inactive']),
 });
@@ -50,6 +51,7 @@ export default function NewContestPage() {
       description: '',
       imageUrl: `https://picsum.photos/seed/${Math.random().toString(36).substring(7)}/1200/800`,
       imageHint: 'chanting people',
+      mantra: 'Jai Shri Ram',
       goal: 108000,
       status: 'inactive',
     },
@@ -62,13 +64,8 @@ export default function NewContestPage() {
       
       const contestData = {
         id: contestId,
-        title: data.title,
-        description: data.description,
-        imageUrl: data.imageUrl,
-        imageHint: data.imageHint,
-        goal: data.goal,
+        ...data,
         totalChants: 0,
-        status: data.status,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -117,6 +114,11 @@ export default function NewContestPage() {
                             <FormItem><FormLabel>Image Hint</FormLabel><FormControl><Input {...field} /></FormControl><FormDescription>E.g., 'praying hands'</FormDescription><FormMessage /></FormItem>
                         )} />
                     </div>
+                    
+                    <FormField control={form.control} name="mantra" render={({ field }) => (
+                        <FormItem><FormLabel>Chant/Mantra</FormLabel><FormControl><Input placeholder="E.g., Om Namah Shivaya" {...field} /></FormControl><FormDescription>The exact text users need to chant.</FormDescription><FormMessage /></FormItem>
+                    )} />
+
 
                     <FormField control={form.control} name="goal" render={({ field }) => (
                         <FormItem><FormLabel>Chant Goal</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>

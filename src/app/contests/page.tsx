@@ -1,9 +1,8 @@
-
 'use client';
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, doc, writeBatch, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc, limit } from 'firebase/firestore';
+import { collection, query, where, doc, writeBatch, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc } from 'firebase/firestore';
 import { Loader2, Trophy, Send, Calendar, Share2, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -23,18 +22,12 @@ import { format, formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const chantSchema = z.object({
-  mantra: z.literal("Jai Shri Ram", { errorMap: () => ({ message: 'Mantra must be "Jai Shri Ram".' }) }),
-});
-type ChantFormValues = z.infer<typeof chantSchema>;
-
 function RecentChants({ contestId }: { contestId: string }) {
     const db = useFirestore();
     const recentChantsQuery = useMemo(() => 
         query(
             collection(db, `contests/${contestId}/chants`), 
             orderBy('createdAt', 'desc'), 
-            limit(10)
         ), [db, contestId]
     );
     const [recentChants, loading] = useCollection(recentChantsQuery);
@@ -74,20 +67,28 @@ function ContestContent({ contest }: { contest: DocumentData }) {
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
 
+    const expectedMantra = contest.mantra || "Jai Shri Ram";
+    
+    const chantSchema = z.object({
+        mantra: z.literal(expectedMantra, { errorMap: () => ({ message: `Mantra must be "${expectedMantra}".` }) }),
+    });
+    type ChantFormValues = z.infer<typeof chantSchema>;
+
     const form = useForm<ChantFormValues>({
         resolver: zodResolver(chantSchema),
-        defaultValues: { mantra: "Jai Shri Ram" },
+        defaultValues: { mantra: expectedMantra },
     });
+    
+    // Reset form default value if contest mantra changes
+    useEffect(() => {
+        form.reset({ mantra: expectedMantra });
+    }, [expectedMantra, form]);
+
 
     const handleChant = (data: ChantFormValues) => {
          const currentUser = auth.currentUser;
          if (!currentUser) {
             toast({ variant: 'destructive', title: 'You must be logged in to chant.' });
-            return;
-        }
-
-        if (data.mantra !== 'Jai Shri Ram') {
-            toast({ variant: 'destructive', title: 'Only "Jai Shri Ram" is allowed.' });
             return;
         }
         
@@ -112,16 +113,15 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                 }, { merge: true });
 
                 await batch.commit();
-
-                form.reset({ mantra: "Jai Shri Ram" });
+                
                 toast({ title: 'Chant submitted successfully!' });
              } catch (error: any) {
                  console.error('Firestore Error:', error);
                  toast({ variant: 'destructive', title: 'Failed to submit chant.', description: error.message });
                  const permissionError = new FirestorePermissionError({
                     path: contestRef.path,
-                    operation: 'write',
-                    requestResourceData: chantData
+                    operation: 'update',
+                    requestResourceData: { totalChants: increment(1) },
                  });
                  errorEmitter.emit('permission-error', permissionError);
             }
@@ -193,7 +193,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                                     <FormItem className="w-full">
                                     <FormControl>
                                         <Textarea
-                                            placeholder="Jai Shri Ram"
+                                            placeholder={expectedMantra}
                                             className="resize-none text-center text-lg"
                                             {...field}
                                         />

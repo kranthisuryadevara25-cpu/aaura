@@ -51,6 +51,15 @@ export default function EditContestPage() {
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
+    defaultValues: {
+        title: '',
+        description: '',
+        imageUrl: '',
+        imageHint: '',
+        mantra: '',
+        goal: 0,
+        status: 'inactive',
+    }
   });
 
   useEffect(() => {
@@ -59,7 +68,7 @@ export default function EditContestPage() {
         title: contest.title,
         description: contest.description,
         imageUrl: contest.imageUrl,
-        imageHint: contest.imageHint,
+        imageHint: contest.imageHint || '',
         mantra: contest.mantra,
         goal: contest.goal,
         status: contest.status,

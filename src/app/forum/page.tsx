@@ -73,7 +73,8 @@ export default function ForumPage() {
                 await batch.commit();
                 toast({ title: `You have left the "${group.name}" group.` });
             } else {
-                batch.set(userGroupRef, { groupId: group.id, joinedAt: serverTimestamp() });
+                const joinData = { groupId: group.id, joinedAt: serverTimestamp() };
+                batch.set(userGroupRef, joinData);
                 batch.update(groupRef, { memberCount: increment(1) });
                 await batch.commit();
                 toast({ title: `Welcome to the "${group.name}" group!` });

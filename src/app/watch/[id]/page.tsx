@@ -4,7 +4,7 @@
 import { FeedSidebar } from "@/components/feed-sidebar";
 import { VideoPlayer } from "@/components/video-player";
 import { useFeed } from '@/hooks/use-feed';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useMemo } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -13,15 +13,26 @@ import { ListMusic } from "lucide-react";
 
 export default function WatchPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const id = params.id as string;
   const router = useRouter();
   const { allItems, loading } = useFeed(20);
+
+  const challengeId = searchParams.get('challengeId');
+  const day = searchParams.get('day');
 
   const upNextItems = useMemo(() => {
     return allItems.filter(item => item.id !== `media-${id}`);
   }, [allItems, id]);
 
   const handleVideoEnd = () => {
+    // If user came from a challenge, redirect them back with a completion flag
+    if (challengeId && day) {
+        router.push(`/challenges/${challengeId}?completedDay=${day}`);
+        return;
+    }
+    
+    // Otherwise, play the next video in the feed
     if (upNextItems.length > 0) {
       const nextItem = upNextItems[0];
       const nextHref = nextItem.kind === 'video' 

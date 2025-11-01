@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useParams, notFound } from 'next/navigation';
+import { useParams, notFound, useSearchParams } from 'next/navigation';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useDocument, useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc, writeBatch, arrayUnion, arrayRemove } from 'firebase/firestore';
@@ -17,8 +17,15 @@ import Link from 'next/link';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 
-function TaskLink({ taskType, contentId }: { taskType: string, contentId: string }) {
-    const href = taskType === 'read-story' ? `/stories/${contentId}` : `/watch/${contentId.replace('media-','')}`;
+function TaskLink({ taskType, contentId, challengeId, day }: { taskType: string, contentId: string, challengeId: string, day: number }) {
+    let href = '#';
+    if (taskType === 'read-story') {
+        href = `/stories/${contentId}`;
+    } else if (taskType === 'watch-media') {
+        // Pass challenge context to the watch page
+        href = `/watch/${contentId}?challengeId=${challengeId}&day=${day}`;
+    }
+    
     if (taskType === 'recite-mantra') {
         return <span className="text-sm italic text-muted-foreground">Recite: "{contentId}"</span>
     }
@@ -33,11 +40,12 @@ function TaskLink({ taskType, contentId }: { taskType: string, contentId: string
 
 export default function ChallengeDetailPage() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const id = params.id as string;
     const db = useFirestore();
     const auth = useAuth();
-    const [user] = useAuthState(auth);
     const { toast } = useToast();
+    const [user] = useAuthState(auth);
     const [isJoining, startJoinTransition] = useTransition();
 
     const challengeRef = useMemo(() => db ? doc(db, 'challenges', id).withConverter(challengeConverter) : null, [db, id]);
@@ -47,6 +55,16 @@ export default function ChallengeDetailPage() {
     const progressRef = useMemo(() => user ? doc(db, `users/${user.uid}/challenges`, id) : null, [user, db, id]);
     const [progress, isLoadingProgress, progressError] = useDocumentData(progressRef);
     
+    // Check for auto-completion from query params
+    useEffect(() => {
+        const completedDay = searchParams.get('completedDay');
+        if (completedDay && progress && !progress.completedTasks?.includes(Number(completedDay))) {
+            handleTaskToggle(Number(completedDay), true, true);
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams, progress]);
+
+
     useEffect(() => {
         if(challengeError) {
              const permissionError = new FirestorePermissionError({ path: challengeRef!.path, operation: 'get' });
@@ -91,19 +109,24 @@ export default function ChallengeDetailPage() {
         });
     }
 
-     const handleTaskToggle = async (day: number, isCompleted: boolean) => {
+     const handleTaskToggle = async (day: number, isCompleted: boolean, silent = false) => {
         if (!user || !progressRef) return;
         const taskData = { completedTasks: isCompleted ? arrayUnion(day) : arrayRemove(day) };
         
         try {
             await writeBatch(db).update(progressRef, taskData).commit();
+            if (!silent) {
+                toast({ title: isCompleted ? "Task Completed!" : "Task marked incomplete." });
+            }
         } catch (error) {
-            const permissionError = new FirestorePermissionError({
-                path: progressRef.path,
-                operation: 'update',
-                requestResourceData: taskData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
+            if (!silent) {
+                const permissionError = new FirestorePermissionError({
+                    path: progressRef.path,
+                    operation: 'update',
+                    requestResourceData: taskData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            }
         }
     }
 
@@ -142,7 +165,7 @@ export default function ChallengeDetailPage() {
                                         Day {task.day}: {task.title}
                                     </label>
                                     <div className="mt-1">
-                                        <TaskLink taskType={task.taskType} contentId={task.contentId} />
+                                        <TaskLink taskType={task.taskType} contentId={task.contentId} challengeId={id} day={task.day} />
                                     </div>
                                 </div>
                                 {isCompleted && <Check className="h-6 w-6 text-green-500" />}

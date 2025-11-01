@@ -96,7 +96,6 @@ export function ProductForm({ product }: ProductFormProps) {
     startTransition(async () => {
       const imageFile = data.imageFile;
       const productId = product ? product.id : doc(collection(db, 'products')).id;
-      const productRef = doc(db, 'products', productId);
       
       const placeholderImageUrl = 'https://picsum.photos/seed/placeholder/600';
 
@@ -108,14 +107,14 @@ export function ProductForm({ product }: ProductFormProps) {
         description_hi: data.description_hi,
         price: data.price,
         originalPrice: data.originalPrice || data.price,
-        imageUrl: product?.imageUrl || (imageFile ? placeholderImageUrl : ''),
+        imageUrl: product?.imageUrl || placeholderImageUrl,
         imageHint: data.imageHint,
         category: data.category,
         shopId: data.shopId,
       };
 
       try {
-        // Immediately save the document with placeholder data
+        const productRef = doc(db, 'products', productId);
         await setDoc(productRef, fullData, { merge: true });
         
         toast({ 
@@ -123,25 +122,21 @@ export function ProductForm({ product }: ProductFormProps) {
           description: `${data.name_en} has been saved.` 
         });
 
-        // Navigate away after the initial save
         router.push('/admin/content?tab=products');
 
-        // Start background upload if there's a file
         if (imageFile) {
             toast({ title: "Uploading Image...", description: "This will happen in the background." });
             const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
-            const snapshot = await uploadBytes(storageRef, imageFile);
-            const finalImageUrl = await getDownloadURL(snapshot.ref);
-
-            // Update the document with the final URL in the background
-            await updateDoc(productRef, { imageUrl: finalImageUrl });
-            
-            toast({ title: "Image Upload Complete!", description: "The product image has been updated." });
+            uploadBytes(storageRef, imageFile).then(snapshot => {
+                getDownloadURL(snapshot.ref).then(finalImageUrl => {
+                    updateDoc(productRef, { imageUrl: finalImageUrl });
+                });
+            });
         }
       } catch (serverError) {
           console.error("Error saving product:", serverError);
           const permissionError = new FirestorePermissionError({
-            path: productRef.path,
+            path: `products/${productId}`,
             operation: 'write',
             requestResourceData: fullData,
           });

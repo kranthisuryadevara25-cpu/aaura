@@ -48,6 +48,8 @@ function MultiSelect({
   const handleUnselect = (item: string) => {
     onChange(selected.filter((i) => i !== item));
   };
+  
+  const selectedOptions = options.filter(option => selected.includes(option.value));
 
   return (
     <Popover open={open} onOpenChange={setOpen} {...props}>
@@ -56,14 +58,12 @@ function MultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={`w-full justify-between ${
-            selected.length > 1 ? "h-full" : "h-10"
-          }`}
+          className={cn("w-full justify-between", selected.length > 1 ? "h-full" : "h-10", className)}
           onClick={() => setOpen(!open)}
         >
           <div className="flex gap-1 flex-wrap">
-            {selected.length > 0 ? (
-                 options.filter(option => selected.includes(option.value)).map(option => (
+            {selectedOptions.length > 0 ? (
+                 selectedOptions.map(option => (
                     <Badge
                         variant="secondary"
                         key={option.value}
@@ -74,13 +74,21 @@ function MultiSelect({
                         }}
                     >
                         {option.label}
-                        <X
-                            className="ml-1 h-3 w-3 text-muted-foreground hover:text-foreground"
-                            onClick={(e) => {
-                                e.preventDefault();
-                                handleUnselect(option.value);
+                        <button
+                            className="ml-1 ring-offset-background rounded-full outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                    handleUnselect(option.value);
+                                }
                             }}
-                         />
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }}
+                            onClick={() => handleUnselect(option.value)}
+                        >
+                            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                        </button>
                     </Badge>
                  ))
             ) : (

@@ -52,7 +52,7 @@ export default function ReelsClient({ initialVideos = [] }: { initialVideos: Fee
 
   if (videoItems.length === 0 && !loading) {
     return (
-        <div className="flex h-screen w-full flex-col items-center justify-center bg-background text-center">
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-background text-center p-4">
             <VideoOff className="h-16 w-16 text-muted-foreground" />
             <h2 className="mt-4 text-2xl font-semibold">No Reels Found</h2>
             <p className="mt-2 text-muted-foreground">There's no video content available to display right now.</p>

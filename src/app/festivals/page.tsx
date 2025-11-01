@@ -97,12 +97,9 @@ export default function FestivalsPage() {
                         </Button>
                     </CardContent>
                 </Card>
-            )
-            })}
+            )})}
             </div>
         )}
     </main>
   );
 }
-
-    

@@ -183,13 +183,14 @@
         "description": { "type": "string" },
         "imageUrl": { "type": "string", "format": "uri" },
         "imageHint": { "type": "string" },
+        "mantra": { "type": "string", "description": "The exact text to be chanted." },
         "goal": { "type": "number" },
         "totalChants": { "type": "number", "description": "The current number of total chants." },
         "status": { "type": "string", "enum": ["active", "inactive", "completed"] },
         "createdAt": { "type": "string", "format": "date-time" },
         "updatedAt": { "type": "string", "format": "date-time" }
       },
-      "required": ["id", "title", "totalChants", "status", "createdAt"]
+      "required": ["id", "title", "mantra", "totalChants", "status", "createdAt"]
     },
     "UserContestProgress": {
       "title": "User Contest Progress",

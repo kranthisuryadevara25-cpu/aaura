@@ -36,7 +36,7 @@ const formSchema = z.object({
   description_hi: z.string().optional(),
   price: z.coerce.number().min(0, 'Price must be a positive number.'),
   originalPrice: z.coerce.number().optional(),
-  imageUrl: z.string().optional(), // Now optional as we handle the file separately
+  imageUrl: z.string().optional(),
   imageFile: z.any().optional(),
   imageHint: z.string().optional(),
   category: z.string().min(1, 'Category is required.'),
@@ -55,8 +55,6 @@ export function ProductForm({ product }: ProductFormProps) {
   const db = useFirestore();
   const storage = useStorage();
   const [isPending, startTransition] = useTransition();
-  const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl || null);
-
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -81,23 +79,12 @@ export function ProductForm({ product }: ProductFormProps) {
   const title = product ? `Edit ${product.name_en}` : 'Add a New Product';
   const description = product ? 'Update the details for this product.' : 'Fill out the form to add a new product to the marketplace.';
 
-  const handleImageChange = (file: File | null) => {
-    if (file) {
-      form.setValue('imageFile', file);
-      setImagePreview(URL.createObjectURL(file));
-    } else {
-      form.setValue('imageFile', null);
-      setImagePreview(product?.imageUrl || null);
-    }
-  };
-
-
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       const imageFile = data.imageFile;
       const productId = product ? product.id : doc(collection(db, 'products')).id;
       
-      const placeholderImageUrl = 'https://picsum.photos/seed/placeholder/600';
+      const placeholderImageUrl = `https://picsum.photos/seed/${productId}/600`;
 
       const fullData: Product = {
         id: productId,
@@ -184,8 +171,8 @@ export function ProductForm({ product }: ProductFormProps) {
                     <FormLabel>Product Image</FormLabel>
                     <FormControl>
                         <ImageUpload 
-                            onFileSelect={handleImageChange}
-                            initialUrl={imagePreview}
+                            onFileSelect={(file) => form.setValue('imageFile', file)}
+                            initialUrl={form.getValues('imageUrl')}
                             folderName="product-images"
                         />
                     </FormControl>

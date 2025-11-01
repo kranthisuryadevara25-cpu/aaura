@@ -24,68 +24,37 @@ export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folder
   const [isUploading, setIsUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [fileUrl, setFileUrl] = useState<string | null>(initialUrl || null);
+  const [file, setFile] = useState<File | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (onFileSelect) {
-      onFileSelect(file || null);
-    } else if (file && onUploadComplete) {
-      handleUpload(file);
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+        if (onFileSelect) {
+            onFileSelect(selectedFile);
+        }
+        setFile(selectedFile);
+        const objectUrl = URL.createObjectURL(selectedFile);
+        setFileUrl(objectUrl);
     }
   };
 
-  const handleUpload = (file: File) => {
-    setIsUploading(true);
-    setProgress(0);
-
-    const storageRef = ref(storage, `${folderName}/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setProgress(progress);
-      },
-      (error) => {
-        setIsUploading(false);
-        console.error('Upload failed:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Upload Failed',
-          description: 'There was an error uploading your image. Please try again.',
-        });
-      },
-      () => {
-        getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
-          setFileUrl(downloadURL);
-          if (onUploadComplete) {
-            onUploadComplete(downloadURL);
-          }
-          setIsUploading(false);
-          toast({
-            title: 'Upload Complete',
-            description: 'Your image has been uploaded successfully.',
-          });
-        });
-      }
-    );
-  };
+  // The upload function can be called externally if needed, e.g., on form submission.
+  // For this component, let's keep it self-contained for now.
 
   const handleRemoveImage = () => {
-    // Note: This only removes the image from the form state, not from Firebase Storage.
-    // A more robust solution would involve deleting the file from Storage as well.
     setFileUrl(null);
-    if(onUploadComplete) onUploadComplete('');
+    setFile(null);
     if(onFileSelect) onFileSelect(null);
+    if(onUploadComplete) onUploadComplete('');
   }
 
-  // Use the local initialUrl state for previewing, which can be updated by the parent form
-  if (initialUrl) {
+  // Display the selected image or the initial URL
+  if (fileUrl) {
     return (
         <div className="relative w-full aspect-video rounded-md overflow-hidden border p-2">
-            <Image src={initialUrl} alt="Uploaded image" layout="fill" className="object-contain rounded-md" />
+            <Image src={fileUrl} alt="Image preview" layout="fill" className="object-contain rounded-md" />
             <Button
+                type="button"
                 variant="destructive"
                 size="icon"
                 onClick={handleRemoveImage}
@@ -109,7 +78,7 @@ export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folder
         <div className="flex flex-col items-center gap-2">
           <UploadCloud className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
-            Drag and drop or click to upload
+            Drag and drop or click to browse
           </p>
           <Input
             id="file-upload"
@@ -118,7 +87,7 @@ export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folder
             onChange={handleFileChange}
             className="hidden"
           />
-           <Button asChild variant="outline">
+           <Button asChild variant="outline" type="button">
               <label htmlFor="file-upload" className="cursor-pointer">
                 Browse Files
               </label>

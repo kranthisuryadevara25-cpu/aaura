@@ -77,12 +77,18 @@ function DeitiesTabContent() {
 
   const handleDelete = async (id: string) => {
     if (!db) return;
-    try {
-      await deleteDoc(doc(db, 'deities', id));
-      toast({ title: 'Deity Deleted', description: 'The deity has been removed from the database.' });
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete deity.' });
-    }
+    const docRef = doc(db, 'deities', id);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({ title: 'Deity Deleted', description: 'The deity has been removed from the database.' });
+      })
+      .catch((error) => {
+         const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   return (
@@ -173,12 +179,18 @@ function StoriesTabContent() {
 
   const handleDelete = async (id: string) => {
     if (!db) return;
-    try {
-      await deleteDoc(doc(db, 'stories', id));
-      toast({ title: 'Story Deleted', description: 'The story has been removed.' });
-    } catch {
-       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete story.' });
-    }
+    const docRef = doc(db, 'stories', id);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({ title: 'Story Deleted', description: 'The story has been removed.' });
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   return (
@@ -268,12 +280,18 @@ function CharactersTabContent() {
 
   const handleDelete = async (id: string) => {
     if (!db) return;
-    try {
-      await deleteDoc(doc(db, 'epicHeroes', id));
-      toast({ title: 'Character Deleted', description: 'The character has been removed.' });
-    } catch {
-       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete character.' });
-    }
+    const docRef = doc(db, 'epicHeroes', id);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({ title: 'Character Deleted', description: 'The character has been removed.' });
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   return (
@@ -363,12 +381,18 @@ function TemplesTabContent() {
 
   const handleDelete = async (id: string) => {
     if (!db) return;
-    try {
-      await deleteDoc(doc(db, 'temples', id));
-      toast({ title: 'Temple Deleted', description: 'The temple has been removed.' });
-    } catch {
-       toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete temple.' });
-    }
+    const docRef = doc(db, 'temples', id);
+    deleteDoc(docRef)
+      .then(() => {
+        toast({ title: 'Temple Deleted', description: 'The temple has been removed.' });
+      })
+      .catch((error) => {
+        const permissionError = new FirestorePermissionError({
+            path: docRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
   };
 
   return (
@@ -449,16 +473,11 @@ function TemplesTabContent() {
 }
 
 function ContestsTabContent() {
-  const [isClient, setIsClient] = useState(false);
   const db = useFirestore();
   const { toast } = useToast();
   const contestsRef = useMemo(() => db ? collection(db, 'contests') : undefined, [db]);
   const [snapshot, isLoading] = useCollection(contestsRef);
-  const contests = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+  const contests = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = (id: string) => {
     if (!db) return;
@@ -475,10 +494,6 @@ function ContestsTabContent() {
         errorEmitter.emit('permission-error', permissionError);
       });
   };
-
-  if (!isClient) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
-  }
   
   if (isLoading) {
     return <div className="flex justify-center items-center h-64"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;

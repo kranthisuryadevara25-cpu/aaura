@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,15 +26,12 @@ export default function ShopPage() {
   const { toast } = useToast();
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
 
-  const productsQuery = useMemo(() => 
-    db ? collection(db, 'products').withConverter(productConverter) : undefined,
-    [db]
-  );
-  const [snapshot, isLoading] = useCollection(productsQuery);
-  
+  const productsQuery = useMemo(() => db ? collection(db, 'products').withConverter(productConverter) : undefined, [db]);
+  const [productsSnapshot, isLoading] = useCollection(productsQuery);
+
   const products = useMemo(() => 
-    snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [],
-    [snapshot]
+    productsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [],
+    [productsSnapshot]
   );
 
 

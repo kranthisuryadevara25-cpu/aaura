@@ -8,9 +8,11 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Film, Music, Mic, Upload, Search } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import { media as mockMedia } from '@/lib/media';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useFirestore } from '@/lib/firebase/provider';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, query, where } from 'firebase/firestore';
 
 const mediaTypes = ['all', 'video', 'short', 'bhajan', 'podcast', 'pravachan', 'audiobook'];
 
@@ -30,11 +32,18 @@ const getIconForType = (type: string) => {
 
 export default function MediaPage() {
   const { language, t } = useLanguage();
+  const db = useFirestore();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
   
-  const media = mockMedia.filter(item => item.status === 'approved');
-  const isLoading = false;
+  const mediaQuery = useMemo(() => {
+    if (!db) return undefined;
+    return query(collection(db, 'media'), where('status', '==', 'approved'));
+  }, [db]);
+  
+  const [mediaSnapshot, isLoading] = useCollection(mediaQuery);
+  
+  const media = useMemo(() => mediaSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [mediaSnapshot]);
 
   const filteredMedia = useMemo(() => {
     if (!media) return [];

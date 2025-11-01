@@ -6,15 +6,28 @@ import { Trophy, Loader2, Users } from 'lucide-react';
 import { useCollection } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { collection, query } from 'firebase/firestore';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 import { Challenge, challengeConverter } from '@/lib/challenges';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 export default function ChallengesPage() {
     const db = useFirestore();
     const challengesQuery = useMemo(() => db ? query(collection(db, 'challenges').withConverter(challengeConverter)) : null, [db]);
-    const [snapshot, isLoading] = useCollection(challengesQuery);
+    const [snapshot, isLoading, error] = useCollection(challengesQuery);
+
+    useEffect(() => {
+        if (error) {
+            const permissionError = new FirestorePermissionError({
+                path: challengesQuery?.path || 'challenges',
+                operation: 'list',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        }
+    }, [error, challengesQuery]);
+
     const challenges = useMemo(() => snapshot?.docs.map(doc => doc.data()) || [], [snapshot]);
 
   return (

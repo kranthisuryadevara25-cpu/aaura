@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy, ShoppingCart, Shield } from 'lucide-react';
@@ -658,8 +658,19 @@ function ProductsTabContent() {
 function ChallengesTabContent() {
   const db = useFirestore();
   const { toast } = useToast();
+  
   const challengesQuery = useMemo(() => db ? query(collection(db, 'challenges').withConverter(challengeConverter)) : null, [db]);
-  const [snapshot, isLoading] = useCollection(challengesQuery);
+  const [snapshot, isLoading, error] = useCollection(challengesQuery);
+
+  useEffect(() => {
+    if (error) {
+        const permissionError = new FirestorePermissionError({
+            path: challengesQuery?.path || 'challenges',
+            operation: 'list',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }
+  }, [error, challengesQuery]);
   
   const challenges = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 

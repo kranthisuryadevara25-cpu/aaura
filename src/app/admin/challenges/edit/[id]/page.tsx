@@ -10,6 +10,9 @@ import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { challengeConverter } from '@/lib/challenges';
 import type { Challenge } from '@/lib/challenges';
+import { useEffect } from 'react';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 
 export default function EditChallengePage() {
@@ -19,8 +22,18 @@ export default function EditChallengePage() {
   const id = params.id as string;
 
   const challengeRef = doc(db, 'challenges', id).withConverter(challengeConverter);
-  const [snapshot, isLoading] = useDocument(challengeRef);
+  const [snapshot, isLoading, error] = useDocument(challengeRef);
   const challenge = snapshot?.data() as Challenge | undefined;
+
+  useEffect(() => {
+    if (error) {
+        const permissionError = new FirestorePermissionError({
+            path: challengeRef.path,
+            operation: 'get',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    }
+  }, [error, challengeRef]);
 
   if (isLoading) {
     return (

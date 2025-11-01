@@ -10,10 +10,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useTransition, useMemo } from 'react';
+import { useTransition, useMemo, useEffect } from 'react';
 import { Challenge, challengeConverter } from '@/lib/challenges';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 function TaskLink({ taskType, contentId }: { taskType: string, contentId: string }) {
     const href = taskType === 'read-story' ? `/stories/${contentId}` : `/watch/${contentId}`;
@@ -39,11 +41,22 @@ export default function ChallengeDetailPage() {
     const [isJoining, startJoinTransition] = useTransition();
 
     const challengeRef = useMemo(() => db ? doc(db, 'challenges', id).withConverter(challengeConverter) : null, [db, id]);
-    const [challengeSnapshot, isLoadingChallenge] = useDocument(challengeRef);
+    const [challengeSnapshot, isLoadingChallenge, challengeError] = useDocument(challengeRef);
     const challenge = challengeSnapshot?.data();
 
     const progressRef = useMemo(() => user ? doc(db, `users/${user.uid}/challenges`, id) : null, [user, db, id]);
-    const [progress, isLoadingProgress] = useDocumentData(progressRef);
+    const [progress, isLoadingProgress, progressError] = useDocumentData(progressRef);
+    
+    useEffect(() => {
+        if(challengeError) {
+             const permissionError = new FirestorePermissionError({ path: challengeRef!.path, operation: 'get' });
+             errorEmitter.emit('permission-error', permissionError);
+        }
+        if(progressError) {
+             const permissionError = new FirestorePermissionError({ path: progressRef!.path, operation: 'get' });
+             errorEmitter.emit('permission-error', permissionError);
+        }
+    }, [challengeError, progressError, challengeRef, progressRef]);
 
     const handleJoinChallenge = () => {
         if (!user || !progressRef) {
@@ -52,36 +65,45 @@ export default function ChallengeDetailPage() {
         }
         startJoinTransition(async () => {
             const batch = writeBatch(db);
+            const progressData = {
+                challengeId: id,
+                startedAt: new Date(),
+                completedTasks: [],
+                isCompleted: false,
+            };
+
             if (progress) { // Leaving the challenge
                  batch.delete(progressRef);
             } else { // Joining the challenge
-                batch.set(progressRef, {
-                    challengeId: id,
-                    startedAt: new Date(),
-                    completedTasks: [],
-                    isCompleted: false,
-                });
+                batch.set(progressRef, progressData);
             }
              try {
                 await batch.commit();
                 toast({ title: progress ? 'You have left the challenge.' : 'Challenge Joined!', description: 'Good luck on your journey.' });
             } catch (error) {
-                console.error('Failed to update challenge status:', error);
-                toast({ variant: 'destructive', title: 'Something went wrong.' });
+                const permissionError = new FirestorePermissionError({
+                    path: progressRef.path,
+                    operation: progress ? 'delete' : 'create',
+                    requestResourceData: progress ? undefined : progressData,
+                });
+                errorEmitter.emit('permission-error', permissionError);
             }
         });
     }
 
      const handleTaskToggle = async (day: number, isCompleted: boolean) => {
         if (!user || !progressRef) return;
+        const taskData = { completedTasks: isCompleted ? arrayUnion(day) : arrayRemove(day) };
         
         try {
-            await writeBatch(db).update(progressRef, {
-                completedTasks: isCompleted ? arrayUnion(day) : arrayRemove(day)
-            }).commit();
+            await writeBatch(db).update(progressRef, taskData).commit();
         } catch (error) {
-            console.error("Failed to update task", error);
-            toast({ variant: 'destructive', title: 'Failed to update task' });
+            const permissionError = new FirestorePermissionError({
+                path: progressRef.path,
+                operation: 'update',
+                requestResourceData: taskData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
         }
     }
 

@@ -16,19 +16,25 @@ service firebase.storage {
     }
 
     // Media uploads (videos, audio, etc.):
-    // Only authenticated users can upload to their own designated folder.
-    // Content is publicly readable.
-    match /media/{userId}/{mediaId}/{fileName} {
+    // Allow authenticated users to write to their own media folder.
+    // The {mediaId} acts as a wildcard for any file within the user's directory.
+    match /media/{userId}/{mediaId}/{allPaths=**} {
       allow read: if true;
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }
 
     // General content images (for deities, stories, etc.)
     // Writable by any authenticated user. Publicly readable.
-    match /content-images/{fileName} {
-      allow read: if true;
-      allow write: if isAuthenticated();
+    match /content-images/{allPaths=**} {
+        allow read: if true;
+        allow write: if isAuthenticated();
     }
+    
+    match /product-images/{allPaths=**} {
+        allow read: if true;
+        allow write: if isAuthenticated();
+    }
+
 
     // Shop item images:
     // Writable by the merchant user. Publicly readable.

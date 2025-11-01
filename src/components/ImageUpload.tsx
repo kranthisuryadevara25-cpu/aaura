@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -11,12 +12,13 @@ import { Loader2, UploadCloud, Image as ImageIcon, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 interface ImageUploadProps {
-  onUploadComplete: (url: string) => void;
-  initialUrl?: string;
+  onUploadComplete?: (url: string) => void;
+  onFileSelect?: (file: File | null) => void;
+  initialUrl?: string | null;
   folderName?: string;
 }
 
-export function ImageUpload({ onUploadComplete, initialUrl, folderName = 'content-images' }: ImageUploadProps) {
+export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folderName = 'content-images' }: ImageUploadProps) {
   const { toast } = useToast();
   const storage = useStorage();
   const [isUploading, setIsUploading] = useState(false);
@@ -25,7 +27,9 @@ export function ImageUpload({ onUploadComplete, initialUrl, folderName = 'conten
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file) {
+    if (onFileSelect) {
+      onFileSelect(file || null);
+    } else if (file && onUploadComplete) {
       handleUpload(file);
     }
   };
@@ -55,7 +59,9 @@ export function ImageUpload({ onUploadComplete, initialUrl, folderName = 'conten
       () => {
         getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
           setFileUrl(downloadURL);
-          onUploadComplete(downloadURL);
+          if (onUploadComplete) {
+            onUploadComplete(downloadURL);
+          }
           setIsUploading(false);
           toast({
             title: 'Upload Complete',
@@ -70,13 +76,15 @@ export function ImageUpload({ onUploadComplete, initialUrl, folderName = 'conten
     // Note: This only removes the image from the form state, not from Firebase Storage.
     // A more robust solution would involve deleting the file from Storage as well.
     setFileUrl(null);
-    onUploadComplete('');
+    if(onUploadComplete) onUploadComplete('');
+    if(onFileSelect) onFileSelect(null);
   }
 
-  if (fileUrl) {
+  // Use the local initialUrl state for previewing, which can be updated by the parent form
+  if (initialUrl) {
     return (
         <div className="relative w-full aspect-video rounded-md overflow-hidden border p-2">
-            <Image src={fileUrl} alt="Uploaded image" layout="fill" className="object-contain rounded-md" />
+            <Image src={initialUrl} alt="Uploaded image" layout="fill" className="object-contain rounded-md" />
             <Button
                 variant="destructive"
                 size="icon"

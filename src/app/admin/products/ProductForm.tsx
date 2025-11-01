@@ -18,15 +18,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition } from 'react';
+import { useTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
-import { useFirestore } from '@/lib/firebase/provider';
+import { useFirestore, useStorage } from '@/lib/firebase/provider';
 import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
 import type { Product } from '@/lib/products';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { ImageUpload } from '@/components/ImageUpload';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const formSchema = z.object({
   name_en: z.string().min(1, 'English name is required.'),
@@ -35,7 +36,8 @@ const formSchema = z.object({
   description_hi: z.string().optional(),
   price: z.coerce.number().min(0, 'Price must be a positive number.'),
   originalPrice: z.coerce.number().optional(),
-  imageUrl: z.string().url('Must be a valid URL.'),
+  imageUrl: z.string().optional(), // Now optional as we handle the file separately
+  imageFile: z.any().optional(),
   imageHint: z.string().optional(),
   category: z.string().min(1, 'Category is required.'),
   shopId: z.string().min(1, 'Shop ID is required.'),
@@ -51,13 +53,17 @@ export function ProductForm({ product }: ProductFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const db = useFirestore();
+  const storage = useStorage();
   const [isPending, startTransition] = useTransition();
+  const [imagePreview, setImagePreview] = useState<string | null>(product?.imageUrl || null);
+
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: product ? {
         ...product,
-        originalPrice: product.originalPrice || 0
+        originalPrice: product.originalPrice || 0,
+        imageUrl: product.imageUrl || ''
     } : {
       name_en: '',
       name_hi: '',
@@ -75,15 +81,58 @@ export function ProductForm({ product }: ProductFormProps) {
   const title = product ? `Edit ${product.name_en}` : 'Add a New Product';
   const description = product ? 'Update the details for this product.' : 'Fill out the form to add a new product to the marketplace.';
 
+  const handleImageChange = (file: File | null) => {
+    if (file) {
+      form.setValue('imageFile', file);
+      setImagePreview(URL.createObjectURL(file));
+    } else {
+      form.setValue('imageFile', null);
+      setImagePreview(product?.imageUrl || null);
+    }
+  };
+
+
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
+      let finalImageUrl = product?.imageUrl || '';
+
+      // --- Start of new image upload logic ---
+      const imageFile = data.imageFile;
+      if (imageFile) {
+        toast({ title: "Uploading Image...", description: "Please wait while the image is uploaded." });
+        const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
+        try {
+          const snapshot = await uploadBytes(storageRef, imageFile);
+          finalImageUrl = await getDownloadURL(snapshot.ref);
+          toast({ title: "Image Uploaded Successfully!" });
+        } catch (error) {
+          console.error("Image upload failed:", error);
+          toast({ variant: "destructive", title: "Image Upload Failed", description: "Could not upload the image. Please try again." });
+          return; // Stop form submission if image upload fails
+        }
+      }
+      // --- End of new image upload logic ---
+
+      if (!finalImageUrl) {
+        toast({ variant: "destructive", title: "Missing Image", description: "Please upload a product image." });
+        return;
+      }
+
       const productId = product ? product.id : doc(collection(db, 'products')).id;
       const productRef = doc(db, 'products', productId);
 
       const fullData: Product = {
         id: productId,
-        ...data,
+        name_en: data.name_en,
+        name_hi: data.name_hi,
+        description_en: data.description_en,
+        description_hi: data.description_hi,
+        price: data.price,
         originalPrice: data.originalPrice || data.price,
+        imageUrl: finalImageUrl,
+        imageHint: data.imageHint,
+        category: data.category,
+        shopId: data.shopId,
       };
 
       setDoc(productRef, fullData, { merge: true })
@@ -136,13 +185,13 @@ export function ProductForm({ product }: ProductFormProps) {
               )} />
             </div>
             
-             <FormField control={form.control} name="imageUrl" render={({ field }) => (
+             <FormField control={form.control} name="imageFile" render={({ field }) => (
                 <FormItem>
                     <FormLabel>Product Image</FormLabel>
                     <FormControl>
                         <ImageUpload 
-                            onUploadComplete={(url) => form.setValue('imageUrl', url)}
-                            initialUrl={field.value}
+                            onFileSelect={handleImageChange}
+                            initialUrl={imagePreview}
                             folderName="product-images"
                         />
                     </FormControl>

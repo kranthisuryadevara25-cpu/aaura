@@ -115,6 +115,7 @@ export function ProductForm({ product }: ProductFormProps) {
       };
 
       try {
+        // Immediately save the document with placeholder data
         await setDoc(productRef, fullData, { merge: true });
         
         toast({ 
@@ -122,19 +123,20 @@ export function ProductForm({ product }: ProductFormProps) {
           description: `${data.name_en} has been saved.` 
         });
 
-        // Navigate away immediately for a faster user experience
+        // Navigate away after the initial save
         router.push('/admin/content?tab=products');
 
+        // Start background upload if there's a file
         if (imageFile) {
-          toast({ title: "Uploading Image...", description: "This will happen in the background." });
-          const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
-          const snapshot = await uploadBytes(storageRef, imageFile);
-          const finalImageUrl = await getDownloadURL(snapshot.ref);
+            toast({ title: "Uploading Image...", description: "This will happen in the background." });
+            const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
+            const snapshot = await uploadBytes(storageRef, imageFile);
+            const finalImageUrl = await getDownloadURL(snapshot.ref);
 
-          // Update the document with the final URL
-          await updateDoc(productRef, { imageUrl: finalImageUrl });
-          
-          toast({ title: "Image Upload Complete!", description: "The product image has been updated." });
+            // Update the document with the final URL in the background
+            await updateDoc(productRef, { imageUrl: finalImageUrl });
+            
+            toast({ title: "Image Upload Complete!", description: "The product image has been updated." });
         }
       } catch (serverError) {
           console.error("Error saving product:", serverError);

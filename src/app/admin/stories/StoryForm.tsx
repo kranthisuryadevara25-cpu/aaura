@@ -28,10 +28,12 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useStorage } from '@/lib/firebase/provider';
+import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { ImageUpload } from '@/components/ImageUpload';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // ----------------------
 // Form Schema Definition
@@ -41,8 +43,9 @@ const formSchema = z.object({
   title: z.object({ en: z.string().min(1, 'English title is required.') }),
   summary: z.object({ en: z.string().min(1, 'English summary is required.') }),
   image: z.object({
-    url: z.string().url('Must be a valid URL.'),
+    url: z.string().optional(),
     hint: z.string().min(1, 'Hint is required.'),
+    file: z.any().optional(),
   }),
   tags: z.string().min(1, 'At least one tag is required.'),
   relatedCharacters: z.string().optional(),
@@ -76,6 +79,7 @@ export function StoryForm({ story }: StoryFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const db = useFirestore();
+  const storage = useStorage();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -122,12 +126,21 @@ export function StoryForm({ story }: StoryFormProps) {
   // ----------------------
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
+      const imageFile = data.image.file;
       const storyId = story ? story.id : data.slug;
       const storyRef = doc(db, 'stories', storyId);
 
+      const serializableData = {
+          ...data,
+          image: {
+            url: data.image.url || `https://picsum.photos/seed/${storyId}/800/600`,
+            hint: data.image.hint,
+          }
+      };
+      
       const fullData = {
         id: storyId,
-        ...data,
+        ...serializableData,
         tags: data.tags.split(',').map((s) => s.trim()),
         relatedCharacters: data.relatedCharacters
           ? data.relatedCharacters.split(',').map((s) => s.trim())
@@ -140,22 +153,32 @@ export function StoryForm({ story }: StoryFormProps) {
         ...(story?.status === 'unclaimed' && { createdAt: serverTimestamp() }),
       };
 
-      setDoc(storyRef, fullData, { merge: true })
-        .then(() => {
-          toast({
-            title: `Saga Submitted!`,
-            description: 'The saga has been sent for review.',
-          });
-          router.push('/admin/content');
-        })
-        .catch(() => {
-          const permissionError = new FirestorePermissionError({
-            path: storyRef.path,
-            operation: 'write',
-            requestResourceData: fullData,
-          });
-          errorEmitter.emit('permission-error', permissionError);
+      try {
+        await setDoc(storyRef, fullData, { merge: true })
+        toast({
+          title: `Saga Submitted!`,
+          description: 'The saga has been sent for review.',
         });
+        router.push('/admin/content');
+
+        if (imageFile) {
+            toast({ title: "Uploading Image...", description: "This will happen in the background." });
+            const storageRef = ref(storage, `content-images/stories/${Date.now()}_${imageFile.name}`);
+            uploadBytes(storageRef, imageFile).then(snapshot => {
+                getDownloadURL(snapshot.ref).then(finalImageUrl => {
+                    updateDoc(storyRef, { 'image.url': finalImageUrl });
+                });
+            });
+        }
+
+      } catch (error) {
+        const permissionError = new FirestorePermissionError({
+          path: storyRef.path,
+          operation: 'write',
+          requestResourceData: fullData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }
     });
   };
 
@@ -225,34 +248,34 @@ export function StoryForm({ story }: StoryFormProps) {
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
+             <FormField
                 control={form.control}
-                name="image.url"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Image URL</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
+                name="image.file"
+                render={() => (
+                    <FormItem>
+                        <FormLabel>Saga Cover Image</FormLabel>
+                        <FormControl>
+                            <ImageUpload
+                                onFileSelect={(file) => form.setValue('image.file', file)}
+                                initialUrl={form.getValues('image.url')}
+                                folderName="content-images/stories"
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
                 )}
-              />
-              <FormField
+             />
+             <FormField
                 control={form.control}
                 name="image.hint"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Image Hint</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
+                     <FormControl><Input {...field} /></FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-            </div>
 
             <FormField
               control={form.control}

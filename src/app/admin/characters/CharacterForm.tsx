@@ -22,16 +22,19 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import type { EpicHero } from '@/lib/characters';
-import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useStorage } from '@/lib/firebase/provider';
+import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { ImageUpload } from '@/components/ImageUpload';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
   name: z.object({ en: z.string().min(1, "English name is required.") }),
   description: z.string().min(1, "English description is required."),
-  imageUrl: z.string().url("Must be a valid URL."),
+  imageUrl: z.string().optional(),
+  imageFile: z.any().optional(),
   imageHint: z.string().optional(),
   epicAssociation: z.string().min(1, "Epic association is required (e.g., Mahabharata)."),
 });
@@ -46,6 +49,7 @@ export function CharacterForm({ character }: CharacterFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const db = useFirestore();
+  const storage = useStorage();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -72,15 +76,16 @@ export function CharacterForm({ character }: CharacterFormProps) {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
+      const imageFile = data.imageFile;
       const characterId = character ? character.id : data.slug;
-      const characterRef = doc(db, 'epicHeroes', characterId);
       
       const fullData = {
           id: characterId,
-          ...data,
+          slug: data.slug,
+          name: data.name,
+          description: data.description,
           epicAssociation: data.epicAssociation.split(',').map(s => s.trim()),
-          status: 'pending', // Changed from 'published' to 'pending'
-          // Add other fields with default values
+          status: 'pending',
           background: character?.background || { birth: '', earlyLife: '', family: { parents: [], siblings: [], spouses: [], children: [] } },
           prominence: character?.prominence || '',
           qualities: character?.qualities || [],
@@ -91,23 +96,36 @@ export function CharacterForm({ character }: CharacterFormProps) {
           popularity: character?.popularity || 0,
           quote: character?.quote || {text: '', source: ''},
           modernRelevance: character?.modernRelevance || '',
+          imageUrl: character?.imageUrl || `https://picsum.photos/seed/${characterId}/600/400`,
+          imageHint: data.imageHint,
           updatedAt: serverTimestamp(),
           ...(character ? {} : { createdAt: serverTimestamp() }),
-      }
+      };
 
-      setDoc(characterRef, fullData, { merge: true })
-      .then(() => {
+      try {
+        const characterRef = doc(db, 'epicHeroes', characterId);
+        await setDoc(characterRef, fullData, { merge: true });
+
         toast({ title: `Character Submitted!`, description: `The character has been sent for review.` });
         router.push('/admin/content');
-      })
-      .catch((serverError) => {
+
+        if (imageFile) {
+            toast({ title: "Uploading Image...", description: "This will happen in the background." });
+            const storageRef = ref(storage, `content-images/heroes/${Date.now()}_${imageFile.name}`);
+            uploadBytes(storageRef, imageFile).then(snapshot => {
+                getDownloadURL(snapshot.ref).then(finalImageUrl => {
+                    updateDoc(characterRef, { imageUrl: finalImageUrl });
+                });
+            });
+        }
+      } catch (serverError) {
         const permissionError = new FirestorePermissionError({
-            path: characterRef.path,
+            path: `epicHeroes/${characterId}`,
             operation: 'write',
             requestResourceData: fullData,
         });
         errorEmitter.emit('permission-error', permissionError);
-      });
+      }
     });
   };
   
@@ -130,14 +148,28 @@ export function CharacterForm({ character }: CharacterFormProps) {
               <FormItem><FormLabel>Short Description (English)</FormLabel><FormControl><Textarea {...field} /></FormControl><FormMessage /></FormItem>
             )} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField control={form.control} name="imageUrl" render={({ field }) => (
-                <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-              <FormField control={form.control} name="imageHint" render={({ field }) => (
-                <FormItem><FormLabel>Image Hint</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-              )} />
-            </div>
+             <FormField control={form.control} name="imageFile" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Hero Image</FormLabel>
+                    <FormControl>
+                        <ImageUpload 
+                            onFileSelect={(file) => form.setValue('imageFile', file)}
+                            initialUrl={form.getValues('imageUrl')}
+                            folderName="content-images/heroes"
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+             )} />
+
+            <FormField control={form.control} name="imageHint" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Image Hint</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormDescription>e.g. `warrior archer` for AI image search.</FormDescription>
+                    <FormMessage />
+                </FormItem>
+            )} />
 
             <FormField control={form.control} name="epicAssociation" render={({ field }) => (
               <FormItem><FormLabel>Epic Association</FormLabel><FormDescription>Comma-separated epics (e.g., Ramayana, Mahabharata).</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>

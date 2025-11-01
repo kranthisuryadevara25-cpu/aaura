@@ -22,11 +22,18 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import { useFirestore } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useFirestore, useStorage } from '@/lib/firebase/provider';
+import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { ImageUpload } from '@/components/ImageUpload';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+
+const imageSchema = z.object({
+  url: z.string().optional(),
+  hint: z.string().min(1, "Hint is required."),
+  file: z.any().optional(),
+});
 
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
@@ -48,10 +55,7 @@ const formSchema = z.object({
     kn: z.string().optional(),
     bn: z.string().optional(),
   }),
-  images: z.array(z.object({
-    url: z.string().url("Must be a valid URL."),
-    hint: z.string().min(1, "Hint is required."),
-  })).min(1, "At least one image is required."),
+  images: z.array(imageSchema).min(1, "At least one image is required."),
   mantras: z.array(z.object({
     sanskrit: z.string().min(1, "Sanskrit text is required."),
     translation_en: z.string().min(1, "English translation is required."),
@@ -73,6 +77,7 @@ export function DeityForm({ deity }: DeityFormProps) {
   const { toast } = useToast();
   const router = useRouter();
   const db = useFirestore();
+  const storage = useStorage();
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -87,7 +92,7 @@ export function DeityForm({ deity }: DeityFormProps) {
     },
   });
 
-  const { fields: imageFields, append: appendImage, remove: removeImage, update } = useFieldArray({
+  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
     control: form.control,
     name: "images",
   });
@@ -109,28 +114,51 @@ export function DeityForm({ deity }: DeityFormProps) {
     startTransition(async () => {
       const deityId = deity ? deity.id : data.slug;
       const deityRef = doc(db, 'deities', deityId);
-      
+
+      const serializableData = {
+          ...data,
+          images: data.images.map((img) => ({
+              url: img.url || `https://picsum.photos/seed/${deityId}-${Math.random()}/600/400`,
+              hint: img.hint
+          }))
+      };
+
       const saveData = { 
         id: deityId,
-        ...data,
+        ...serializableData,
         status: 'pending', // Changed from 'published' to 'pending'
         updatedAt: serverTimestamp(),
         ...(deity.status === 'unclaimed' && { createdAt: serverTimestamp() }),
       };
 
-      setDoc(deityRef, saveData, { merge: true })
-        .then(() => {
-          toast({ title: `Deity Submitted!`, description: 'The deity has been sent for review.' });
-          router.push('/admin/content');
-        })
-        .catch((serverError) => {
-            const permissionError = new FirestorePermissionError({
-                path: deityRef.path,
-                operation: 'write',
-                requestResourceData: saveData,
-            });
-            errorEmitter.emit('permission-error', permissionError);
+      try {
+        await setDoc(deityRef, saveData, { merge: true });
+
+        toast({ title: `Deity Submitted!`, description: 'The deity has been sent for review.' });
+        router.push('/admin/content');
+        
+        data.images.forEach((image, index) => {
+            if (image.file) {
+                const file = image.file as File;
+                toast({ title: `Uploading image ${index + 1}...`});
+                const storageRef = ref(storage, `content-images/deities/${deityId}-${Date.now()}_${file.name}`);
+                uploadBytes(storageRef, file).then(snapshot => {
+                    getDownloadURL(snapshot.ref).then(finalImageUrl => {
+                        const updatedImages = form.getValues('images').map((img, i) => i === index ? { ...img, url: finalImageUrl } : img);
+                        updateDoc(deityRef, { [`images.${index}.url`]: finalImageUrl });
+                    });
+                });
+            }
         });
+
+      } catch (serverError) {
+          const permissionError = new FirestorePermissionError({
+              path: deityRef.path,
+              operation: 'write',
+              requestResourceData: saveData,
+          });
+          errorEmitter.emit('permission-error', permissionError);
+      }
     });
   };
 
@@ -167,12 +195,23 @@ export function DeityForm({ deity }: DeityFormProps) {
               {imageFields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
                    <div className="space-y-4">
-                     <ImageUpload
-                        onUploadComplete={(url) => {
-                            update(index, { ...field, url: url });
-                        }}
-                        initialUrl={field.url}
-                     />
+                     <FormField
+                        control={form.control}
+                        name={`images.${index}.file`}
+                        render={() => (
+                           <FormItem>
+                                <FormLabel>Deity Image {index + 1}</FormLabel>
+                                <FormControl>
+                                    <ImageUpload
+                                        onFileSelect={(file) => form.setValue(`images.${index}.file`, file)}
+                                        initialUrl={form.getValues(`images.${index}.url`)}
+                                        folderName={`content-images/deities`}
+                                    />
+                                </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                      />
                     <FormField control={form.control} name={`images.${index}.hint`} render={({ field }) => (
                       <FormItem><FormLabel>Image Hint</FormLabel><FormDescription>A short phrase describing the image for AI (e.g. 'Ganesha meditating').</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />

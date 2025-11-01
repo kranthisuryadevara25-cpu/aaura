@@ -25,6 +25,8 @@ import { useFirestore } from '@/lib/firebase/provider';
 import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
 import type { Challenge } from '@/lib/challenges';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 const taskSchema = z.object({
   day: z.coerce.number().min(1),
@@ -86,14 +88,17 @@ export function ChallengeForm({ challenge }: ChallengeFormProps) {
         ...data
       };
 
-      try {
-        await setDoc(challengeRef, fullData, { merge: true });
+      setDoc(challengeRef, fullData, { merge: true }).then(() => {
         toast({ title: challenge ? 'Challenge Updated' : 'Challenge Created!', description: 'The challenge is now live.' });
         router.push('/admin/content?tab=challenges');
-      } catch (e) {
-        console.error("Error saving challenge: ", e);
-        toast({ variant: 'destructive', title: 'Error saving challenge' });
-      }
+      }).catch((error) => {
+        const permissionError = new FirestorePermissionError({
+            path: challengeRef.path,
+            operation: challenge ? 'update' : 'create',
+            requestResourceData: fullData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
     });
   };
 

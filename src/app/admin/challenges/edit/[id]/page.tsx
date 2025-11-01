@@ -8,7 +8,9 @@ import { Button } from '@/components/ui/button';
 import { useDocument } from 'react-firebase-hooks/firestore';
 import { doc } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { challengeConverter, type Challenge } from '@/lib/challenges';
+import { challengeConverter } from '@/lib/challenges';
+import type { Challenge } from '@/lib/challenges';
+
 
 export default function EditChallengePage() {
   const params = useParams();
@@ -18,7 +20,7 @@ export default function EditChallengePage() {
 
   const challengeRef = doc(db, 'challenges', id).withConverter(challengeConverter);
   const [snapshot, isLoading] = useDocument(challengeRef);
-  const challenge = snapshot?.data();
+  const challenge = snapshot?.data() as Challenge | undefined;
 
   if (isLoading) {
     return (

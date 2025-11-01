@@ -411,6 +411,7 @@ export function StoryForm({ story }: StoryFormProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>YouTube Video ID</FormLabel>
+                          <FormDescription>The 11-character ID from the YouTube URL.</FormDescription>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -424,6 +425,7 @@ export function StoryForm({ story }: StoryFormProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Thumbnail URL</FormLabel>
+                           <FormDescription>Use: https://img.youtube.com/vi/VIDEO_ID/0.jpg</FormDescription>
                           <FormControl>
                             <Input {...field} />
                           </FormControl>
@@ -477,5 +479,3 @@ export function StoryForm({ story }: StoryFormProps) {
     </Card>
   );
 }
-
-    

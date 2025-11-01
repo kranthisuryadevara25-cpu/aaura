@@ -544,17 +544,25 @@ function ProductsTabContent() {
   const db = useFirestore();
   const productsRef = useMemo(() => db ? collection(db, 'products').withConverter(productConverter) : undefined, [db]);
   const { toast } = useToast();
-  const { language } = useLanguage();
-  const [products, isLoading] = useCollectionData<Product>(productsRef);
+  const [snapshot, isLoading] = useCollection(productsRef);
+  
+  const products = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = (id: string) => {
     if (!db) return;
-    try {
-      await deleteDoc(doc(db, 'products', id));
-      toast({ title: 'Product Deleted', description: 'The product has been removed.' });
-    } catch {
-      toast({ variant: 'destructive', title: 'Error', description: 'Failed to delete product.' });
-    }
+    const productDocRef = doc(db, 'products', id);
+
+    deleteDoc(productDocRef)
+        .then(() => {
+            toast({ title: 'Product Deleted', description: 'The product has been removed.' });
+        })
+        .catch((err) => {
+            const permissionError = new FirestorePermissionError({
+                path: productDocRef.path,
+                operation: 'delete',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
   };
 
   return (

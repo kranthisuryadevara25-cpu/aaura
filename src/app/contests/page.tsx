@@ -221,12 +221,20 @@ export default function ContestsPage() {
 
     const contestsQuery = useMemo(() => query(
         collection(db, 'contests'), 
-        where('status', '==', 'active'),
-        orderBy('createdAt', 'desc')
+        where('status', '==', 'active')
+        // orderBy('createdAt', 'desc') // Removed for now to avoid index dependency
     ), [db]);
 
     const [snapshot, loading, error] = useCollection(contestsQuery);
-    const contests = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    // Client-side sorting
+    const contests = useMemo(() => {
+        if (!snapshot) return [];
+        return snapshot.docs
+            .map(doc => ({ id: doc.id, ...doc.data() }))
+            .sort((a, b) => (b.createdAt?.toDate() || 0) - (a.createdAt?.toDate() || 0));
+    }, [snapshot]);
+
 
     if (error) {
         return (

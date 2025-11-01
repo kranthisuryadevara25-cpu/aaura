@@ -439,6 +439,7 @@ export function StoryForm({ story }: StoryFormProps) {
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel>Duration (seconds)</FormLabel>
+                           <FormDescription>Enter the total seconds.</FormDescription>
                           <FormControl>
                             <Input type="number" {...field} />
                           </FormControl>

@@ -22,8 +22,10 @@ import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, ArrowLeft } from 'lucide-react';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useAuth } from '@/lib/firebase/provider';
-
+import { useAuth, useFirestore } from '@/lib/firebase/provider';
+import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   title: z.string().min(5, "Title must be at least 5 characters long."),
@@ -39,6 +41,7 @@ type FormValues = z.infer<typeof formSchema>;
 export default function CreateManifestationPage() {
   const { toast } = useToast();
   const router = useRouter();
+  const db = useFirestore();
   const [user] = useAuthState(useAuth());
   const [isPending, startTransition] = useTransition();
 
@@ -59,13 +62,36 @@ export default function CreateManifestationPage() {
         return;
     }
     startTransition(async () => {
-      // Mock creation logic
-      console.log("Creating new manifestation post (mock):", data);
-      toast({ 
-        title: 'Manifestation Shared! (Mock)', 
-        description: 'Your story has been added to the hub.' 
-      });
-      router.push('/manifestation');
+      const manifestationsCollection = collection(db, 'manifestations');
+      const postData = {
+          userId: user.uid,
+          title: data.title,
+          technique: data.technique,
+          results: data.results || null,
+          tags: data.tags.split(',').map(tag => tag.trim()),
+          imageUrl: data.imageUrl || null,
+          createdAt: serverTimestamp(),
+          likesCount: 0,
+          commentsCount: 0,
+      };
+      
+      try {
+        const docRef = await addDoc(manifestationsCollection, postData);
+        await updateDoc(docRef, { id: docRef.id });
+
+        toast({ 
+          title: 'Manifestation Shared!', 
+          description: 'Your story has been added to the hub.' 
+        });
+        router.push('/manifestation');
+      } catch (error) {
+         const permissionError = new FirestorePermissionError({
+            path: manifestationsCollection.path,
+            operation: 'create',
+            requestResourceData: postData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      }
     });
   };
 

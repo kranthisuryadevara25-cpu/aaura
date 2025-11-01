@@ -25,6 +25,7 @@ import { Posts } from '@/components/Posts';
 
 export default function GroupDetailPage() {
   const params = useParams();
+  // The param is named `postId` in the folder structure, but it represents the group ID.
   const groupId = params.postId as string; 
   const db = useFirestore();
 

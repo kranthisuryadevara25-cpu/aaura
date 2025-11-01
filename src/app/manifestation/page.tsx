@@ -1,22 +1,23 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardFooter, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Brain, PlusCircle, ThumbsUp, MessageSquare, ArrowRight } from 'lucide-react';
+import { Brain, PlusCircle, ThumbsUp, MessageSquare, ArrowRight, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { manifestations } from '@/lib/manifestations';
 import type { Manifestation } from '@/lib/manifestations';
 import { formatDistanceToNow } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, orderBy } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
 
 
 function ManifestationCard({ post }: { post: Manifestation }) {
-    // MOCK: In a real app, this would fetch the author details
-    const author = { displayName: 'User ' + post.authorId.slice(0, 4), photoURL: `https://picsum.photos/seed/${post.authorId}/100/100` };
+    const author = { displayName: 'User ' + post.userId.slice(0, 4), photoURL: `https://picsum.photos/seed/${post.userId}/100/100` };
     
     return (
         <Card className="flex flex-col overflow-hidden group border-primary/20 hover:border-primary/50 transition-colors duration-300">
@@ -49,7 +50,7 @@ function ManifestationCard({ post }: { post: Manifestation }) {
                     </span>
                 </div>
                 <Button variant="ghost" size="sm" asChild>
-                    <Link href={`/manifestation/${post.slug}`}>
+                    <Link href={`/manifestation/${post.id}`}>
                         Read More <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                 </Button>
@@ -60,7 +61,9 @@ function ManifestationCard({ post }: { post: Manifestation }) {
 
 
 export default function ManifestationPage() {
-    const [posts, setPosts] = useState(manifestations);
+    const db = useFirestore();
+    const manifestationsQuery = useMemo(() => query(collection(db, 'manifestations'), orderBy('createdAt', 'desc')), [db]);
+    const [posts, isLoading] = useCollectionData(manifestationsQuery);
     
     return (
         <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -81,11 +84,23 @@ export default function ManifestationPage() {
                 </Button>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {posts.map(post => (
-                    <ManifestationCard key={post.id} post={post} />
-                ))}
-            </div>
+            {isLoading ? (
+                <div className="flex justify-center items-center h-64"><Loader2 className="h-12 w-12 animate-spin text-primary" /></div>
+            ) : posts && posts.length > 0 ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    {posts.map(post => (
+                        <ManifestationCard key={post.id} post={post as Manifestation} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                    <Brain className="mx-auto h-24 w-24 text-muted-foreground/50" />
+                    <h2 className="mt-6 text-2xl font-semibold text-foreground">Be the First to Share</h2>
+                    <p className="mt-2 text-muted-foreground">
+                        No manifestations have been shared yet. Start the movement!
+                    </p>
+                </div>
+            )}
         </main>
     );
 }

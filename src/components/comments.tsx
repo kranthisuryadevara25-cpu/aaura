@@ -2,14 +2,14 @@
 
 'use client';
 
-import { useTransition, useMemo } from 'react';
+import { useTransition, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
+import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, DocumentData } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -94,7 +94,8 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
-  
+  const [optimisticComments, setOptimisticComments] = useState<DocumentData[]>([]);
+
   const commentsCollectionName = `${contentType}s`;
 
   const commentsQuery = useMemo(() => {
@@ -104,6 +105,13 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   }, [db, commentsCollectionName, contentId]);
   
   const [comments, commentsLoading] = useCollectionData(commentsQuery, { idField: 'id' });
+
+  useEffect(() => {
+    if (comments) {
+        setOptimisticComments(comments);
+    }
+  }, [comments]);
+
 
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
@@ -126,6 +134,14 @@ export function Comments({ contentId, contentType }: CommentsProps) {
           createdAt: serverTimestamp(),
         };
 
+        const tempComment = {
+            ...commentData,
+            id: `temp-${Date.now()}`,
+            createdAt: { toDate: () => new Date() }
+        }
+        setOptimisticComments(prev => [tempComment, ...prev]);
+        form.reset();
+
         try {
             await addDoc(commentsCollectionRef, commentData);
             
@@ -134,8 +150,8 @@ export function Comments({ contentId, contentType }: CommentsProps) {
                 commentsCount: increment(1)
             });
 
-            form.reset();
         } catch (serverError) {
+             setOptimisticComments(prev => prev.filter(c => c.id !== tempComment.id)); // Rollback on error
              const permissionError = new FirestorePermissionError({
                 path: commentsCollectionRef.path,
                 operation: 'create',
@@ -148,7 +164,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
 
   return (
     <div className="max-w-4xl">
-      <h2 className="text-lg font-bold mb-4">{t.forum.discussionTitle} ({comments?.length || 0})</h2>
+      <h2 className="text-lg font-bold mb-4">{t.forum.discussionTitle} ({optimisticComments?.length || 0})</h2>
 
       {user ? (
         <Form {...form}>
@@ -189,7 +205,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
       )}
 
 
-      {commentsLoading ? (
+      {commentsLoading && optimisticComments.length === 0 ? (
         <div className="space-y-6">
             {[...Array(3)].map((_, i) => (
                 <div key={i} className="flex items-start gap-3 p-2">
@@ -203,8 +219,8 @@ export function Comments({ contentId, contentType }: CommentsProps) {
         </div>
       ) : (
         <div className="space-y-6">
-            {comments && comments.length > 0 ? (
-                comments.map((comment, index) => (
+            {optimisticComments && optimisticComments.length > 0 ? (
+                optimisticComments.map((comment, index) => (
                 <CommentCard key={comment.id || index} comment={comment} />
                 ))
             ) : (

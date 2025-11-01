@@ -3,7 +3,7 @@
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc, writeBatch, increment, serverTimestamp, collection, query, where, orderBy } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -48,11 +48,12 @@ export default function UserProfilePage() {
   const profileRef = useMemo(() => doc(db, 'users', userId), [db, userId]);
   const [profile, loadingProfile] = useDocumentData(profileRef, { idField: 'id' });
 
-  const postsQuery = query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc'));
+  const postsQuery = useMemo(() => query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc')), [db, userId]);
   const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
 
   const followingRef = useMemo(() => currentUser ? doc(db, `users/${currentUser.uid}/following`, userId) : undefined, [currentUser, db, userId]);
   const [following, loadingFollowing] = useDocumentData(followingRef);
+  
   const isFollowing = !!following;
   const isOwner = currentUser?.uid === userId;
 
@@ -93,6 +94,7 @@ export default function UserProfilePage() {
     })
     .catch((serverError) => {
         const operation = isFollowing ? 'delete' : 'create';
+        toast({ variant: "destructive", title: `Failed to ${operation} user`});
         const permissionError = new FirestorePermissionError({
             path: followingRef.path,
             operation: operation

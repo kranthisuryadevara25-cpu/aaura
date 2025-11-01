@@ -1,11 +1,9 @@
 
-
 "use client";
-import React, { useTransition, useMemo } from "react";
+import React, { useTransition, useMemo, useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
 import Link from "next/link";
 import Image from "next/image";
-import { formatDistanceToNow } from 'date-fns';
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import { doc, writeBatch, increment, serverTimestamp } from "firebase/firestore";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
@@ -20,6 +18,7 @@ import { Button } from "./ui/button";
 import { FirestorePermissionError } from "@/lib/firebase/errors";
 import { errorEmitter } from "@/lib/firebase/error-emitter";
 import { Comments } from './comments';
+import { ClientOnlyTime } from "./ClientOnlyTime";
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {
   const db = useFirestore();
@@ -60,9 +59,16 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const [contentData, contentLoading] = useDocumentData(contentRef);
   
   const likeRef = useMemo(() => user ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined, [user, db, contentCollection, contentId]);
-
   const [like, likeLoading] = useDocumentData(likeRef);
-  const isLiked = !!like;
+  
+  const initialLikes = item.meta?.likes || contentData?.likes || 0;
+  const [optimisticLikes, setOptimisticLikes] = useState(initialLikes);
+  const [isLiked, setIsLiked] = useState(false);
+
+  useEffect(() => {
+    setOptimisticLikes(contentData?.likes ?? initialLikes);
+    setIsLiked(!!like);
+  }, [contentData, like, initialLikes]);
 
   const handleLike = () => {
       if (!user || !contentRef || !likeRef) {
@@ -71,10 +77,15 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
       }
 
       startLikeTransition(() => {
+        const wasLiked = isLiked;
+        // Optimistic UI update
+        setIsLiked(!wasLiked);
+        setOptimisticLikes(prev => wasLiked ? prev - 1 : prev + 1);
+
         const batch = writeBatch(db);
         const likeData = { createdAt: serverTimestamp() };
 
-        if (isLiked) {
+        if (wasLiked) {
             batch.delete(likeRef);
             batch.update(contentRef, { likes: increment(-1) });
         } else {
@@ -83,7 +94,11 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
         }
         
         batch.commit().catch(async (serverError) => {
-            const operation = isLiked ? 'delete' : 'create';
+            // Revert optimistic UI update on failure
+            setIsLiked(wasLiked);
+            setOptimisticLikes(initialLikes);
+
+            const operation = wasLiked ? 'delete' : 'create';
             const permissionError = new FirestorePermissionError({
                 path: likeRef.path,
                 operation: operation,
@@ -112,7 +127,11 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
         case 'deity':
              return `/deities/${item.meta?.slug}`;
         case 'post':
-            return `/forum/${item.meta?.contextId}`;
+            // Posts related to a group are now under /forum/{groupId}, not /posts/{postId}
+            if (item.meta?.contextType === 'group' && item.meta?.contextId) {
+                return `/forum/${item.meta.contextId}`;
+            }
+            return `/forum`; // Fallback for other post types if needed
         default:
             return '#';
     }
@@ -121,12 +140,11 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const currentItemData = contentData || item;
   const title = getText(currentItemData.title);
   const description = getText(currentItemData.description);
-  const authorId = currentItemData.meta?.authorId || currentItemData.authorId;
+  const authorId = currentItemData.meta?.authorId || currentItemData.authorId || currentItemData.userId;
   const engagement = contentLoading ? item.meta : (currentItemData.meta || currentItemData);
-  const thumbnail = currentItemData.thumbnail || "https://picsum.photos/seed/placeholder/800/450";
+  const thumbnail = currentItemData.thumbnail || currentItemData.thumbnailUrl || "https://picsum.photos/seed/placeholder/800/450";
   const hint = currentItemData.meta?.imageHint || "image";
   const createdAtDate = currentItemData.createdAt?.toDate ? currentItemData.createdAt.toDate() : (item.createdAt ? new Date(item.createdAt) : undefined);
-  const createdAt = createdAtDate ? formatDistanceToNow(createdAtDate, { addSuffix: true }) : 'a while ago';
 
   const canInteract = item.kind === 'post' || item.kind === 'media' || item.kind === 'video';
   const commentContentType = useMemo(() => (item.kind === 'video' ? 'media' : item.kind) as 'post' | 'media', [item.kind]);
@@ -152,13 +170,13 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
                     <span>{engagement.views ? `${engagement.views.toLocaleString()} views` : "New"}</span>
                     &bull;
-                    <span>{createdAt}</span>
+                    <ClientOnlyTime date={createdAtDate} fallback="a while ago" />
                 </div>
                  {canInteract && (
                     <div className="flex items-center gap-2 mt-2 text-muted-foreground">
                         <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs px-2" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
                             {isLiking || likeLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Heart className={`w-4 h-4 ${isLiked ? "text-red-500 fill-current" : ""}`} />} 
-                            {contentLoading ? (item.meta?.likes || 0) : (engagement.likes || 0)}
+                            {optimisticLikes}
                         </Button>
                         <Button variant="ghost" size="sm" onClick={() => setShowComments(!showComments)} className="flex items-center gap-1.5 text-xs px-2">
                             <MessageCircle className="w-4 h-4" /> {contentLoading ? (item.meta?.commentsCount || 0) : (engagement.commentsCount || 0)}

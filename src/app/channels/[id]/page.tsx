@@ -167,8 +167,8 @@ function PostsTab({ channelId, isOwner }: { channelId: string, isOwner: boolean 
     const db = useFirestore();
     const postsQuery = useMemo(() => query(
         collection(db, 'posts'), 
-        where('authorId', '==', channelId), 
         where('contextType', '==', 'channel'),
+        where('contextId', '==', channelId), 
         orderBy('createdAt', 'desc')
     ), [db, channelId]);
     const [posts, loading] = useCollectionData(postsQuery, { idField: 'id' });
@@ -291,6 +291,7 @@ export default function ChannelDetailPage() {
 
   const subscriptionRef = useMemo(() => user ? doc(db, `users/${user.uid}/subscriptions`, channelId) : undefined, [user, db, channelId]);
   const [subscription, loadingSubscription] = useDocumentData(subscriptionRef);
+  
   const isSubscribed = !!subscription;
   const isOwner = user?.uid === channelId;
 
@@ -300,7 +301,7 @@ export default function ChannelDetailPage() {
       toast({ variant: 'destructive', title: 'You must be logged in to subscribe to a channel.' });
       return;
     }
-     if (user.uid === channel.userId) {
+     if (isOwner) {
         toast({ variant: 'destructive', title: "You cannot subscribe to your own channel." });
         return;
     }
@@ -331,6 +332,7 @@ export default function ChannelDetailPage() {
     })
     .catch((serverError) => {
         const operation = isSubscribed ? 'delete' : 'create';
+        toast({ variant: 'destructive', title: `Failed to ${operation} subscription` });
         const permissionError = new FirestorePermissionError({
             path: userSubscriptionRef.path,
             operation: operation,

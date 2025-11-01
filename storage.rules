@@ -16,9 +16,8 @@ service firebase.storage {
     }
 
     // Media uploads (videos, audio, etc.):
-    // Allow authenticated users to write to their own media folder.
-    // The {mediaId} acts as a wildcard for any file within the user's directory.
-    match /media/{userId}/{mediaId}/{allPaths=**} {
+    // Allow authenticated users to write to any path inside their own media folder.
+    match /media/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }

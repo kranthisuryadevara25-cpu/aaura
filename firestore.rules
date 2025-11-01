@@ -16,7 +16,7 @@ service cloud.firestore {
     }
     
     function isSuperAdmin() {
-      return isSignedIn() && request.auth.token.isSuperAdmin == true;
+      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSuperAdmin == true;
     }
     
     function isPublicRead() {
@@ -45,7 +45,7 @@ service cloud.firestore {
               request.resource.data.text.size() > 0 &&
               request.resource.data.createdAt == request.time &&
               request.resource.data.contentType == contentType &&
-              exists(/databases/$(database)/documents/$(contentType + 's')/$(request.resource.data.contentId));
+              exists(/databases/$(database)/documents/$(contentType)/$(request.resource.data.contentId));
     }
 
 
@@ -104,6 +104,10 @@ service cloud.firestore {
        match /challenges/{challengeId} {
          allow get, create, update, delete: if isOwner(userId);
        }
+       // Rule to allow users to join/leave groups
+       match /groups/{groupId} {
+          allow get, list, create, delete: if isOwner(userId);
+       }
     }
 
 
@@ -112,7 +116,7 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
     
     // Publicly readable content stubs
-    match /{collectionId}/{docId} where collectionId in ['deities', 'stories', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges'] {
+    match /{collectionId}/{docId} where collectionId in ['deities', 'stories', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges', 'groups'] {
       allow get, list: if true;
       allow create, update, delete: if isSuperAdmin();
     }
@@ -120,8 +124,8 @@ service cloud.firestore {
     // Media
     match /media/{mediaId} {
       allow get, list: if true;
-      allow create, update: if isOwner(request.resource.data.userId);
-      allow delete: if isOwner(resource.data.userId) || isSuperAdmin();
+      allow create: if isOwner(request.resource.data.userId);
+      allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
       
       match /comments/{commentId} {
           allow list: if true;
@@ -182,6 +186,22 @@ service cloud.firestore {
         }
     }
 
+    match /manifestations/{manifestationId} {
+        allow get, list: if true;
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
+
+        match /comments/{commentId} {
+            allow list: if true;
+            allow create: if isSignedIn() && isValidComment('manifestation');
+            allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
+        }
+        match /likes/{userId} {
+            allow get, list: if true;
+            allow create, delete: if isOwner(userId);
+        }
+    }
+
 
     // ---------------------------------------------------------------------------------------------
     // E-commerce & Community
@@ -207,7 +227,7 @@ service cloud.firestore {
         allow get, list: if true;
         // Allow any signed-in user to increment the totalChants count.
         // For all other fields, only a super admin can update.
-        allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants'])
+        allow update: if (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants']))
                       || isSuperAdmin();
         allow create, delete: if isSuperAdmin();
         
@@ -219,5 +239,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

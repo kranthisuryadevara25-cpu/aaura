@@ -2,10 +2,10 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy, ShoppingCart } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Loader2, PlusCircle, Trash2, Edit, Sparkles, BookOpen, UserSquare, Palmtree, Trophy, ShoppingCart, Shield } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/use-language';
@@ -18,13 +18,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCollection } from 'react-firebase-hooks/firestore';
+import { useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
-import { collection, deleteDoc, doc, FirestoreDataConverter, Query, type DocumentData, where } from 'firebase/firestore';
+import { collection, deleteDoc, doc, FirestoreDataConverter, Query, type DocumentData, where, orderBy } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
 import type { Story } from '@/lib/stories';
 import type { EpicHero } from '@/lib/characters';
@@ -33,6 +32,7 @@ import { Badge } from '@/components/ui/badge';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { productConverter, type Product } from '@/lib/products';
+import { Challenge, challengeConverter } from '@/lib/challenges';
 
 
 const deityConverter: FirestoreDataConverter<Deity> = {
@@ -68,10 +68,11 @@ const templeConverter: FirestoreDataConverter<Temple> = {
 
 function DeitiesTabContent() {
   const db = useFirestore();
-  const deitiesRef = useMemo(() => db ? collection(db, 'deities').withConverter(deityConverter) : undefined, [db]);
+  const deitiesQuery = useMemo(() => db ? query(collection(db, 'deities').withConverter(deityConverter)) : null, [db]);
+  const [snapshot, isLoading] = useCollection(deitiesQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [snapshot, isLoading] = useCollection(deitiesRef);
+  
   const deities = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
 
@@ -170,12 +171,12 @@ function DeitiesTabContent() {
 
 function StoriesTabContent() {
   const db = useFirestore();
-  const storiesRef = useMemo(() => db ? collection(db, 'stories').withConverter(storyConverter) : undefined, [db]);
+  const storiesQuery = useMemo(() => db ? query(collection(db, 'stories').withConverter(storyConverter)) : null, [db]);
+  const [snapshot, isLoading] = useCollection(storiesQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [snapshot, isLoading] = useCollection(storiesRef);
+  
   const stories = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
-
 
   const handleDelete = async (id: string) => {
     if (!db) return;
@@ -272,10 +273,11 @@ function StoriesTabContent() {
 
 function CharactersTabContent() {
   const db = useFirestore();
-  const charactersRef = useMemo(() => db ? collection(db, 'epicHeroes').withConverter(epicHeroConverter) : undefined, [db]);
+  const charactersQuery = useMemo(() => db ? query(collection(db, 'epicHeroes').withConverter(epicHeroConverter)) : null, [db]);
+  const [snapshot, isLoading] = useCollection(charactersQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [snapshot, isLoading] = useCollection(charactersRef);
+  
   const characters = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = async (id: string) => {
@@ -373,10 +375,11 @@ function CharactersTabContent() {
 
 function TemplesTabContent() {
   const db = useFirestore();
-  const templesRef = useMemo(() => db ? collection(db, 'temples').withConverter(templeConverter) : undefined, [db]);
+  const templesQuery = useMemo(() => db ? query(collection(db, 'temples').withConverter(templeConverter)) : null, [db]);
+  const [snapshot, isLoading] = useCollection(templesQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [snapshot, isLoading] = useCollection(templesRef);
+  
   const temples = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = async (id: string) => {
@@ -475,7 +478,7 @@ function TemplesTabContent() {
 function ContestsTabContent() {
   const db = useFirestore();
   const { toast } = useToast();
-  const contestsRef = useMemo(() => db ? collection(db, 'contests') : undefined, [db]);
+  const contestsRef = useMemo(() => db ? collection(db, 'contests') : null, [db]);
   const [snapshot, isLoading] = useCollection(contestsRef);
   const contests = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
@@ -562,16 +565,10 @@ function ProductsTabContent() {
     const db = useFirestore();
     const { toast } = useToast();
     
-    const productsQuery = useMemo(() => 
-        db ? collection(db, 'products').withConverter(productConverter) : undefined, 
-        [db]
-    );
+    const productsQuery = useMemo(() => db ? collection(db, 'products').withConverter(productConverter) : null, [db]);
     const [snapshot, isLoading] = useCollection(productsQuery);
     
-    const products = useMemo(() => 
-        snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [],
-        [snapshot]
-    );
+    const products = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
     const handleDelete = (id: string) => {
         if (!db) return;
@@ -657,6 +654,93 @@ function ProductsTabContent() {
     );
 }
 
+function ChallengesTabContent() {
+  const db = useFirestore();
+  const { toast } = useToast();
+  const challengesQuery = useMemo(() => db ? query(collection(db, 'challenges').withConverter(challengeConverter)) : null, [db]);
+  const [snapshot, isLoading] = useCollection(challengesQuery);
+  
+  const challenges = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
+
+  const handleDelete = (id: string) => {
+    if (!db) return;
+    const challengeDocRef = doc(db, 'challenges', id);
+    deleteDoc(challengeDocRef)
+      .then(() => {
+        toast({ title: 'Challenge Deleted', description: 'The challenge has been removed.' });
+      })
+      .catch((serverError) => {
+        const permissionError = new FirestorePermissionError({
+            path: challengeDocRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
+  };
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-6">
+        <p className="text-muted-foreground">Create and manage community challenges.</p>
+        <Button asChild>
+          <Link href="/admin/challenges/new">
+            <PlusCircle className="mr-2" />
+            Create New Challenge
+          </Link>
+        </Button>
+      </div>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {challenges.map((challenge) => (
+            <Card key={challenge.id}>
+              <CardHeader>
+                <div className="flex justify-between items-start">
+                  <div>
+                    <CardTitle>{challenge.title_en}</CardTitle>
+                    <CardDescription>{challenge.durationDays} day challenge</CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link href={`/admin/challenges/edit/${challenge.id}`}>
+                        <Edit className="mr-2 h-4 w-4" /> Edit
+                      </Link>
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="mr-2 h-4 w-4" />Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                          <AlertDialogDescription>This action cannot be undone. This will permanently delete the challenge.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => handleDelete(challenge.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Badge variant="secondary">Badge: {challenge.badgeId}</Badge>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 export default function ContentManagementPage() {
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
@@ -670,13 +754,14 @@ export default function ContentManagementPage() {
       </div>
 
       <Tabs defaultValue="deities" className="w-full">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="deities"><Sparkles className="mr-2 h-4 w-4" />Deities</TabsTrigger>
           <TabsTrigger value="stories"><BookOpen className="mr-2 h-4 w-4" />Epic Sagas</TabsTrigger>
           <TabsTrigger value="characters"><UserSquare className="mr-2 h-4 w-4" />Epic Heroes</TabsTrigger>
           <TabsTrigger value="temples"><Palmtree className="mr-2 h-4 w-4" />Temples</TabsTrigger>
           <TabsTrigger value="products"><ShoppingCart className="mr-2 h-4 w-4" />Products</TabsTrigger>
           <TabsTrigger value="contests"><Trophy className="mr-2 h-4 w-4" />Contests</TabsTrigger>
+          <TabsTrigger value="challenges"><Shield className="mr-2 h-4 w-4" />Challenges</TabsTrigger>
         </TabsList>
         <TabsContent value="deities" className="mt-6"><DeitiesTabContent /></TabsContent>
         <TabsContent value="stories" className="mt-6"><StoriesTabContent /></TabsContent>
@@ -684,6 +769,7 @@ export default function ContentManagementPage() {
         <TabsContent value="temples" className="mt-6"><TemplesTabContent /></TabsContent>
         <TabsContent value="products" className="mt-6"><ProductsTabContent /></TabsContent>
         <TabsContent value="contests" className="mt-6"><ContestsTabContent /></TabsContent>
+        <TabsContent value="challenges" className="mt-6"><ChallengesTabContent /></TabsContent>
       </Tabs>
     </main>
   );

@@ -71,10 +71,16 @@ const templeConverter: FirestoreDataConverter<Temple> = {
 function DeitiesTabContent() {
   const db = useFirestore();
   const deitiesQuery = useMemo(() => db ? query(collection(db, 'deities').withConverter(deityConverter)) : null, [db]);
-  const [snapshot, isLoading] = useCollection(deitiesQuery);
+  const [snapshot, isLoading, error] = useCollection(deitiesQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
   
+  useEffect(() => {
+    if (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'deities', operation: 'list'}));
+    }
+  }, [error]);
+
   const deities = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
 
@@ -174,10 +180,16 @@ function DeitiesTabContent() {
 function StoriesTabContent() {
   const db = useFirestore();
   const storiesQuery = useMemo(() => db ? query(collection(db, 'stories').withConverter(storyConverter)) : null, [db]);
-  const [snapshot, isLoading] = useCollection(storiesQuery);
+  const [snapshot, isLoading, error] = useCollection(storiesQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
   
+  useEffect(() => {
+    if (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'stories', operation: 'list'}));
+    }
+  }, [error]);
+
   const stories = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = async (id: string) => {
@@ -276,10 +288,16 @@ function StoriesTabContent() {
 function CharactersTabContent() {
   const db = useFirestore();
   const charactersQuery = useMemo(() => db ? query(collection(db, 'epicHeroes').withConverter(epicHeroConverter)) : null, [db]);
-  const [snapshot, isLoading] = useCollection(charactersQuery);
+  const [snapshot, isLoading, error] = useCollection(charactersQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
   
+  useEffect(() => {
+    if (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'epicHeroes', operation: 'list'}));
+    }
+  }, [error]);
+
   const characters = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = async (id: string) => {
@@ -378,10 +396,16 @@ function CharactersTabContent() {
 function TemplesTabContent() {
   const db = useFirestore();
   const templesQuery = useMemo(() => db ? query(collection(db, 'temples').withConverter(templeConverter)) : null, [db]);
-  const [snapshot, isLoading] = useCollection(templesQuery);
+  const [snapshot, isLoading, error] = useCollection(templesQuery);
   const { toast } = useToast();
   const { language } = useLanguage();
   
+  useEffect(() => {
+    if (error) {
+      errorEmitter.emit('permission-error', new FirestorePermissionError({ path: 'temples', operation: 'list'}));
+    }
+  }, [error]);
+
   const temples = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = async (id: string) => {
@@ -568,7 +592,13 @@ function ProductsTabContent() {
     const { toast } = useToast();
     
     const productsQuery = useMemo(() => db ? query(collection(db, 'products').withConverter(productConverter)) : undefined, [db]);
-    const [productsSnapshot, isLoading] = useCollection(productsQuery);
+    const [productsSnapshot, isLoading, error] = useCollection(productsQuery);
+    
+    useEffect(() => {
+        if(error) {
+            errorEmitter.emit('permission-error', new FirestorePermissionError({path: 'products', operation: 'list'}));
+        }
+    }, [error]);
     
     const products = useMemo(() => productsSnapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [productsSnapshot]);
 
@@ -767,7 +797,7 @@ export default function ContentManagementPage() {
       </div>
 
       <Tabs defaultValue="deities" className="w-full">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-7">
           <TabsTrigger value="deities"><Sparkles className="mr-2 h-4 w-4" />Deities</TabsTrigger>
           <TabsTrigger value="stories"><BookOpen className="mr-2 h-4 w-4" />Epic Sagas</TabsTrigger>
           <TabsTrigger value="characters"><UserSquare className="mr-2 h-4 w-4" />Epic Heroes</TabsTrigger>

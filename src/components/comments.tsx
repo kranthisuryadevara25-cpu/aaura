@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useTransition, useMemo, useState, useEffect } from 'react';
@@ -7,8 +8,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
-import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, DocumentData } from 'firebase/firestore';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, DocumentData, WithFieldValue } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
 import { Textarea } from '@/components/ui/textarea';
@@ -125,7 +126,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
 
     startTransition(async () => {
         const commentsCollectionRef = collection(db, `${commentsCollectionName}/${contentId}/comments`);
-        const commentData = {
+        const commentData: WithFieldValue<DocumentData> = {
           contentId,
           contentType: contentType,
           authorId: user.uid,
@@ -133,11 +134,14 @@ export function Comments({ contentId, contentType }: CommentsProps) {
           createdAt: serverTimestamp(),
         };
 
+        const tempId = `temp-${Date.now()}`;
         const tempComment = {
             ...commentData,
-            id: `temp-${Date.now()}`,
-            createdAt: { toDate: () => new Date() }
-        }
+            id: tempId,
+            createdAt: { toDate: () => new Date() },
+            authorId: user.uid,
+        };
+        
         setOptimisticComments(prev => [tempComment, ...prev]);
         form.reset();
 
@@ -150,7 +154,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
             });
 
         } catch (serverError) {
-             setOptimisticComments(prev => prev.filter(c => c.id !== tempComment.id)); // Rollback on error
+             setOptimisticComments(prev => prev.filter(c => c.id !== tempId)); // Rollback on error
              const permissionError = new FirestorePermissionError({
                 path: commentsCollectionRef.path,
                 operation: 'create',

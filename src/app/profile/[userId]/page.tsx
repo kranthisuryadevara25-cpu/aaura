@@ -3,7 +3,7 @@
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
 import { doc, writeBatch, increment, serverTimestamp, collection, query, where, orderBy } from 'firebase/firestore';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
@@ -58,7 +58,7 @@ export default function UserProfilePage() {
   const isOwner = currentUser?.uid === userId;
 
   const handleFollow = async () => {
-    if (!currentUser || !profileRef || !followingRef) {
+    if (!currentUser || !followingRef) {
       toast({ variant: 'destructive', title: 'You must be logged in to follow a user.' });
       return;
     }

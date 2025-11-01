@@ -5,16 +5,19 @@ import { useParams, useRouter } from 'next/navigation';
 import { TempleForm } from '../../TempleForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getTempleBySlug } from '@/lib/temples';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import type { Temple } from '@/lib/temples';
 
 export default function EditTemplePage() {
   const params = useParams();
   const router = useRouter();
+  const db = useFirestore();
   const id = params.id as string;
   
-  // Use local mock data instead of Firestore
-  const temple = getTempleBySlug(id);
-  const isLoading = false;
+  const templeRef = doc(db, 'temples', id);
+  const [temple, isLoading] = useDocumentData(templeRef);
 
   if (isLoading) {
     return (
@@ -30,7 +33,7 @@ export default function EditTemplePage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
         </Button>
-        <TempleForm temple={temple} />
+        <TempleForm temple={temple as Temple} />
     </main>
   );
 }

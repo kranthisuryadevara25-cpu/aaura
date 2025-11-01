@@ -5,17 +5,21 @@ import { useParams, useRouter } from 'next/navigation';
 import { DeityForm } from '../../DeityForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getDeityBySlug } from '@/lib/deities';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import type { Deity } from '@/lib/deities';
+
 
 export default function EditDeityPage() {
   const params = useParams();
   const router = useRouter();
+  const db = useFirestore();
   const id = params.id as string;
 
-  // Use local mock data instead of Firestore
-  const deity = getDeityBySlug(id);
-  const isLoading = false;
-
+  const deityRef = doc(db, 'deities', id);
+  const [deity, isLoading] = useDocumentData(deityRef);
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-full">
@@ -30,7 +34,8 @@ export default function EditDeityPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
         </Button>
-        <DeityForm deity={deity} />
+        <DeityForm deity={deity as Deity} />
     </main>
   );
 }
+

@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore, useStorage } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, updateDoc, collection, getDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { ImageUpload } from '@/components/ImageUpload';
@@ -36,24 +36,16 @@ const imageSchema = z.object({
 });
 
 const formSchema = z.object({
-  slug: z.string().min(1, "Slug is required."),
+  slug: z.string().min(3, "Slug must be at least 3 characters.").regex(/^[a-z0-9-]+$/, "Slug can only contain lowercase letters, numbers, and hyphens."),
   name: z.object({
     en: z.string().min(1, "English name is required."),
     hi: z.string().optional(),
     te: z.string().optional(),
-    mr: z.string().optional(),
-    ta: z.string().optional(),
-    kn: z.string().optional(),
-    bn: z.string().optional(),
   }),
   description: z.object({
     en: z.string().min(1, "English description is required."),
     hi: z.string().optional(),
     te: z.string().optional(),
-    mr: z.string().optional(),
-    ta: z.string().optional(),
-    kn: z.string().optional(),
-    bn: z.string().optional(),
   }),
   images: z.array(imageSchema).min(1, "At least one image is required."),
   mantras: z.array(z.object({
@@ -113,6 +105,20 @@ export function DeityForm({ deity }: DeityFormProps) {
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       const deityId = deity ? deity.id : data.slug;
+      
+      if (!deity) {
+        // Check if slug already exists for new deities
+        const existingDoc = await getDoc(doc(db, 'deities', deityId));
+        if (existingDoc.exists()) {
+          form.setError('slug', {
+            type: 'manual',
+            message: 'This slug is already in use. Please choose a unique one.',
+          });
+          toast({ variant: 'destructive', title: 'Slug already exists' });
+          return;
+        }
+      }
+
       const deityRef = doc(db, 'deities', deityId);
 
       const serializableData = {
@@ -126,9 +132,9 @@ export function DeityForm({ deity }: DeityFormProps) {
       const saveData = { 
         id: deityId,
         ...serializableData,
-        status: 'pending', // Changed from 'published' to 'pending'
+        status: 'pending',
         updatedAt: serverTimestamp(),
-        ...(deity.status === 'unclaimed' && { createdAt: serverTimestamp() }),
+        ...(deity ? {} : { createdAt: serverTimestamp() }),
       };
 
       try {
@@ -144,7 +150,6 @@ export function DeityForm({ deity }: DeityFormProps) {
                 const storageRef = ref(storage, `content-images/deities/${deityId}-${Date.now()}_${file.name}`);
                 uploadBytes(storageRef, file).then(snapshot => {
                     getDownloadURL(snapshot.ref).then(finalImageUrl => {
-                        const updatedImages = form.getValues('images').map((img, i) => i === index ? { ...img, url: finalImageUrl } : img);
                         updateDoc(deityRef, { [`images.${index}.url`]: finalImageUrl });
                     });
                 });
@@ -176,7 +181,7 @@ export function DeityForm({ deity }: DeityFormProps) {
               <FormItem>
                 <FormLabel>Slug</FormLabel>
                 <FormDescription>A unique identifier for the URL (e.g., 'sri-ganesha').</FormDescription>
-                <FormControl><Input {...field} disabled /></FormControl>
+                <FormControl><Input {...field} disabled={!!deity} /></FormControl>
                 <FormMessage />
               </FormItem>
             )} />

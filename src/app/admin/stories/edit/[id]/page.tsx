@@ -5,16 +5,20 @@ import { useParams, useRouter } from 'next/navigation';
 import { StoryForm } from '../../StoryForm';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { getStoryBySlug } from '@/lib/stories';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import type { Story } from '@/lib/stories';
+
 
 export default function EditStoryPage() {
   const params = useParams();
   const router = useRouter();
+  const db = useFirestore();
   const id = params.id as string;
 
-  // Use local mock data instead of Firestore
-  const story = getStoryBySlug(id);
-  const isLoading = false;
+  const storyRef = doc(db, 'stories', id);
+  const [story, isLoading] = useDocumentData(storyRef);
 
   if (isLoading) {
     return (
@@ -30,7 +34,7 @@ export default function EditStoryPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back
         </Button>
-        <StoryForm story={story} />
+        <StoryForm story={story as Story} />
     </main>
   );
 }

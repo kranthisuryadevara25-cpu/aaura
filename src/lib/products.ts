@@ -121,7 +121,7 @@ export type Product = {
     toFirestore: (product: Product) => product,
     fromFirestore: (snapshot, options) => {
         const data = snapshot.data(options);
-        return { id: snapshot.id, ...data } as Product;
+        return { ...data, id: snapshot.id } as Product;
     }
 };
   

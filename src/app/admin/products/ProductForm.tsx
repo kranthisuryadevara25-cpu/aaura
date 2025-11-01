@@ -26,6 +26,7 @@ import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
 import type { Product } from '@/lib/products';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const formSchema = z.object({
   name_en: z.string().min(1, 'English name is required.'),
@@ -135,14 +136,28 @@ export function ProductForm({ product }: ProductFormProps) {
               )} />
             </div>
             
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <FormField control={form.control} name="imageUrl" render={({ field }) => (
-                    <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                )} />
-                <FormField control={form.control} name="imageHint" render={({ field }) => (
-                    <FormItem><FormLabel>Image Hint</FormLabel><FormControl><Input {...field} /></FormControl><FormDescription>e.g. `product image`</FormDescription><FormMessage /></FormItem>
-                )} />
-            </div>
+             <FormField control={form.control} name="imageUrl" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Product Image</FormLabel>
+                    <FormControl>
+                        <ImageUpload 
+                            onUploadComplete={(url) => form.setValue('imageUrl', url)}
+                            initialUrl={field.value}
+                            folderName="product-images"
+                        />
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
+             )} />
+            
+            <FormField control={form.control} name="imageHint" render={({ field }) => (
+                <FormItem>
+                    <FormLabel>Image Hint</FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormDescription>e.g. `product image` for AI image search.</FormDescription>
+                    <FormMessage />
+                </FormItem>
+             )} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField control={form.control} name="category" render={({ field }) => (

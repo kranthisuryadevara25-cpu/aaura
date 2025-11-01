@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTransition, useMemo } from 'react';
 
-type ContentType = 'media' | 'stories' | 'deities' | 'temples' | 'epicHeroes';
+type ContentType = 'stories' | 'deities' | 'temples' | 'epicHeroes';
 
 interface ReviewItem extends DocumentData {
   id: string;
@@ -131,16 +131,12 @@ export default function AdminReviewPage() {
       </div>
 
       <Tabs defaultValue="sagas" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="media"><Film className="mr-2 h-4 w-4" />Media</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="sagas"><BookOpen className="mr-2 h-4 w-4" />Sagas</TabsTrigger>
             <TabsTrigger value="deities"><Sparkles className="mr-2 h-4 w-4" />Deities</TabsTrigger>
             <TabsTrigger value="heroes"><UserSquare className="mr-2 h-4 w-4" />Heroes</TabsTrigger>
             <TabsTrigger value="temples"><Palmtree className="mr-2 h-4 w-4" />Temples</TabsTrigger>
         </TabsList>
-        <TabsContent value="media" className="mt-6">
-            <ReviewTabContent collectionName="media" icon={Film} />
-        </TabsContent>
         <TabsContent value="sagas" className="mt-6">
             <ReviewTabContent collectionName="stories" icon={BookOpen} />
         </TabsContent>

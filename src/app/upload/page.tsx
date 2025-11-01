@@ -90,7 +90,6 @@ export default function UploadPage() {
         return;
     }
     
-    // Start the transition for AI moderation and Firestore doc creation
     startModerationTransition(async () => {
       setIsUploading(true);
       try {
@@ -118,7 +117,6 @@ export default function UploadPage() {
         const mediaCollection = collection(db, 'media');
         const newDocRef = doc(mediaCollection);
         
-        // Start the file upload to Firebase Storage
         const storageRef = ref(storage, `media/${user.uid}/${newDocRef.id}/${mediaFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, mediaFile);
 
@@ -133,10 +131,9 @@ export default function UploadPage() {
             setIsUploading(false);
           }, 
           () => {
-            // Upload completed successfully, now get the download URL
             getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
                 
-                await setDoc(newDocRef, {
+                await updateDoc(newDocRef, {
                     id: newDocRef.id,
                     userId: user.uid,
                     title_en: data.title_en,
@@ -146,11 +143,11 @@ export default function UploadPage() {
                     description_hi: data.description_hi,
                     description_te: data.description_te,
                     mediaUrl: downloadURL,
-                    thumbnailUrl: 'https://picsum.photos/seed/placeholder-thumb/800/450', // Placeholder, can be generated via cloud function
+                    thumbnailUrl: `https://img.youtube.com/vi/${Math.random().toString(36).substring(7)}/0.jpg`,
                     uploadDate: serverTimestamp(),
                     mediaType: data.mediaType,
-                    status: 'pending', // Set status to pending for admin review
-                    duration: 0, // Should be extracted from video metadata
+                    status: 'approved',
+                    duration: 0, 
                     language: 'en',
                     tags: [data.mediaType],
                     likes: 0,
@@ -159,7 +156,7 @@ export default function UploadPage() {
                 
                 toast({
                     title: 'Upload Complete!',
-                    description: 'Your media has been submitted for review.',
+                    description: 'Your media has been published.',
                 });
                 setIsUploading(false);
                 router.push('/media');

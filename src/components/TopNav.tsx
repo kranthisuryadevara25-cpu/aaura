@@ -1,6 +1,5 @@
 
-
-"use client";
+'use client';
 import React, { useState, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import Link from "next/link";
@@ -31,7 +30,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "./FollowListDialog";
 import { useLanguage } from "@/hooks/use-language";
-import { Sidebar } from "./Sidebar";
+import { MobileSidebar } from "./MobileSidebar";
 
 const UserStats = () => {
     const auth = useAuth();
@@ -147,7 +146,7 @@ const MobileNav = () => {
           <SheetTitle className="text-2xl font-serif">Aaura</SheetTitle>
           <SheetDescription className="sr-only">Main Navigation</SheetDescription>
         </SheetHeader>
-        <Sidebar />
+        <MobileSidebar onLinkClick={() => setOpen(false)}/>
       </SheetContent>
     </Sheet>
   )

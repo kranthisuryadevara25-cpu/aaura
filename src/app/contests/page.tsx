@@ -223,7 +223,7 @@ export default function ContestsPage() {
     const contestsQuery = query(
         collection(db, 'contests'), 
         where('status', '==', 'active'),
-        limit(1)
+        orderBy('createdAt', 'desc')
     );
     const [contests, loadingContests] = useCollectionData(contestsQuery);
     
@@ -235,9 +235,7 @@ export default function ContestsPage() {
         );
     }
     
-    const activeContest = contests?.[0];
-
-    if (!activeContest) {
+    if (!contests || contests.length === 0) {
          return (
              <main className="flex-grow container mx-auto px-4 py-8 md:py-16 text-center">
                 <Trophy className="mx-auto h-24 w-24 text-muted-foreground/50" />
@@ -248,8 +246,20 @@ export default function ContestsPage() {
     }
 
     return (
-        <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-start">
-            <ContestContent contest={activeContest} />
+        <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
+             <div className="text-center mb-12">
+                <h1 className="text-4xl md:text-5xl font-headline font-bold tracking-tight text-primary flex items-center justify-center gap-3">
+                    <Trophy className="h-10 w-10" /> Active Contests
+                </h1>
+                <p className="mt-4 max-w-3xl mx-auto text-lg text-muted-foreground">
+                    Join the community in a global chant and contribute to a collective goal.
+                </p>
+            </div>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+                {contests.map(contest => (
+                    <ContestContent key={contest.id} contest={contest} />
+                ))}
+            </div>
         </main>
     );
 }

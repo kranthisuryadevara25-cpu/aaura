@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -10,24 +10,27 @@ import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { Input } from '@/components/ui/input';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection } from 'firebase/firestore';
+import { collection, query } from 'firebase/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
+import type { Deity } from '@/lib/deities';
 
 export default function DeitiesPage() {
   const { language, t } = useLanguage();
   const db = useFirestore();
-  const deitiesRef = collection(db, 'deities');
-  const [deities, isLoading] = useCollectionData(deitiesRef, { idField: 'id' });
+  const deitiesRef = useMemo(() => collection(db, 'deities'), [db]);
+  const deitiesQuery = useMemo(() => query(deitiesRef), [deitiesRef]);
+  const [deities, isLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
+  
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredDeities, setFilteredDeities] = useState(deities);
+  const [filteredDeities, setFilteredDeities] = useState<Deity[]>([]);
 
   useEffect(() => {
     if (deities) {
       if (searchQuery.trim() === '') {
-        setFilteredDeities(deities);
+        setFilteredDeities(deities as Deity[]);
       } else {
         const lowercasedQuery = searchQuery.toLowerCase();
-        const filtered = deities.filter((deity) => {
+        const filtered = (deities as Deity[]).filter((deity) => {
           const name = (deity.name as any)[language] || deity.name.en;
           return name.toLowerCase().includes(lowercasedQuery);
         });
@@ -50,7 +53,7 @@ export default function DeitiesPage() {
              <Button asChild>
                 <Link href="/admin/deities/new">
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Deity
+                    {t.deities.addDeity}
                 </Link>
             </Button>
         </div>
@@ -71,17 +74,19 @@ export default function DeitiesPage() {
             </div>
         ) : filteredDeities && filteredDeities.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredDeities.map((deity: any) => {
+            {filteredDeities.map((deity: Deity) => {
                 const name = (deity.name as any)[language] || deity.name.en;
                 const description = (deity.description as any)[language] || deity.description.en;
+                const imageUrl = deity.images?.[0]?.url || `https://picsum.photos/seed/${deity.slug}/600/400`;
+                const imageHint = deity.images?.[0]?.hint || 'deity';
                 return (
                 <Card key={deity.id} className="flex flex-col overflow-hidden group bg-card border-border hover:border-primary/50 transition-colors duration-300">
                 <CardContent className="p-0">
                     <div className="aspect-video relative">
                         <Image
-                            src={deity.images[0].url}
+                            src={imageUrl}
                             alt={name}
-                            data-ai-hint={deity.images[0].hint}
+                            data-ai-hint={imageHint}
                             fill
                             className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />

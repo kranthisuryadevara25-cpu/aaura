@@ -6,10 +6,13 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
 import { Music, BookOpen, Sunrise, Sunset, Loader2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import type { DeityDailyRelevanceOutput } from '@/ai/flows/deity-daily-relevance';
 import { useLanguage } from '@/hooks/use-language';
-import { getDeityBySlug } from '@/lib/deities';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { doc, query, collection, where } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import type { Deity } from '@/lib/deities';
 
 export default function DeityDetailPage() {
   const params = useParams();
@@ -17,10 +20,12 @@ export default function DeityDetailPage() {
   const { language, t } = useLanguage();
   const [dailyContent, setDailyContent] = useState<DeityDailyRelevanceOutput | null>(null);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
+  const db = useFirestore();
 
-  const deity = getDeityBySlug(slug);
-  const isDeitiesLoading = false;
-  
+  const deitiesQuery = useMemo(() => query(collection(db, 'deities'), where('slug', '==', slug)), [db, slug]);
+  const [deities, isDeitiesLoading] = useDocumentData(deitiesQuery);
+  const deity = useMemo(() => deities?.[0] as Deity | undefined, [deities]);
+
   useEffect(() => {
     if (deity) {
       // MOCK DATA: Using static content to avoid API rate limits during development.
@@ -105,7 +110,7 @@ export default function DeityDetailPage() {
                     <CardTitle className="flex items-center gap-3 text-primary"><Music /> {t.deityDetail.mantras}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {deity.mantras.map((mantra: any, index: number) => {
+                    {deity.mantras?.map((mantra: any, index: number) => {
                     const translationKey = `translation_${language}` as keyof typeof mantra;
                     const translation = (mantra as any)[translationKey] || mantra.translation_en;
                     return (
@@ -123,7 +128,7 @@ export default function DeityDetailPage() {
                     <CardTitle className="flex items-center gap-3 text-primary"><BookOpen /> {t.deityDetail.stotras}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    {deity.stotras.map((stotra: any, index: number) => {
+                    {deity.stotras?.map((stotra: any, index: number) => {
                     const title = (stotra.title as any)[language] || stotra.title.en;
                     const translationKey = `translation_${language}` as keyof typeof stotra;
                     const translation = (stotra as any)[translationKey] || stotra.translation_en;

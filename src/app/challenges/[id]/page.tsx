@@ -18,7 +18,7 @@ import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 
 function TaskLink({ taskType, contentId }: { taskType: string, contentId: string }) {
-    const href = taskType === 'read-story' ? `/stories/${contentId}` : `/watch/${contentId}`;
+    const href = taskType === 'read-story' ? `/stories/${contentId}` : `/watch/${contentId.replace('media-','')}`;
     if (taskType === 'recite-mantra') {
         return <span className="text-sm italic text-muted-foreground">Recite: "{contentId}"</span>
     }

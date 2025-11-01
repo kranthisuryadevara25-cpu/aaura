@@ -22,7 +22,7 @@ import { useTransition, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { useFirestore, useStorage } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
+import { doc, setDoc, updateDoc, serverTimestamp, collection } from 'firebase/firestore';
 import type { Product } from '@/lib/products';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
@@ -94,32 +94,11 @@ export function ProductForm({ product }: ProductFormProps) {
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
-      let finalImageUrl = product?.imageUrl || '';
-
-      // --- Start of new image upload logic ---
       const imageFile = data.imageFile;
-      if (imageFile) {
-        toast({ title: "Uploading Image...", description: "Please wait while the image is uploaded." });
-        const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
-        try {
-          const snapshot = await uploadBytes(storageRef, imageFile);
-          finalImageUrl = await getDownloadURL(snapshot.ref);
-          toast({ title: "Image Uploaded Successfully!" });
-        } catch (error) {
-          console.error("Image upload failed:", error);
-          toast({ variant: "destructive", title: "Image Upload Failed", description: "Could not upload the image. Please try again." });
-          return; // Stop form submission if image upload fails
-        }
-      }
-      // --- End of new image upload logic ---
-
-      if (!finalImageUrl) {
-        toast({ variant: "destructive", title: "Missing Image", description: "Please upload a product image." });
-        return;
-      }
-
       const productId = product ? product.id : doc(collection(db, 'products')).id;
       const productRef = doc(db, 'products', productId);
+      
+      const placeholderImageUrl = 'https://picsum.photos/seed/placeholder/600';
 
       const fullData: Product = {
         id: productId,
@@ -129,25 +108,43 @@ export function ProductForm({ product }: ProductFormProps) {
         description_hi: data.description_hi,
         price: data.price,
         originalPrice: data.originalPrice || data.price,
-        imageUrl: finalImageUrl,
+        imageUrl: product?.imageUrl || (imageFile ? placeholderImageUrl : ''),
         imageHint: data.imageHint,
         category: data.category,
         shopId: data.shopId,
       };
 
-      setDoc(productRef, fullData, { merge: true })
-        .then(() => {
-          toast({ title: product ? 'Product Updated!' : 'Product Created!', description: `${data.name_en} has been saved.` });
-          router.push('/admin/content?tab=products');
-        })
-        .catch((serverError) => {
+      try {
+        await setDoc(productRef, fullData, { merge: true });
+        
+        toast({ 
+          title: product ? 'Product Updated!' : 'Product Created!', 
+          description: `${data.name_en} has been saved.` 
+        });
+
+        // Navigate away immediately for a faster user experience
+        router.push('/admin/content?tab=products');
+
+        if (imageFile) {
+          toast({ title: "Uploading Image...", description: "This will happen in the background." });
+          const storageRef = ref(storage, `product-images/${Date.now()}_${imageFile.name}`);
+          const snapshot = await uploadBytes(storageRef, imageFile);
+          const finalImageUrl = await getDownloadURL(snapshot.ref);
+
+          // Update the document with the final URL
+          await updateDoc(productRef, { imageUrl: finalImageUrl });
+          
+          toast({ title: "Image Upload Complete!", description: "The product image has been updated." });
+        }
+      } catch (serverError) {
+          console.error("Error saving product:", serverError);
           const permissionError = new FirestorePermissionError({
             path: productRef.path,
             operation: 'write',
             requestResourceData: fullData,
           });
           errorEmitter.emit('permission-error', permissionError);
-        });
+      }
     });
   };
 

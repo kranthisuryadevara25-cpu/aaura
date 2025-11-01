@@ -546,13 +546,17 @@ function ContestsTabContent() {
 function ProductsTabContent() {
     const db = useFirestore();
     const { toast } = useToast();
-
-    // The productsRef is now stable and doesn't depend on a `useMemo` that can cause re-renders.
-    const productsRef = db ? collection(db, 'products').withConverter(productConverter) : null;
-    const [snapshot, isLoading] = useCollection(productsRef);
     
-    // The products list is derived directly from the stable snapshot.
-    const products = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const productsQuery = useMemo(() => 
+        db ? collection(db, 'products').withConverter(productConverter) : undefined, 
+        [db]
+    );
+    const [snapshot, isLoading] = useCollection(productsQuery);
+    
+    const products = useMemo(() => 
+        snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [],
+        [snapshot]
+    );
 
     const handleDelete = (id: string) => {
         if (!db) return;

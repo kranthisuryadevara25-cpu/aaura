@@ -26,6 +26,7 @@ import { useFirestore } from '@/lib/firebase/provider';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
+import { ImageUpload } from '@/components/ImageUpload';
 
 const formSchema = z.object({
   slug: z.string().min(1, "Slug is required."),
@@ -86,7 +87,7 @@ export function DeityForm({ deity }: DeityFormProps) {
     },
   });
 
-  const { fields: imageFields, append: appendImage, remove: removeImage } = useFieldArray({
+  const { fields: imageFields, append: appendImage, remove: removeImage, update } = useFieldArray({
     control: form.control,
     name: "images",
   });
@@ -164,13 +165,18 @@ export function DeityForm({ deity }: DeityFormProps) {
             <div>
               <h3 className="text-lg font-medium mb-2">Images</h3>
               {imageFields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
-                   <FormField control={form.control} name={`images.${index}.url`} render={({ field }) => (
-                      <FormItem><FormLabel>Image URL</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                <div key={field.id} className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-start mb-4 border p-4 rounded-md">
+                   <div className="space-y-4">
+                     <ImageUpload
+                        onUploadComplete={(url) => {
+                            update(index, { ...field, url: url });
+                        }}
+                        initialUrl={field.url}
+                     />
                     <FormField control={form.control} name={`images.${index}.hint`} render={({ field }) => (
-                      <FormItem><FormLabel>Image Hint</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel>Image Hint</FormLabel><FormDescription>A short phrase describing the image for AI (e.g. 'Ganesha meditating').</FormDescription><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
+                   </div>
                     <Button type="button" variant="destructive" size="icon" onClick={() => removeImage(index)} className="mt-8">
                         <Trash2 className="h-4 w-4" />
                     </Button>

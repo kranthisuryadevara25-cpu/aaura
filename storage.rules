@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service firebase.storage {
@@ -20,6 +21,13 @@ service firebase.storage {
     match /media/{userId}/{mediaId}/{fileName} {
       allow read: if true;
       allow write: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // General content images (for deities, stories, etc.)
+    // Writable by any authenticated user. Publicly readable.
+    match /content-images/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated();
     }
 
     // Shop item images:

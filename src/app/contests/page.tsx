@@ -1,11 +1,10 @@
 
-
 'use client';
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
-import { collection, query, where, limit, doc, runTransaction, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc, writeBatch } from 'firebase/firestore';
-import { Loader2, Trophy, Send, Calendar, Share2 } from 'lucide-react';
+import { useCollection } from 'react-firebase-hooks/firestore';
+import { collection, query, where, doc, writeBatch, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc } from 'firebase/firestore';
+import { Loader2, Trophy, Send, Calendar, Share2, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -22,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format, formatDistanceToNow } from 'date-fns';
 import Image from 'next/image';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const chantSchema = z.object({
   mantra: z.literal("Jai Shri Ram", { errorMap: () => ({ message: 'Mantra must be "Jai Shri Ram".' }) }),
@@ -37,7 +37,7 @@ function RecentChants({ contestId }: { contestId: string }) {
             limit(10)
         ), [db, contestId]
     );
-    const [recentChants, loading] = useCollectionData(recentChantsQuery);
+    const [recentChants, loading] = useCollection(recentChantsQuery);
 
     if (loading) {
         return <div className="flex justify-center"><Loader2 className="h-6 w-6 animate-spin" /></div>
@@ -46,21 +46,24 @@ function RecentChants({ contestId }: { contestId: string }) {
     return (
         <div className="space-y-4 mt-6">
             <h4 className="font-semibold text-center text-muted-foreground">Recent Chants</h4>
-            {recentChants && recentChants.length > 0 ? recentChants.map((chant, index) => (
-                <div key={index} className="flex items-center gap-3 text-sm bg-secondary/50 p-2 rounded-lg">
-                    <Avatar className="h-8 w-8">
-                         <AvatarImage src={`https://picsum.photos/seed/${chant.authorId}/40`} />
-                        <AvatarFallback>{chant.displayName?.[0] || 'A'}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1">
-                        <p className="font-semibold text-foreground">{chant.displayName}</p>
-                        <p className="text-sm text-primary font-medium">{chant.text}</p>
+            {recentChants && recentChants.docs.length > 0 ? recentChants.docs.map((chantDoc) => {
+                const chant = chantDoc.data();
+                return (
+                    <div key={chantDoc.id} className="flex items-center gap-3 text-sm bg-secondary/50 p-2 rounded-lg">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src={`https://picsum.photos/seed/${chant.authorId}/40`} />
+                            <AvatarFallback>{chant.displayName?.[0] || 'A'}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                            <p className="font-semibold text-foreground">{chant.displayName}</p>
+                            <p className="text-sm text-primary font-medium">{chant.text}</p>
+                        </div>
+                        <p className="text-xs text-muted-foreground self-start">
+                            {chant.createdAt ? formatDistanceToNow(chant.createdAt.toDate(), { addSuffix: true }) : 'just now'}
+                        </p>
                     </div>
-                    <p className="text-xs text-muted-foreground self-start">
-                        {chant.createdAt ? formatDistanceToNow(chant.createdAt.toDate(), { addSuffix: true }) : 'just now'}
-                    </p>
-                </div>
-            )) : <p className="text-sm text-muted-foreground text-center">No chants yet. Be the first!</p>}
+                )
+            }) : <p className="text-sm text-muted-foreground text-center">No chants yet. Be the first!</p>}
         </div>
     )
 }
@@ -83,7 +86,6 @@ function ContestContent({ contest }: { contest: DocumentData }) {
             return;
         }
 
-        // Client-side validation
         if (data.mantra !== 'Jai Shri Ram') {
             toast({ variant: 'destructive', title: 'Only "Jai Shri Ram" is allowed.' });
             return;
@@ -102,11 +104,8 @@ function ContestContent({ contest }: { contest: DocumentData }) {
 
             try {
                 const batch = writeBatch(db);
-                // Add chant
                 batch.set(doc(chantsCollectionRef), chantData);
-                // Increment totalChants
                 batch.update(contestRef, { totalChants: increment(1) });
-                // Update contest progress
                 batch.set(contestProgressRef, {
                     submissionCount: increment(1),
                     lastSubmissionTime: serverTimestamp(),
@@ -220,14 +219,30 @@ function ContestContent({ contest }: { contest: DocumentData }) {
 export default function ContestsPage() {
     const db = useFirestore();
 
-    const contestsQuery = query(
+    const contestsQuery = useMemo(() => query(
         collection(db, 'contests'), 
         where('status', '==', 'active'),
         orderBy('createdAt', 'desc')
-    );
-    const [contests, loadingContests] = useCollectionData(contestsQuery);
+    ), [db]);
+
+    const [snapshot, loading, error] = useCollection(contestsQuery);
+    const contests = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+    if (error) {
+        return (
+            <main className="flex-grow container mx-auto px-4 py-8 md:py-16 text-center">
+                <Alert variant="destructive" className="max-w-md mx-auto">
+                    <Info className="h-4 w-4" />
+                    <AlertTitle>Error Loading Contests</AlertTitle>
+                    <AlertDescription>
+                       There was a problem fetching the contests. The required database index might still be building. Please wait a few minutes and try again.
+                    </AlertDescription>
+                </Alert>
+            </main>
+        )
+    }
     
-    if (loadingContests) {
+    if (loading) {
         return (
             <main className="flex-grow container mx-auto px-4 py-8 md:py-16 flex justify-center items-center">
                 <Loader2 className="h-16 w-16 animate-spin text-primary" />
@@ -255,7 +270,7 @@ export default function ContestsPage() {
                     Join the community in a global chant and contribute to a collective goal.
                 </p>
             </div>
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+            <div className="flex flex-col items-center gap-8">
                 {contests.map(contest => (
                     <ContestContent key={contest.id} contest={contest} />
                 ))}

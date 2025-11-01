@@ -12,10 +12,10 @@ import { useFirestore } from '@/lib/firebase/provider';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { productConverter, type Product } from '@/lib/products';
 import { Badge } from '@/components/ui/badge';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 
 export default function ShopPage() {
   const { t, language } = useLanguage();
@@ -26,7 +26,9 @@ export default function ShopPage() {
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
 
   const productsRef = collection(db, 'products').withConverter(productConverter);
-  const [products, isLoading] = useCollectionData<Product>(productsRef);
+  const [snapshot, isLoading] = useCollection(productsRef);
+  
+  const products = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
 
   const handleAddToCart = (product: Product) => {
@@ -90,8 +92,8 @@ export default function ShopPage() {
             </div>
         ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {products?.map((product: any) => {
-                const name = product[`name_${language}`] || product.name_en;
+            {products?.map((product: Product) => {
+                const name = product[`name_${language}` as keyof typeof product] || product.name_en;
                 const hasDiscount = product.originalPrice && product.originalPrice > product.price;
                 const discountPercent = hasDiscount ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
                 const isAdding = addingProductId === product.id;
@@ -103,7 +105,7 @@ export default function ShopPage() {
                        <Link href={`/shop/${product.id}`}>
                             <Image
                                 src={product.imageUrl}
-                                alt={name}
+                                alt={name as string}
                                 data-ai-hint={product.imageHint || "product image"}
                                 fill
                                 className="object-cover transition-transform duration-300 group-hover:scale-105"
@@ -117,11 +119,11 @@ export default function ShopPage() {
                     </div>
                 </CardContent>
                 <CardHeader>
-                    <CardTitle className="text-foreground">{name}</CardTitle>
+                    <CardTitle className="text-foreground">{name as string}</CardTitle>
                     <div className="flex items-baseline gap-2">
                         <p className="text-lg font-semibold text-primary">₹{product.price.toFixed(2)}</p>
                         {hasDiscount && (
-                             <p className="text-sm text-muted-foreground line-through">₹{product.originalPrice.toFixed(2)}</p>
+                             <p className="text-sm text-muted-foreground line-through">₹{product.originalPrice!.toFixed(2)}</p>
                         )}
                     </div>
                 </CardHeader>

@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useCollection, useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollection } from 'react-firebase-hooks/firestore';
 import { useFirestore } from '@/lib/firebase/provider';
 import { collection, deleteDoc, doc, FirestoreDataConverter, Query, type DocumentData, where } from 'firebase/firestore';
 import type { Deity } from '@/lib/deities';
@@ -71,7 +71,8 @@ function DeitiesTabContent() {
   const deitiesRef = useMemo(() => db ? collection(db, 'deities').withConverter(deityConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [deities, isLoading] = useCollectionData<Deity>(deitiesRef, { idField: 'id' });
+  const [snapshot, isLoading] = useCollection(deitiesRef);
+  const deities = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
 
   const handleDelete = async (id: string) => {
@@ -166,7 +167,8 @@ function StoriesTabContent() {
   const storiesRef = useMemo(() => db ? collection(db, 'stories').withConverter(storyConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [stories, isLoading] = useCollectionData<Story>(storiesRef, { idField: 'id' });
+  const [snapshot, isLoading] = useCollection(storiesRef);
+  const stories = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
 
   const handleDelete = async (id: string) => {
@@ -261,8 +263,8 @@ function CharactersTabContent() {
   const charactersRef = useMemo(() => db ? collection(db, 'epicHeroes').withConverter(epicHeroConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [characters, isLoading] = useCollectionData<EpicHero>(charactersRef, { idField: 'id' });
-
+  const [snapshot, isLoading] = useCollection(charactersRef);
+  const characters = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = async (id: string) => {
     if (!db) return;
@@ -356,7 +358,8 @@ function TemplesTabContent() {
   const templesRef = useMemo(() => db ? collection(db, 'temples').withConverter(templeConverter) : undefined, [db]);
   const { toast } = useToast();
   const { language } = useLanguage();
-  const [temples, isLoading] = useCollectionData<Temple>(templesRef, { idField: 'id' });
+  const [snapshot, isLoading] = useCollection(templesRef);
+  const temples = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
 
   const handleDelete = async (id: string) => {
     if (!db) return;

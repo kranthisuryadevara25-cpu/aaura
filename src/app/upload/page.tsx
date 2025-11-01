@@ -19,7 +19,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth, useFirestore, useStorage } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -28,6 +28,9 @@ import { moderateContent } from '@/ai/ai-content-moderation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/hooks/use-language';
 import { Progress } from '@/components/ui/progress';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
+
 
 const formSchema = z.object({
   title_en: z.string().min(5, { message: 'English title must be at least 5 characters.' }),
@@ -70,14 +73,6 @@ export default function UploadPage() {
 
   const fileRef = form.register('media');
 
-  const toBase64 = (file: File) =>
-    new Promise<string>((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-  });
-
   const onSubmit = (data: FormValues) => {
     if (!user) {
       toast({ variant: 'destructive', title: 'You must be logged in to upload.' });
@@ -90,97 +85,84 @@ export default function UploadPage() {
         return;
     }
     
-    setIsUploading(true);
+    startTransition(() => {
+        setIsUploading(true);
 
-    startTransition(async () => {
-      try {
-        
-        // Step 1: Create the Firestore document reference first to get an ID.
-        const mediaCollection = collection(db, 'media');
-        const newDocRef = doc(mediaCollection);
-        
-        // Step 2: Start the Firebase Storage upload immediately.
-        const storageRef = ref(storage, `media/${user.uid}/${newDocRef.id}/${mediaFile.name}`);
+        const newDocRef = doc(collection(db, 'media'));
+        const mediaId = newDocRef.id;
+        const storageRef = ref(storage, `media/${user.uid}/${mediaId}/${mediaFile.name}`);
         const uploadTask = uploadBytesResumable(storageRef, mediaFile);
 
-        // Step 3: In parallel, run AI content moderation.
-        const moderationPromise = moderateContent({
-          videoDataUri: "data:text/plain;base64,aG9sZGluZw==", // Using a tiny placeholder as the content is not analyzed
-          title: data.title_en,
-          description: data.description_en,
-        });
-
-        // Listen for state changes, errors, and completion of the upload.
         uploadTask.on('state_changed', 
           (snapshot) => {
             const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
             setUploadProgress(progress);
           }, 
           (error) => {
-            // Handle unsuccessful uploads
             console.error("Upload failed:", error);
             toast({ variant: "destructive", title: "File Upload Failed", description: "Could not upload your file. Please try again." });
             setIsUploading(false);
           }, 
           async () => {
-            // Upload completed successfully, now get the download URL.
-            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-            
-            // Wait for the moderation to complete
-            const moderationResult = await moderationPromise;
+            try {
+                const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-            if (!moderationResult.isAppropriate) {
-              toast({
-                variant: 'destructive',
-                title: 'Content Moderation Failed',
-                description: moderationResult.reason,
-                duration: 9000,
-              });
-              // Note: You might want to delete the uploaded file from storage here.
-              setIsUploading(false);
-              return;
+                const moderationResult = await moderateContent({
+                  videoDataUri: "data:text/plain;base64,aG9sZGluZw==",
+                  title: data.title_en,
+                  description: data.description_en,
+                });
+    
+                if (!moderationResult.isAppropriate) {
+                  toast({
+                    variant: 'destructive',
+                    title: 'Content Moderation Failed',
+                    description: moderationResult.reason,
+                    duration: 9000,
+                  });
+                  setIsUploading(false);
+                  return;
+                }
+                
+                await setDoc(newDocRef, {
+                    id: mediaId,
+                    userId: user.uid,
+                    title_en: data.title_en,
+                    title_hi: data.title_hi,
+                    title_te: data.title_te,
+                    description_en: data.description_en,
+                    description_hi: data.description_hi,
+                    description_te: data.description_te,
+                    mediaUrl: downloadURL,
+                    thumbnailUrl: `https://img.youtube.com/vi/${Math.random().toString(36).substring(7)}/0.jpg`,
+                    uploadDate: serverTimestamp(),
+                    mediaType: data.mediaType,
+                    status: 'approved',
+                    duration: 0, 
+                    language: 'en',
+                    tags: [data.mediaType],
+                    likes: 0,
+                    views: 0,
+                });
+                
+                toast({
+                    title: 'Upload Complete!',
+                    description: 'Your media has been published.',
+                });
+                router.push('/media');
+
+            } catch(error) {
+                 const permissionError = new FirestorePermissionError({
+                    path: newDocRef.path,
+                    operation: 'create',
+                    requestResourceData: data,
+                });
+                errorEmitter.emit('permission-error', permissionError);
+            } finally {
+                setIsUploading(false);
             }
-
-            // Step 4: Update the Firestore document with all the metadata and the final URL.
-            await setDoc(newDocRef, {
-                id: newDocRef.id,
-                userId: user.uid,
-                title_en: data.title_en,
-                title_hi: data.title_hi,
-                title_te: data.title_te,
-                description_en: data.description_en,
-                description_hi: data.description_hi,
-                description_te: data.description_te,
-                mediaUrl: downloadURL,
-                thumbnailUrl: `https://img.youtube.com/vi/${Math.random().toString(36).substring(7)}/0.jpg`,
-                uploadDate: serverTimestamp(),
-                mediaType: data.mediaType,
-                status: 'approved', // Automatically approved
-                duration: 0, 
-                language: 'en',
-                tags: [data.mediaType],
-                likes: 0,
-                views: 0,
-            });
-            
-            toast({
-                title: 'Upload Complete!',
-                description: 'Your media has been published.',
-            });
-            setIsUploading(false);
-            router.push('/media');
           }
         );
-
-      } catch (error) {
-        console.error('Upload process failed:', error);
-        toast({
-          variant: 'destructive',
-          title: 'Upload Failed',
-          description: 'Something went wrong during the submission process. Please try again.',
-        });
-        setIsUploading(false);
-      }
     });
   };
 
@@ -330,4 +312,3 @@ export default function UploadPage() {
   );
 }
 
-    

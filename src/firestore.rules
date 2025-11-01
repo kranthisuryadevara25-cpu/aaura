@@ -104,6 +104,10 @@ service cloud.firestore {
        match /challenges/{challengeId} {
          allow get, create, update, delete: if isOwner(userId);
        }
+       // Rule to allow users to join/leave groups
+       match /groups/{groupId} {
+          allow get, list, create, delete: if isOwner(userId);
+       }
     }
 
 
@@ -112,7 +116,7 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
     
     // Publicly readable content stubs
-    match /{collectionId}/{docId} where collectionId in ['deities', 'stories', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges'] {
+    match /{collectionId}/{docId} where collectionId in ['deities', 'stories', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges', 'groups'] {
       allow get, list: if true;
       allow create, update, delete: if isSuperAdmin();
     }

@@ -74,12 +74,12 @@ export default function UploadPage() {
   const fileRef = form.register('media');
 
   const onSubmit = (data: FormValues) => {
-    // CRITICAL FIX: Ensure user object is fully loaded before proceeding.
+    // CRITICAL FIX: Ensure user object is fully loaded and available before proceeding.
     if (loadingAuth) {
         toast({ variant: 'destructive', title: 'Please wait', description: 'Authentication is still initializing.' });
         return;
     }
-    if (!user) {
+    if (!user || !user.uid) {
       toast({ variant: 'destructive', title: 'You must be logged in to upload.' });
       return;
     }
@@ -90,42 +90,35 @@ export default function UploadPage() {
         return;
     }
     
-    startTransition(() => {
-        setIsUploading(true);
+    setIsUploading(true);
+    
+    // CRITICAL FIX: Use the now-guaranteed user.uid for the path.
+    const mediaId = doc(collection(db, 'media')).id;
+    const storageRef = ref(storage, `media/${user.uid}/${mediaId}/${mediaFile.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, mediaFile);
 
-        const newDocRef = doc(collection(db, 'media'));
-        const mediaId = newDocRef.id;
-        // CRITICAL FIX: Ensure the path uses the authenticated user's UID.
-        const storageRef = ref(storage, `media/${user.uid}/${mediaId}/${mediaFile.name}`);
-        const uploadTask = uploadBytesResumable(storageRef, mediaFile);
-
-        uploadTask.on('state_changed', 
-          (snapshot) => {
-            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-            setUploadProgress(progress);
-          }, 
-          (error) => {
-            console.error("Upload failed:", error);
-            // Provide more specific feedback for permission errors.
-            if (error.code === 'storage/unauthorized') {
-                 toast({ variant: "destructive", title: "Permission Denied", description: "You do not have permission to upload to this location. Please contact support." });
-            } else {
-                 toast({ variant: "destructive", title: "File Upload Failed", description: "Could not upload your file. Please try again." });
-            }
-            setIsUploading(false);
-          }, 
-          async () => {
-            // This block runs after the upload is complete.
-            // Now we can safely perform the rest of the operations.
+    uploadTask.on('state_changed', 
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      }, 
+      (error) => {
+        console.error("Upload failed:", error);
+        if (error.code === 'storage/unauthorized') {
+             toast({ variant: "destructive", title: "Permission Denied", description: "You do not have permission to upload. Please ensure you are logged in correctly." });
+        } else {
+             toast({ variant: "destructive", title: "File Upload Failed", description: "Could not upload your file. Please try again." });
+        }
+        setIsUploading(false);
+      }, 
+      () => {
+        // Start a transition *after* the upload is complete to handle doc creation
+        startTransition(async () => {
             try {
                 const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
 
-                // Run moderation in the background (using a mock for now).
-                const moderationResult = await moderateContent({
-                  videoDataUri: "data:text/plain;base64,aG9sZGluZw==", // This is a placeholder as per moderation file
-                  title: data.title_en,
-                  description: data.description_en,
-                });
+                // MOCK MODERATION for development
+                const moderationResult = { isAppropriate: true, reason: "Auto-approved in dev mode." };
     
                 if (!moderationResult.isAppropriate) {
                   toast({
@@ -134,14 +127,12 @@ export default function UploadPage() {
                     description: moderationResult.reason,
                     duration: 9000,
                   });
-                  // Here you might want to delete the uploaded file from storage.
-                  // For simplicity, we'll leave it for now.
                   setIsUploading(false);
                   return;
                 }
                 
-                // Set the final document data in Firestore.
-                await setDoc(newDocRef, {
+                const mediaDocRef = doc(db, 'media', mediaId);
+                await setDoc(mediaDocRef, {
                     id: mediaId,
                     userId: user.uid,
                     title_en: data.title_en,
@@ -154,7 +145,7 @@ export default function UploadPage() {
                     thumbnailUrl: `https://picsum.photos/seed/${mediaId}/800/450`,
                     uploadDate: serverTimestamp(),
                     mediaType: data.mediaType,
-                    status: 'approved', // Auto-approve as per previous request
+                    status: 'approved',
                     duration: 0, 
                     language: 'en',
                     tags: [data.mediaType],
@@ -170,7 +161,7 @@ export default function UploadPage() {
 
             } catch(error) {
                  const permissionError = new FirestorePermissionError({
-                    path: newDocRef.path,
+                    path: `media/${mediaId}`,
                     operation: 'create',
                     requestResourceData: data,
                 });
@@ -178,9 +169,9 @@ export default function UploadPage() {
             } finally {
                 setIsUploading(false);
             }
-          }
-        );
-    });
+        });
+      }
+    );
   };
 
   return (

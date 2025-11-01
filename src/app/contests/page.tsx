@@ -3,7 +3,7 @@
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useCollection } from 'react-firebase-hooks/firestore';
-import { collection, query, where, doc, writeBatch, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc } from 'firebase/firestore';
+import { collection, query, where, doc, writeBatch, serverTimestamp, increment, DocumentData, Timestamp, orderBy, addDoc, limit } from 'firebase/firestore';
 import { Loader2, Trophy, Send, Calendar, Share2, Info } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -222,7 +222,6 @@ export default function ContestsPage() {
     const contestsQuery = useMemo(() => query(
         collection(db, 'contests'), 
         where('status', '==', 'active')
-        // orderBy('createdAt', 'desc') // Removed for now to avoid index dependency
     ), [db]);
 
     const [snapshot, loading, error] = useCollection(contestsQuery);

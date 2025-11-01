@@ -17,7 +17,7 @@ service firebase.storage {
 
     // Media uploads (videos, audio, etc.):
     // Allow authenticated users to write to any path inside their own media folder.
-    match /media/{userId}/{mediaId}/{fileName} {
+    match /media/{userId}/{allPaths=**} {
       allow read: if true;
       allow write: if isAuthenticated() && request.auth.uid == userId;
     }

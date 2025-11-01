@@ -42,23 +42,19 @@ export default function PanchangPage() {
         setPanchang(data);
         setIsLoading(false);
 
+        // MOCK AI CONTENT TO AVOID RATE LIMITS
         if (user && userData?.zodiacSign && data) {
           setIsAiLoading(true);
-          personalizePanchang({
-            userId: user.uid,
-            zodiacSign: userData.zodiacSign,
-            panchang: {
-              tithi: data.tithi.en,
-              nakshatra: data.nakshatra.en
-            }
-          }).then(result => {
-            setAiContent(result);
-          }).catch(error => {
-            console.error("Failed to get personalized panchang:", error);
-            setAiContent(null);
-          }).finally(() => {
-            setIsAiLoading(false);
-          });
+          // This mock data prevents API calls on every date change.
+          const mockAiContent: PersonalizedPanchangOutput = {
+            recommendations: [
+              `As a ${userData.zodiacSign}, today's ${data.nakshatra.en} nakshatra is a great time for introspection. Consider journaling your thoughts.`,
+              `The energy of ${data.tithi.en} tithi supports selfless service. Try a small act of kindness today.`,
+              "Today is favorable for creative pursuits. Spend 15 minutes on a hobby you love.",
+            ]
+          };
+          setAiContent(mockAiContent);
+          setIsAiLoading(false);
         } else {
             setAiContent(null);
         }

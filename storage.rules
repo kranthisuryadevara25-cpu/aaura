@@ -4,45 +4,35 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Helper function to check auth
-    function isAuthenticated() {
-      return request.auth != null;
+    // This is the CRITICAL fix.
+    // It specifically matches the path structure used by the media upload feature.
+    // A user can write to their own folder, inside a specific media ID folder.
+    match /media/{userId}/{mediaId}/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // User profile images: Only the owner can upload/update. Publicly readable.
+    // Secure rule for user profile images.
     match /users/{userId}/profileImage/{fileName} {
       allow read: if true;
-      allow write: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
-    // Media uploads (videos, audio, etc.):
-    // Allow authenticated users to write to any path inside their own media folder.
-    match /media/{userId}/{allPaths=**} {
-      allow read: if true;
-      allow write: if isAuthenticated() && request.auth.uid == userId;
-    }
-
-    // General content images (for deities, stories, etc.)
-    // Writable by any authenticated user. Publicly readable.
+    // Secure rule for general content images (deities, stories, etc.)
+    // Allows any authenticated user to upload, which is necessary for the admin forms.
     match /content-images/{allPaths=**} {
-        allow read: if true;
-        allow write: if isAuthenticated();
-    }
-    
-    match /product-images/{allPaths=**} {
-        allow read: if true;
-        allow write: if isAuthenticated();
-    }
-
-
-    // Shop item images:
-    // Writable by the merchant user. Publicly readable.
-    match /shopItems/{sellerId}/{itemId}/{fileName} {
       allow read: if true;
-      allow write: if isAuthenticated() && request.auth.uid == sellerId;
+      allow write: if request.auth != null;
     }
-    
-    // Default deny all other access
+
+    // Secure rule for product images in the marketplace.
+    match /product-images/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Default rule: Deny all other read/write operations to prevent unauthorized access.
+    // This is a security best practice.
     match /{allPaths=**} {
       allow read, write: if false;
     }

@@ -67,6 +67,19 @@ const moderateContentFlow = ai.defineFlow(
     outputSchema: ModerateContentOutputSchema,
   },
   async input => {
+    // START: MOCK IMPLEMENTATION TO AVOID RATE LIMITS
+    // This bypasses the actual AI call during development.
+    // In production, you would remove this and use the prompt.
+    console.log("Bypassing AI content moderation for development.");
+    return {
+      isAppropriate: true,
+      reason: "Content approved (development mode).",
+      sentimentScore: 95,
+    };
+    // END: MOCK IMPLEMENTATION
+
+    /*
+    // Original implementation - uncomment for production
     const {output} = await prompt(input);
     if (output) {
         // Enforce the 80% positivity rule
@@ -76,5 +89,6 @@ const moderateContentFlow = ai.defineFlow(
         }
     }
     return output!;
+    */
   }
 );

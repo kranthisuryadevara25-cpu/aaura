@@ -18,15 +18,16 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition } from 'react';
+import { useTransition, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
-import { useFirestore } from '@/lib/firebase/provider';
+import { useFirestore, useCollection } from '@/lib/firebase/provider';
 import { doc, setDoc, serverTimestamp, collection } from 'firebase/firestore';
 import type { Challenge } from '@/lib/challenges';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
+import type { DocumentData } from 'firebase/firestore';
 
 const taskSchema = z.object({
   day: z.coerce.number().min(1),
@@ -57,6 +58,15 @@ export function ChallengeForm({ challenge }: ChallengeFormProps) {
   const db = useFirestore();
   const [isPending, startTransition] = useTransition();
 
+  const [mediaSnapshot, mediaLoading] = useCollection(collection(db, 'media'));
+  const mediaOptions = useMemo(() => {
+    if (!mediaSnapshot) return [];
+    return mediaSnapshot.docs.map(doc => ({
+      value: doc.id,
+      label: doc.data().title_en || 'Unnamed Video',
+    }));
+  }, [mediaSnapshot]);
+
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: challenge || {
@@ -74,6 +84,8 @@ export function ChallengeForm({ challenge }: ChallengeFormProps) {
     control: form.control,
     name: "tasks",
   });
+  
+  const watchedTasks = form.watch('tasks');
 
   const title = challenge ? `Edit ${challenge.title_en}` : 'Create a New Challenge';
   const description = challenge ? 'Update the details for this challenge.' : 'Fill out the form to add a new challenge to the app.';
@@ -135,29 +147,49 @@ export function ChallengeForm({ challenge }: ChallengeFormProps) {
                     <Button type="button" variant="destructive" size="icon" onClick={() => removeTask(index)} className="absolute top-2 right-2 h-6 w-6">
                       <Trash2 className="h-4 w-4" />
                     </Button>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <FormField control={form.control} name={`tasks.${index}.day`} render={({ field }) => (
                         <FormItem><FormLabel>Day</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
                       <FormField control={form.control} name={`tasks.${index}.title`} render={({ field }) => (
                         <FormItem><FormLabel>Task Title</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
                       )} />
-                      <FormField control={form.control} name={`tasks.${index}.taskType`} render={({ field }) => (
-                        <FormItem><FormLabel>Task Type</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
-                            <SelectContent>
-                              <SelectItem value="read-story">Read Story</SelectItem>
-                              <SelectItem value="watch-media">Watch Media</SelectItem>
-                              <SelectItem value="recite-mantra">Recite Mantra</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        <FormMessage /></FormItem>
-                      )} />
                     </div>
-                     <FormField control={form.control} name={`tasks.${index}.contentId`} render={({ field }) => (
-                        <FormItem><FormLabel>Content ID / Slug / Mantra</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
-                      )} />
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField control={form.control} name={`tasks.${index}.taskType`} render={({ field }) => (
+                            <FormItem><FormLabel>Task Type</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl><SelectTrigger><SelectValue placeholder="Select type" /></SelectTrigger></FormControl>
+                                <SelectContent>
+                                <SelectItem value="read-story">Read Story</SelectItem>
+                                <SelectItem value="watch-media">Watch Media</SelectItem>
+                                <SelectItem value="recite-mantra">Recite Mantra</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage /></FormItem>
+                        )} />
+                        
+                        {watchedTasks[index]?.taskType === 'watch-media' ? (
+                             <FormField control={form.control} name={`tasks.${index}.contentId`} render={({ field }) => (
+                                <FormItem><FormLabel>Select Media</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                    <FormControl><SelectTrigger>
+                                        <SelectValue placeholder={mediaLoading ? "Loading..." : "Select a video"} />
+                                    </SelectTrigger></FormControl>
+                                    <SelectContent>
+                                        {mediaOptions.map(option => (
+                                            <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage /></FormItem>
+                            )} />
+                        ) : (
+                            <FormField control={form.control} name={`tasks.${index}.contentId`} render={({ field }) => (
+                                <FormItem><FormLabel>Content ID / Slug / Mantra</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                        )}
+                     </div>
                   </div>
                 ))}
               </div>

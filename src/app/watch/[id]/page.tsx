@@ -22,7 +22,8 @@ export default function WatchPage() {
   const day = searchParams.get('day');
 
   const upNextItems = useMemo(() => {
-    return allItems.filter(item => item.id !== `media-${id}`);
+    // Exclude the current video from the "Up Next" list
+    return allItems.filter(item => item.id.replace('media-', '') !== id);
   }, [allItems, id]);
 
   const handleVideoEnd = () => {
@@ -42,7 +43,7 @@ export default function WatchPage() {
     }
   };
 
-  if (loading) {
+  if (loading && allItems.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen bg-background">
         <Loader2 className="h-16 w-16 animate-spin text-primary" />

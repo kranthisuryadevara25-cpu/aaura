@@ -98,7 +98,7 @@ export default function VirtualPoojaPage() {
   
   if (!selectedDeity) {
       return (
-        <main className="min-h-screen w-full flex flex-col items-center justify-center bg-background dark:bg-gray-900 p-4">
+        <main className="min-h-screen w-full flex flex-col items-center justify-start bg-background dark:bg-gray-900 p-4 pt-16">
              <div className="text-center mb-8">
                 <h1 className="text-3xl md:text-5xl font-headline font-bold tracking-tight text-primary">
                     Select a Deity for Pooja
@@ -126,7 +126,7 @@ export default function VirtualPoojaPage() {
   }
 
   return (
-    <main className="relative min-h-screen w-full flex flex-col items-center justify-center overflow-hidden bg-gray-900 p-4 [perspective:800px]">
+    <main className="relative min-h-screen w-full flex flex-col items-center justify-between overflow-hidden bg-gray-900 p-4 [perspective:800px]">
       <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
         {flowers.map((id, index) => (
           <RisingFlower key={id} id={id} delay={index * 0.1} />
@@ -148,9 +148,9 @@ export default function VirtualPoojaPage() {
         fill
         className="object-cover absolute inset-0 z-0 opacity-30"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/60 z-10" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-black/80 z-10" />
 
-      <div className="relative z-20 text-center text-white mb-auto pt-20">
+      <div className="relative z-20 text-center text-white pt-16">
         <h1 className="text-4xl md:text-6xl font-headline font-bold tracking-tight text-primary">
           Virtual Pooja
         </h1>
@@ -170,7 +170,7 @@ export default function VirtualPoojaPage() {
         </Button>
       </div>
 
-      <div className="relative z-20 grid grid-cols-4 gap-4 md:gap-8 w-full max-w-lg mb-8 mt-auto">
+      <div className="relative z-20 grid grid-cols-4 gap-4 md:gap-8 w-full max-w-lg mb-8">
         <button onClick={() => handleInteraction('ring-bell')} className={cn("flex flex-col items-center p-2 rounded-lg transition-all duration-200 pooja-button", activeInteraction === 'ring-bell' && 'animate-wiggle')}>
             <Bell className="w-12 h-12 md:w-16 md:h-16 text-amber-300 drop-shadow-lg" />
             <p className="text-amber-200 mt-2 font-semibold text-xs md:text-sm">Ring Bell</p>

@@ -17,15 +17,17 @@ import {
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAuth, useFirestore } from '@/lib/firebase/provider';
+import { useAuth, useFirestore, useStorage } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, doc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from "firebase/storage";
 import { Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import { moderateContent } from '@/ai/ai-content-moderation';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useLanguage } from '@/hooks/use-language';
+import { Progress } from '@/components/ui/progress';
 
 const formSchema = z.object({
   title_en: z.string().min(5, { message: 'English title must be at least 5 characters.' }),
@@ -45,8 +47,10 @@ export default function UploadPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
+  const storage = useStorage();
   const [user] = useAuthState(auth);
-  const [isPending, startTransition] = useTransition();
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const { t } = useLanguage();
 
 
@@ -79,22 +83,24 @@ export default function UploadPage() {
       return;
     }
 
+    setIsUploading(true);
+
+    const mediaFile = data.media[0];
+    if (!mediaFile) {
+        toast({ variant: 'destructive', title: 'No file selected.' });
+        setIsUploading(false);
+        return;
+    }
+    
+    // Start the transition for AI moderation and Firestore doc creation
     startTransition(async () => {
       try {
-        const mediaFile = data.media[0];
         const mediaDataUri = await toBase64(mediaFile);
         
-        // Temporarily bypass AI moderation to avoid rate limit errors
-        const moderationResult = {
-          isAppropriate: true,
-          reason: "Moderation bypassed due to API rate limits.",
-          sentimentScore: 100,
-        };
-        
-        toast({
-            title: 'AI Moderation Bypassed',
-            description: 'Continuing with upload due to API rate limits.',
-            duration: 5000,
+        const moderationResult = await moderateContent({
+          videoDataUri: mediaDataUri,
+          title: data.title_en,
+          description: data.description_en,
         });
 
         if (!moderationResult.isAppropriate) {
@@ -104,45 +110,72 @@ export default function UploadPage() {
             description: moderationResult.reason,
             duration: 9000,
           });
+          setIsUploading(false);
           return;
         }
-
-        const placeholderMediaUrl = 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-        const placeholderThumbnailUrl = 'https://picsum.photos/seed/spirit/600/400';
+        
+        toast({ title: "Content approved by AI", description: "Now uploading your file..." });
         
         const mediaCollection = collection(db, 'media');
-        await addDoc(mediaCollection, {
-          userId: user.uid,
-          title_en: data.title_en,
-          title_hi: data.title_hi,
-          title_te: data.title_te,
-          description_en: data.description_en,
-          description_hi: data.description_hi,
-          description_te: data.description_te,
-          mediaUrl: placeholderMediaUrl,
-          thumbnailUrl: placeholderThumbnailUrl,
-          uploadDate: serverTimestamp(),
-          mediaType: data.mediaType,
-          status: 'pending', // Set status to pending for admin review
-          duration: 0,
-          language: 'en',
-          tags: [data.mediaType],
-          likes: 0,
-          views: 0,
-        });
+        const newDocRef = doc(mediaCollection);
+        
+        // Start the file upload to Firebase Storage
+        const storageRef = ref(storage, `media/${user.uid}/${newDocRef.id}/${mediaFile.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, mediaFile);
 
-        toast({
-          title: 'Upload Submitted!',
-          description: 'Your media has been submitted for review.',
-        });
-        router.push('/media');
+        uploadTask.on('state_changed', 
+          (snapshot) => {
+            const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+            setUploadProgress(progress);
+          }, 
+          (error) => {
+            console.error("Upload failed:", error);
+            toast({ variant: "destructive", title: "File Upload Failed", description: "Could not upload your file. Please try again." });
+            setIsUploading(false);
+          }, 
+          () => {
+            // Upload completed successfully, now get the download URL
+            getDownloadURL(uploadTask.snapshot.ref).then(async (downloadURL) => {
+                
+                await setDoc(newDocRef, {
+                    id: newDocRef.id,
+                    userId: user.uid,
+                    title_en: data.title_en,
+                    title_hi: data.title_hi,
+                    title_te: data.title_te,
+                    description_en: data.description_en,
+                    description_hi: data.description_hi,
+                    description_te: data.description_te,
+                    mediaUrl: downloadURL,
+                    thumbnailUrl: 'https://picsum.photos/seed/placeholder-thumb/800/450', // Placeholder, can be generated via cloud function
+                    uploadDate: serverTimestamp(),
+                    mediaType: data.mediaType,
+                    status: 'pending', // Set status to pending for admin review
+                    duration: 0, // Should be extracted from video metadata
+                    language: 'en',
+                    tags: [data.mediaType],
+                    likes: 0,
+                    views: 0,
+                });
+                
+                toast({
+                    title: 'Upload Complete!',
+                    description: 'Your media has been submitted for review.',
+                });
+                setIsUploading(false);
+                router.push('/media');
+            });
+          }
+        );
+
       } catch (error) {
-        console.error('Upload failed:', error);
+        console.error('Upload process failed:', error);
         toast({
           variant: 'destructive',
           title: 'Upload Failed',
-          description: 'Something went wrong. Please try again.',
+          description: 'Something went wrong during the submission process. Please try again.',
         });
+        setIsUploading(false);
       }
     });
   };
@@ -155,134 +188,138 @@ export default function UploadPage() {
             <CardDescription>Share your spiritual, religious, and wellness content with the community. All content must be positive and uplifting.</CardDescription>
         </CardHeader>
         <CardContent>
-            <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="title_en"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Title (English)</FormLabel>
-                      <FormControl>
-                          <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="title_hi"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Title (Hindi)</FormLabel>
-                      <FormControl>
-                          <Input placeholder="उदा., सकारात्मक ऊर्जा के लिए सुबह का योग" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="title_te"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Title (Telugu)</FormLabel>
-                      <FormControl>
-                          <Input placeholder="ఉదా., సానుకూల శక్తి కోసం ఉదయం యోగా" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="description_en"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Description (English)</FormLabel>
-                      <FormControl>
-                          <Textarea placeholder="A short summary of your media's positive message" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="description_hi"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Description (Hindi)</FormLabel>
-                      <FormControl>
-                          <Textarea placeholder="आपके मीडिया के सकारात्मक संदेश का संक्षिप्त सारांश" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="description_te"
-                  render={({ field }) => (
-                      <FormItem>
-                      <FormLabel>Description (Telugu)</FormLabel>
-                      <FormControl>
-                          <Textarea placeholder="మీ మీడియా యొక్క సానుకూల సందేశం యొక్క చిన్న సారాంశం" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                      </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="mediaType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Media Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+            {isUploading ? (
+                 <div className="flex flex-col items-center justify-center h-40">
+                    <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                    <p className="text-muted-foreground mb-2">Uploading... please wait.</p>
+                    <Progress value={uploadProgress} className="w-full" />
+                 </div>
+            ) : (
+                <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <FormField
+                    control={form.control}
+                    name="title_en"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Title (English)</FormLabel>
                         <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select a media type" />
-                          </SelectTrigger>
+                            <Input placeholder="E.g., Morning Yoga for Positive Energy" {...field} />
                         </FormControl>
-                        <SelectContent>
-                          <SelectItem value="video">Video</SelectItem>
-                          <SelectItem value="short">Short</SelectItem>
-                          <SelectItem value="bhajan">Bhajan</SelectItem>
-                          <SelectItem value="podcast">Podcast</SelectItem>
-                          <SelectItem value="pravachan">Pravachan</SelectItem>
-                          <SelectItem value="audiobook">Audiobook</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="media"
-                  render={({ field }) => (
-                    <FormItem>
-                    <FormLabel>Media File</FormLabel>
-                    <FormControl>
-                        <Input type="file" accept="video/*,audio/*" {...fileRef} />
-                    </FormControl>
-                    <FormMessage />
-                    </FormItem>
-                )}
-                />
-                <Button type="submit" className="w-full" disabled={isPending}>
-                {isPending ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                    <Upload className="mr-2 h-4 w-4" />
-                )}
-                Submit for Review
-                </Button>
-            </form>
-            </Form>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="title_hi"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Title (Hindi)</FormLabel>
+                        <FormControl>
+                            <Input placeholder="उदा., सकारात्मक ऊर्जा के लिए सुबह का योग" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="title_te"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Title (Telugu)</FormLabel>
+                        <FormControl>
+                            <Input placeholder="ఉదా., సానుకూల శక్తి కోసం ఉదయం యోగా" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="description_en"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Description (English)</FormLabel>
+                        <FormControl>
+                            <Textarea placeholder="A short summary of your media's positive message" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="description_hi"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Description (Hindi)</FormLabel>
+                        <FormControl>
+                            <Textarea placeholder="आपके मीडिया के सकारात्मक संदेश का संक्षिप्त सारांश" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="description_te"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Description (Telugu)</FormLabel>
+                        <FormControl>
+                            <Textarea placeholder="మీ మీడియా యొక్క సానుకూల సందేశం యొక్క చిన్న సారాంశం" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="mediaType"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Media Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Select a media type" />
+                            </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                            <SelectItem value="video">Video</SelectItem>
+                            <SelectItem value="short">Short</SelectItem>
+                            <SelectItem value="bhajan">Bhajan</SelectItem>
+                            <SelectItem value="podcast">Podcast</SelectItem>
+                            <SelectItem value="pravachan">Pravachan</SelectItem>
+                            <SelectItem value="audiobook">Audiobook</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <FormField
+                    control={form.control}
+                    name="media"
+                    render={({ field }) => (
+                        <FormItem>
+                        <FormLabel>Media File</FormLabel>
+                        <FormControl>
+                            <Input type="file" accept="video/*,audio/*" {...fileRef} />
+                        </FormControl>
+                        <FormMessage />
+                        </FormItem>
+                    )}
+                    />
+                    <Button type="submit" className="w-full" disabled={isUploading}>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Submit for Review
+                    </Button>
+                </form>
+                </Form>
+            )}
         </CardContent>
         </Card>
     </main>

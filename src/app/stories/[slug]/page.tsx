@@ -3,42 +3,63 @@
 'use client';
 
 import { useParams, notFound } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { BookOpen, Palmtree, UserSquare, Loader2, PlayCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { getStoryBySlug } from '@/lib/stories';
+import { useFirestore } from '@/lib/firebase/provider';
+import { collection, query, where } from 'firebase/firestore';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { characters as allCharacters } from '@/lib/characters';
 import { temples as allTemples } from '@/lib/temples';
+import type { Story } from '@/lib/stories';
 
 export default function StoryDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
-  
-  const story = getStoryBySlug(slug);
+  const db = useFirestore();
+
+  const storyQuery = useMemo(() => {
+    if (!db || !slug) return undefined;
+    return query(collection(db, 'stories'), where('slug', '==', slug));
+  }, [db, slug]);
+
+  const [stories, isLoading] = useCollectionData(storyQuery);
+  const story = useMemo(() => (stories?.[0] as Story | undefined), [stories]);
+
   const [activeEpisode, setActiveEpisode] = useState(story?.episodes[0]);
 
-  const relatedCharacters = useMemo(() => 
+  useEffect(() => {
+    if (story && !activeEpisode) {
+      setActiveEpisode(story.episodes[0]);
+    }
+  }, [story, activeEpisode]);
+
+  const relatedCharacters = useMemo(() =>
     story ? allCharacters.filter(c => story.relatedCharacters.includes(c.slug)) : [],
     [story]
   );
-  
+
   const relatedTemples = useMemo(() =>
     story ? allTemples.filter(tm => story.relatedTemples.includes(tm.slug)) : [],
     [story]
   );
-
-  if (!story) {
-    notFound();
+  
+  if (isLoading) {
+    return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
 
-  const title = story.title[language] || story.title.en;
-  const summary = story.summary[language] || story.summary.en;
-  
+  if (!story) {
+    return notFound();
+  }
+
+  const title = (story.title as any)[language] || story.title.en;
+  const summary = (story.summary as any)[language] || story.summary.en;
+
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
         <article className="max-w-7xl mx-auto">
@@ -51,7 +72,6 @@ export default function StoryDetailPage() {
             </header>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Main Content: Video Player and Details */}
                 <div className="lg:col-span-2">
                     <div className="aspect-video relative rounded-lg overflow-hidden border-2 border-primary/20 mb-4 bg-black">
                         {activeEpisode ? (
@@ -60,7 +80,7 @@ export default function StoryDetailPage() {
                                 width="100%" 
                                 height="100%" 
                                 src={`https://www.youtube.com/embed/${activeEpisode.videoId}?autoplay=1`}
-                                title={activeEpisode.title[language] || activeEpisode.title.en}
+                                title={(activeEpisode.title as any)[language] || activeEpisode.title.en}
                                 frameBorder="0" 
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
                                 allowFullScreen
@@ -79,15 +99,14 @@ export default function StoryDetailPage() {
                     
                     <Card className="bg-transparent border-primary/20">
                         <CardHeader>
-                            <CardTitle className="text-2xl text-primary">{activeEpisode?.title[language] || activeEpisode?.title.en || title}</CardTitle>
+                            <CardTitle className="text-2xl text-primary">{(activeEpisode?.title as any)?.[language] || activeEpisode?.title.en || title}</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-lg text-foreground/90">{activeEpisode?.description[language] || activeEpisode?.description.en || summary}</p>
+                            <p className="text-lg text-foreground/90">{(activeEpisode?.description as any)?.[language] || activeEpisode?.description.en || summary}</p>
                         </CardContent>
                     </Card>
                 </div>
 
-                {/* Sidebar: Episode Playlist */}
                 <div className="lg:col-span-1">
                     <Card className="sticky top-24 bg-transparent border-primary/20">
                         <CardHeader>
@@ -107,7 +126,7 @@ export default function StoryDetailPage() {
                                         </div>
                                     </div>
                                     <div className="flex-grow">
-                                        <h4 className="font-semibold text-sm text-foreground line-clamp-2">{episode.title[language] || episode.title.en}</h4>
+                                        <h4 className="font-semibold text-sm text-foreground line-clamp-2">{(episode.title as any)[language] || episode.title.en}</h4>
                                         <p className="text-xs text-muted-foreground">Episode {episode.episodeNumber}</p>
                                     </div>
                                 </div>
@@ -118,7 +137,6 @@ export default function StoryDetailPage() {
             </div>
 
 
-            {/* Related Content Sections */}
             <div className="mt-12 max-w-5xl mx-auto space-y-12">
                 {relatedCharacters.length > 0 && (
                     <Card className="bg-transparent border-primary/20">
@@ -129,9 +147,9 @@ export default function StoryDetailPage() {
                             {relatedCharacters.map((character) => (
                                 <Link key={character.id} href={`/characters/${character.slug}`} className="block p-4 text-center rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                     <div className="w-24 h-24 relative mx-auto rounded-full overflow-hidden mb-2 border-2 border-accent/20">
-                                        <Image src={character.imageUrl} alt={character.name[language] || character.name.en} data-ai-hint={character.imageHint} fill className="object-cover" />
+                                        <Image src={character.imageUrl} alt={(character.name as any)[language] || character.name.en} data-ai-hint={character.imageHint} fill className="object-cover" />
                                     </div>
-                                    <h4 className="font-semibold text-md text-foreground group-hover:underline">{character.name[language] || character.name.en}</h4>
+                                    <h4 className="font-semibold text-md text-foreground group-hover:underline">{(character.name as any)[language] || character.name.en}</h4>
                                 </Link>
                             ))}
                         </CardContent>
@@ -147,10 +165,10 @@ export default function StoryDetailPage() {
                             {relatedTemples.map((temple) => (
                                 <Link key={temple.id} href={`/temples/${temple.slug}`} className="flex items-center gap-4 p-4 rounded-lg hover:bg-primary/10 border border-primary/20 transition-colors">
                                     <div className="w-20 h-20 relative rounded-lg overflow-hidden shrink-0">
-                                        <Image src={temple.media.images[0].url} alt={temple.name[language] || temple.name.en} data-ai-hint={temple.media.images[0].hint} fill className="object-cover" />
+                                        <Image src={temple.media.images[0].url} alt={(temple.name as any)[language] || temple.name.en} data-ai-hint={temple.media.images[0].hint} fill className="object-cover" />
                                     </div>
                                     <div>
-                                        <h4 className="font-semibold text-lg text-primary group-hover:underline">{temple.name[language] || temple.name.en}</h4>
+                                        <h4 className="font-semibold text-lg text-primary group-hover:underline">{(temple.name as any)[language] || temple.name.en}</h4>
                                         <p className="text-sm text-muted-foreground">{temple.location.city}, {temple.location.state}</p>
                                     </div>
                                 </Link>

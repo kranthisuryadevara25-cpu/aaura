@@ -29,7 +29,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore, useStorage } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, updateDoc, getDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { ImageUpload } from '@/components/ImageUpload';
@@ -128,6 +128,19 @@ export function StoryForm({ story }: StoryFormProps) {
     startTransition(async () => {
       const imageFile = data.image.file;
       const storyId = story ? story.id : data.slug;
+
+      if (!story) {
+        const existingDoc = await getDoc(doc(db, 'stories', storyId));
+        if (existingDoc.exists()) {
+          form.setError('slug', {
+            type: 'manual',
+            message: 'This slug is already in use. Please choose a unique one.',
+          });
+          toast({ variant: 'destructive', title: 'Slug already exists' });
+          return;
+        }
+      }
+
       const storyRef = doc(db, 'stories', storyId);
 
       const serializableData = {
@@ -148,18 +161,18 @@ export function StoryForm({ story }: StoryFormProps) {
         relatedTemples: data.relatedTemples
           ? data.relatedTemples.split(',').map((s) => s.trim())
           : [],
-        status: 'pending', // Changed from 'published' to 'pending'
+        status: 'published',
         updatedAt: serverTimestamp(),
-        ...(story?.status === 'unclaimed' && { createdAt: serverTimestamp() }),
+        ...(story ? {} : { createdAt: serverTimestamp() }),
       };
 
       try {
         await setDoc(storyRef, fullData, { merge: true })
         toast({
-          title: `Saga Submitted!`,
-          description: 'The saga has been sent for review.',
+          title: `Saga ${story ? 'Updated' : 'Created'}!`,
+          description: 'The saga is now live on the platform.',
         });
-        router.push('/admin/content');
+        router.push('/admin/content?tab=stories');
 
         if (imageFile) {
             toast({ title: "Uploading Image...", description: "This will happen in the background." });
@@ -213,7 +226,7 @@ export function StoryForm({ story }: StoryFormProps) {
                     A unique identifier for the URL (e.g., 'ramayana-summary').
                   </FormDescription>
                   <FormControl>
-                    <Input {...field} disabled />
+                    <Input {...field} disabled={!!story} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -456,7 +469,7 @@ export function StoryForm({ story }: StoryFormProps) {
 
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {story ? 'Submit Changes for Review' : 'Submit for Review'}
+              {story ? 'Save Changes' : 'Create Saga'}
             </Button>
           </form>
         </Form>
@@ -464,3 +477,5 @@ export function StoryForm({ story }: StoryFormProps) {
     </Card>
   );
 }
+
+    

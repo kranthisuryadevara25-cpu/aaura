@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -10,27 +10,33 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
-import { festivals as mockFestivals } from '@/lib/festivals';
 import { Input } from '@/components/ui/input';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import { collection, query, DocumentData } from 'firebase/firestore';
+
 
 export default function FestivalsPage() {
   const { language, t } = useLanguage();
-  const festivals = mockFestivals;
-  const isLoading = false;
+  const db = useFirestore();
+  const festivalsQuery = useMemo(() => query(collection(db, 'festivals')), [db]);
+  const [festivals, isLoading] = useCollectionData(festivalsQuery, { idField: 'id' });
   
   const [searchQuery, setSearchQuery] = useState('');
-  const [filteredFestivals, setFilteredFestivals] = useState(festivals);
+  const [filteredFestivals, setFilteredFestivals] = useState<DocumentData[]>([]);
 
   useEffect(() => {
-    if (searchQuery.trim() === '') {
-      setFilteredFestivals(festivals);
-    } else {
-      const lowercasedQuery = searchQuery.toLowerCase();
-      const filtered = festivals.filter((festival) => {
-        const name = (festival.name as any)[language] || festival.name.en;
-        return name.toLowerCase().includes(lowercasedQuery);
-      });
-      setFilteredFestivals(filtered);
+    if (festivals) {
+      if (searchQuery.trim() === '') {
+        setFilteredFestivals(festivals);
+      } else {
+        const lowercasedQuery = searchQuery.toLowerCase();
+        const filtered = festivals.filter((festival) => {
+          const name = (festival.name as any)[language] || festival.name.en;
+          return name.toLowerCase().includes(lowercasedQuery);
+        });
+        setFilteredFestivals(filtered);
+      }
     }
   }, [searchQuery, festivals, language]);
 
@@ -98,3 +104,5 @@ export default function FestivalsPage() {
     </main>
   );
 }
+
+    

@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { useFirestore, useStorage } from '@/lib/firebase/provider';
-import { doc, setDoc, serverTimestamp, collection, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, collection, updateDoc, getDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { ImageUpload } from '@/components/ImageUpload';
@@ -122,6 +122,19 @@ export function TempleForm({ temple }: TempleFormProps) {
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
       const templeId = temple ? temple.id : data.slug;
+
+      if (!temple) {
+        const existingDoc = await getDoc(doc(db, 'temples', templeId));
+        if (existingDoc.exists()) {
+          form.setError('slug', {
+            type: 'manual',
+            message: 'This slug is already in use. Please choose a unique one.',
+          });
+          toast({ variant: 'destructive', title: 'Slug already exists' });
+          return;
+        }
+      }
+
       const templeRef = doc(db, 'temples', templeId);
       
       const serializableData = {
@@ -138,16 +151,16 @@ export function TempleForm({ temple }: TempleFormProps) {
         id: templeId,
         ...serializableData,
         officialWebsite: data.officialWebsite || null,
-        status: 'pending',
+        status: 'published',
         updatedAt: serverTimestamp(),
-        ...(temple.status === 'unclaimed' && { createdAt: serverTimestamp() }),
+        ...(temple ? {} : { createdAt: serverTimestamp() }),
       };
       
       try {
         await setDoc(templeRef, fullData, { merge: true });
 
-        toast({ title: `Temple Submitted!`, description: 'The temple has been sent for review.' });
-        router.push('/admin/content');
+        toast({ title: `Temple ${temple ? 'Updated' : 'Created'}!`, description: 'The temple is now live.' });
+        router.push('/admin/content?tab=temples');
 
         data.media.images.forEach((image, index) => {
             if (image.file) {
@@ -184,7 +197,7 @@ export function TempleForm({ temple }: TempleFormProps) {
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <h3 className="text-xl font-semibold text-primary">Basic Information</h3>
             <FormField control={form.control} name="slug" render={({ field }) => (
-              <FormItem><FormLabel>Slug</FormLabel><FormDescription>Unique identifier for the URL (e.g., 'ram-mandir-ayodhya').</FormDescription><FormControl><Input {...field} disabled /></FormControl><FormMessage /></FormItem>
+              <FormItem><FormLabel>Slug</FormLabel><FormDescription>Unique identifier for the URL (e.g., 'ram-mandir-ayodhya').</FormDescription><FormControl><Input {...field} disabled={!!temple} /></FormControl><FormMessage /></FormItem>
             )} />
             <FormField control={form.control} name="name.en" render={({ field }) => (
               <FormItem><FormLabel>Name (English)</FormLabel><FormControl><Input {...field} /></FormControl><FormMessage /></FormItem>
@@ -394,7 +407,7 @@ export function TempleForm({ temple }: TempleFormProps) {
 
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {temple ? 'Submit Changes for Review' : 'Submit for Review'}
+              {temple ? 'Save Changes' : 'Create Temple'}
             </Button>
           </form>
         </Form>
@@ -402,3 +415,5 @@ export function TempleForm({ temple }: TempleFormProps) {
     </Card>
   );
 }
+
+    

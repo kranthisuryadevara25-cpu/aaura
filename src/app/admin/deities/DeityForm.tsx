@@ -132,7 +132,7 @@ export function DeityForm({ deity }: DeityFormProps) {
       const saveData = { 
         id: deityId,
         ...serializableData,
-        status: 'pending',
+        status: 'published',
         updatedAt: serverTimestamp(),
         ...(deity ? {} : { createdAt: serverTimestamp() }),
       };
@@ -140,7 +140,7 @@ export function DeityForm({ deity }: DeityFormProps) {
       try {
         await setDoc(deityRef, saveData, { merge: true });
 
-        toast({ title: `Deity Submitted!`, description: 'The deity has been sent for review.' });
+        toast({ title: `Deity ${deity ? 'Updated' : 'Created'}!`, description: 'The deity is now live.' });
         router.push('/admin/content');
         
         data.images.forEach((image, index) => {
@@ -282,7 +282,7 @@ export function DeityForm({ deity }: DeityFormProps) {
 
             <Button type="submit" disabled={isPending} className="w-full">
               {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-              {deity ? 'Submit Changes for Review' : 'Submit for Review'}
+              {deity ? 'Save Changes' : 'Create Deity'}
             </Button>
           </form>
         </Form>
@@ -290,3 +290,5 @@ export function DeityForm({ deity }: DeityFormProps) {
     </Card>
   );
 }
+
+    

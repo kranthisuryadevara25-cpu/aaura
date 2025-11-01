@@ -3,28 +3,37 @@
 
 import { useParams, notFound } from 'next/navigation';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, CheckSquare, Sparkles, Loader2, Music, PlayCircle, ShoppingCart } from 'lucide-react';
 import { format } from 'date-fns';
 import Link from 'next/link';
 import { useLanguage } from '@/hooks/use-language';
-import { getFestivalBySlug } from '@/lib/festivals';
-import { deities as allDeities } from '@/lib/deities';
-import { products as allProducts } from '@/lib/products';
 import { Button } from '@/components/ui/button';
+import { useFirestore } from '@/lib/firebase/provider';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
+import { collection, query, where, doc } from 'firebase/firestore';
+import { useMemo } from 'react';
 
 export default function FestivalDetailPage() {
   const params = useParams();
   const slug = params.slug as string;
   const { language, t } = useLanguage();
+  const db = useFirestore();
 
-  const festival = getFestivalBySlug(slug);
-  const isLoading = false;
+  const festivalQuery = useMemo(() => query(collection(db, 'festivals'), where('slug', '==', slug)), [db, slug]);
+  const [festivals, isLoading] = useDocumentData(festivalQuery);
+  const festival = useMemo(() => festivals?.[0], [festivals]);
   
-  const associatedDeities = festival ? allDeities.filter(d => festival.associatedDeities.includes(d.slug)) : [];
-  const relatedProducts = festival?.relatedProducts ? allProducts.filter(p => festival.relatedProducts.includes(p.id)) : [];
+  const deitySlugs = useMemo(() => festival?.associatedDeities || [], [festival]);
+  const productIds = useMemo(() => festival?.relatedProducts || [], [festival]);
   
+  const deitiesQuery = useMemo(() => deitySlugs.length > 0 ? query(collection(db, 'deities'), where('__name__', 'in', deitySlugs)) : undefined, [db, deitySlugs]);
+  const [associatedDeities, loadingDeities] = useCollectionData(deitiesQuery, { idField: 'id' });
+  
+  const productsQuery = useMemo(() => productIds.length > 0 ? query(collection(db, 'products'), where('__name__', 'in', productIds)) : undefined, [db, productIds]);
+  const [relatedProducts, loadingProducts] = useCollectionData(productsQuery, { idField: 'id' });
+
   const pageLoading = isLoading;
 
   if (pageLoading) {
@@ -39,10 +48,10 @@ export default function FestivalDetailPage() {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
 
-  const name = festival.name[language] || festival.name.en;
-  const description = festival.description[language] || festival.description.en;
-  const significance = festival.significance[language] || festival.significance.en;
-  const rituals = festival.rituals[language] || festival.rituals.en;
+  const name = (festival.name as any)[language] || festival.name.en;
+  const description = (festival.description as any)[language] || festival.description.en;
+  const significance = (festival.significance as any)[language] || festival.significance.en;
+  const rituals = (festival.rituals as any)[language] || festival.rituals.en;
 
   return (
     <main className="container mx-auto px-4 py-8 md:py-12">
@@ -95,7 +104,7 @@ export default function FestivalDetailPage() {
                             <CardTitle>{t.festivalDetail.associatedDeities}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {associatedDeities.map((deity) => (
+                            {associatedDeities.map((deity: any) => (
                                 <Link key={deity.id} href={`/deities/${deity.slug}`} className="group flex items-center gap-3 p-2 rounded-md hover:bg-primary/10">
                                     <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0">
                                         <Image src={deity.images[0].url} alt={deity.name[language] || deity.name.en} data-ai-hint={deity.images[0].hint} fill className="object-cover" />
@@ -124,13 +133,13 @@ export default function FestivalDetailPage() {
                             </CardContent>
                         </Card>
                     )}
-                    {relatedProducts.length > 0 && (
+                    {relatedProducts && relatedProducts.length > 0 && (
                         <Card className="bg-transparent border-primary/20">
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-3 text-primary"><ShoppingCart /> Shop Essentials</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-3">
-                               {relatedProducts.map(product => (
+                               {relatedProducts.map((product: any) => (
                                    <Link key={product.id} href={`/shop/${product.id}`} className="group flex items-center gap-3 p-2 rounded-md hover:bg-primary/10">
                                        <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
                                            <Image src={product.imageUrl} alt={product.name_en} data-ai-hint={product.imageHint} fill className="object-cover" />
@@ -150,3 +159,5 @@ export default function FestivalDetailPage() {
     </main>
   );
 }
+
+    

@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -9,39 +9,47 @@ import { ArrowRight, BookHeart, Loader2, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useLanguage } from '@/hooks/use-language';
-import { rituals as mockRituals } from '@/lib/rituals';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { deities } from '@/lib/deities';
+import { useFirestore } from '@/lib/firebase/provider';
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query, DocumentData } from 'firebase/firestore';
+
 
 export default function RitualsPage() {
   const { language, t } = useLanguage();
-  const rituals = mockRituals;
-  const isLoading = false;
+  const db = useFirestore();
+
+  const ritualsQuery = useMemo(() => query(collection(db, 'rituals')), [db]);
+  const [rituals, isLoading] = useCollectionData(ritualsQuery, { idField: 'id' });
   
+  const deitiesQuery = useMemo(() => query(collection(db, 'deities')), [db]);
+  const [deities, loadingDeities] = useCollectionData(deitiesQuery, { idField: 'id' });
+
   const [searchQuery, setSearchQuery] = useState('');
   const [filterDeity, setFilterDeity] = useState('all');
-  const [filteredRituals, setFilteredRituals] = useState(rituals);
+  const [filteredRituals, setFilteredRituals] = useState<DocumentData[]>([]);
 
   useEffect(() => {
-    let updatedRituals = rituals;
+    if (rituals) {
+        let updatedRituals = rituals;
 
-    if (searchQuery.trim() !== '') {
-      const lowercasedQuery = searchQuery.toLowerCase();
-      updatedRituals = updatedRituals.filter(ritual => 
-        (ritual.name[language] || ritual.name.en).toLowerCase().includes(lowercasedQuery) ||
-        (ritual.description[language] || ritual.description.en).toLowerCase().includes(lowercasedQuery)
-      );
+        if (searchQuery.trim() !== '') {
+        const lowercasedQuery = searchQuery.toLowerCase();
+        updatedRituals = updatedRituals.filter(ritual => 
+            (ritual.name[language] || ritual.name.en).toLowerCase().includes(lowercasedQuery) ||
+            (ritual.description[language] || ritual.description.en).toLowerCase().includes(lowercasedQuery)
+        );
+        }
+
+        if (filterDeity !== 'all') {
+        updatedRituals = updatedRituals.filter(ritual => 
+            (ritual.deity.en.toLowerCase().replace(/ /g, '-') === filterDeity)
+        );
+        }
+        
+        setFilteredRituals(updatedRituals);
     }
-
-    if (filterDeity !== 'all') {
-      updatedRituals = updatedRituals.filter(ritual => 
-        (ritual.deity.en.toLowerCase().replace(/ /g, '-') === filterDeity)
-      );
-    }
-    
-    setFilteredRituals(updatedRituals);
-
   }, [searchQuery, filterDeity, rituals, language]);
 
   return (
@@ -71,7 +79,7 @@ export default function RitualsPage() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Deities</SelectItem>
-              {deities.map(deity => (
+              {deities?.map((deity: any) => (
                 <SelectItem key={deity.slug} value={deity.slug}>{deity.name.en}</SelectItem>
               ))}
             </SelectContent>
@@ -125,3 +133,5 @@ export default function RitualsPage() {
     </main>
   );
 }
+
+    

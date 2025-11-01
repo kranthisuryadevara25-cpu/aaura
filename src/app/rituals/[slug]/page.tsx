@@ -7,8 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { CheckSquare, ShoppingBasket, Clock, Loader2, BookOpen, Lightbulb, AlertTriangle, Sparkles, Music, PlayCircle } from 'lucide-react';
 import { useLanguage } from '@/hooks/use-language';
-import { getRitualBySlug } from '@/lib/rituals';
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useMemo } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
 import { Button } from '@/components/ui/button';
@@ -16,8 +15,8 @@ import Link from 'next/link';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useToast } from '@/hooks/use-toast';
-import { doc, runTransaction, serverTimestamp, increment } from 'firebase/firestore';
-import { products } from '@/lib/products';
+import { doc, runTransaction, serverTimestamp, increment, query, where, collection, DocumentData } from 'firebase/firestore';
+import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
 
 export default function RitualDetailPage() {
   const params = useParams();
@@ -29,10 +28,15 @@ export default function RitualDetailPage() {
   const [user] = useAuthState(auth);
   const [isAddingToCart, startTransition] = useTransition();
   
-  const ritual = getRitualBySlug(slug);
-  const isLoading = false;
-
+  const ritualQuery = useMemo(() => query(collection(db, 'rituals'), where('slug', '==', slug)), [db, slug]);
+  const [rituals, isLoading] = useCollectionData(ritualQuery, { idField: 'id' });
+  const ritual = useMemo(() => rituals?.[0], [rituals]);
+  
   const [checkedItems, setCheckedItems] = useState<string[]>([]);
+  
+  const productIds = useMemo(() => ritual?.itemsRequired?.en?.map((item: any) => item.productId) || [], [ritual]);
+  const productsQuery = useMemo(() => productIds.length > 0 ? query(collection(db, 'products'), where('__name__', 'in', productIds)) : undefined, [db, productIds]);
+  const [products, loadingProducts] = useCollectionData(productsQuery, { idField: 'id' });
 
   const handleAddToCart = (productId: string, name: string) => {
     if (!user) {
@@ -47,7 +51,7 @@ export default function RitualDetailPage() {
 
     startTransition(async () => {
         try {
-            const product = products.find(p => p.id === productId);
+            const product = products?.find(p => p.id === productId);
             if (!product) throw new Error("Product not found");
             
             const cartRef = doc(db, 'users', user.uid, 'cart', productId);
@@ -96,13 +100,13 @@ export default function RitualDetailPage() {
     return <div className="flex justify-center items-center min-h-screen"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
   }
   
-  const name = ritual.name[language] || ritual.name.en;
-  const description = ritual.description[language] || ritual.description.en;
-  const deity = ritual.deity[language] || ritual.deity.en;
+  const name = (ritual.name as any)[language] || ritual.name.en;
+  const description = (ritual.description as any)[language] || ritual.description.en;
+  const deity = (ritual.deity as any)[language] || ritual.deity.en;
   const auspiciousTime = ritual.auspiciousTime.en;
   const procedure = ritual.procedure.en || [];
   const itemsRequired = ritual.itemsRequired.en || [];
-  const significance = ritual.significance[language] || ritual.significance.en;
+  const significance = (ritual.significance as any)[language] || ritual.significance.en;
   const benefits = ritual.benefits.en || [];
   const commonMistakes = ritual.commonMistakes.en || [];
 
@@ -148,7 +152,7 @@ export default function RitualDetailPage() {
                             <CardTitle className="flex items-center gap-3 text-primary"><CheckSquare /> {t.ritualDetail.procedure}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {procedure.map((section, sectionIndex) => (
+                            {procedure.map((section: any, sectionIndex: number) => (
                                 <div key={sectionIndex}>
                                     <h3 className="font-bold text-lg mb-2">{section.title}</h3>
                                     <ol className="list-decimal list-inside space-y-3 pl-4 border-l-2 border-primary/20">
@@ -192,7 +196,7 @@ export default function RitualDetailPage() {
                             <CardTitle className="flex items-center gap-3 text-primary"><ShoppingBasket /> {t.ritualDetail.itemsRequired}</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-3">
-                            {itemsRequired.map((item, index) => (
+                            {itemsRequired.map((item: any, index: number) => (
                                 <div key={item.name} className="flex items-center gap-3">
                                   <Checkbox 
                                     id={`item-${index}`} 
@@ -224,7 +228,7 @@ export default function RitualDetailPage() {
                                 <CardDescription>{ritual.recommendedPlaylist.title}</CardDescription>
                             </CardHeader>
                             <CardContent className="space-y-2">
-                                {ritual.recommendedPlaylist.tracks.map((track, index) => (
+                                {ritual.recommendedPlaylist.tracks.map((track: any, index: number) => (
                                     <div key={index} className="text-sm">
                                         <p className="font-semibold text-foreground">{track.title}</p>
                                         <p className="text-xs text-muted-foreground">{track.artist}</p>
@@ -245,3 +249,5 @@ export default function RitualDetailPage() {
     </main>
   );
 }
+
+    

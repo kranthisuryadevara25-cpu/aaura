@@ -16,9 +16,7 @@ service cloud.firestore {
     }
     
     function isSuperAdmin() {
-      // In a real app, this should check a custom claim, not an email address.
-      // e.g. return request.auth.token.isSuperAdmin == true;
-      return isSignedIn() && request.auth.token.email == "smr@aaura.com";
+      return isSignedIn() && request.auth.token.isSuperAdmin == true;
     }
     
     function isPublicRead() {
@@ -103,6 +101,9 @@ service cloud.firestore {
         allow get: if isOwner(userId);
         allow list, create, update, delete: if false; // Generated server-side
       }
+       match /challenges/{challengeId} {
+         allow get, create, update, delete: if isOwner(userId);
+       }
     }
 
 
@@ -111,7 +112,7 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
     
     // Publicly readable content stubs
-    match /{collectionId}/{docId} where collectionId in ['deities', 'stories', 'epicHeroes', 'rituals', 'panchang', 'festivals'] {
+    match /{collectionId}/{docId} where collectionId in ['deities', 'stories', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges'] {
       allow get, list: if true;
       allow create, update, delete: if isSuperAdmin();
     }
@@ -160,8 +161,8 @@ service cloud.firestore {
     
     // Playlists
     match /playlists/{playlistId} {
-        allow get, list: if resource.data.isPublic == true || isOwner(resource.data.creatorId);
-        allow create, update, delete: if isOwner(request.resource.data.creatorId);
+        allow get, list: if resource.data.isPublic == true || (isSignedIn() && isOwner(resource.data.creatorId));
+        allow create, update, delete: if isSignedIn() && isOwner(request.resource.data.creatorId);
     }
     
     // Posts (Global collection for simplicity, context is key)
@@ -218,3 +219,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

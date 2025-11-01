@@ -25,10 +25,10 @@ export default function ShopPage() {
   const { toast } = useToast();
   const [addingProductId, setAddingProductId] = useState<string | null>(null);
 
-  const productsRef = collection(db, 'products').withConverter(productConverter);
+  const productsRef = db ? collection(db, 'products').withConverter(productConverter) : null;
   const [snapshot, isLoading] = useCollection(productsRef);
   
-  const products = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
+  const products = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
 
   const handleAddToCart = (product: Product) => {

@@ -544,95 +544,98 @@ function ContestsTabContent() {
 }
 
 function ProductsTabContent() {
-  const db = useFirestore();
-  const productsRef = useMemo(() => db ? collection(db, 'products').withConverter(productConverter) : undefined, [db]);
-  const { toast } = useToast();
-  const [snapshot, isLoading] = useCollection(productsRef);
-  
-  const products = useMemo(() => snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() })) || [], [snapshot]);
+    const db = useFirestore();
+    const { toast } = useToast();
 
-  const handleDelete = (id: string) => {
-    if (!db) return;
-    const productDocRef = doc(db, 'products', id);
+    // The productsRef is now stable and doesn't depend on a `useMemo` that can cause re-renders.
+    const productsRef = db ? collection(db, 'products').withConverter(productConverter) : null;
+    const [snapshot, isLoading] = useCollection(productsRef);
+    
+    // The products list is derived directly from the stable snapshot.
+    const products = snapshot?.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-    deleteDoc(productDocRef)
-        .then(() => {
-            toast({ title: 'Product Deleted', description: 'The product has been removed.' });
-        })
-        .catch((err) => {
-            const permissionError = new FirestorePermissionError({
-                path: productDocRef.path,
-                operation: 'delete',
+    const handleDelete = (id: string) => {
+        if (!db) return;
+        const productDocRef = doc(db, 'products', id);
+
+        deleteDoc(productDocRef)
+            .then(() => {
+                toast({ title: 'Product Deleted', description: 'The product has been removed.' });
+            })
+            .catch((err) => {
+                const permissionError = new FirestorePermissionError({
+                    path: productDocRef.path,
+                    operation: 'delete',
+                });
+                errorEmitter.emit('permission-error', permissionError);
             });
-            errorEmitter.emit('permission-error', permissionError);
-        });
-  };
+    };
 
-  return (
-    <div>
-      <div className="flex justify-between items-center mb-6">
-        <p className="text-muted-foreground">Manage the items in your marketplace.</p>
-        <Button asChild>
-          <Link href="/admin/products/new">
-            <PlusCircle className="mr-2" />
-            Add New Product
-          </Link>
-        </Button>
-      </div>
-      {isLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+    return (
+        <div>
+        <div className="flex justify-between items-center mb-6">
+            <p className="text-muted-foreground">Manage the items in your marketplace.</p>
+            <Button asChild>
+            <Link href="/admin/products/new">
+                <PlusCircle className="mr-2" />
+                Add New Product
+            </Link>
+            </Button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {products?.map((product) => (
-            <Card key={product.id}>
-              <CardHeader className="flex flex-row items-center justify-between">
-                <CardTitle>{product.name_en}</CardTitle>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" asChild>
-                    <Link href={`/admin/products/edit/${product.id}`}>
-                      <Edit className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>This will permanently delete the product.</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleDelete(product.id)}>Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="relative aspect-square rounded-md overflow-hidden bg-secondary">
-                  <Image
-                    src={product.imageUrl}
-                    alt={product.name_en}
-                    data-ai-hint={product.imageHint || 'product image'}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-                <p className="mt-2 font-bold text-lg text-primary">₹{product.price.toFixed(2)}</p>
-                <p className="text-sm text-muted-foreground">{product.category}</p>
-              </CardContent>
-            </Card>
-          ))}
+        {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {products?.map((product) => (
+                <Card key={product.id}>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>{product.name_en}</CardTitle>
+                    <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" asChild>
+                        <Link href={`/admin/products/edit/${product.id}`}>
+                        <Edit className="h-4 w-4" />
+                        </Link>
+                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                        <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                            <AlertDialogDescription>This will permanently delete the product.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={() => handleDelete(product.id)}>Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <div className="relative aspect-square rounded-md overflow-hidden bg-secondary">
+                    <Image
+                        src={product.imageUrl}
+                        alt={product.name_en}
+                        data-ai-hint={product.imageHint || 'product image'}
+                        fill
+                        className="object-cover"
+                    />
+                    </div>
+                    <p className="mt-2 font-bold text-lg text-primary">₹{product.price.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground">{product.category}</p>
+                </CardContent>
+                </Card>
+            ))}
+            </div>
+        )}
         </div>
-      )}
-    </div>
-  );
+    );
 }
 
 export default function ContentManagementPage() {

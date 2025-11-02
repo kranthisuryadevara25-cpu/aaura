@@ -109,7 +109,7 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
                 title: data.title_en ? { en: data.title_en, hi: data.title_hi, te: data.title_te } : data.title,
                 description: data.description_en ? { en: data.description_en, hi: data.description_hi, te: data.description_te } : data.description,
                 thumbnail: data.thumbnailUrl || "",
-                mediaUrl: data.mediaUrl,
+                mediaUrl: data.mediaUrl || "", // <-- FIX: Ensure mediaUrl is always present
                 meta: { duration: data.duration, views: data.views, userId: data.userId, channelName: data.channelName, likes: data.likes },
                 createdAt: createdAt.toISOString(),
             };

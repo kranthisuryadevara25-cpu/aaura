@@ -15,9 +15,10 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
+    // Check if the user is the designated Super Admin.
+    // REPLACE 'PLEASE_ADD_YOUR_UID_HERE' with your actual Firebase User ID.
     function isSuperAdmin() {
-      // Check if the isSuperAdmin field exists and is true.
-      return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSuperAdmin == true;
+      return request.auth.uid == "PLEASE_ADD_YOUR_UID_HERE";
     }
 
     // Ensures that a user cannot follow themselves.
@@ -38,12 +39,14 @@ service cloud.firestore {
     
     // Validates the shape of a comment being created
     function isValidComment(contentType) {
+       // Handle irregular pluralization for 'media'
+       let collectionName = contentType == 'media' ? 'media' : contentType + 's';
        return request.resource.data.authorId == request.auth.uid &&
               request.resource.data.text is string &&
               request.resource.data.text.size() > 0 &&
               request.resource.data.createdAt == request.time &&
               request.resource.data.contentType == contentType &&
-              exists(/databases/$(database)/documents/$(contentType + 's')/$(request.resource.data.contentId));
+              exists(/databases/$(database)/documents/$(collectionName)/$(request.resource.data.contentId));
     }
 
 
@@ -148,7 +151,7 @@ service cloud.firestore {
     // Stories can be created by any signed-in user (or admins)
     match /stories/{storyId} {
         allow get, list: if true;
-        allow create, update, delete: if isSignedIn();
+        allow create, update, delete: if isSuperAdmin();
     }
 
     // Temples are admin-only write
@@ -223,11 +226,11 @@ service cloud.firestore {
     // E-commerce & Community
     // ---------------------------------------------------------------------------------------------
     
-    // Groups are public to read, but only admins can create them globally.
-    // Membership is handled in the user's subcollection.
+    // Groups are public to read. Any signed-in user can create a group.
     match /groups/{groupId} {
         allow get, list: if true;
-        allow create, update, delete: if isSuperAdmin(); // Or some other logic for group creation
+        allow create: if isSignedIn();
+        allow update, delete: if isSuperAdmin(); // Only super admin can edit/delete a group
     }
 
     // Orders
@@ -260,3 +263,5 @@ service cloud.firestore {
     }
   }
 }
+
+    

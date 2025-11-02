@@ -100,7 +100,10 @@ export function Comments({ contentId, contentType }: CommentsProps) {
     defaultValues: { text: '' },
   });
 
-  const commentsCollectionName = `${contentType}s`;
+  const commentsCollectionName = useMemo(() => {
+      if(contentType === 'media') return 'media';
+      return `${contentType}s`;
+  }, [contentType]);
 
   const commentsQuery = useMemo(() => {
       if (!db || !contentId) return undefined;

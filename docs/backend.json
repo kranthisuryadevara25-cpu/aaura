@@ -57,6 +57,10 @@
             "type": "boolean",
             "description": "Flag to indicate if the user has completed their profile."
         },
+        "isSuperAdmin": {
+            "type": "boolean",
+            "description": "Flag to indicate if the user has super administrator privileges."
+        },
         "followerCount": {
           "type": "number",
           "description": "The number of users following this user."
@@ -938,7 +942,8 @@
   },
   "auth": {
     "providers": [
-      "password"
+      "password",
+      "google.com"
     ]
   },
   "firestore": {

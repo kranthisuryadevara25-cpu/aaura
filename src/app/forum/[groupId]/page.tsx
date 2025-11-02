@@ -1,3 +1,4 @@
+
 "use client";
 import React, { useTransition, useMemo, useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
@@ -6,18 +7,18 @@ import Image from "next/image";
 import { useDocumentData } from "react-firebase-hooks/firestore";
 import { doc, writeBatch, increment, serverTimestamp } from "firebase/firestore";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Heart, Loader2, MessageCircle } from "lucide-react";
-import { Card } from "./ui/card";
-import { Skeleton } from "./ui/skeleton";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { FeedItem } from "@/types/feed";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useToast } from "@/hooks/use-toast";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { FirestorePermissionError } from "@/lib/firebase/errors";
 import { errorEmitter } from "@/lib/firebase/error-emitter";
-import { Comments } from './comments';
-import { ClientOnlyTime } from "./ClientOnlyTime";
+import { Comments } from '@/components/comments';
+import { ClientOnlyTime } from "@/components/ClientOnlyTime";
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {
   const db = useFirestore();

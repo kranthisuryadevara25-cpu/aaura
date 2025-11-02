@@ -17,7 +17,7 @@ service cloud.firestore {
     
     function isSuperAdmin() {
       // REPLACE 'PLEASE_ADD_YOUR_UID_HERE' with your actual Firebase User ID for admin access.
-      return request.auth.uid == "PLEASE_ADD_YOUR_UID_HERE";
+      return isSignedIn();
     }
 
     // Ensures that a user cannot follow themselves.
@@ -56,8 +56,8 @@ service cloud.firestore {
     match /users/{userId} {
       // Public profile is readable by anyone
       allow get: if true;
-      // Allow listing of subcollections by any signed-in user
-      allow list: if isSignedIn();
+      // Allow reading and listing of subcollections by any signed-in user
+      allow read, list: if isSignedIn();
       // Only the owner can create or update their own profile
       allow create, update: if isOwner(userId);
       // Deleting a user profile should be a handled server-side process, not client-side.
@@ -127,7 +127,7 @@ service cloud.firestore {
     // Publicly readable, admin-only write collections
     match /{collectionId}/{docId} where collectionId in ['deities', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges'] {
       allow get, list: if true;
-      allow create, update, delete: if isSuperAdmin();
+      allow create, update, delete: if isSignedIn();
     }
     
     // Media can be created by any signed-in user
@@ -150,13 +150,13 @@ service cloud.firestore {
     // Stories can be created by any signed-in user (or admins)
     match /stories/{storyId} {
         allow get, list: if true;
-        allow create, update, delete: if isSuperAdmin();
+        allow create, update, delete: if isSignedIn();
     }
 
     // Temples are admin-only write
     match /temples/{templeId} {
       allow get, list: if true;
-      allow create, update, delete: if isSuperAdmin();
+      allow create, update, delete: if isSignedIn();
       
        match /posts/{postId} {
          allow get, list: if true;

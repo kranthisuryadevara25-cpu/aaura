@@ -11,10 +11,8 @@ import type { FeedItem } from "@/types/feed";
 export default function Page() {
   const { allItems, loading } = useFeed();
   const [filteredItems, setFilteredItems] = useState<FeedItem[]>([]);
-  const [isClient, setIsClient] = useState(false);
-
+  
   useEffect(() => {
-    setIsClient(true);
     setFilteredItems(allItems);
   }, [allItems]);
 
@@ -34,11 +32,11 @@ export default function Page() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-4 space-y-8">
-      {isClient && <CreateContent />}
+      <CreateContent />
       <div className="space-y-4">
         <h2 className="text-2xl font-bold font-headline text-primary">For You</h2>
         <SearchBar onSearch={handleSearch} />
-        <Feed items={filteredItems} isLoading={loading && filteredItems.length === 0} />
+        <Feed items={filteredItems} isLoading={loading && allItems.length === 0} />
       </div>
     </div>
   );

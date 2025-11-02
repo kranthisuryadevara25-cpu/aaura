@@ -9,8 +9,8 @@ import type { FeedItem } from '@/types/feed';
 
 const VIRTUALIZATION_BUFFER = 3;
 
-export default function ReelsClient({ initialVideos = [] }: { initialVideos: FeedItem[] }) {
-  const { allItems, loading, loadMore, canLoadMore } = useFeed(initialVideos, 5);
+export default function ReelsClient() {
+  const { allItems, loading, loadMore, canLoadMore } = useFeed(5);
   const [visibleItemIndex, setVisibleItemIndex] = useState(0);
   const observer = useRef<IntersectionObserver | null>(null);
   const loadMoreObserver = useRef<IntersectionObserver | null>(null);
@@ -50,6 +50,14 @@ export default function ReelsClient({ initialVideos = [] }: { initialVideos: Fee
   }, [videoItems]);
 
 
+  if (videoItems.length === 0 && loading) {
+    return (
+        <div className="h-screen w-full flex flex-col items-center justify-center bg-black text-center p-4">
+             <Loader2 className="h-16 w-16 animate-spin text-white" />
+        </div>
+    );
+  }
+
   if (videoItems.length === 0 && !loading) {
     return (
         <div className="h-screen w-full flex flex-col items-center justify-center bg-background text-center p-4">
@@ -79,7 +87,7 @@ export default function ReelsClient({ initialVideos = [] }: { initialVideos: Fee
         </div>
       ))}
 
-      {loading && (
+      {loading && videoItems.length > 0 && (
         <div className="h-screen w-full snap-start flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-white" />
         </div>

@@ -38,7 +38,7 @@ export default function Page() {
       <div className="space-y-4">
         <h2 className="text-2xl font-bold font-headline text-primary">For You</h2>
         <SearchBar onSearch={handleSearch} />
-        <Feed items={filteredItems} isLoading={loading} />
+        <Feed items={filteredItems} isLoading={loading && filteredItems.length === 0} />
       </div>
     </div>
   );

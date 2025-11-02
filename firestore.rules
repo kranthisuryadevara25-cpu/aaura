@@ -54,8 +54,6 @@ service cloud.firestore {
     match /users/{userId} {
       // Public profile is readable by anyone
       allow get: if true;
-      // Users can only list their own subcollections, not other users'
-      allow list: if isOwner(userId);
       // Only the owner can create or update their own profile
       allow create, update: if isOwner(userId);
       // Deleting a user profile should be a handled server-side process, not client-side.
@@ -226,7 +224,7 @@ service cloud.firestore {
     // Groups can be created by any signed in user
     match /groups/{groupId} {
         allow get, list: if true;
-        allow create: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.memberCount == 0;
         allow update, delete: if isSuperAdmin();
     }
 

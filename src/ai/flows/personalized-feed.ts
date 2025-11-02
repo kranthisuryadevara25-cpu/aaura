@@ -70,61 +70,23 @@ const personalizedFeedFlow = ai.defineFlow(
     outputSchema: PersonalizedFeedOutputSchema,
   },
   async (input) => {
-    const { userId, pageSize } = input;
+    const { pageSize = 20 } = input;
     
-    if (!userId || await isUserNew(db, userId)) {
-        console.log(`New or logged-out user detected. Returning trending content.`);
-        return getTrendingContent(db, pageSize);
-    }
-
-    // --- Optimized Algorithm for Existing Users ---
-    
-    // Step 2: Parallelize Firestore fetches
-    const [userLikes, userBookmarks, recentMedia, recentPosts, recentStories] = await Promise.all([
-        fetchUserInteractions(db, userId, 'likes'),
-        fetchUserInteractions(db, userId, 'bookmarks'),
-        fetchRecentContent(db, 'media', 50),
-        fetchRecentContent(db, 'posts', 50),
-        fetchRecentContent(db, 'stories', 50)
+    // Step 1: Fetch recent trending content in parallel
+    const [mediaItems, postItems, storyItems] = await Promise.all([
+        fetchContent(db, 'media', 'uploadDate', pageSize),
+        fetchContent(db, 'posts', 'createdAt', pageSize),
+        fetchContent(db, 'stories', 'createdAt', pageSize),
     ]);
+
+    // Step 2: Combine and shuffle the content for variety
+    const combinedFeed = [...mediaItems, ...postItems, ...storyItems];
+    const shuffledFeed = combinedFeed.sort(() => 0.5 - Math.random());
     
-    const allCandidates = [...recentMedia, ...recentPosts, ...recentStories];
-
-    const scoredContent = allCandidates.map(item => {
-        let score = 0;
-        let reason = "Recommended based on recent uploads.";
-
-        const hoursSinceCreation = (new Date().getTime() - item.createdAt.getTime()) / (1000 * 60 * 60);
-        score += Math.max(0, 10 - Math.floor(hoursSinceCreation / 24));
-
-        if (userLikes.some(l => l.contentId === item.contentId)) {
-            score += 20;
-            reason = "You previously liked content like this.";
-        }
-        if (userBookmarks.some(b => b.contentId === item.contentId)) {
-            score += 25;
-            reason = "From your bookmarks.";
-        }
-        
-        if(item.contentType === 'media') score += 15;
-        if(item.contentType === 'post') score += 10;
-
-        score += item.popularityScore || 0;
-        
-        return {
-            ...item,
-            score,
-            reason
-        };
-    });
-
-    const sortedFeed = scoredContent
-        .sort((a, b) => b.score - a.score)
-        .slice(0, pageSize || 20);
-
-    const finalFeed = sortedFeed.map(item => mapToFeedItem(item.doc, item.contentType as any));
-
-    return { feed: finalFeed.filter((i): i is FeedItem => i !== null) };
+    // Step 3: Slice to the desired page size
+    const finalFeed = shuffledFeed.slice(0, pageSize);
+    
+    return { feed: finalFeed };
   }
 );
 
@@ -187,77 +149,22 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
                 kind: 'post',
                 description: { en: data.content },
                 createdAt: createdAt.toISOString(),
-                meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount, contextId: data.contextId },
+                meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount, contextId: data.contextId, contextType: data.contextType },
             }
         default:
             return null;
     }
 }
 
-
-async function isUserNew(db: Firestore, userId: string): Promise<boolean> {
+async function fetchContent(db: Firestore, collectionName: string, dateField: string, limit: number): Promise<FeedItem[]> {
     try {
-        const userDoc = await db.collection('users').doc(userId).get();
-        return !userDoc.exists || !userDoc.data()?.profileComplete;
-    } catch {
-        return true;
-    }
-}
-
-export async function getTrendingContent(db: Firestore, pageSize: number = 20): Promise<PersonalizedFeedOutput> {
-    const mediaQuery = db.collection('media').orderBy('uploadDate', 'desc').limit(Math.floor(pageSize / 2));
-    const postsQuery = db.collection('posts').orderBy('createdAt', 'desc').limit(Math.floor(pageSize / 2));
-
-    const [mediaSnap, postsSnap] = await Promise.all([
-        mediaQuery.get(),
-        postsQuery.get()
-    ]);
-    
-    const mediaItems = mediaSnap.docs.map(d => mapToFeedItem(d, 'media')).filter(Boolean) as FeedItem[];
-    const postItems = postsSnap.docs.map(d => mapToFeedItem(d, 'post')).filter(Boolean) as FeedItem[];
-    
-    const feedItems = [...mediaItems, ...postItems].slice(0, pageSize);
-    return { feed: feedItems };
-}
-
-async function fetchUserInteractions(db: Firestore, userId: string, interactionType: 'likes' | 'bookmarks'): Promise<{contentId: string, contentType: string}[]> {
-    try {
-        const q = db.collection('users').doc(userId).collection(interactionType).limit(50);
-        const snap = await q.get();
-        return snap.docs.map(d => ({ contentId: d.id, contentType: 'unknown' }));
-    } catch {
-        return [];
-    }
-}
-
-async function fetchRecentContent(
-    db: Firestore,
-    collectionName: 'media' | 'posts' | 'stories', 
-    count: number
-): Promise<{contentId: string, contentType: any, createdAt: Date, popularityScore: number, doc: DocumentData}[]> {
-    try {
-        const dateField = collectionName === 'media' ? 'uploadDate' : 'createdAt';
-        const q = db.collection(collectionName).orderBy(dateField, 'desc').limit(count);
-        const snap = await q.get();
-
-        return snap.docs.map(doc => {
-            const data = doc.data();
-            const popularity = (data.likes || 0) + (data.views || 0) / 10;
-            const createdAtTimestamp = data[dateField];
-            const createdAt = createdAtTimestamp?.toDate ? createdAtTimestamp.toDate() : new Date();
-
-            return {
-                contentId: doc.id,
-                contentType: collectionName,
-                createdAt: createdAt,
-                popularityScore: popularity,
-                doc: doc
-            };
-        });
+        const q = db.collection(collectionName).orderBy(dateField, 'desc').limit(limit);
+        const snapshot = await q.get();
+        return snapshot.docs
+            .map(doc => mapToFeedItem(doc, collectionName as any))
+            .filter((item): item is FeedItem => item !== null);
     } catch (e) {
-        console.error(`Failed to fetch recent content from ${collectionName}:`, e);
+        console.error(`Failed to fetch content from ${collectionName}:`, e);
         return [];
     }
 }
-
-    

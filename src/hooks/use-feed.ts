@@ -7,12 +7,6 @@ import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useAuth } from "@/lib/firebase/provider";
 
-const getTextFromField = (field: Record<string, string> | string | undefined, lang: string): string => {
-    if (!field) return "";
-    if (typeof field === "string") return field;
-    return field[lang] || field["en"] || "";
-};
-
 export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number = 20) => {
   const { language } = useLanguage();
   const [user, loadingAuth] = useAuthState(useAuth());
@@ -30,13 +24,11 @@ export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number
       const result = await getPersonalizedFeed({
         userId: user?.uid,
         pageSize: typeof initialItems === 'number' ? initialItems : pageSize,
-        // In a real app, you'd pass a cursor from the last item of `allItems`
       });
       
       if (result.feed.length === 0) {
         setCanLoadMore(false);
       } else {
-        // Prevent duplicates
         setAllItems(prevItems => {
             const existingIds = new Set(prevItems.map(item => item.id));
             const newItems = result.feed.filter(newItem => !existingIds.has(newItem.id));
@@ -61,18 +53,6 @@ export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number
         initialLoadDone.current = true;
     }
   }, [loadingAuth, initialItems, loadMore]);
-
-  const filterItems = useCallback((searchQuery: string): FeedItem[] => {
-    if (!searchQuery) {
-        return allItems;
-    }
-    const lowercasedQuery = searchQuery.toLowerCase();
-    return allItems.filter(item => {
-        const title = getTextFromField(item.title, language).toLowerCase();
-        const description = getTextFromField(item.description, language).toLowerCase();
-        return title.includes(lowercasedQuery) || description.includes(lowercasedQuery);
-    });
-  }, [allItems, language]);
-
-  return { allItems, loading, filterItems, loadMore, canLoadMore };
+  
+  return { allItems, loading, loadMore, canLoadMore };
 };

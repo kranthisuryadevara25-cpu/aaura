@@ -898,7 +898,8 @@
         "tags": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" },
         "likes": { "type": "number" },
-        "commentsCount": { "type": "number" }
+        "commentsCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["published", "pending", "archived"] }
       },
       "required": ["contextId", "contextType", "authorId", "content", "createdAt"]
     },

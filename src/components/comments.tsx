@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import { useTransition, useMemo, useState, useEffect } from 'react';
@@ -8,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { useCollectionData, useDocumentData } from 'react-firebase-hooks/firestore';
 import { collection, serverTimestamp, query, orderBy, addDoc, updateDoc, doc, increment, DocumentData, WithFieldValue } from 'firebase/firestore';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
@@ -96,6 +95,11 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const { t } = useLanguage();
   const [optimisticComments, setOptimisticComments] = useState<DocumentData[]>([]);
 
+  const form = useForm<CommentFormValues>({
+    resolver: zodResolver(commentSchema),
+    defaultValues: { text: '' },
+  });
+
   const commentsCollectionName = `${contentType}s`;
 
   const commentsQuery = useMemo(() => {
@@ -112,11 +116,6 @@ export function Comments({ contentId, contentType }: CommentsProps) {
     }
   }, [comments]);
 
-
-  const form = useForm<CommentFormValues>({
-    resolver: zodResolver(commentSchema),
-    defaultValues: { text: '' },
-  });
 
   const onSubmitComment = (data: CommentFormValues) => {
     if (!user || !contentId) {

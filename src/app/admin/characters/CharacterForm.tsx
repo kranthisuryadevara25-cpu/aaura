@@ -79,7 +79,7 @@ export function CharacterForm({ character }: CharacterFormProps) {
       const imageFile = data.imageFile;
       const characterId = character ? character.id : data.slug;
       
-      const fullData = {
+      const saveData = {
           id: characterId,
           slug: data.slug,
           name: data.name,
@@ -104,7 +104,7 @@ export function CharacterForm({ character }: CharacterFormProps) {
 
       try {
         const characterRef = doc(db, 'epicHeroes', characterId);
-        await setDoc(characterRef, fullData, { merge: true });
+        await setDoc(characterRef, saveData, { merge: true });
 
         toast({ title: `Character Submitted!`, description: `The character has been sent for review.` });
         router.push('/admin/content');
@@ -122,7 +122,7 @@ export function CharacterForm({ character }: CharacterFormProps) {
         const permissionError = new FirestorePermissionError({
             path: `epicHeroes/${characterId}`,
             operation: 'write',
-            requestResourceData: fullData,
+            requestResourceData: saveData,
         });
         errorEmitter.emit('permission-error', permissionError);
       }

@@ -1,0 +1,38 @@
+
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Allows authenticated users to write to their own media folder.
+    // This is the primary rule for the media upload feature.
+    match /media/{userId}/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Secure rule for user profile images.
+    match /users/{userId}/profileImage/{fileName} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Secure rule for general content images (deities, stories, etc.)
+    // Allows any authenticated user to upload, which is necessary for the admin forms.
+    match /content-images/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Secure rule for product images
+    match /product-images/{allPaths=**} {
+        allow read: if true;
+        allow write: if request.auth != null;
+    }
+
+    // Default rule: Deny all other read/write operations to prevent unauthorized access.
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

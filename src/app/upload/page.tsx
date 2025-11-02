@@ -74,14 +74,13 @@ export default function UploadPage() {
   const fileRef = form.register('media');
 
   const onSubmit = (data: FormValues) => {
-    // CRITICAL FIX: Ensure user object is fully loaded and available before proceeding.
-    if (loadingAuth) {
-        toast({ variant: 'destructive', title: 'Please wait', description: 'Authentication is still initializing.' });
-        return;
-    }
     if (!user || !user.uid) {
-      toast({ variant: 'destructive', title: 'You must be logged in to upload.' });
-      return;
+        toast({
+            variant: "destructive",
+            title: "Authentication Error",
+            description: "You must be logged in to upload media. Please wait or log in again.",
+        });
+        return;
     }
 
     const mediaFile = data.media[0];
@@ -92,7 +91,6 @@ export default function UploadPage() {
     
     setIsUploading(true);
     
-    // CRITICAL FIX: Use the now-guaranteed user.uid for the path.
     const mediaId = doc(collection(db, 'media')).id;
     const storageRef = ref(storage, `media/${user.uid}/${mediaId}/${mediaFile.name}`);
     const uploadTask = uploadBytesResumable(storageRef, mediaFile);
@@ -132,7 +130,7 @@ export default function UploadPage() {
                 }
                 
                 const mediaDocRef = doc(db, 'media', mediaId);
-                await setDoc(mediaDocRef, {
+                const mediaData = {
                     id: mediaId,
                     userId: user.uid,
                     title_en: data.title_en,
@@ -151,7 +149,9 @@ export default function UploadPage() {
                     tags: [data.mediaType],
                     likes: 0,
                     views: 0,
-                });
+                };
+
+                await setDoc(mediaDocRef, mediaData);
                 
                 toast({
                     title: 'Upload Complete!',

@@ -165,6 +165,8 @@ export function StoryForm({ story }: StoryFormProps) {
         updatedAt: serverTimestamp(),
         ...(story ? {} : { createdAt: serverTimestamp() }),
       };
+      
+      delete (fullData as any).image.file;
 
       try {
         await setDoc(storyRef, fullData, { merge: true })

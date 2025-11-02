@@ -16,11 +16,8 @@ service cloud.firestore {
     }
     
     function isSuperAdmin() {
+      // Check if the isSuperAdmin field exists and is true.
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSuperAdmin == true;
-    }
-    
-    function isPublicRead() {
-      return true; // anyone (including anonymous users) can read
     }
 
     // Ensures that a user cannot follow themselves.
@@ -58,8 +55,10 @@ service cloud.firestore {
       allow get: if true;
       // Users can only list their own subcollections, not other users'
       allow list: if isOwner(userId);
-      // Only the owner can create, update, or delete their profile
-      allow create, update, delete: if isOwner(userId);
+      // Only the owner can create or update their own profile
+      allow create, update: if isOwner(userId);
+      // Deleting a user profile should be a handled server-side process, not client-side.
+      allow delete: if false;
 
       // --- Social Subcollections ---
       match /followers/{followerId} {
@@ -78,7 +77,7 @@ service cloud.firestore {
       
       match /subscriptions/{channelId} {
         allow read, list: if isOwner(userId);
-        allow create: if isOwner(userId) && request.resource.data.channelId == channelId && isNotSelf(channelId);
+        allow create: if isOwner(userId) && request.resource.data.channelId == channelId;
         allow delete: if isOwner(userId);
         allow update: if false;
       }
@@ -102,11 +101,18 @@ service cloud.firestore {
         allow list, create, update, delete: if false; // Generated server-side
       }
        match /challenges/{challengeId} {
-         allow get, create, update, delete: if isOwner(userId);
+         allow get, list, create, update, delete: if isOwner(userId);
        }
        // Rule to allow users to join/leave groups
        match /groups/{groupId} {
-          allow get, list, create, delete: if isOwner(userId);
+          allow create, delete: if isOwner(userId);
+          allow get, list: if true;
+       }
+       match /playlists/{playlistId} {
+         allow create, delete, get, list: if isOwner(userId);
+       }
+       match /contestProgress/{contestId} {
+          allow get, list, create, update: if isOwner(userId);
        }
     }
 
@@ -115,20 +121,20 @@ service cloud.firestore {
     // Content Collections
     // ---------------------------------------------------------------------------------------------
     
-    // Publicly readable content stubs
-    match /{collectionId}/{docId} where collectionId in ['deities', 'stories', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges', 'groups'] {
+    // Publicly readable, admin-only write collections
+    match /{collectionId}/{docId} where collectionId in ['deities', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges'] {
       allow get, list: if true;
       allow create, update, delete: if isSuperAdmin();
     }
     
-    // Media
+    // Media can be created by any signed-in user
     match /media/{mediaId} {
       allow get, list: if true;
-      allow create: if isOwner(request.resource.data.userId);
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
       allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
       
       match /comments/{commentId} {
-          allow list: if true;
+          allow get, list: if true;
           allow create: if isSignedIn() && isValidComment('media');
           allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
@@ -138,7 +144,13 @@ service cloud.firestore {
       }
     }
     
-    // Temples
+    // Stories can be created by any signed-in user (or admins)
+    match /stories/{storyId} {
+        allow get, list: if true;
+        allow create, update, delete: if isSignedIn();
+    }
+
+    // Temples are admin-only write
     match /temples/{templeId} {
       allow get, list: if true;
       allow create, update, delete: if isSuperAdmin();
@@ -150,7 +162,7 @@ service cloud.firestore {
        }
     }
 
-    // Channels
+    // Channels can be created and managed by their owner
     match /channels/{channelId} {
         allow get, list: if true;
         allow create, update: if isOwner(channelId);
@@ -163,13 +175,14 @@ service cloud.firestore {
         }
     }
     
-    // Playlists
+    // Playlists can be created by any user. Can be read if public, or if owner.
     match /playlists/{playlistId} {
         allow get, list: if resource.data.isPublic == true || (isSignedIn() && isOwner(resource.data.creatorId));
-        allow create, update, delete: if isSignedIn() && isOwner(request.resource.data.creatorId);
+        allow create: if isSignedIn() && isOwner(request.resource.data.creatorId);
+        allow update, delete: if isOwner(resource.data.creatorId);
     }
     
-    // Posts (Global collection for simplicity, context is key)
+    // Posts can be created by any signed-in user
     match /posts/{postId} {
         allow get, list: if true;
         allow create: if isSignedIn() && isValidPost();
@@ -186,6 +199,7 @@ service cloud.firestore {
         }
     }
 
+    // Manifestations can be created by any signed-in user
     match /manifestations/{manifestationId} {
         allow get, list: if true;
         allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
@@ -207,6 +221,13 @@ service cloud.firestore {
     // E-commerce & Community
     // ---------------------------------------------------------------------------------------------
     
+    // Groups are public to read, but only admins can create them globally.
+    // Membership is handled in the user's subcollection.
+    match /groups/{groupId} {
+        allow get, list: if true;
+        allow create, update, delete: if isSuperAdmin(); // Or some other logic for group creation
+    }
+
     // Orders
     match /orders/{orderId} {
       allow get: if isOwner(resource.data.userId) || isSuperAdmin();
@@ -216,17 +237,15 @@ service cloud.firestore {
       allow delete: if false;
     }
     
-    // Products
+    // Products are admin-only
     match /products/{productId} {
         allow get, list: if true;
         allow create, update, delete: if isSuperAdmin();
     }
     
-    // Contests
+    // Contests are admin-only to create, but any user can update the chant count
     match /contests/{contestId} {
         allow get, list: if true;
-        // Allow any signed-in user to increment the totalChants count.
-        // For all other fields, only a super admin can update.
         allow update: if (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants']))
                       || isSuperAdmin();
         allow create, delete: if isSuperAdmin();

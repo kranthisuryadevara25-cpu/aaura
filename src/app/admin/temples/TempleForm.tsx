@@ -137,19 +137,17 @@ export function TempleForm({ temple }: TempleFormProps) {
 
       const templeRef = doc(db, 'temples', templeId);
       
-      const serializableData = {
-          ...data,
-          media: {
-              images: data.media.images.map(img => ({
-                  url: img.url || `https://picsum.photos/seed/${templeId}-${Math.random()}/800/600`,
-                  hint: img.hint
-              }))
-          }
-      };
+      const serializableImages = data.media.images.map(img => ({
+        url: img.url || `https://picsum.photos/seed/${templeId}-${Math.random()}/800/600`,
+        hint: img.hint,
+      }));
 
       const fullData = { 
         id: templeId,
-        ...serializableData,
+        ...data,
+        media: {
+            images: serializableImages,
+        },
         officialWebsite: data.officialWebsite || null,
         status: 'published',
         updatedAt: serverTimestamp(),
@@ -415,5 +413,3 @@ export function TempleForm({ temple }: TempleFormProps) {
     </Card>
   );
 }
-
-    

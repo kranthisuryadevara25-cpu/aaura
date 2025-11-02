@@ -121,21 +121,24 @@ export function DeityForm({ deity }: DeityFormProps) {
 
       const deityRef = doc(db, 'deities', deityId);
 
-      const serializableData = {
-          ...data,
-          images: data.images.map((img) => ({
-              url: img.url || `https://picsum.photos/seed/${deityId}-${Math.random()}/600/400`,
-              hint: img.hint
-          }))
-      };
+      // Prepare serializable data without the 'file' object
+      const serializableImages = data.images.map(img => ({
+        url: img.url || `https://picsum.photos/seed/${deityId}-${Math.random()}/600/400`,
+        hint: img.hint
+      }));
 
       const saveData = { 
         id: deityId,
-        ...serializableData,
+        ...data,
+        images: serializableImages, // Use the sanitized images array
         status: 'published',
         updatedAt: serverTimestamp(),
         ...(deity ? {} : { createdAt: serverTimestamp() }),
       };
+
+      // Remove 'file' property before saving
+      delete (saveData as any).images.file;
+
 
       try {
         await setDoc(deityRef, saveData, { merge: true });
@@ -290,5 +293,3 @@ export function DeityForm({ deity }: DeityFormProps) {
     </Card>
   );
 }
-
-    

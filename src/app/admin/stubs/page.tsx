@@ -10,5 +10,4 @@ export default function ContentStubsRedirectPage() {
     redirect('/admin/content');
     return null;
 }
-
     

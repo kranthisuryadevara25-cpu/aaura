@@ -10,7 +10,8 @@ import { Comments } from "./comments";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useToast } from "@/hooks/use-toast";
-import { doc, writeBatch, increment, serverTimestamp, useDocumentData } from "firebase/firestore";
+import { doc, writeBatch, increment, serverTimestamp } from "firebase/firestore";
+import { useDocumentData } from "react-firebase-hooks/firestore";
 import { FirestorePermissionError } from "@/lib/firebase/errors";
 import { errorEmitter } from "@/lib/firebase/error-emitter";
 
@@ -198,7 +199,7 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
             </button>
              <Sheet open={isCommentSheetOpen} onOpenChange={setCommentSheetOpen}>
                 <SheetTrigger asChild>
-                     <button onClick={(e) => e.stopPropagation()} className="flex flex-col items-center gap-1">
+                     <button onClick={(e) => {e.stopPropagation(); setCommentSheetOpen(true);}} className="flex flex-col items-center gap-1">
                         <MessageCircle className="w-8 h-8 drop-shadow-lg" />
                         <span className="text-xs drop-shadow-md">{item.meta?.commentsCount || 0}</span>
                     </button>

@@ -16,7 +16,7 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      return isSignedIn() && request.auth.uid == "9RwsoEEkWPR3Wpv6wKZmhos1xTG2";
+      return request.auth.uid == "0iG3GrufQ6g4bOYeTj9yFRgZwyx1";
     }
 
     function isNotSelf(userId) {
@@ -24,11 +24,11 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Global Read Access for Everyone
+    // 🔹 Global Rules - Deny all by default for security
     // ---------------------------------------------------------------------------------------------
 
     match /{document=**} {
-      allow get, list: if true; // Everyone (even anonymous) can read
+      allow read, write: if false;
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -36,65 +36,79 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
 
     match /users/{userId} {
-      allow create, update: if isOwner(userId) || isSuperAdmin();
-      allow delete: if isSuperAdmin();
+      allow get: if true;
+      allow create, update, delete: if isOwner(userId) || isSuperAdmin();
+
+      // Subcollections
+      match /{subcollection}/{docId} {
+        allow read, write: if isOwner(userId) || isSuperAdmin();
+      }
 
       // Followers
       match /followers/{followerId} {
         allow create: if isSignedIn() && request.auth.uid == followerId && isNotSelf(userId);
         allow delete: if isSignedIn() && (request.auth.uid == followerId || isOwner(userId));
+        allow get, list: if true;
       }
 
       // Following
       match /following/{followedId} {
         allow create: if isOwner(userId) && isNotSelf(followedId);
         allow delete: if isOwner(userId);
+        allow get, list: if true;
       }
+    }
+    
+    // ---------------------------------------------------------------------------------------------
+    // 🔹 Content Collections (Read for all, Write for Admin)
+    // ---------------------------------------------------------------------------------------------
 
-      // Preferences
-      match /preferences/{prefId} {
-        allow create, update, delete: if isOwner(userId) || isSuperAdmin();
-      }
+    match /deities/{deityId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
+    
+    match /stories/{storyId} {
+        allow get, list: if true;
+        allow create, update, delete: if isSuperAdmin();
+    }
+    
+    match /epicHeroes/{heroId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
 
-      // Bookmarks
-      match /bookmarks/{bookmarkId} {
-        allow create, delete: if isOwner(userId);
-      }
-
-      // Cart
-      match /cart/{productId} {
-        allow create, update, delete: if isOwner(userId);
-      }
-      
-      // Rule to allow users to join/leave groups
-      match /groups/{groupId} {
-        allow create, delete: if isOwner(userId);
-      }
-
-      // Challenges / Playlist / Contest progress
-      match /{subcollection}/{docId} {
-        allow create, update, delete: if isOwner(userId) || isSuperAdmin();
-      }
+    match /temples/{templeId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
+    
+    match /rituals/{ritualId} {
+        allow get, list: if true;
+        allow create, update, delete: if isSuperAdmin();
+    }
+    
+    match /festivals/{festivalId} {
+        allow get, list: if true;
+        allow create, update, delete: if isSuperAdmin();
+    }
+    
+    match /panchang/{date} {
+        allow get, list: if true;
+        allow create, update, delete: if isSuperAdmin();
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Content Collections (with if condition instead of 'where')
-    // ---------------------------------------------------------------------------------------------
-
-    match /{collectionId}/{docId} {
-      allow create, update, delete: if isSuperAdmin() &&
-        (collectionId in ['deities', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges', 'stories', 'temples', 'products']);
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // 🔹 Media
+    // 🔹 User-Generated & Interactive Content
     // ---------------------------------------------------------------------------------------------
 
     match /media/{mediaId} {
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
 
       match /comments/{commentId} {
+        allow get, list: if true;
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
@@ -102,16 +116,14 @@ service cloud.firestore {
         allow create, delete: if isOwner(userId);
       }
     }
-
-    // ---------------------------------------------------------------------------------------------
-    // 🔹 Posts
-    // ---------------------------------------------------------------------------------------------
-
+    
     match /posts/{postId} {
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
 
       match /comments/{commentId} {
+        allow get, list: if true;
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
@@ -119,16 +131,14 @@ service cloud.firestore {
         allow create, delete: if isOwner(userId);
       }
     }
-
-    // ---------------------------------------------------------------------------------------------
-    // 🔹 Manifestations
-    // ---------------------------------------------------------------------------------------------
-
+    
     match /manifestations/{manifestationId} {
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
 
       match /comments/{commentId} {
+        allow get, list: if true;
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
@@ -137,11 +147,8 @@ service cloud.firestore {
       }
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // 🔹 Channels
-    // ---------------------------------------------------------------------------------------------
-
     match /channels/{channelId} {
+      allow get, list: if true;
       allow create, update, delete: if isOwner(channelId) || isSuperAdmin();
       match /subscribers/{userId} {
         allow create, delete: if isOwner(userId);
@@ -149,34 +156,45 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Groups
+    // 🔹 E-commerce & Other Collections
     // ---------------------------------------------------------------------------------------------
-
+    
     match /groups/{groupId} {
-      allow create: if isSignedIn();
-      allow update: if isSuperAdmin() || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['memberCount']);
-      allow delete: if isSuperAdmin();
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        allow update: if isSuperAdmin();
+        allow delete: if isSuperAdmin();
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // 🔹 Orders
-    // ---------------------------------------------------------------------------------------------
-
     match /orders/{orderId} {
+      allow get, list: if true;
       allow create: if isSignedIn();
       allow update, delete: if isSuperAdmin();
     }
 
-    // ---------------------------------------------------------------------------------------------
-    // 🔹 Contests
-    // ---------------------------------------------------------------------------------------------
+    match /products/{productId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
+    
+    match /shops/{shopId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
 
     match /contests/{contestId} {
+      allow get, list: if true;
       allow create, delete: if isSuperAdmin();
       allow update: if isSignedIn(); // Allows incrementing chants
       match /chants/{chantId} {
         allow create: if isSignedIn();
       }
     }
+    
+    match /challenges/{challengeId} {
+      allow get, list: if true;
+      allow create, update, delete: if isSuperAdmin();
+    }
+
   }
 }

@@ -1,21 +1,53 @@
 
 "use client";
-import React, { useRef, useEffect, useState, useMemo } from "react";
+import React, { useRef, useEffect, useState, useMemo, useTransition } from "react";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
-import { Heart, MessageCircle, Play, Pause, Share2 } from "lucide-react";
+import { Heart, MessageCircle, Play, Pause, Share2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Comments } from "./comments";
+import { useAuth, useFirestore } from "@/lib/firebase/provider";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useToast } from "@/hooks/use-toast";
+import { doc, writeBatch, increment, serverTimestamp, useDocumentData } from "firebase/firestore";
+import { FirestorePermissionError } from "@/lib/firebase/errors";
+import { errorEmitter } from "@/lib/firebase/error-emitter";
 
 export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isVisible?: boolean }) {
   const { language } = useLanguage();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const auth = useAuth();
+  const db = useFirestore();
+  const { toast } = useToast();
+  const [user] = useAuthState(auth);
+  const [isLiking, startLikeTransition] = useTransition();
 
   const [showLike, setShowLike] = useState<string | null>(null);
   const [showPlayPause, setShowPlayPause] = useState<{ id: string, state: 'play' | 'pause' } | null>(null);
-  const [isLiked, setIsLiked] = useState(false);
   const [isCommentSheetOpen, setCommentSheetOpen] = useState(false);
+  
+  const item = items[0];
+  const contentId = useMemo(() => item?.id.replace(`${item?.kind}-`, ''), [item]);
+  const contentCollection = useMemo(() => {
+    if (item?.kind === 'video') return 'media';
+    return `${item?.kind}s`;
+  }, [item?.kind]);
+
+  const contentRef = useMemo(() => doc(db, contentCollection, contentId), [db, contentCollection, contentId]);
+  const [contentData] = useDocumentData(contentRef);
+  
+  const likeRef = useMemo(() => user ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined, [user, db, contentCollection, contentId]);
+  const [like, loadingLike] = useDocumentData(likeRef);
+  
+  const initialLikes = item.meta?.likes || contentData?.likes || 0;
+  const [optimisticLikes, setOptimisticLikes] = useState(initialLikes);
+  const [isLiked, setIsLiked] = useState(false);
+
+  useEffect(() => {
+    setOptimisticLikes(contentData?.likes ?? initialLikes);
+    setIsLiked(!!like);
+  }, [contentData, like, initialLikes]);
 
   const lastTap = useRef(0);
   const tapTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -68,14 +100,44 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
   };
 
   const handleLike = (id: string) => {
+     if (!user || !contentRef || !likeRef) {
+        toast({ variant: "destructive", title: "Please log in to like content." });
+        return;
+      }
     if (!isLiked) {
       setShowLike(id);
       setTimeout(() => setShowLike(null), 1000);
     }
-    setIsLiked(prev => !prev);
+    
+    startLikeTransition(() => {
+        const wasLiked = isLiked;
+        // Optimistic UI update
+        setIsLiked(!wasLiked);
+        setOptimisticLikes(prev => wasLiked ? prev - 1 : prev + 1);
+
+        const batch = writeBatch(db);
+        const likeData = { createdAt: serverTimestamp() };
+
+        if (wasLiked) {
+            batch.delete(likeRef);
+            batch.update(contentRef, { likes: increment(-1) });
+        } else {
+            batch.set(likeRef, likeData);
+            batch.update(contentRef, { likes: increment(1) });
+        }
+        
+        batch.commit().catch(async (serverError) => {
+            setIsLiked(wasLiked);
+            setOptimisticLikes(initialLikes);
+            const permissionError = new FirestorePermissionError({
+                path: likeRef.path,
+                operation: wasLiked ? 'delete' : 'create',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        });
+      })
   };
   
-  const contentId = useMemo(() => items[0]?.id.replace(`${items[0]?.kind}-`, ''), [items]);
   const commentContentType = useMemo(() => {
     const kind = items[0]?.kind;
     if (kind === 'video') return 'media';
@@ -84,9 +146,7 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
   }, [items]);
 
 
-  if (!items || items.length === 0) return null;
-
-  const item = items[0];
+  if (!item) return null;
 
   return (
     <div
@@ -133,8 +193,8 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
 
         <div className="absolute bottom-4 right-2 flex flex-col items-center gap-4 text-white pointer-events-auto">
             <button onClick={(e) => { e.stopPropagation(); handleLike(item.id); }} className="flex flex-col items-center gap-1">
-                <Heart className={cn("w-8 h-8 drop-shadow-lg", isLiked && "text-red-500 fill-current")} />
-                <span className="text-xs drop-shadow-md">{item.meta?.likes || 0}</span>
+                {isLiking || loadingLike ? <Loader2 className="w-8 h-8 animate-spin" /> : <Heart className={cn("w-8 h-8 drop-shadow-lg", isLiked && "text-red-500 fill-current")} />}
+                <span className="text-xs drop-shadow-md">{optimisticLikes}</span>
             </button>
              <Sheet open={isCommentSheetOpen} onOpenChange={setCommentSheetOpen}>
                 <SheetTrigger asChild>

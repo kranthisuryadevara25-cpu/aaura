@@ -19,10 +19,12 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, type User } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, type User } from 'firebase/auth';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { Icons } from '@/components/ui/icons';
+import { Separator } from '@/components/ui/separator';
 
 const formSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
@@ -47,21 +49,33 @@ export default function LoginPage() {
     },
   });
 
-  useEffect(() => {
-    if (user) {
-      // If user is already logged in, check if their profile is complete.
-      const userDocRef = doc(db, 'users', user.uid);
-      getDoc(userDocRef).then(docSnap => {
-        if (docSnap.exists() && docSnap.data().profileComplete) {
-            router.push('/');
-        } else {
-            // If profile is not complete, they might have aborted setup.
-            // Let's send them to the setup page.
-            router.push('/profile/setup');
-        }
-      });
+  const checkAndRedirectUser = async (user: User) => {
+    const userDocRef = doc(db, 'users', user.uid);
+    const docSnap = await getDoc(userDocRef);
+    if (docSnap.exists() && docSnap.data().profileComplete) {
+      router.push('/feed');
+    } else {
+      if (!docSnap.exists()) {
+        await setDoc(userDocRef, {
+            id: user.uid,
+            email: user.email,
+            fullName: user.displayName,
+            photoURL: user.photoURL,
+            profileComplete: false,
+            creationTimestamp: serverTimestamp(),
+            followerCount: 0,
+            followingCount: 0,
+        }, { merge: true });
+      }
+      router.push('/profile/setup');
     }
-  }, [user, router, db]);
+  };
+
+  useEffect(() => {
+    if (!loading && user) {
+      checkAndRedirectUser(user);
+    }
+  }, [user, loading, router, db]);
   
   const handleAuthAction = async (action: 'signIn' | 'signUp', data: FormValues) => {
     setIsSubmitting(true);
@@ -70,26 +84,33 @@ export default function LoginPage() {
       if (action === 'signIn') {
         userCredential = await signInWithEmailAndPassword(auth, data.email, data.password);
         toast({ title: 'Success!', description: 'You are now signed in.' });
-        // The useEffect will handle redirection.
       } else {
         userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
-        
-        // This is a new user, create a basic user document
-        const userDocRef = doc(db, 'users', userCredential.user.uid);
-        await setDoc(userDocRef, {
-            id: userCredential.user.uid,
-            email: userCredential.user.email,
-            profileComplete: false,
-            creationTimestamp: serverTimestamp(),
-            followerCount: 0,
-            followingCount: 0,
-        });
-
         toast({ title: 'Account Created!', description: 'Let\'s set up your profile.' });
-        // Redirect new users directly to the setup page.
-        router.push('/profile/setup');
       }
+      // The useEffect will handle redirection.
     } catch (error: any) {
+      handleAuthError(error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+      setIsSubmitting(true);
+      const provider = new GoogleAuthProvider();
+      try {
+          await signInWithPopup(auth, provider);
+          // On successful sign-in, the useEffect will trigger the redirect logic.
+          toast({ title: 'Success!', description: 'You are now signed in with Google.' });
+      } catch (error: any) {
+          handleAuthError(error);
+      } finally {
+          setIsSubmitting(false);
+      }
+  };
+
+  const handleAuthError = (error: any) => {
       let description = 'An unexpected error occurred.';
       switch (error.code) {
         case 'auth/user-not-found':
@@ -107,6 +128,9 @@ export default function LoginPage() {
         case 'auth/invalid-credential':
            description = 'Invalid credentials. Please check your email and password.';
            break;
+        case 'auth/popup-closed-by-user':
+           description = 'Sign-in was cancelled.';
+           break;
         default:
           description = error.message;
           break;
@@ -116,10 +140,7 @@ export default function LoginPage() {
         title: 'Authentication Failed',
         description: description,
       });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  }
 
   if (loading || user) {
     return (
@@ -139,6 +160,26 @@ export default function LoginPage() {
           <CardContent>
             <Form {...form}>
               <form className="space-y-6">
+                <Button
+                    type="button"
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleGoogleSignIn}
+                    disabled={isSubmitting}
+                >
+                    {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Icons.google className="mr-2 h-4 w-4" />}
+                    Sign in with Google
+                </Button>
+                
+                <div className="relative">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t" />
+                    </div>
+                    <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                    </div>
+                </div>
+
                 <FormField
                   control={form.control}
                   name="email"

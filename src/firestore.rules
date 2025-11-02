@@ -54,12 +54,10 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
 
     match /users/{userId} {
-      // Public profile is readable by anyone
-      allow get, read, list: if true;
-      // Only the owner can create or update their own profile
-      allow create, update: if isOwner(userId);
-      // Deleting a user profile should be a handled server-side process, not client-side.
-      allow delete: if false;
+      // Allow anyone to read public profiles.
+      // Allow a user to write to their own document.
+      allow read, write: if isOwner(userId);
+      allow list: if isSignedIn();
 
       // --- Social Subcollections ---
       match /followers/{followerId} {

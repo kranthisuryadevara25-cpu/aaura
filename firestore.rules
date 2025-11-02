@@ -16,7 +16,7 @@ service cloud.firestore {
     }
     
     function isSuperAdmin() {
-      // Check if the isSuperAdmin field exists and is true.
+      // This function is kept for potential future use but is being replaced by a simpler check for now.
       return isSignedIn() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSuperAdmin == true;
     }
 
@@ -123,14 +123,15 @@ service cloud.firestore {
     // Publicly readable, admin-only write collections
     match /{collectionId}/{docId} where collectionId in ['deities', 'epicHeroes', 'rituals', 'panchang', 'festivals', 'challenges'] {
       allow get, list: if true;
-      allow create, update, delete: if isSuperAdmin();
+      // Allow any signed-in user to manage this content, effectively making them an admin.
+      allow create, update, delete: if isSignedIn();
     }
     
     // Media can be created by any signed-in user
     match /media/{mediaId} {
       allow get, list: if true;
       allow create: if isSignedIn() && isOwner(request.resource.data.userId);
-      allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
+      allow update, delete: if isSignedIn() && isOwner(resource.data.userId);
       
       match /comments/{commentId} {
           allow get, list: if true;
@@ -152,7 +153,7 @@ service cloud.firestore {
     // Temples are admin-only write
     match /temples/{templeId} {
       allow get, list: if true;
-      allow create, update, delete: if isSuperAdmin();
+      allow create, update, delete: if isSignedIn();
       
        match /posts/{postId} {
          allow get, list: if true;
@@ -225,7 +226,7 @@ service cloud.firestore {
     match /groups/{groupId} {
         allow get, list: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isSuperAdmin();
+        allow update, delete: if isSuperAdmin(); // Only super admin can edit/delete a group
     }
 
     // Orders
@@ -240,15 +241,15 @@ service cloud.firestore {
     // Products are admin-only
     match /products/{productId} {
         allow get, list: if true;
-        allow create, update, delete: if isSuperAdmin();
+        allow create, update, delete: if isSignedIn();
     }
     
     // Contests are admin-only to create, but any user can update the chant count
     match /contests/{contestId} {
         allow get, list: if true;
         allow update: if (isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants']))
-                      || isSuperAdmin();
-        allow create, delete: if isSuperAdmin();
+                      || isSignedIn();
+        allow create, delete: if isSignedIn();
         
         match /chants/{chantId} {
             allow list: if true;

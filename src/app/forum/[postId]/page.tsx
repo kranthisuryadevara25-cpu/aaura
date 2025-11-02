@@ -1,42 +1,36 @@
 'use client';
-
-import { useParams, notFound, useRouter } from 'next/navigation';
-import { useFirestore, useAuth } from '@/lib/firebase/provider';
-import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useParams, useRouter } from 'next/navigation';
+import { useFirestore } from '@/lib/firebase/provider';
 import { doc } from 'firebase/firestore';
-import { Loader2, Users } from 'lucide-react';
-import { Posts } from '@/components/Posts';
-import { useMemo } from 'react';
+import { useDocumentData } from 'react-firebase-hooks/firestore';
+import { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
-export default function GroupDetailPage() {
+// This page is a temporary redirect to handle old links.
+// The primary page for viewing a group's posts is [groupId]/page.tsx.
+export default function PostRedirectPage() {
   const params = useParams();
-  const groupId = params.groupId as string; 
+  const router = useRouter();
   const db = useFirestore();
+  const postId = params.postId as string;
 
-  const groupRef = useMemo(() => doc(db, 'groups', groupId), [db, groupId]);
-  const [group, loadingGroup] = useDocumentData(groupRef);
-  
-  if (loadingGroup) {
-      return <div className="flex h-screen items-center justify-center"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>;
-  }
+  const postRef = doc(db, 'posts', postId);
+  const [post, loading] = useDocumentData(postRef);
 
-  if (!group) {
-    notFound();
-  }
+  useEffect(() => {
+    if (!loading && post && post.contextId) {
+      // Redirect to the group page where the post lives.
+      router.replace(`/forum/${post.contextId}`);
+    } else if (!loading && !post) {
+      // If post doesn't exist, go to the main forum page.
+      router.replace('/forum');
+    }
+  }, [post, loading, router]);
 
   return (
-    <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-headline font-bold tracking-tight text-primary">{group.name}</h1>
-            <p className="mt-2 text-muted-foreground">{group.description}</p>
-            <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
-                <Users className="h-4 w-4" /> {group.memberCount || 0} members
-            </div>
-        </div>
-        
-        <Posts contextId={groupId} contextType="group" />
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        <p className="ml-4">Redirecting...</p>
       </div>
-    </main>
   );
 }

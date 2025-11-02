@@ -1,10 +1,12 @@
 
 "use client";
-import React, { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState, useMemo } from "react";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
 import { Heart, MessageCircle, Play, Pause, Share2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Comments } from "./comments";
 
 export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isVisible?: boolean }) {
   const { language } = useLanguage();
@@ -13,6 +15,7 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
   const [showLike, setShowLike] = useState<string | null>(null);
   const [showPlayPause, setShowPlayPause] = useState<{ id: string, state: 'play' | 'pause' } | null>(null);
   const [isLiked, setIsLiked] = useState(false);
+  const [isCommentSheetOpen, setCommentSheetOpen] = useState(false);
 
   const lastTap = useRef(0);
   const tapTimeout = useRef<NodeJS.Timeout | null>(null);
@@ -71,6 +74,15 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
     }
     setIsLiked(prev => !prev);
   };
+  
+  const contentId = useMemo(() => items[0]?.id.replace(`${items[0]?.kind}-`, ''), [items]);
+  const commentContentType = useMemo(() => {
+    const kind = items[0]?.kind;
+    if (kind === 'video') return 'media';
+    if (kind === 'post') return 'post';
+    return kind as 'post' | 'media' | 'manifestation';
+  }, [items]);
+
 
   if (!items || items.length === 0) return null;
 
@@ -124,10 +136,22 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
                 <Heart className={cn("w-8 h-8 drop-shadow-lg", isLiked && "text-red-500 fill-current")} />
                 <span className="text-xs drop-shadow-md">{item.meta?.likes || 0}</span>
             </button>
-            <button className="flex flex-col items-center gap-1">
-                <MessageCircle className="w-8 h-8 drop-shadow-lg" />
-                <span className="text-xs drop-shadow-md">{item.meta?.commentsCount || 0}</span>
-            </button>
+             <Sheet open={isCommentSheetOpen} onOpenChange={setCommentSheetOpen}>
+                <SheetTrigger asChild>
+                     <button onClick={(e) => e.stopPropagation()} className="flex flex-col items-center gap-1">
+                        <MessageCircle className="w-8 h-8 drop-shadow-lg" />
+                        <span className="text-xs drop-shadow-md">{item.meta?.commentsCount || 0}</span>
+                    </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="h-[80vh] flex flex-col rounded-t-lg">
+                    <SheetHeader className="p-4 border-b">
+                        <SheetTitle>Comments</SheetTitle>
+                    </SheetHeader>
+                    <div className="flex-1 overflow-y-auto p-4">
+                        <Comments contentId={contentId} contentType={commentContentType} />
+                    </div>
+                </SheetContent>
+            </Sheet>
              <button className="flex flex-col items-center gap-1">
                 <Share2 className="w-8 h-8 drop-shadow-lg" />
                 <span className="text-xs drop-shadow-md">Share</span>

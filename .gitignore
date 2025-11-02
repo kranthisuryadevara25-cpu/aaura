@@ -46,3 +46,7 @@ firestore-debug.logserviceAccountKey.json
 src/lib/firebase/secrets/serviceAccountKey.json
 .env.local
 
+serviceAccountKey.json
+src/lib/firebase/secrets/serviceAccountKey.json
+serviceAccountKet.json
+.env.local

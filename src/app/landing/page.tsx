@@ -4,110 +4,130 @@
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
-import { BookHeart, Palmtree, Sparkles, Users, ArrowRight } from "lucide-react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookHeart, Palmtree, Sparkles, Users, ArrowDown, ArrowRight, Mouse } from "lucide-react";
+import { Icons } from "@/components/ui/icons";
 
 const features = [
     {
         icon: Sparkles,
         title: "Explore Deities",
-        description: "Discover the rich pantheon of Hindu gods and goddesses. Explore their stories, mantras, and significance."
+        description: "Discover the rich pantheon of Hindu gods and goddesses. Explore their stories, mantras, and significance in your spiritual journey.",
+        image: {
+            url: "https://picsum.photos/seed/feature-deities/1080/1920",
+            hint: "vibrant hindu deity statue"
+        }
     },
     {
         icon: Palmtree,
         title: "Discover Temples",
-        description: "Explore the sacred geography of India. Discover temples, their stories, and plan your spiritual journey."
+        description: "Explore the sacred geography of India. Discover ancient temples, their stories, and plan your next spiritual journey with our detailed guides.",
+        image: {
+            url: "https://picsum.photos/seed/feature-temples/1080/1920",
+            hint: "ancient temple architecture"
+        }
     },
     {
         icon: BookHeart,
         title: "Read Epic Sagas",
-        description: "Immerse yourself in the timeless epics and mythological stories that have shaped generations."
+        description: "Immerse yourself in the timeless epics and mythological stories that have shaped generations of spiritual seekers and thinkers.",
+        image: {
+            url: "https://picsum.photos/seed/feature-sagas/1080/1920",
+            hint: "ancient manuscript scroll"
+        }
     },
     {
         icon: Users,
         title: "Join Communities",
-        description: "Connect with fellow seekers in community groups based on your interests and spiritual path."
+        description: "Connect with fellow seekers in community groups. Share experiences, ask questions, and grow together on your spiritual path.",
+        image: {
+            url: "https://picsum.photos/seed/feature-community/1080/1920",
+            hint: "diverse group meditation"
+        }
     }
-]
+];
 
 export default function LandingPage() {
     return (
-        <div className="flex flex-col min-h-screen">
-            <main className="flex-1">
-                <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 bg-gradient-to-br from-primary/10 to-background">
-                    <div className="container px-4 md:px-6">
-                        <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
-                            <div className="flex flex-col justify-center space-y-4">
-                                <div className="space-y-2">
-                                    <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none font-headline text-primary">
-                                        Welcome to Aaura
-                                    </h1>
-                                    <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                                        Your daily dose of spiritual wellness. Explore ancient wisdom, connect with communities, and deepen your practice.
-                                    </p>
-                                </div>
-                                <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                                    <Button asChild size="lg">
-                                        <Link href="/login">Get Started</Link>
-                                    </Button>
-                                </div>
-                            </div>
-                            <Image
-                                src="https://picsum.photos/seed/landing-hero/1200/800"
-                                alt="Hero"
-                                width={1200}
-                                height={800}
-                                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full lg:order-last lg:aspect-square"
-                                data-ai-hint="spiritual abstract"
-                            />
-                        </div>
+        <div className="h-screen snap-y snap-mandatory overflow-y-scroll overflow-x-hidden">
+            {/* Hero Section */}
+            <section className="h-screen w-full snap-start relative flex flex-col items-center justify-center text-center text-white bg-black p-4">
+                <Image
+                    src="https://picsum.photos/seed/landing-hero-bg/1080/1920"
+                    alt="Spiritual Background"
+                    layout="fill"
+                    objectFit="cover"
+                    className="opacity-40"
+                    data-ai-hint="spiritual abstract"
+                    priority
+                />
+                <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                    <Icons.logo className="w-24 h-24 text-primary drop-shadow-[0_5px_15px_rgba(var(--primary),0.5)]" />
+                    <h1 className="text-6xl md:text-8xl font-bold tracking-tighter font-headline text-primary mt-4 drop-shadow-lg">
+                        Aaura
+                    </h1>
+                    <p className="max-w-[600px] text-white/90 md:text-xl mt-4 drop-shadow-md">
+                        Your daily dose of spiritual wellness. Explore ancient wisdom, connect with communities, and deepen your practice.
+                    </p>
+                    <div className="flex flex-col sm:flex-row gap-4 mt-8">
+                        <Button asChild size="lg" className="bg-primary/90 hover:bg-primary text-primary-foreground">
+                            <Link href="/login">Get Started</Link>
+                        </Button>
+                         <Button asChild size="lg" variant="outline" className="bg-transparent border-primary text-primary hover:bg-primary/10">
+                            <Link href="/login">Log In</Link>
+                        </Button>
                     </div>
-                </section>
-                <section className="w-full py-12 md:py-24 lg:py-32 bg-secondary/50">
-                    <div className="container px-4 md:px-6">
-                        <div className="flex flex-col items-center justify-center space-y-4 text-center">
-                            <div className="space-y-2">
-                                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-primary">Discover Your Path</h2>
-                                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                                    Aaura is a comprehensive platform for anyone on a spiritual journey. Here's a glimpse of what you can explore.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="mx-auto grid max-w-5xl items-center gap-6 py-12 lg:grid-cols-2 lg:gap-12">
-                            {features.map((feature, index) => (
-                                <Card key={index} className="bg-background">
-                                    <CardHeader className="flex flex-row items-center gap-4">
-                                        <feature.icon className="w-8 h-8 text-primary" />
-                                        <CardTitle>{feature.title}</CardTitle>
-                                    </CardHeader>
-                                    <CardContent>
-                                        <CardDescription>{feature.description}</CardDescription>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </div>
+                     <div className="absolute bottom-8 flex flex-col items-center gap-2 animate-bounce">
+                        <Mouse className="w-6 h-6" />
+                        <span className="text-sm">Scroll to discover</span>
+                        <ArrowDown className="w-5 h-5" />
                     </div>
-                </section>
-                 <section className="w-full py-12 md:py-24 lg:py-32">
-                    <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
-                        <div className="space-y-3">
-                            <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight">
-                                Ready to Begin Your Journey?
-                            </h2>
-                            <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                                Create an account to personalize your experience, track your progress, and join the community.
-                            </p>
-                        </div>
-                        <div className="mx-auto w-full max-w-sm space-x-2">
-                             <Button asChild size="lg">
-                                <Link href="/login">
-                                    Sign Up Now <ArrowRight className="ml-2 h-4 w-4" />
-                                </Link>
-                            </Button>
-                        </div>
+                </div>
+            </section>
+
+            {/* Features Sections */}
+            {features.map((feature, index) => (
+                 <section key={index} className="h-screen w-full snap-start relative flex items-center justify-center text-center text-white bg-black p-4">
+                     <Image
+                        src={feature.image.url}
+                        alt={feature.title}
+                        layout="fill"
+                        objectFit="cover"
+                        className="opacity-30"
+                        data-ai-hint={feature.image.hint}
+                    />
+                    <div className="relative z-10 p-8 max-w-2xl rounded-xl">
+                        <feature.icon className="w-16 h-16 mx-auto text-primary drop-shadow-lg" />
+                        <h2 className="text-4xl md:text-5xl font-bold mt-4 font-headline text-primary">{feature.title}</h2>
+                        <p className="mt-4 text-lg text-white/90 drop-shadow-md">{feature.description}</p>
                     </div>
-                </section>
-            </main>
+                 </section>
+            ))}
+
+             {/* Final CTA Section */}
+            <section className="h-screen w-full snap-start relative flex flex-col items-center justify-center text-center text-white bg-black p-4">
+                 <Image
+                    src="https://picsum.photos/seed/final-cta-bg/1080/1920"
+                    alt="Final Call to Action Background"
+                    layout="fill"
+                    objectFit="cover"
+                    className="opacity-40"
+                    data-ai-hint="celestial stars"
+                />
+                 <div className="relative z-10 flex flex-col items-center">
+                    <h2 className="text-4xl md:text-5xl font-bold tracking-tighter text-primary font-headline">
+                        Ready to Begin Your Journey?
+                    </h2>
+                    <p className="mt-4 max-w-[600px] text-white/90 md:text-xl">
+                        Create an account to personalize your experience, track your progress, and join the community.
+                    </p>
+                    <Button asChild size="lg" className="mt-8">
+                        <Link href="/login">
+                            Sign Up Now <ArrowRight className="ml-2 h-4 w-4" />
+                        </Link>
+                    </Button>
+                </div>
+            </section>
         </div>
-    )
+    );
 }
+

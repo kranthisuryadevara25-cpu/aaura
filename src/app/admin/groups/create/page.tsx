@@ -53,6 +53,7 @@ export default function CreateGroupPage() {
       description: '',
       coverImageUrl: `https://picsum.photos/seed/${Math.random()}/600/400`,
       topicType: 'general',
+      topicId: '',
     },
   });
 
@@ -65,6 +66,7 @@ export default function CreateGroupPage() {
       const groupData = {
           id: newDocRef.id,
           ...data,
+          topicId: data.topicId || '', // Ensure topicId is not undefined
           memberCount: 0,
           createdAt: serverTimestamp(),
       }

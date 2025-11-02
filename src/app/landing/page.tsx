@@ -52,11 +52,11 @@ export default function LandingPage() {
             {/* Hero Section */}
             <section className="h-screen w-full snap-start relative flex flex-col items-center justify-center text-center text-white bg-black p-4">
                 <Image
-                    src="https://picsum.photos/seed/landing-hero-bg/1080/1920"
+                    src="https://picsum.photos/seed/spirit/600/400"
                     alt="Spiritual Background"
-                    layout="fill"
-                    objectFit="cover"
-                    className="opacity-40"
+                    fill
+                    sizes="100vw"
+                    className="object-cover opacity-40"
                     data-ai-hint="spiritual abstract"
                     priority
                 />
@@ -90,9 +90,9 @@ export default function LandingPage() {
                      <Image
                         src={feature.image.url}
                         alt={feature.title}
-                        layout="fill"
-                        objectFit="cover"
-                        className="opacity-30"
+                        fill
+                        sizes="100vw"
+                        className="object-cover opacity-30"
                         data-ai-hint={feature.image.hint}
                     />
                     <div className="relative z-10 p-8 max-w-2xl rounded-xl">
@@ -108,9 +108,9 @@ export default function LandingPage() {
                  <Image
                     src="https://picsum.photos/seed/final-cta-bg/1080/1920"
                     alt="Final Call to Action Background"
-                    layout="fill"
-                    objectFit="cover"
-                    className="opacity-40"
+                    fill
+                    sizes="100vw"
+                    className="object-cover opacity-40"
                     data-ai-hint="celestial stars"
                 />
                  <div className="relative z-10 flex flex-col items-center">
@@ -130,4 +130,3 @@ export default function LandingPage() {
         </div>
     );
 }
-

@@ -40,11 +40,11 @@ export default function VirtualPoojaPage() {
   const [showAarti, setShowAarti] = useState(false);
 
   const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya' | 'offer-aarti') => {
-    if (!user && interaction !== 'ring-bell') {
+    if (!user) {
       toast({
         variant: 'destructive',
         title: 'Please log in',
-        description: 'You must be logged in to perform most virtual pooja actions.',
+        description: 'You must be logged in to perform any pooja actions.',
       });
       return;
     }

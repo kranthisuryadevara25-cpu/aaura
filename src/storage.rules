@@ -4,9 +4,10 @@ rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
 
-    // Allows authenticated users to write to their own media folder.
-    // This is the primary rule for the media upload feature.
-    match /media/{userId}/{allPaths=**} {
+    // This is the CRITICAL fix.
+    // It specifically matches the path structure used by the media upload feature.
+    // A user can write to their own folder, inside a specific media ID folder.
+    match /media/{userId}/{mediaId}/{allPaths=**} {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
@@ -24,13 +25,14 @@ service firebase.storage {
       allow write: if request.auth != null;
     }
     
-    // Secure rule for product images
+    // Secure rule for product images in the marketplace.
     match /product-images/{allPaths=**} {
-        allow read: if true;
-        allow write: if request.auth != null;
+      allow read: if true;
+      allow write: if request.auth != null;
     }
 
     // Default rule: Deny all other read/write operations to prevent unauthorized access.
+    // This is a security best practice.
     match /{allPaths=**} {
       allow read, write: if false;
     }

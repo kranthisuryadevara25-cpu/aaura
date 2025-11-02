@@ -224,7 +224,7 @@ service cloud.firestore {
     // Groups are public to read. Any signed-in user can create a group.
     match /groups/{groupId} {
         allow get, list: if true;
-        allow create: if isSignedIn() && request.resource.data.memberCount == 0;
+        allow create: if isSignedIn();
         allow update, delete: if isSuperAdmin();
     }
 
@@ -258,5 +258,3 @@ service cloud.firestore {
     }
   }
 }
-
-  

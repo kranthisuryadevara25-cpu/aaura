@@ -15,9 +15,8 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
     
-    // Check if the user is the designated Super Admin.
-    // REPLACE 'PLEASE_ADD_YOUR_UID_HERE' with your actual Firebase User ID.
     function isSuperAdmin() {
+      // REPLACE 'PLEASE_ADD_YOUR_UID_HERE' with your actual Firebase User ID for admin access.
       return request.auth.uid == "PLEASE_ADD_YOUR_UID_HERE";
     }
 
@@ -57,8 +56,8 @@ service cloud.firestore {
     match /users/{userId} {
       // Public profile is readable by anyone
       allow get: if true;
-      // Users can only list their own subcollections, not other users'
-      allow list: if isOwner(userId);
+      // Allow listing of subcollections by any signed-in user
+      allow list: if isSignedIn();
       // Only the owner can create or update their own profile
       allow create, update: if isOwner(userId);
       // Deleting a user profile should be a handled server-side process, not client-side.
@@ -263,5 +262,3 @@ service cloud.firestore {
     }
   }
 }
-
-    

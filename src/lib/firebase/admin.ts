@@ -2,7 +2,6 @@
 import { initializeApp, getApps, cert, type App, type ServiceAccount } from 'firebase-admin/app';
 import { getFirestore, type Firestore } from 'firebase-admin/firestore';
 import { getAuth, type Auth } from 'firebase-admin/auth';
-import serviceAccount from './secrets/serviceAccountKey.json';
 
 let adminApp: App;
 let db: Firestore;
@@ -10,19 +9,34 @@ let auth: Auth;
 
 /**
  * Initializes (or reuses) the Firebase Admin SDK app instance.
- * Uses a directly required service account key.
+ * It will try to use environment variables first, then fall back to a local key file.
  */
 function initializeFirebaseAdmin() {
   if (getApps().length === 0) {
     try {
-      adminApp = initializeApp(
-        {
-          credential: cert(serviceAccount as ServiceAccount),
+      // Production-ready: Use environment variables
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        adminApp = initializeApp({
+          credential: cert(serviceAccount),
+        });
+      } else {
+        // Fallback for local development if you were to re-add the key file (not recommended for git)
+        try {
+            const serviceAccount = require('./secrets/serviceAccountKey.json');
+             adminApp = initializeApp({
+                credential: cert(serviceAccount),
+             });
+        } catch (e) {
+            console.warn("Could not initialize Firebase Admin SDK. Service account key file not found or environment variables not set. Some server-side features may not work.");
+            // Create a dummy app to avoid crashing the server
+            adminApp = initializeApp();
         }
-      );
+      }
     } catch (error: any) {
       console.error('🔥 Firebase Admin SDK initialization failed:', error);
-      throw new Error(`Firebase Admin SDK could not be initialized: ${error.message}`);
+      // Create a dummy app to avoid crashing the server on failed init
+      adminApp = initializeApp();
     }
   } else {
     adminApp = getApps()[0];

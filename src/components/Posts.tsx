@@ -59,18 +59,18 @@ function CreatePost({ contextId, contextType, onPostCreated }: { contextId: stri
             commentsCount: 0,
         };
         
-        try {
-            const docRef = await addDoc(postsCollection, newPost);
-            form.reset();
-            toast({ title: 'Post created successfully!' });
-            
-            const postWithDate = {
-              ...newPost,
-              id: docRef.id,
-              createdAt: { toDate: () => new Date() } // Mock timestamp for immediate UI update
-            };
-            onPostCreated(postWithDate);
+        const optimisticPost = {
+          ...newPost,
+          id: `optimistic-${Date.now()}`,
+          authorId: user.uid,
+          createdAt: { toDate: () => new Date() }, // Mock timestamp for immediate UI update
+        };
+        onPostCreated(optimisticPost);
+        form.reset();
 
+        try {
+            await addDoc(postsCollection, newPost);
+            toast({ title: 'Post created successfully!' });
         } catch (error) {
              const permissionError = new FirestorePermissionError({
                 path: postsCollection.path,
@@ -145,7 +145,12 @@ export function Posts({ contextId, contextType }: PostsProps) {
 
     useEffect(() => {
         if(fetchedPosts) {
-            setOptimisticPosts(fetchedPosts);
+            // Combine optimistic posts with fetched posts, ensuring no duplicates
+             setOptimisticPosts(prev => {
+                const fetchedIds = new Set(fetchedPosts.map(p => p.id));
+                const optimisticOnly = prev.filter(p => p.id.startsWith('optimistic-') && !fetchedIds.has(p.id));
+                return [...optimisticOnly, ...fetchedPosts];
+            });
         }
     }, [fetchedPosts]);
 
@@ -163,7 +168,7 @@ export function Posts({ contextId, contextType }: PostsProps) {
             {loadingPosts && optimisticPosts.length === 0 ? <div className="flex justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div> : (
                 <div className="space-y-6">
                     {optimisticPosts && optimisticPosts.length > 0 ? (
-                        optimisticPosts.map((post, index) => <PostCard key={post.id || `optimistic-${index}`} post={post} />)
+                        optimisticPosts.map((post) => <PostCard key={post.id} post={post} />)
                     ) : (
                         <div className="text-center py-10 border-2 border-dashed rounded-lg">
                             <p className="text-muted-foreground">No posts here yet.</p>

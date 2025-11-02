@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useTransition, useMemo, useState, useEffect } from "react";
 import { useLanguage } from "@/hooks/use-language";
@@ -136,9 +135,6 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
             }
              if (item.meta?.contextType === 'temple' && item.meta?.contextId) {
                 return `/temples/${item.meta.contextId}`;
-            }
-            if (item.meta?.contextType === 'channel' && item.meta?.contextId) {
-                return `/channels/${item.meta.contextId}`;
             }
             return `/forum`; 
         default:

@@ -1,36 +1,13 @@
 
+'use client';
 
-'use server';
-
-import { db as adminDb } from '@/lib/firebase/admin';
 import { Button } from '@/components/ui/button';
 import { ListMusic, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { PlaylistClientPage } from './PlaylistClientPage';
 import type { DocumentData } from 'firebase/firestore';
 
-async function getPublicPlaylists() {
-  try {
-    const playlistsQuery = adminDb.collection('playlists').where('isPublic', '==', true);
-    
-    const querySnapshot = await playlistsQuery.get();
-    
-    const playlists = querySnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-      createdAt: doc.data().createdAt?.toDate().toISOString() || new Date().toISOString(),
-      updatedAt: doc.data().updatedAt?.toDate().toISOString() || new Date().toISOString(),
-    }));
-    return playlists;
-  } catch (error) {
-    console.error("Failed to fetch public playlists:", error);
-    return [];
-  }
-}
-
-export default async function PlaylistsPage() {
-  const initialPublicPlaylists = await getPublicPlaylists();
-
+export default function PlaylistsPage() {
   return (
     <main className="flex-grow container mx-auto px-4 py-8 md:py-16">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-12">
@@ -51,9 +28,7 @@ export default async function PlaylistsPage() {
         </Button>
       </div>
 
-      <PlaylistClientPage initialPublicPlaylists={initialPublicPlaylists as DocumentData[]} />
+      <PlaylistClientPage initialPublicPlaylists={[]} />
     </main>
   );
 }
-
-  

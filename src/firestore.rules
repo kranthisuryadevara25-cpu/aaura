@@ -27,12 +27,13 @@ service cloud.firestore {
 
     // Validates the shape of a post being created
     function isValidPost() {
+      let contextPath = request.resource.data.contextType + 's';
       return request.resource.data.authorId == request.auth.uid &&
              request.resource.data.content is string &&
              request.resource.data.content.size() > 0 &&
              request.resource.data.createdAt == request.time &&
              request.resource.data.contextType in ['group', 'temple', 'channel'] &&
-             exists(/databases/$(database)/documents/$(request.resource.data.contextType + 's')/$(request.resource.data.contextId));
+             exists(/databases/$(database)/documents/$(contextPath)/$(request.resource.data.contextId));
     }
     
     // Validates the shape of a comment being created
@@ -42,7 +43,7 @@ service cloud.firestore {
               request.resource.data.text.size() > 0 &&
               request.resource.data.createdAt == request.time &&
               request.resource.data.contentType == contentType &&
-              exists(/databases/$(database)/documents/$(contentType)/$(request.resource.data.contentId));
+              exists(/databases/$(database)/documents/$(contentType + 's')/$(request.resource.data.contentId));
     }
 
 
@@ -177,9 +178,10 @@ service cloud.firestore {
     
     // Playlists can be created by any user. Can be read if public, or if owner.
     match /playlists/{playlistId} {
-        allow get, list: if resource.data.isPublic == true || (isSignedIn() && isOwner(resource.data.creatorId));
+        allow get: if resource.data.isPublic == true || (isSignedIn() && isOwner(resource.data.creatorId));
+        allow list: if true;
         allow create: if isSignedIn() && isOwner(request.resource.data.creatorId);
-        allow update, delete: if isOwner(resource.data.creatorId);
+        allow update, delete: if isSignedIn() && isOwner(resource.data.creatorId);
     }
     
     // Posts can be created by any signed-in user

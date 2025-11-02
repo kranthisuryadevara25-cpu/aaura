@@ -15,10 +15,12 @@ const getTextFromField = (field: Record<string, string> | string | undefined, la
 
 export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number = 20) => {
   const { language } = useLanguage();
-  const [auth] = useAuthState(useAuth());
+  const [user, loadingAuth] = useAuthState(useAuth());
   const [allItems, setAllItems] = useState<FeedItem[]>(Array.isArray(initialItems) ? initialItems : []);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [canLoadMore, setCanLoadMore] = useState(true);
+  
+  const initialLoadDone = React.useRef(false);
 
   const loadMore = useCallback(async () => {
     if (loading || !canLoadMore) return;
@@ -26,7 +28,7 @@ export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number
     setLoading(true);
     try {
       const result = await getPersonalizedFeed({
-        userId: auth?.uid,
+        userId: user?.uid,
         pageSize: typeof initialItems === 'number' ? initialItems : pageSize,
         // In a real app, you'd pass a cursor from the last item of `allItems`
       });
@@ -35,8 +37,11 @@ export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number
         setCanLoadMore(false);
       } else {
         // Prevent duplicates
-        const newItems = result.feed.filter(newItem => !allItems.some(existingItem => existingItem.id === newItem.id));
-        setAllItems(prevItems => [...prevItems, ...newItems]);
+        setAllItems(prevItems => {
+            const existingIds = new Set(prevItems.map(item => item.id));
+            const newItems = result.feed.filter(newItem => !existingIds.has(newItem.id));
+            return [...prevItems, ...newItems];
+        });
       }
 
     } catch (error) {
@@ -44,15 +49,18 @@ export const useFeed = (initialItems: FeedItem[] | number = [], pageSize: number
     } finally {
       setLoading(false);
     }
-  }, [loading, canLoadMore, auth?.uid, pageSize, allItems, initialItems]);
+  }, [loading, canLoadMore, user?.uid, pageSize, initialItems]);
   
-  // If there are no initial items, load the first batch.
   useEffect(() => {
-    if (Array.isArray(initialItems) && initialItems.length === 0) {
-      loadMore();
+    if (!loadingAuth && !initialLoadDone.current) {
+        if (Array.isArray(initialItems) && initialItems.length === 0) {
+            loadMore();
+        } else {
+            setLoading(false);
+        }
+        initialLoadDone.current = true;
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [loadingAuth, initialItems, loadMore]);
 
   const filterItems = useCallback((searchQuery: string): FeedItem[] => {
     if (!searchQuery) {

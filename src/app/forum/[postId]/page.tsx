@@ -1,32 +1,16 @@
-
 'use client';
 
 import { useParams, notFound, useRouter } from 'next/navigation';
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
-import { doc, collection, query, where, orderBy, serverTimestamp, addDoc, updateDoc, increment, deleteDoc, setDoc, writeBatch } from 'firebase/firestore';
-import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Loader2, MessageCircle, ThumbsUp, Send, Users, CheckCircle, PlusCircle } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { Separator } from '@/components/ui/separator';
-import { Comments } from '@/components/comments';
-import { Button } from '@/components/ui/button';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
-import { Form, FormControl, FormField, FormItem, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/hooks/use-toast';
-import { useTransition, useState, useMemo } from 'react';
-import { useAuthState } from 'react-firebase-hooks/auth';
+import { doc } from 'firebase/firestore';
+import { Loader2, Users } from 'lucide-react';
 import { Posts } from '@/components/Posts';
-
+import { useMemo } from 'react';
 
 export default function GroupDetailPage() {
   const params = useParams();
-  // The param is named `postId` in the folder structure, but it represents the group ID.
-  const groupId = params.postId as string; 
+  const groupId = params.groupId as string; 
   const db = useFirestore();
 
   const groupRef = useMemo(() => doc(db, 'groups', groupId), [db, groupId]);

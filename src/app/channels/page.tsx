@@ -1,14 +1,15 @@
 
+'use client';
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { CheckCircle, PlusCircle, Users } from 'lucide-react';
+import { CheckCircle, PlusCircle, Users, Loader2 } from 'lucide-react';
 import Link from 'next/link';
-import { db } from '@/lib/firebase/admin';
-import type { DocumentData } from 'firebase-admin/firestore';
-
-// This line disables caching, ensuring the channel list is always fresh.
-export const revalidate = 0;
+import { useCollectionData } from 'react-firebase-hooks/firestore';
+import { collection, query } from 'firebase/firestore';
+import { useFirestore } from '@/lib/firebase/provider';
+import type { DocumentData } from 'firebase/firestore';
 
 interface Channel extends DocumentData {
   id: string;
@@ -43,7 +44,7 @@ function ChannelCard({ channel }: { channel: Channel }) {
          <CardFooter className="flex-col w-full items-center gap-4">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Users className="h-4 w-4" />
-                <span>{channel.followerCount || 0} Followers</span>
+                <span>{channel.subscriberCount || 0} Subscribers</span>
             </div>
          </CardFooter>
       </Card>
@@ -52,17 +53,13 @@ function ChannelCard({ channel }: { channel: Channel }) {
 }
 
 
-export default async function ChannelsPage() {
-  let channels: Channel[] = [];
-  let fetchError: string | null = null;
-  
-  try {
-    const channelsQuery = db.collection('channels');
-    const querySnapshot = await channelsQuery.get();
-    channels = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Channel));
-  } catch (error: any) {
+export default function ChannelsPage() {
+  const db = useFirestore();
+  const channelsQuery = query(collection(db, 'channels'));
+  const [channels, isLoading, error] = useCollectionData(channelsQuery, { idField: 'id' });
+
+  if (error) {
     console.error("Error fetching channels:", error);
-    fetchError = "Could not load channels. Please try again later.";
   }
 
   return (
@@ -82,12 +79,16 @@ export default async function ChannelsPage() {
             </p>
         </div>
 
-        {fetchError ? (
-            <div className="text-center text-red-500">{fetchError}</div>
-        ) : channels.length > 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-16 w-16 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+            <div className="text-center text-red-500">Could not load channels. Please try again later.</div>
+        ) : channels && channels.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {channels.map((channel) => (
-              <ChannelCard key={channel.id} channel={channel} />
+              <ChannelCard key={channel.id} channel={channel as Channel} />
             ))}
           </div>
         ) : (

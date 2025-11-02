@@ -11,6 +11,11 @@ import type { FeedItem } from "@/types/feed";
 export default function FeedPage() {
   const { allItems, loading, loadMore, canLoadMore } = useFeed();
   const [filteredItems, setFilteredItems] = useState<FeedItem[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   useEffect(() => {
     setFilteredItems(allItems);
@@ -32,7 +37,7 @@ export default function FeedPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-4 py-4 space-y-8">
-      <CreateContent />
+      {isClient && <CreateContent />}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold font-headline text-primary">For You</h2>
         <SearchBar onSearch={handleSearch} />
@@ -41,4 +46,3 @@ export default function FeedPage() {
     </div>
   );
 }
-

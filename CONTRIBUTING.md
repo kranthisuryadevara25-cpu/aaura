@@ -1,33 +1,59 @@
-# How to Commit and Push Your Code
+# How to Remove Secrets From Your Git History and Push to GitHub
 
-This guide provides the step-by-step commands to commit your code to your GitHub repository. Follow these commands in your terminal to push your project code to GitHub.
+Your push was blocked because a secret (a service account key) was found in your commit history. Simply deleting the file isn't enough; you must remove it from all of your repository's history.
+
+Follow these steps **exactly** to clean your repository and push your code successfully.
 
 ---
 
-### Step 1: Add the Changes to Staging
+### Prerequisites: Install `git-filter-repo`
 
-This command stages all the recent changes you've made (including the removal of the secret files).
+You'll need a special tool to rewrite history. If you don't have `git-filter-repo` installed, you can install it with `pip`:
+
+```bash
+pip install git-filter-repo
+```
+
+---
+
+### Step 1: Remove the Secret File from All History
+
+This command will go through every commit in your history and remove the specified secret files.
+
+**Important:** Run this command from the root directory of your project (the same directory where your `.git` folder is).
+
+```bash
+git filter-repo --path serviceAccountKey.json --path src/lib/firebase/secrets/serviceAccountKey.json --invert-paths
+```
+
+This command tells `git` to create a new history that includes everything *except* for the files at those two paths.
+
+### Step 2: Add All Changes to Staging
+
+After the history is rewritten, you need to stage all the changes.
 
 ```bash
 git add .
 ```
 
-### Step 2: Commit the Changes
+### Step 3: Commit the Cleaned History
 
-This command saves your staged files to the project's history. The message explains what was fixed.
+Now, create a new commit with the cleaned history.
 
 ```bash
 git commit -m "feat: Remove service account keys from source control"
 ```
 
-### Step 3: Push Your Code to GitHub
+### Step 4: Force Push to GitHub
 
-This command uploads your committed code to your GitHub repository. Since the secrets have been removed from the commit, this push should now succeed.
+Because you have rewritten the history, you must perform a "force push". This will replace the history on GitHub with your new, clean history.
+
+**Warning:** A force push is a destructive operation. Since you are the only one working on this repository, it is safe to do this.
 
 ```bash
-git push origin main
+git push origin main --force
 ```
 
 ---
 
-After running these commands, your code will be live in your GitHub repository without the security violations. For future updates, you'll just need to repeat these steps (add, commit, and push).
+After running these commands, your repository on GitHub will be clean, and the "push declined" error will be resolved. You will be able to push normally from now on.

@@ -1,6 +1,6 @@
 
 "use client";
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import type { FeedItem } from "@/types/feed";
 import { useLanguage } from "@/hooks/use-language";
 import { getPersonalizedFeed } from "@/ai/flows/personalized-feed";

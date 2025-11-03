@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
@@ -44,11 +45,11 @@ function RecentChants({ contestId }: { contestId: string }) {
                 return (
                     <div key={chantDoc.id} className="flex items-center gap-3 text-sm bg-secondary/50 p-2 rounded-lg">
                         <Avatar className="h-8 w-8">
-                            <AvatarImage src={`https://picsum.photos/seed/${chant.authorId}/40`} />
-                            <AvatarFallback>{chant.displayName?.[0] || 'A'}</AvatarFallback>
+                            <AvatarImage src={chant.userPhotoURL || `https://picsum.photos/seed/${chant.authorId}/40`} />
+                            <AvatarFallback>{chant.username?.[0] || 'A'}</AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
-                            <p className="font-semibold text-foreground">{chant.displayName}</p>
+                            <p className="font-semibold text-foreground">@{chant.username}</p>
                             <p className="text-sm text-primary font-medium">{chant.text}</p>
                         </div>
                         <p className="text-xs text-muted-foreground self-start">
@@ -79,7 +80,6 @@ function ContestContent({ contest }: { contest: DocumentData }) {
         defaultValues: { mantra: expectedMantra },
     });
     
-    // Reset form default value if contest mantra changes
     useEffect(() => {
         form.reset({ mantra: expectedMantra });
     }, [expectedMantra, form]);
@@ -96,9 +96,16 @@ function ContestContent({ contest }: { contest: DocumentData }) {
             const contestRef = doc(db, 'contests', contest.id);
             const chantsCollectionRef = collection(db, `contests/${contest.id}/chants`);
             const contestProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, contest.id);
+
+            // Fetch username from user doc
+            const userDoc = await db.collection('users').doc(currentUser.uid).get();
+            const username = userDoc.data()?.username || 'anonymous';
+            const userPhotoURL = userDoc.data()?.photoURL || null;
+
             const chantData = {
                 authorId: currentUser.uid,
-                displayName: currentUser.displayName || 'Anonymous User',
+                username: username,
+                userPhotoURL: userPhotoURL,
                 text: data.mantra,
                 createdAt: serverTimestamp(),
             };
@@ -226,7 +233,6 @@ export default function ContestsPage() {
 
     const [snapshot, loading, error] = useCollection(contestsQuery);
 
-    // Client-side sorting
     const contests = useMemo(() => {
         if (!snapshot) return [];
         return snapshot.docs

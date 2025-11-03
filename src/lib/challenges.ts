@@ -1,5 +1,5 @@
 
-import type { FirestoreDataConverter } from "firebase/firestore";
+import type { FirestoreDataConverter, DocumentData } from "firebase/firestore";
 
 export type ChallengeTask = {
     day: number;
@@ -45,10 +45,29 @@ export const getChallengeById = (id: string) => {
 }
 
 export const challengeConverter: FirestoreDataConverter<Challenge> = {
-    toFirestore: (challenge: Challenge) => challenge,
-    fromFirestore: (snapshot, options) => {
+    toFirestore: (challenge: Challenge): DocumentData => {
+        return {
+            id: challenge.id,
+            title_en: challenge.title_en,
+            title_hi: challenge.title_hi,
+            description_en: challenge.description_en,
+            description_hi: challenge.description_hi,
+            durationDays: challenge.durationDays,
+            badgeId: challenge.badgeId,
+            tasks: challenge.tasks,
+        };
+    },
+    fromFirestore: (snapshot, options): Challenge => {
         const data = snapshot.data(options);
-        return { id: snapshot.id, ...data } as Challenge;
+        return {
+            id: snapshot.id,
+            title_en: data.title_en,
+            title_hi: data.title_hi,
+            description_en: data.description_en,
+            description_hi: data.description_hi,
+            durationDays: data.durationDays,
+            badgeId: data.badgeId,
+            tasks: data.tasks,
+        };
     }
 };
-

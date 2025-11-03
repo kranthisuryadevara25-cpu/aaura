@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { Loader2, PlusCircle, ArrowLeft } from 'lucide-react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
-import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { addDoc, collection, serverTimestamp, doc, updateDoc } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -65,6 +65,7 @@ export default function CreateManifestationPage() {
       const manifestationsCollection = collection(db, 'manifestations');
       const postData = {
           userId: user.uid,
+          creatorId: user.uid,
           title: data.title,
           technique: data.technique,
           results: data.results || null,

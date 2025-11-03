@@ -90,7 +90,7 @@ export default function RequestRenovationPage() {
         
         const videoUrl = videoFile ? await uploadMedia(videoFile, "renovation_requests") : null;
         
-        const { imageFile: _, videoFile: __, ...restOfData } = data;
+        const { imageFile: _if, videoFile: _vf, ...restOfData } = data;
 
         const requestData = {
           ...restOfData,

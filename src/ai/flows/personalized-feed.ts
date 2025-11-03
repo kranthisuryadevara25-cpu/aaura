@@ -72,15 +72,17 @@ const personalizedFeedFlow = ai.defineFlow(
   async (input) => {
     const { pageSize = 20 } = input;
     
-    // Step 1: Fetch recent trending content in parallel
-    const [mediaItems, postItems, storyItems] = await Promise.all([
+    // Step 1: Fetch recent trending content in parallel from multiple collections
+    const [mediaItems, postItems, storyItems, templeItems, deityItems] = await Promise.all([
         fetchContent(db, 'media', 'uploadDate', pageSize),
         fetchContent(db, 'posts', 'createdAt', pageSize),
         fetchContent(db, 'stories', 'createdAt', pageSize),
+        fetchContent(db, 'temples', 'createdAt', pageSize),
+        fetchContent(db, 'deities', 'createdAt', pageSize),
     ]);
 
     // Step 2: Combine and shuffle the content for variety
-    const combinedFeed = [...mediaItems, ...postItems, ...storyItems];
+    const combinedFeed = [...mediaItems, ...postItems, ...storyItems, ...templeItems, ...deityItems];
     const shuffledFeed = combinedFeed.sort(() => 0.5 - Math.random());
     
     // Step 3: Slice to the desired page size
@@ -94,7 +96,7 @@ const personalizedFeedFlow = ai.defineFlow(
 // ---------------------------------------------------
 // 4. Helper & Data Transformation Functions
 // ---------------------------------------------------
-const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | 'deity' | 'post' | 'media'): FeedItem | null => {
+const mapToFeedItem = (doc: DocumentData, kind: FeedItem['kind']): FeedItem | null => {
     const data = doc.data();
     if (!data) return null;
 
@@ -109,7 +111,7 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
                 title: data.title_en ? { en: data.title_en, hi: data.title_hi, te: data.title_te } : data.title,
                 description: data.description_en ? { en: data.description_en, hi: data.description_hi, te: data.description_te } : data.description,
                 thumbnail: data.thumbnailUrl || "",
-                mediaUrl: data.mediaUrl || "", // <-- FIX: Ensure mediaUrl is always present
+                mediaUrl: data.mediaUrl || "",
                 meta: { duration: data.duration, views: data.views, userId: data.userId, channelName: data.channelName, likes: data.likes },
                 createdAt: createdAt.toISOString(),
             };
@@ -118,8 +120,8 @@ const mapToFeedItem = (doc: DocumentData, kind: 'video' | 'temple' | 'story' | '
                 id: `temple-${doc.id}`,
                 kind: "temple",
                 title: data.name,
-                description: data.importance.mythological,
-                thumbnail: data.media?.images?.[0].url,
+                description: data.importance?.mythological,
+                thumbnail: data.media?.images?.[0]?.url,
                 meta: { location: data.location, slug: data.slug, imageHint: data.media?.images?.[0]?.hint },
                 createdAt: createdAt.toISOString(),
             };

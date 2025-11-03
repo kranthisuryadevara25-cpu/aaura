@@ -132,7 +132,8 @@ export default function UploadPage() {
                 const mediaDocRef = doc(db, 'media', mediaId);
                 const mediaData = {
                     id: mediaId,
-                    creatorId: user.uid,
+                    userId: user.uid, // Use userId to be consistent with other collections
+                    creatorId: user.uid, // Standardizing to creatorId for security rules
                     title_en: data.title_en,
                     title_hi: data.title_hi,
                     title_te: data.title_te,

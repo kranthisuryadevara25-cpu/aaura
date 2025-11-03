@@ -44,6 +44,7 @@ export default function CreateGroupPage() {
   const { toast } = useToast();
   const router = useRouter();
   const db = useFirestore();
+  const [user] = useAuthState(useAuth());
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<FormValues>({
@@ -60,14 +61,19 @@ export default function CreateGroupPage() {
   const topicType = form.watch('topicType');
 
   const onSubmit = (data: FormValues) => {
+    if (!user) {
+        toast({ variant: 'destructive', title: 'You must be logged in to create a group.' });
+        return;
+    }
     startTransition(async () => {
       const groupsCollection = collection(db, 'groups');
       const newDocRef = doc(groupsCollection);
       const groupData = {
           id: newDocRef.id,
+          creatorId: user.uid, // Add creatorId for security rules
           ...data,
           topicId: data.topicId || '', // Ensure topicId is not undefined
-          memberCount: 0,
+          memberCount: 1, // Start with the creator as a member
           createdAt: serverTimestamp(),
       }
       setDoc(newDocRef, groupData)

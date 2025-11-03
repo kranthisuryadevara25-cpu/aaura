@@ -14,21 +14,20 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
+    
+    function isCreator(docData) {
+        return isOwner(docData.creatorId) || isOwner(docData.authorId) || isOwner(docData.userId);
+    }
 
     function isSuperAdmin() {
       // This is a placeholder UID. In a real app, manage this securely.
       return request.auth.uid == "9RwsoEEkWPR3Wpv6wKZmhos1xTG2";
     }
 
-    function isNotSelf(userId) {
-      return request.auth.uid != userId;
-    }
-
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Global Read-Only Rule for Public Content
+    // 🔹 Public Read-Only Content
     // ---------------------------------------------------------------------------------------------
-    // All collections listed here are publicly readable by anyone.
-    // Write access is handled on a case-by-case basis below.
+    // These collections can be read by anyone. Writes are handled by more specific rules below.
     match /{collectionId}/{docId} 
       where collectionId in [
         'deities', 'stories', 'epicHeroes', 'temples', 'rituals', 
@@ -38,105 +37,81 @@ service cloud.firestore {
       allow get, list: if true;
     }
     
-    // Explicit rule for Media to allow reads
     match /media/{mediaId} {
       allow get, list: if true;
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 🔹 User Profiles and User-Specific Subcollections
+    // 🔹 Admin-Only Write Collections
+    // ---------------------------------------------------------------------------------------------
+    match /{collectionId}/{docId}
+       where collectionId in ['deities', 'stories', 'epicHeroes', 'temples', 'rituals', 'festivals', 'panchang', 'products', 'shops', 'challenges', 'plans'] {
+        allow write: if isSuperAdmin();
+    }
+    
+    match /channels/{channelId} {
+        allow write: if isOwner(channelId) || isSuperAdmin();
+    }
+
+    // ---------------------------------------------------------------------------------------------
+    // 🔹 User Profiles & Subcollections
     // ---------------------------------------------------------------------------------------------
     match /users/{userId} {
       allow get: if true;
       allow create, update, delete: if isOwner(userId) || isSuperAdmin();
 
-      // Default subcollections are readable/writable only by the owner
-      match /{subcollection}/{docId} 
-        where subcollection in ['preferences', 'horoscopes', 'badges', 'bookmarks', 'cart', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists', 'groups'] {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // Followers can be seen by anyone, but only created/deleted with specific logic
       match /followers/{followerId} {
         allow get, list: if true;
-        allow create: if isSignedIn() && request.auth.uid == followerId && isNotSelf(userId);
+        allow create: if isSignedIn() && request.auth.uid == followerId && request.auth.uid != userId;
         allow delete: if isSignedIn() && (request.auth.uid == followerId || isOwner(userId));
       }
 
-      // Following can be seen by anyone, but only managed by the user themselves
       match /following/{followedId} {
         allow get, list: if true;
-        allow create, delete: if isOwner(userId) && isNotSelf(followedId);
+        allow create, delete: if isOwner(userId) && request.auth.uid != followedId;
       }
        
-      // Channel subscriptions are private to the user
       match /subscriptions/{channelId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      match /cart/{productId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /bookmarks/{bookmarkId} {
+        allow read, write: if isOwner(userId);
+      }
+      
+      match /{subcollection}/{docId} 
+        where subcollection in ['preferences', 'horoscopes', 'badges', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists'] {
         allow read, write: if isOwner(userId);
       }
     }
     
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Content Write Rules (Admin-Only)
+    // 🔹 User-Generated Content Collections
     // ---------------------------------------------------------------------------------------------
-    // Admin can manage all core content types
+    // Rules for content any signed-in user can create.
     match /{collectionId}/{docId}
-       where collectionId in ['deities', 'stories', 'epicHeroes', 'temples', 'rituals', 'festivals', 'panchang', 'products', 'shops', 'challenges', 'plans'] {
-        allow write: if isSuperAdmin();
-    }
-
-    // Admins or channel owners can manage channels
-    match /channels/{channelId} {
-        allow write: if isOwner(channelId) || isSuperAdmin();
-        
-        // Subscribers subcollection is managed by the subscriber themselves
-        match /subscribers/{subscriberId} {
-             allow create, delete: if isOwner(subscriberId);
-             allow get, list: if true;
-        }
+      where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups', 'temple_renovation_requests', 'temple_maintenance_funds'] {
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isCreator(resource.data) || isSuperAdmin();
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Community & User-Generated Content Write Rules
+    // 🔹 Comments and Likes Subcollections
     // ---------------------------------------------------------------------------------------------
-    
-    // Any signed-in user can create content in these collections. Only owners/admins can edit/delete.
-    match /{collectionId}/{docId}
-      where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups'] {
-        allow create: if isSignedIn();
-        allow update, delete: if isOwner(resource.data.creatorId) || isSuperAdmin();
-    }
-
-    // Consolidated rules for temple funding
-    match /temple_renovation_requests/{requestId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isOwner(resource.data.creatorId) || isSuperAdmin();
-    }
-    match /temple_maintenance_funds/{fundId} {
-      allow get, list: if true;
-      allow create: if isSignedIn();
-      allow update, delete: if isOwner(resource.data.creatorId) || isSuperAdmin();
-
-      // Donations to a fund
-      match /donations/{donationId} {
-        allow create: if isSignedIn();
-        allow read: if isOwner(request.auth.uid) || isSuperAdmin();
-      }
-    }
-    
-    // Rules for Comments and Likes subcollections
-    match /{collectionId}/{docId} 
+     match /{collectionId}/{docId} 
        where collectionId in ['media', 'posts', 'manifestations', 'temples'] {
       
-      // Comments can be created by any signed-in user.
-      // Only the author of the comment or an admin can edit/delete it.
       match /comments/{commentId} {
         allow get, list: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
+        allow update, delete: if isCreator(resource.data) || isSuperAdmin();
       }
 
-      // Likes can be created/deleted by any signed-in user for their own like.
       match /likes/{userId} {
         allow get, list: if true;
         allow create, delete: if isOwner(userId);
@@ -144,41 +119,44 @@ service cloud.firestore {
     }
     
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Special Cases
+    // 🔹 Special Collection Rules
     // ---------------------------------------------------------------------------------------------
     
-    // Rule for group membership
+    match /channels/{channelId}/subscribers/{subscriberId} {
+         allow create, delete: if isOwner(subscriberId);
+         allow get, list: if true;
+    }
+    
     match /groups/{groupId}/members/{userId} {
         allow read, write: if isOwner(userId);
     }
 
-    // Rules for Contests
     match /contests/{contestId} {
-        allow get, list: if true;
-        allow create, delete: if isSuperAdmin();
-        // Any signed-in user can increment the total chant count
         allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants', 'updatedAt']);
 
-        // Any signed-in user can add a chant document to the subcollection
         match /chants/{chantId} {
             allow create: if isSignedIn();
             allow read: if true;
         }
     }
 
-    // Rules for Orders and Transactions
+     match /temple_maintenance_funds/{fundId}/donations/{donationId} {
+        allow create: if isSignedIn();
+        allow read: if isOwner(request.auth.uid) || isSuperAdmin();
+     }
+    
      match /orders/{orderId} {
       allow get: if isOwner(resource.data.userId) || isSuperAdmin();
       allow list: if isSuperAdmin();
       allow create: if isSignedIn();
-      allow update, delete: if isSuperAdmin();
+      allow update: if isSuperAdmin();
     }
 
      match /transactions/{transactionId} {
         allow get: if isOwner(resource.data.userId) || isSuperAdmin();
         allow list: if isSuperAdmin();
         allow create: if isSignedIn();
-        allow update, delete: if isSuperAdmin();
+        allow update: if isSuperAdmin();
     }
   }
 }

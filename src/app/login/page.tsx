@@ -14,6 +14,7 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -25,13 +26,23 @@ import { useToast } from '@/hooks/use-toast';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { Icons } from '@/components/ui/icons';
 import { Separator } from '@/components/ui/separator';
+import { Checkbox } from '@/components/ui/checkbox';
+import Link from 'next/link';
 
-const formSchema = z.object({
+const loginSchema = z.object({
   email: z.string().email({ message: 'Please enter a valid email.' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters.' }),
+  termsAccepted: z.boolean().optional(),
 });
 
-type FormValues = z.infer<typeof formSchema>;
+const signupSchema = loginSchema.extend({
+    termsAccepted: z.literal(true, {
+        errorMap: () => ({ message: "You must accept the terms and conditions to sign up." }),
+    }),
+});
+
+
+type FormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const router = useRouter();
@@ -40,12 +51,14 @@ export default function LoginPage() {
   const db = useFirestore();
   const [user, loading] = useAuthState(auth);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(isSignUp ? signupSchema : loginSchema),
     defaultValues: {
       email: '',
       password: '',
+      termsAccepted: false,
     },
   });
 
@@ -79,6 +92,15 @@ export default function LoginPage() {
   
   const handleAuthAction = async (action: 'signIn' | 'signUp', data: FormValues) => {
     setIsSubmitting(true);
+    setIsSignUp(action === 'signUp'); // Set context for validation
+
+    // Manually trigger validation based on the action
+    const isValid = await form.trigger();
+    if (!isValid) {
+        setIsSubmitting(false);
+        return;
+    }
+    
     try {
       let userCredential;
       if (action === 'signIn') {
@@ -88,7 +110,6 @@ export default function LoginPage() {
         userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
         toast({ title: 'Account Created!', description: 'Let\'s set up your profile.' });
       }
-      // The useEffect will handle redirection.
     } catch (error: any) {
       handleAuthError(error);
     } finally {
@@ -101,7 +122,6 @@ export default function LoginPage() {
       const provider = new GoogleAuthProvider();
       try {
           await signInWithPopup(auth, provider);
-          // On successful sign-in, the useEffect will trigger the redirect logic.
           toast({ title: 'Success!', description: 'You are now signed in with Google.' });
       } catch (error: any) {
           handleAuthError(error);
@@ -206,14 +226,43 @@ export default function LoginPage() {
                     </FormItem>
                   )}
                 />
+
+                {isSignUp && (
+                  <FormField
+                    control={form.control}
+                    name="termsAccepted"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <div className="space-y-1 leading-none">
+                          <FormLabel>
+                            Accept Terms and Conditions
+                          </FormLabel>
+                          <FormDescription>
+                            By signing up, you agree to our{' '}
+                            <Link href="/policies/terms-of-use" className="underline hover:text-primary">Terms of Use</Link>,{' '}
+                            <Link href="/policies/privacy" className="underline hover:text-primary">Privacy Policy</Link>, and other related policies.
+                          </FormDescription>
+                          <FormMessage />
+                        </div>
+                      </FormItem>
+                    )}
+                  />
+                )}
+
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button
                     type="button"
                     className="w-full"
                     disabled={isSubmitting}
-                    onClick={form.handleSubmit((data) => handleAuthAction('signIn', data))}
+                    onClick={() => handleAuthAction('signIn', form.getValues())}
                   >
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSubmitting && !isSignUp ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Sign In
                   </Button>
                   <Button
@@ -221,9 +270,9 @@ export default function LoginPage() {
                     variant="secondary"
                     className="w-full"
                     disabled={isSubmitting}
-                    onClick={form.handleSubmit((data) => handleAuthAction('signUp', data))}
+                    onClick={() => handleAuthAction('signUp', form.getValues())}
                   >
-                    {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isSubmitting && isSignUp ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                     Sign Up
                   </Button>
                 </div>

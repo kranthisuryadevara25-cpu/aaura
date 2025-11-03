@@ -149,10 +149,12 @@ export default function SettingsPage() {
         await updateProfile(auth.currentUser!, { displayName: data.fullName });
 
         const userProfileRef = doc(db, `users/${user.uid}`);
+        
+        // Create the data object for Firestore, ensuring birthDate is a string.
         const userProfileData = {
-          ...userData, 
+          ...userData,
           ...data,
-          birthDate: formattedBirthDate,
+          birthDate: formattedBirthDate, // <-- FIX: Convert Date object to string
           profileComplete: true,
         };
         
@@ -416,3 +418,4 @@ export default function SettingsPage() {
     </main>
   );
 }
+

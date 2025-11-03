@@ -63,7 +63,20 @@ const onboardingInsightsFlow = ai.defineFlow(
     outputSchema: OnboardingInsightsOutputSchema,
   },
   async input => {
+    // START: MOCK IMPLEMENTATION TO AVOID RATE LIMITS
+    // This bypasses the actual AI call during development.
+    // In production, you would remove this and use the prompt.
+    console.log("Bypassing AI onboarding insights for development.");
+    return {
+        welcomeMessage: `Welcome, ${input.zodiacSign}! Your adventurous spirit is a divine gift. We recommend exploring stories of Hanuman on your journey with us.`,
+        horoscope: "Today is a wonderful day for new beginnings. Embrace the positive energy around you and take a moment for quiet reflection. An unexpected joy is on its way."
+    };
+    // END: MOCK IMPLEMENTATION
+
+    /*
+    // Original implementation - uncomment for production
     const {output} = await prompt(input);
     return output!;
+    */
   }
 );

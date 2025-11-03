@@ -23,9 +23,9 @@ import { format } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { doc, serverTimestamp, writeBatch, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { useTransition, useState } from 'react';
+import { useTransition, useState, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { updateProfile } from 'firebase/auth';
 import { generateOnboardingInsights, type OnboardingInsightsOutput } from '@/ai/flows/onboarding-insights';
@@ -34,7 +34,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
-
+import { formSchema, step1Schema, step2Schema, FormValues } from '@/lib/profile-setup-schemas';
+import { debounce } from 'lodash';
 
 const getZodiacSign = (date: Date): string => {
   const day = date.getDate();
@@ -53,26 +54,9 @@ const getZodiacSign = (date: Date): string => {
   return 'Pisces';
 };
 
-const step1Schema = z.object({
-  fullName: z.string().min(1, 'Full name is required.'),
-  birthDate: z.date({
-    required_error: "A date of birth is required.",
-  }),
-  timeOfBirth: z.string().regex(/^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Please use HH:MM format.'),
-  placeOfBirth: z.string().min(1, 'Place of birth is required.'),
-});
-
-const step2Schema = z.object({
-  favoriteDeities: z.array(z.string()).refine((value) => value.some((item) => item), {
-    message: 'You have to select at least one deity.',
-  }),
-});
-
-const formSchema = step1Schema.merge(step2Schema);
-type FormValues = z.infer<typeof formSchema>;
 
 const steps = [
-    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
+    { title: 'Tell us about yourself', schema: step1Schema, fields: ['fullName', 'username', 'birthDate', 'timeOfBirth', 'placeOfBirth'] as const },
     { title: 'Select your interests', schema: step2Schema, fields: ['favoriteDeities'] as const },
     { title: 'Get your first horoscope', schema: z.object({}), fields: [] },
   ];
@@ -90,13 +74,41 @@ export default function ProfileSetupPage() {
     resolver: zodResolver(formSchema),
     defaultValues: {
       fullName: user?.displayName || '',
+      username: '',
       placeOfBirth: '',
       timeOfBirth: '12:00',
       favoriteDeities: [],
-      birthDate: new Date(),
     },
-     mode: "onChange",
+     mode: "onBlur",
   });
+  
+  const checkUsernameUniqueness = useMemo(
+    () =>
+      debounce(async (username: string) => {
+        if (username.length < 3) return;
+        const usersRef = collection(db, 'users');
+        const q = query(usersRef, where('username', '==', username));
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          form.setError('username', {
+            type: 'manual',
+            message: 'This username is already taken.',
+          });
+        } else {
+            form.clearErrors('username');
+        }
+      }, 500),
+    [db, form]
+  );
+  
+  const watchedUsername = form.watch("username");
+  
+  useEffect(() => {
+    if(watchedUsername) {
+        checkUsernameUniqueness(watchedUsername);
+    }
+  }, [watchedUsername, checkUsernameUniqueness]);
+
 
   const nextStep = async () => {
     const fieldsToValidate = steps[currentStep].fields;
@@ -159,6 +171,7 @@ export default function ProfileSetupPage() {
         const userProfileData = {
           email: currentUser.email,
           fullName: data.fullName,
+          username: data.username,
           birthDate: formattedBirthDate,
           timeOfBirth: data.timeOfBirth,
           placeOfBirth: data.placeOfBirth,
@@ -245,6 +258,20 @@ export default function ProfileSetupPage() {
                                 <FormControl>
                                 <Input placeholder="Your full name" {...field} />
                                 </FormControl>
+                                <FormMessage />
+                            </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={form.control}
+                            name="username"
+                            render={({ field }) => (
+                            <FormItem>
+                                <FormLabel>Username</FormLabel>
+                                <FormControl>
+                                <Input placeholder="e.g., spiritual_seeker" {...field} />
+                                </FormControl>
+                                <FormDescription>This will be your unique public name on Aaura.</FormDescription>
                                 <FormMessage />
                             </FormItem>
                             )}
@@ -419,3 +446,5 @@ export default function ProfileSetupPage() {
     </main>
   );
 }
+
+    

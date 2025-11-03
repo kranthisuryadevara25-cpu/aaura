@@ -111,4 +111,11 @@ export default function CreateMaintenanceFundPage() {
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Create Fund
                 </Button>
-              
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+      </div>
+    </main>
+  );
+}

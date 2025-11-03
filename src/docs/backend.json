@@ -57,6 +57,10 @@
             "type": "boolean",
             "description": "Flag to indicate if the user has completed their profile."
         },
+        "isSuperAdmin": {
+            "type": "boolean",
+            "description": "Flag to indicate if the user has super administrator privileges."
+        },
         "followerCount": {
           "type": "number",
           "description": "The number of users following this user."
@@ -933,6 +937,36 @@
         "commentsCount": { "type": "number" }
       },
       "required": ["id", "userId", "title", "technique", "createdAt"]
+    },
+    "Plan": {
+        "title": "Monetization Plan",
+        "type": "object",
+        "description": "Represents a subscription or donation plan.",
+        "properties": {
+            "id": { "type": "string", "description": "Unique ID for the plan (e.g., 'sub_annual_49')." },
+            "name": { "type": "string" },
+            "amount": { "type": "number" },
+            "currency": { "type": "string" },
+            "period": { "type": "string", "enum": ["year", "month", "one-time"] },
+            "description": { "type": "string" }
+        },
+        "required": ["id", "name", "amount", "currency"]
+    },
+    "Transaction": {
+        "title": "Transaction",
+        "type": "object",
+        "description": "Represents a pending or completed payment for a donation or subscription.",
+        "properties": {
+            "id": { "type": "string" },
+            "userId": { "type": "string" },
+            "planId": { "type": "string" },
+            "quantity": { "type": "number" },
+            "totalAmount": { "type": "number" },
+            "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "paymentGatewayId": { "type": "string", "description": "ID from the payment gateway (e.g., Razorpay Order ID)." }
+        },
+        "required": ["id", "userId", "planId", "totalAmount", "status"]
     }
   },
   "auth": {
@@ -1265,6 +1299,22 @@
             "schema": { "type": "object", "properties": { "userId": { "type": "string" } } },
             "description": "Stores likes for a manifestation post."
         }
+       },
+       {
+            "path": "/plans/{planId}",
+            "definition": {
+                "entityName": "Plan",
+                "schema": { "$ref": "#/entities/Plan" },
+                "description": "Stores monetization plans for subscriptions and donations."
+            }
+       },
+       {
+            "path": "/transactions/{transactionId}",
+            "definition": {
+                "entityName": "Transaction",
+                "schema": { "$ref": "#/entities/Transaction" },
+                "description": "Logs all payment transactions for donations and subscriptions."
+            }
        }
     ],
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."

@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStorage } from '@/lib/firebase/provider';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Loader2, UploadCloud, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Loader2, UploadCloud, Trash2 } from 'lucide-react';
 import Image from 'next/image';
 
 interface ImageUploadProps {
@@ -18,13 +18,13 @@ interface ImageUploadProps {
   folderName?: string;
 }
 
-export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folderName = 'content-images' }: ImageUploadProps) {
-  const { toast } = useToast();
-  const storage = useStorage();
-  const [isUploading, setIsUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [fileUrl, setFileUrl] = useState<string | null>(initialUrl || null);
-  const [file, setFile] = useState<File | null>(null);
+export function ImageUpload({ onFileSelect, initialUrl, }: ImageUploadProps) {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(initialUrl || null);
+
+  useEffect(() => {
+    // Sync with initialUrl prop if it changes
+    setPreviewUrl(initialUrl || null);
+  }, [initialUrl]);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -32,27 +32,32 @@ export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folder
         if (onFileSelect) {
             onFileSelect(selectedFile);
         }
-        setFile(selectedFile);
+        // Create a temporary URL for the selected file to show a preview
         const objectUrl = URL.createObjectURL(selectedFile);
-        setFileUrl(objectUrl);
+        setPreviewUrl(objectUrl);
     }
   };
 
-  // The upload function can be called externally if needed, e.g., on form submission.
-  // For this component, let's keep it self-contained for now.
-
   const handleRemoveImage = () => {
-    setFileUrl(null);
-    setFile(null);
-    if(onFileSelect) onFileSelect(null);
-    if(onUploadComplete) onUploadComplete('');
+    setPreviewUrl(null);
+    if(onFileSelect) {
+        onFileSelect(null);
+    }
   }
 
-  // Display the selected image or the initial URL
-  if (fileUrl) {
+  // Display the selected image preview or the initial URL
+  if (previewUrl) {
     return (
-        <div className="relative w-full aspect-video rounded-md overflow-hidden border p-2">
-            <Image src={fileUrl} alt="Image preview" layout="fill" className="object-contain rounded-md" />
+        <div className="relative w-full aspect-video rounded-md overflow-hidden border p-2 bg-secondary/30">
+             {/* 
+                Use a standard `<img>` tag for blob URLs (local previews) 
+                and next/image for remote URLs to avoid configuration errors.
+             */}
+            {previewUrl.startsWith('blob:') ? (
+                <img src={previewUrl} alt="Image preview" className="object-contain w-full h-full rounded-md" />
+            ) : (
+                <Image src={previewUrl} alt="Image preview" layout="fill" className="object-contain rounded-md" />
+            )}
             <Button
                 type="button"
                 variant="destructive"
@@ -68,13 +73,6 @@ export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folder
 
   return (
     <div className="w-full p-4 border-2 border-dashed rounded-lg text-center">
-      {isUploading ? (
-        <div className="flex flex-col items-center gap-2">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Uploading...</p>
-          <Progress value={progress} className="w-full mt-2" />
-        </div>
-      ) : (
         <div className="flex flex-col items-center gap-2">
           <UploadCloud className="h-8 w-8 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
@@ -93,7 +91,6 @@ export function ImageUpload({ onUploadComplete, onFileSelect, initialUrl, folder
               </label>
             </Button>
         </div>
-      )}
     </div>
   );
 }

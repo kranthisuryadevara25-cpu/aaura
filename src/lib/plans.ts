@@ -1,6 +1,6 @@
 
 export type Plan = {
-    id: "sub_annual_49" | "donate_cow_feed" | "donate_sadhu_meal" | "donate_ayyappa_yatra";
+    id: "sub_annual_49" | "donate_cow_feed" | "donate_sadhu_meal" | "donate_ayyappa_yatra" | "donate_temple_renovation";
     name: string;
     amount: number;
     currency: "INR";
@@ -44,6 +44,15 @@ export const monetizationPlans: Plan[] = [
     currency: "INR",
     period: "one-time",
     type: "custom_donation",
-    description: "Contribute to help 500 Ayyappa Swamys with their pilgrimage costs. Suggested donation is ₹99."
+    description: "Contribute to help Ayyappa Swamys with their pilgrimage costs. Suggested donation is ₹99."
+  },
+  {
+    id: "donate_temple_renovation",
+    name: "Temple Renovation Fund",
+    amount: 101,
+    currency: "INR",
+    period: "one-time",
+    type: "custom_donation",
+    description: "Contribute to the restoration and upkeep of sacred temples. Suggested donation is ₹101."
   }
 ];

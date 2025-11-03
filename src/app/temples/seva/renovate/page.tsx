@@ -12,18 +12,18 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useToast } from '@/hooks/use-toast';
 import { useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, CalendarIcon } from 'lucide-react';
 import { useAuth, useFirestore, useStorage } from '@/lib/firebase/provider';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { ImageUpload } from '@/components/ImageUpload';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
-import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { FirestorePermissionError } from '@/lib/firebase/errors';
+import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   templeName: z.string().min(5, "Temple name is required."),
@@ -61,6 +61,13 @@ export default function RequestRenovationPage() {
       hasApprovals: false,
     },
   });
+  
+  async function uploadMedia(file: File, folder: string) {
+      if (!file) return null;
+      const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+      await uploadBytes(fileRef, file);
+      return getDownloadURL(fileRef);
+  }
 
   const onSubmit = (data: FormValues) => {
     startTransition(async () => {
@@ -83,41 +90,39 @@ export default function RequestRenovationPage() {
         
         const videoUrl = videoFile ? await uploadMedia(videoFile, "renovation_requests") : null;
         
+        const { imageFile: _, videoFile: __, ...restOfData } = data;
+
         const requestData = {
-          templeName: data.templeName,
-          location: data.location,
-          description: data.description,
-          totalGoal: data.totalGoal,
-          progressStatus: data.progressStatus,
-          proposedStartDate: data.proposedStartDate ? format(data.proposedStartDate, "yyyy-MM-dd") : null,
-          proposedCompletionDate: data.proposedCompletionDate ? format(data.proposedCompletionDate, "yyyy-MM-dd") : null,
-          hasSocietyRegistration: data.hasSocietyRegistration,
-          hasApprovals: data.hasApprovals,
+          ...restOfData,
           imageUrl,
           videoUrl,
-          createdBy: user.uid,
+          creatorId: user.uid,
           createdAt: serverTimestamp(),
           status: 'pending',
+          proposedStartDate: data.proposedStartDate ? format(data.proposedStartDate, "yyyy-MM-dd") : null,
+          proposedCompletionDate: data.proposedCompletionDate ? format(data.proposedCompletionDate, "yyyy-MM-dd") : null,
         };
 
-        await addDoc(collection(db, 'temple_renovation_requests'), requestData);
+        const requestsCollection = collection(db, 'temple_renovation_requests');
+        await addDoc(requestsCollection, requestData);
 
         toast({ title: 'Request Submitted!', description: 'Your request for temple renovation funding has been submitted for review.' });
         router.push('/temples/seva');
 
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error submitting request:", error);
-        toast({ variant: 'destructive', title: 'Submission Failed', description: 'There was an error submitting your request.' });
+         if (error.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+                path: `temple_renovation_requests`,
+                operation: 'create',
+            });
+            errorEmitter.emit('permission-error', permissionError);
+        } else {
+            toast({ variant: 'destructive', title: 'Submission Failed', description: 'There was an error submitting your request.' });
+        }
       }
     });
   };
-  
-  async function uploadMedia(file: File, folder: string) {
-      if (!file) return null;
-      const fileRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
-      await uploadBytes(fileRef, file);
-      return getDownloadURL(fileRef);
-  }
 
   return (
     <main className="container mx-auto px-4 py-8">

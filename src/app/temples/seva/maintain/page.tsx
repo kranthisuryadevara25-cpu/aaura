@@ -51,9 +51,10 @@ export default function CreateMaintenanceFundPage() {
       
       const fundData = {
           ...data,
-          createdBy: user.uid,
+          creatorId: user.uid,
           createdAt: serverTimestamp(),
           totalCollected: 0,
+          donors: []
       };
 
       try {

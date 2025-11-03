@@ -89,22 +89,46 @@ service cloud.firestore {
     }
 
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Comments and Likes Subcollections
+    // 🔹 Explicit Rules for Comments and Likes Subcollections
     // ---------------------------------------------------------------------------------------------
-    match /{collectionId}/{docId}/comments/{commentId} {
-        // Anyone can read comments on any content.
-        allow get, list: if true;
-        // Any signed-in user can create a comment.
-        allow create: if isSignedIn();
-        // Only the author of the comment or an admin can edit/delete it.
-        allow update, delete: if isCreator(resource.data) || isSuperAdmin();
+    
+    // Media Comments and Likes
+    match /media/{mediaId} {
+        match /comments/{commentId} {
+            allow get, list: if true;
+            allow create: if isSignedIn();
+            allow update, delete: if isCreator(resource.data) || isSuperAdmin();
+        }
+        match /likes/{userId} {
+            allow get, list: if true;
+            allow create, delete: if isOwner(userId);
+        }
     }
-     
-    match /{collectionId}/{docId}/likes/{userId} {
-        // Anyone can see who liked a post.
-        allow get, list: if true;
-        // Only the specific user can create or delete their own like document.
-        allow create, delete: if isOwner(userId);
+
+    // Post Comments and Likes
+    match /posts/{postId} {
+        match /comments/{commentId} {
+            allow get, list: if true;
+            allow create: if isSignedIn();
+            allow update, delete: if isCreator(resource.data) || isSuperAdmin();
+        }
+        match /likes/{userId} {
+            allow get, list: if true;
+            allow create, delete: if isOwner(userId);
+        }
+    }
+
+    // Manifestation Comments and Likes
+    match /manifestations/{manifestationId} {
+        match /comments/{commentId} {
+            allow get, list: if true;
+            allow create: if isSignedIn();
+            allow update, delete: if isCreator(resource.data) || isSuperAdmin();
+        }
+        match /likes/{userId} {
+            allow get, list: if true;
+            allow create, delete: if isOwner(userId);
+        }
     }
     
     // ---------------------------------------------------------------------------------------------

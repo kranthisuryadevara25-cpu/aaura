@@ -4,7 +4,7 @@
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
-import { collection, doc, deleteDoc, writeBatch, serverTimestamp, updateDoc, increment } from 'firebase/firestore';
+import { collection, doc, deleteDoc, writeBatch, serverTimestamp, updateDoc } from 'firebase/firestore';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from '@/components/ui/card';
@@ -13,7 +13,7 @@ import { useLanguage } from '@/hooks/use-language';
 import { useToast } from '@/hooks/use-toast';
 import { useTransition, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { createRazorpayOrder } from '@/ai/flows/create-razorpay-order';
+import { createPaymentOrder } from '@/ai/flows/create-payment-order';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 
@@ -83,11 +83,16 @@ export default function CartPage() {
         toast({ title: 'Initiating secure payment...' });
         
         const orderPayload = {
-            cartItems: cartItems.map(item => ({ productId: item.productId, quantity: item.quantity })),
+            items: cartItems.map(item => ({ 
+                id: item.productId, 
+                name: item.name_en,
+                amount: item.price, 
+                quantity: item.quantity 
+            })),
             currency: 'INR',
         };
 
-        const order = await createRazorpayOrder(orderPayload);
+        const order = await createPaymentOrder(orderPayload);
         
         if (!order || !order.id) {
              throw new Error('Failed to create Razorpay order.');

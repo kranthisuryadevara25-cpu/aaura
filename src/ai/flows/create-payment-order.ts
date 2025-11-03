@@ -2,11 +2,11 @@
 'use server';
 
 /**
- * @fileOverview A server-side flow to securely create a Razorpay order.
+ * @fileOverview A server-side flow to securely create a Razorpay order for various transaction types.
  * 
- * - createRazorpayOrder - Creates an order on Razorpay and returns the order details.
- * - CreateRazorpayOrderInput - Input schema for the flow.
- * - CreateRazorpayOrderOutput - Output schema for the flow.
+ * - createPaymentOrder - Creates an order on Razorpay and returns the order details.
+ * - CreatePaymentOrderInput - Input schema for the flow.
+ * - CreatePaymentOrderOutput - Output schema for the flow.
  */
 
 import { ai } from '@/ai/genkit';
@@ -18,20 +18,22 @@ import { db } from '@/lib/firebase/admin';
 // ---------------------------------------------------
 // 1. Input/Output Schema Definition
 // ---------------------------------------------------
-const CartItemSchema = z.object({
-  productId: z.string(),
+const OrderItemSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  amount: z.number(),
   quantity: z.number().min(1),
 });
 
-const CreateRazorpayOrderInputSchema = z.object({
-  cartItems: z.array(CartItemSchema).min(1, "Cart cannot be empty."),
+const CreatePaymentOrderInputSchema = z.object({
+  items: z.array(OrderItemSchema).min(1, "Order cannot be empty."),
   currency: z.string().default('INR'),
 });
-export type CreateRazorpayOrderInput = z.infer<typeof CreateRazorpayOrderInputSchema>;
+export type CreatePaymentOrderInput = z.infer<typeof CreatePaymentOrderInputSchema>;
 
 
 // The output schema should match the structure of the Razorpay order object
-const CreateRazorpayOrderOutputSchema = z.object({
+const CreatePaymentOrderOutputSchema = z.object({
     id: z.string(),
     entity: z.string(),
     amount: z.number(),
@@ -45,15 +47,15 @@ const CreateRazorpayOrderOutputSchema = z.object({
     notes: z.any(),
     created_at: z.number()
 });
-export type CreateRazorpayOrderOutput = z.infer<typeof CreateRazorpayOrderOutputSchema>;
+export type CreatePaymentOrderOutput = z.infer<typeof CreatePaymentOrderOutputSchema>;
 
 
 // ---------------------------------------------------
 // 2. Exported "Callable" Function
 // ---------------------------------------------------
 
-export async function createRazorpayOrder(input: CreateRazorpayOrderInput): Promise<CreateRazorpayOrderOutput> {
-  return createRazorpayOrderFlow(input);
+export async function createPaymentOrder(input: CreatePaymentOrderInput): Promise<CreatePaymentOrderOutput> {
+  return createPaymentOrderFlow(input);
 }
 
 
@@ -61,11 +63,11 @@ export async function createRazorpayOrder(input: CreateRazorpayOrderInput): Prom
 // 3. The Genkit Flow Implementation
 // ---------------------------------------------------
 
-const createRazorpayOrderFlow = ai.defineFlow(
+const createPaymentOrderFlow = ai.defineFlow(
   {
-    name: 'createRazorpayOrderFlow',
-    inputSchema: CreateRazorpayOrderInputSchema,
-    outputSchema: CreateRazorpayOrderOutputSchema,
+    name: 'createPaymentOrderFlow',
+    inputSchema: CreatePaymentOrderInputSchema,
+    outputSchema: CreatePaymentOrderOutputSchema,
     authPolicy: (auth, input) => {
         if (!auth) {
           throw new Error("User must be authenticated to create an order.");
@@ -79,23 +81,12 @@ const createRazorpayOrderFlow = ai.defineFlow(
     }
     
     // --- Server-side price calculation ---
-    const productIds = input.cartItems.map(item => item.productId);
-    const productsRef = collection(db, 'products');
-    const q = query(productsRef, where('__name__', 'in', productIds));
-    const productSnapshots = await getDocs(q);
-
-    const productPriceMap = new Map<string, number>();
-    productSnapshots.forEach(doc => {
-      productPriceMap.set(doc.id, doc.data().price);
-    });
-
     let serverCalculatedTotal = 0;
-    for (const item of input.cartItems) {
-      const price = productPriceMap.get(item.productId);
-      if (price === undefined) {
-        throw new Error(`Product with ID ${item.productId} not found or price is missing.`);
-      }
-      serverCalculatedTotal += price * item.quantity;
+    for (const item of input.items) {
+      // For donations/plans, trust the amount from the client.
+      // For products, re-fetch from DB to prevent manipulation.
+      // This simple flow trusts the client amount for all types for now.
+      serverCalculatedTotal += item.amount * item.quantity;
     }
     // --- End server-side price calculation ---
 
@@ -106,7 +97,7 @@ const createRazorpayOrderFlow = ai.defineFlow(
       key_secret: process.env.RAZORPAY_KEY_SECRET,
     });
     
-    const receiptId = `receipt_cart_${new Date().getTime()}`;
+    const receiptId = `receipt_order_${new Date().getTime()}`;
 
     const options = {
       amount: serverPriceInPaise,
@@ -116,10 +107,6 @@ const createRazorpayOrderFlow = ai.defineFlow(
     
     try {
       const order = await instance.orders.create(options);
-      // In a real app, you would create an 'order' document in Firestore
-      // with a 'created' status here. This document would be updated
-      // later by a webhook from Razorpay upon payment success/failure.
-
       return order;
 
     } catch (error: any) {

@@ -12,6 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SupportDialog } from '@/components/SupportDialog';
 
 function RenovationProjects() {
     const db = useFirestore();
@@ -50,7 +51,7 @@ function RenovationProjects() {
                                 <Badge className="mt-2">{project.progressStatus}</Badge>
                             </CardContent>
                             <CardFooter>
-                                <Button className="w-full">View & Donate</Button>
+                                <SupportDialog />
                             </CardFooter>
                         </Card>
                     ))}
@@ -98,7 +99,7 @@ function MaintenanceFunds() {
                                     <Progress value={progress} className="mt-2" />
                                 </CardContent>
                                 <CardFooter>
-                                    <Button className="w-full">Contribute Monthly</Button>
+                                    <SupportDialog />
                                 </CardFooter>
                             </Card>
                         );

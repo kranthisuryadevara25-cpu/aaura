@@ -15,11 +15,11 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { Loader2, Heart, Plus, Minus, Check } from 'lucide-react';
+import { Loader2, Heart, Plus, Minus } from 'lucide-react';
 import { monetizationPlans, type Plan } from '@/lib/plans';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
+import { Card } from './ui/card';
 import { cn } from '@/lib/utils';
-import { createRazorpayOrder } from '@/ai/flows/create-razorpay-order'; // Assuming a similar flow exists
+import { createPaymentOrder } from '@/ai/flows/create-payment-order';
 import { writeBatch, doc, collection, serverTimestamp } from 'firebase/firestore';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from './ui/checkbox';
@@ -92,47 +92,90 @@ export function SupportDialog() {
           const newSelection = { ...prev };
           if (newSelection[planId]) {
               newSelection[planId] = { ...newSelection[planId], customAmount: amount };
+          } else {
+              // If user types in custom amount before ticking the box, select it.
+              newSelection[planId] = { quantity: 1, customAmount: amount };
           }
           return newSelection;
       })
   }
+
+    useEffect(() => {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        document.body.appendChild(script);
+        return () => {
+            document.body.removeChild(script);
+        };
+    }, []);
 
   const handlePayment = () => {
      if (!user) {
          toast({ variant: 'destructive', title: 'Please log in to proceed.' });
          return;
      }
+     if (totalAmount <= 0) {
+         toast({ variant: 'destructive', title: 'Please select an amount to contribute.' });
+         return;
+     }
 
      startProcessing(async () => {
          try {
             toast({ title: 'Initiating secure payment...', description: 'Please wait.' });
-            
-            const batch = writeBatch(db);
+
             const transactionItems = Object.entries(selection).map(([planId, data]) => {
-                const plan = monetizationPlans.find(p => p.id === planId);
+                const plan = monetizationPlans.find(p => p.id === planId)!;
                 return {
-                    planId: plan!.id,
-                    name: plan!.name,
+                    id: plan.id,
+                    name: plan.name,
                     quantity: data.quantity,
-                    amount: plan!.type === 'custom_donation' ? data.customAmount : plan!.amount,
+                    amount: plan.type === 'custom_donation' ? (data.customAmount || plan.amount) : plan.amount,
                 };
             });
+            
+            const order = await createPaymentOrder({ items: transactionItems, currency: 'INR' });
+            if (!order || !order.id) {
+                throw new Error('Failed to create Razorpay order.');
+            }
 
-            const transactionRef = doc(collection(db, 'transactions'));
-            batch.set(transactionRef, {
-                userId: user.uid,
-                items: transactionItems,
-                totalAmount: totalAmount,
-                status: 'completed', // Mocking completion
-                createdAt: serverTimestamp(),
-                paymentGatewayId: `mock_${Date.now()}`
+            const options = {
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                amount: order.amount,
+                currency: order.currency,
+                name: 'Support Aaura',
+                description: 'Contribution to Aaura Platform',
+                order_id: order.id,
+                handler: async (response: any) => {
+                    const batch = writeBatch(db);
+                    const transactionRef = doc(collection(db, 'transactions'));
+                    batch.set(transactionRef, {
+                        userId: user.uid,
+                        items: transactionItems,
+                        totalAmount: totalAmount,
+                        status: 'completed',
+                        createdAt: serverTimestamp(),
+                        paymentGatewayId: response.razorpay_order_id,
+                        paymentDetails: response,
+                    });
+                    await batch.commit();
+
+                    toast({ title: 'Thank you for your support!', description: 'Your contribution is greatly appreciated.' });
+                    setIsOpen(false);
+                    setSelection({});
+                },
+                prefill: {
+                    name: user.displayName || 'Aaura Supporter',
+                    email: user.email,
+                },
+                theme: { color: '#E6E6FA' }
+            };
+            
+            const rzp = new window.Razorpay(options);
+            rzp.on('payment.failed', function (response: any) {
+                toast({ variant: 'destructive', title: 'Payment Failed', description: response.error.description });
             });
-
-            await batch.commit();
-
-            toast({ title: 'Thank you for your support!', description: 'Your contribution is greatly appreciated.' });
-            setIsOpen(false);
-            setSelection({});
+            rzp.open();
 
          } catch (error: any) {
              console.error("Payment processing error:", error);

@@ -30,7 +30,7 @@ import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "@/components/FollowListDialog";
 import { useLanguage } from "@/hooks/use-language";
-import { MobileSidebar } from "./MobileSidebar";
+import { MobileSidebar } from "@/components/MobileSidebar";
 import { SupportDialog } from "./SupportDialog";
 
 const UserStats = () => {
@@ -283,7 +283,7 @@ export const TopNav = () => {
             )}
           </>
         ) : (
-          <Skeleton className="h-8 w-20" /> // Placeholder to prevent layout shift
+          <Skeleton className="h-8 w-20" />
         )}
       </div>
     </header>

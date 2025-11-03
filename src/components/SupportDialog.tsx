@@ -21,6 +21,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { cn } from '@/lib/utils';
 import { createRazorpayOrder } from '@/ai/flows/create-razorpay-order'; // Assuming a similar flow exists
 import { writeBatch, doc, collection, serverTimestamp } from 'firebase/firestore';
+import { Label } from '@/components/ui/label';
 
 
 declare global {

@@ -47,8 +47,8 @@ service cloud.firestore {
 
       // Default subcollections are readable/writable only by the owner or admin
       match /{subcollection}/{docId} 
-        where subcollection in ['preferences', 'horoscopes', 'badges', 'bookmarks', 'cart', 'challenges', 'contestProgress', 'virtualOfferings'] {
-        allow read, write: if isOwner(userId) || isSuperAdmin();
+        where subcollection in ['preferences', 'horoscopes', 'badges', 'bookmarks', 'cart', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists', 'groups'] {
+        allow read, write: if isOwner(userId);
       }
 
       // Followers can be seen by anyone, but only created/deleted with specific logic
@@ -67,16 +67,6 @@ service cloud.firestore {
       // Channel subscriptions are private to the user
       match /subscriptions/{channelId} {
         allow read, write: if isOwner(userId);
-      }
-
-      // Playlist references are private
-       match /playlists/{playlistId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      // User's group memberships
-      match /groups/{groupId} {
-          allow read, write: if isOwner(userId);
       }
     }
     

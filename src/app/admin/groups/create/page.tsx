@@ -153,7 +153,7 @@ export default function CreateGroupPage() {
                         )}
                     </div>
                     
-                    <Button type="submit" disabled={isPending} className="w-full">
+                    <Button type="submit" disabled={isPending || !user} className="w-full">
                     {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PlusCircle className="mr-2 h-4 w-4" />}
                     Create Group
                     </Button>

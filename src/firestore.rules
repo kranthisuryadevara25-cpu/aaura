@@ -16,18 +16,19 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
+      // In a real app, this should be a custom claim, not a hardcoded UID.
       return request.auth.uid == "9RwsoEEkWPR3Wpv6wKZmhos1xTG2";
     }
 
     function isCreator(docData) {
+      // Handles documents with either creatorId, authorId, or userId
       return isOwner(docData.creatorId) || isOwner(docData.authorId) || isOwner(docData.userId);
     }
     
 
     // ---------------------------------------------------------------------------------------------
-    // 🔹 Public Read-Only Content
+    // 🔹 Public Read-Only Content (Admin-Managed)
     // ---------------------------------------------------------------------------------------------
-    // These collections can be read by anyone, but only written to by admins.
     match /{collectionId}/{docId} 
       where collectionId in [
         'deities', 'stories', 'epicHeroes', 'temples', 'rituals', 
@@ -39,48 +40,44 @@ service cloud.firestore {
     }
     
     // ---------------------------------------------------------------------------------------------
-    // 🔹 User Profiles & Subcollections
+    // 🔹 User Profiles & Private Subcollections
     // ---------------------------------------------------------------------------------------------
     match /users/{userId} {
       allow get: if true;
       allow create, update, delete: if isOwner(userId) || isSuperAdmin();
 
+      // Social Graph
       match /followers/{followerId} {
         allow get, list: if true;
         allow create: if isSignedIn() && request.auth.uid == followerId && request.auth.uid != userId;
         allow delete: if isSignedIn() && (request.auth.uid == followerId || isOwner(userId));
       }
-
       match /following/{followedId} {
         allow get, list: if true;
         allow create, delete: if isOwner(userId) && request.auth.uid != followedId;
       }
        
-      match /subscriptions/{channelId} {
-        allow read, write: if isOwner(userId);
-      }
-
-      match /cart/{productId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      match /bookmarks/{bookmarkId} {
-        allow read, write: if isOwner(userId);
-      }
-      
-      match /{subcollection}/{docId} 
-        where subcollection in ['preferences', 'horoscopes', 'badges', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists', 'groups'] {
-        allow read, write: if isOwner(userId);
-      }
+      // Private User Data
+      match /subscriptions/{channelId} { allow read, write: if isOwner(userId); }
+      match /cart/{productId} { allow read, write: if isOwner(userId); }
+      match /bookmarks/{bookmarkId} { allow read, write: if isOwner(userId); }
+      match /preferences/{docId} { allow read, write: if isOwner(userId); }
+      match /horoscopes/{docId} { allow read, write: if isOwner(userId); }
+      match /badges/{docId} { allow read, write: if isOwner(userId); }
+      match /challenges/{docId} { allow read, write: if isOwner(userId); }
+      match /contestProgress/{docId} { allow read, write: if isOwner(userId); }
+      match /virtualOfferings/{docId} { allow read, write: if isOwner(userId); }
+      match /groups/{docId} { allow read, write: if isOwner(userId); }
     }
     
     // ---------------------------------------------------------------------------------------------
-    // 🔹 User-Generated Content Collections
+    // 🔹 User-Generated Content (Publicly Readable)
     // ---------------------------------------------------------------------------------------------
-    // These collections can be created by any signed-in user.
-    // They can only be updated/deleted by the creator or a super admin.
     match /{collectionId}/{docId}
-      where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups', 'temple_renovation_requests', 'temple_maintenance_funds'] {
+      where collectionId in [
+        'media', 'posts', 'manifestations', 'playlists', 'groups', 
+        'temple_renovation_requests', 'temple_maintenance_funds'
+      ] {
         allow get, list: if true;
         allow create: if isSignedIn();
         allow update, delete: if isCreator(resource.data) || isSuperAdmin();
@@ -90,14 +87,16 @@ service cloud.firestore {
     // 🔹 Comments and Likes Subcollections
     // ---------------------------------------------------------------------------------------------
      match /{collectionId}/{docId} 
-       where collectionId in ['media', 'posts', 'manifestations', 'temples'] {
+       where collectionId in ['media', 'posts', 'manifestations', 'temples', 'stories', 'deities', 'epicHeroes'] {
       
+      // Anyone can read comments
       match /comments/{commentId} {
         allow get, list: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
+        allow update, delete: if isCreator(resource.data) || isSuperAdmin();
       }
 
+      // Anyone can read likes, but only the user can create/delete their own like
       match /likes/{userId} {
         allow get, list: if true;
         allow create, delete: if isOwner(userId);
@@ -135,7 +134,7 @@ service cloud.firestore {
 
      match /temple_maintenance_funds/{fundId}/donations/{donationId} {
         allow create: if isSignedIn();
-        allow read: if isOwner(request.auth.uid) || isSuperAdmin();
+        allow read: if isCreator(get(/databases/$(database)/documents/temple_maintenance_funds/$(fundId)).data) || isSuperAdmin();
      }
     
      match /orders/{orderId} {

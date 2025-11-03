@@ -149,7 +149,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const currentItemData = contentData || item;
   const title = getText(currentItemData.title);
   const description = getText(currentItemData.description);
-  const authorId = currentItemData.meta?.authorId || currentItemData.authorId || currentItemData.userId;
+  const authorId = currentItemData.meta?.authorId || currentItemData.creatorId || currentItemData.userId;
   const engagement = contentLoading ? item.meta : (currentItemData.meta || currentItemData);
   const thumbnail = currentItemData.thumbnail || currentItemData.thumbnailUrl || "https://picsum.photos/seed/placeholder/800/450";
   const hint = currentItemData.meta?.imageHint || "image";
@@ -181,7 +181,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
                 </Link>
                 {title && <p className="text-sm text-muted-foreground line-clamp-2">{description}</p>}
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
-                    <span>{engagement.views ? `${engagement.views.toLocaleString()} views` : "New"}</span>
+                    <span>{engagement?.views ? `${engagement.views.toLocaleString()} views` : "New"}</span>
                     &bull;
                     <ClientOnlyTime date={createdAtDate} fallback="a while ago" />
                 </div>

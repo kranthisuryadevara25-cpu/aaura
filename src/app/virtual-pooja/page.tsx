@@ -40,14 +40,6 @@ export default function VirtualPoojaPage() {
   const [showAarti, setShowAarti] = useState(false);
 
   const handleInteraction = async (interaction: 'ring-bell' | 'offer-flower' | 'light-diya' | 'offer-aarti') => {
-    if (!user) {
-      toast({
-        variant: 'destructive',
-        title: 'Please log in',
-        description: 'You must be logged in to perform any pooja actions.',
-      });
-      return;
-    }
     
     setActiveInteraction(interaction);
     setTimeout(() => setActiveInteraction(null), 500);
@@ -93,6 +85,12 @@ export default function VirtualPoojaPage() {
           console.error("Failed to record interaction:", error);
           toast({ variant: "destructive", title: 'Something went wrong.', description: "Your interaction could not be saved." });
         }
+    } else {
+       toast({
+        variant: 'destructive',
+        title: 'Please log in',
+        description: 'You must be logged in to perform any pooja actions.',
+      });
     }
   };
   

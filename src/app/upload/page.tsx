@@ -34,11 +34,11 @@ import { errorEmitter } from '@/lib/firebase/error-emitter';
 
 const formSchema = z.object({
   title_en: z.string().min(5, { message: 'English title must be at least 5 characters.' }),
-  title_hi: z.string().min(5, { message: 'Hindi title must be at least 5 characters.' }),
-  title_te: z.string().min(5, { message: 'Telugu title must be at least 5 characters.' }),
+  title_hi: z.string().optional(),
+  title_te: z.string().optional(),
   description_en: z.string().min(10, { message: 'English description must be at least 10 characters.' }),
-  description_hi: z.string().min(10, { message: 'Hindi description must be at least 10 characters.' }),
-  description_te: z.string().min(10, { message: 'Telugu description must be at least 10 characters.' }),
+  description_hi: z.string().optional(),
+  description_te: z.string().optional(),
   media: z.any().refine((files) => files?.length === 1, 'A media file is required.'),
   mediaType: z.enum(['video', 'short', 'bhajan', 'podcast', 'pravachan', 'audiobook']),
 });
@@ -132,14 +132,13 @@ export default function UploadPage() {
                 const mediaDocRef = doc(db, 'media', mediaId);
                 const mediaData = {
                     id: mediaId,
-                    userId: user.uid, // Use userId to be consistent with other collections
-                    creatorId: user.uid, // Standardizing to creatorId for security rules
+                    creatorId: user.uid,
                     title_en: data.title_en,
-                    title_hi: data.title_hi,
-                    title_te: data.title_te,
+                    title_hi: data.title_hi || '',
+                    title_te: data.title_te || '',
                     description_en: data.description_en,
-                    description_hi: data.description_hi,
-                    description_te: data.description_te,
+                    description_hi: data.description_hi || '',
+                    description_te: data.description_te || '',
                     mediaUrl: downloadURL,
                     thumbnailUrl: `https://picsum.photos/seed/${mediaId}/800/450`,
                     uploadDate: serverTimestamp(),

@@ -28,8 +28,8 @@ export default function FeedPage() {
     }
     const lowerCaseQuery = query.toLowerCase();
     const filtered = allItems.filter(item => {
-      const title = item.title ? (item.title['en'] || '') : '';
-      const description = item.description ? (item.description['en'] || '') : '';
+      const title = item.title ? (item.title['en'] || Object.values(item.title)[0] || '') : '';
+      const description = item.description ? (item.description['en'] || Object.values(item.description)[0] || '') : '';
       return title.toLowerCase().includes(lowerCaseQuery) || description.toLowerCase().includes(lowerCaseQuery);
     });
     setFilteredItems(filtered);

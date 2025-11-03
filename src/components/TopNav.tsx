@@ -25,7 +25,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X, Users, Heart } from "lucide-react";
+import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, Heart } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "./FollowListDialog";
@@ -42,7 +42,7 @@ const UserStats = () => {
     const [userData, loading] = useDocumentData(userRef);
     
     const channelRef = user ? doc(db, 'channels', user.uid) : undefined;
-    const [channelData, loadingChannel] = useDocumentData(channelRef);
+    const [channelData] = useDocumentData(channelRef);
 
     const [isClient, setIsClient] = useState(false);
 
@@ -50,11 +50,7 @@ const UserStats = () => {
         setIsClient(true);
     }, []);
 
-    if (!isClient) {
-        return <div className="flex items-center gap-4"><Skeleton className="h-8 w-24" /><Skeleton className="h-8 w-24" /></div>; 
-    }
-
-    if (!user) {
+    if (!isClient || !user) {
         return null; 
     }
 
@@ -154,6 +150,34 @@ const MobileNav = () => {
   )
 }
 
+const MobileProfileSheet = ({ user, children }: { user: any, children: React.ReactNode }) => {
+    return (
+        <Sheet>
+            <SheetTrigger asChild>{children}</SheetTrigger>
+            <SheetContent side="right" className="p-0">
+                <SheetHeader className="p-4 border-b">
+                    <SheetTitle>Profile & Stats</SheetTitle>
+                </SheetHeader>
+                 <div className="p-4 space-y-4">
+                    <div className="flex flex-col items-center gap-2">
+                        <Avatar className="h-16 w-16">
+                            <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
+                            <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                        <p className="text-lg font-medium leading-none">
+                            {user.displayName || 'User'}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                            {user.email}
+                        </p>
+                    </div>
+                    <UserStats />
+                 </div>
+            </SheetContent>
+        </Sheet>
+    )
+}
+
 export const TopNav = () => {
   const auth = useAuth();
   const [user, loading] = useAuthState(auth);
@@ -169,7 +193,7 @@ export const TopNav = () => {
   };
 
   return (
-    <header className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-10">
+    <header className="flex items-center justify-between px-4 py-3 border-b bg-background sticky top-0 z-50">
       <div className="flex items-center gap-2">
         <MobileNav />
         <Link href="/" className="text-2xl font-serif">aaura</Link>
@@ -186,58 +210,72 @@ export const TopNav = () => {
             {loading ? (
               <Skeleton className="h-8 w-8 rounded-full" />
             ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
-                      <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {user.displayName || 'User'}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {user.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link href={`/profile/${user.uid}`}>
-                          <User className="mr-2 h-4 w-4" />
-                          <span>My Profile</span>
-                      </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                      <Link href="/upload">
-                          <Upload className="mr-2 h-4 w-4" />
-                          <span>{t.sidebar.upload}</span>
-                      </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                      <Link href="/forum">
-                          <MessageSquare className="mr-2 h-4 w-4" />
-                          <span>{t.forum.createPostTitle}</span>
-                      </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                      <Link href="/settings">
-                          <Settings className="mr-2 h-4 w-4" />
-                          <span>{t.sidebar.settings}</span>
-                      </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <>
+                <div className="hidden md:block">
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                        <Avatar className="h-8 w-8">
+                          <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
+                          <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">
+                            {user.displayName || 'User'}
+                          </p>
+                          <p className="text-xs leading-none text-muted-foreground">
+                            {user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                        <DropdownMenuItem asChild>
+                          <Link href={`/profile/${user.uid}`}>
+                              <User className="mr-2 h-4 w-4" />
+                              <span>My Profile</span>
+                          </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                          <Link href="/upload">
+                              <Upload className="mr-2 h-4 w-4" />
+                              <span>{t.sidebar.upload}</span>
+                          </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                          <Link href="/forum">
+                              <MessageSquare className="mr-2 h-4 w-4" />
+                              <span>{t.forum.createPostTitle}</span>
+                          </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                          <Link href="/settings">
+                              <Settings className="mr-2 h-4 w-4" />
+                              <span>{t.sidebar.settings}</span>
+                          </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={handleSignOut}>
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>Log out</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+                 <div className="md:hidden">
+                    <MobileProfileSheet user={user}>
+                       <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                            <Avatar className="h-8 w-8">
+                              <AvatarImage src={user.photoURL || undefined} alt={user.displayName || user.email || ''} />
+                              <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                        </Button>
+                    </MobileProfileSheet>
+                 </div>
+              </>
             ) : (
               <Button asChild>
                 <Link href="/login">Login</Link>

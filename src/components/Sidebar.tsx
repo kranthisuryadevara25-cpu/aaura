@@ -60,6 +60,7 @@ const communityNav = [
   { href: '/forum', label: 'forum', icon: MessageCircle },
   { href: '/channels', label: 'channels', icon: PlusCircle },
   { href: '/media', label: 'media', icon: Film },
+  { href: '/temples/seva', label: 'templeSeva', icon: HandHeart },
 ];
 
 const personalNav = [
@@ -173,5 +174,3 @@ export const Sidebar = () => {
         </nav>
       </ScrollArea>
     </aside>
-  );
-};

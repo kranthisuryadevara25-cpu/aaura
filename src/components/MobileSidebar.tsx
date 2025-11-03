@@ -42,7 +42,7 @@ import { useAuth } from '@/lib/firebase/provider';
 import { ScrollArea } from './ui/scroll-area';
 
 const mainNav = [
-  { href: '/', label: 'home', icon: Home, exact: true },
+  { href: '/feed', label: 'home', icon: Home, exact: true },
   { href: '/reels', label: 'reels', icon: Clapperboard },
   { href: '/virtual-pooja', label: 'virtualPooja', icon: HandHeart },
 ];
@@ -60,6 +60,7 @@ const communityNav = [
   { href: '/forum', label: 'forum', icon: MessageCircle },
   { href: '/channels', label: 'channels', icon: PlusCircle },
   { href: '/media', label: 'media', icon: Film },
+  { href: '/temples/seva', label: 'templeSeva', icon: HandHeart },
 ];
 
 const personalNav = [
@@ -93,28 +94,11 @@ interface NavLinkProps {
 const NavLink = ({ href, label, icon: Icon, exact = false, onLinkClick }: NavLinkProps) => {
   const { t } = useLanguage();
   const pathname = usePathname();
-  const isActive = exact ? pathname === href : pathname.startsWith(href) && href !== '/';
+  let isActive = exact ? pathname === href : pathname.startsWith(href) && href !== '/';
 
-  if (exact && href === '/') {
-      const isActiveHome = pathname === '/' || pathname.startsWith('/#') || pathname.startsWith('/feed');
-       return (
-        <Link
-          href={href}
-          onClick={onLinkClick}
-          className={cn(
-            'flex items-center gap-3 py-2 px-3 rounded-md text-sm transition-colors',
-            isActiveHome
-              ? 'bg-primary/10 text-primary font-semibold'
-              : 'text-foreground/70 hover:bg-secondary hover:text-foreground'
-          )}
-        >
-          <Icon className="h-5 w-5" />
-          <span>
-            {t.sidebar[label as keyof typeof t.sidebar] ||
-              label.charAt(0).toUpperCase() + label.slice(1)}
-          </span>
-        </Link>
-      );
+  // Special case for home/feed
+  if (href === '/feed') {
+      isActive = pathname === '/' || pathname === '/feed';
   }
 
 
@@ -191,6 +175,4 @@ export const MobileSidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => 
         <CollapsibleNavSection title="Marketplace" items={marketplaceNav} onLinkClick={onLinkClick}/>
         {isClient && isSuperAdmin && <CollapsibleNavSection title="Manage" items={adminNav} onLinkClick={onLinkClick}/>}
       </nav>
-    </ScrollArea>
-  );
-};
+    </ScrollArea

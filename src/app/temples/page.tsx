@@ -1,10 +1,9 @@
-
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Palmtree, Loader2, PlusCircle } from 'lucide-react';
+import { ArrowRight, Palmtree, Loader2, PlusCircle, HandHeart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
 import { useCollectionData } from 'react-firebase-hooks/firestore';
@@ -28,12 +27,20 @@ export default function TemplesPage() {
                     {t.temples.description}
                 </p>
             </div>
-             <Button asChild>
-                <Link href="/admin/temples/new">
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Temple
-                </Link>
-            </Button>
+            <div className="flex gap-2">
+                 <Button asChild>
+                    <Link href="/admin/temples/new">
+                        <PlusCircle className="mr-2 h-4 w-4" />
+                        Add Temple
+                    </Link>
+                </Button>
+                <Button asChild variant="outline">
+                    <Link href="/temples/seva">
+                        <HandHeart className="mr-2 h-4 w-4" />
+                        Temple Seva
+                    </Link>
+                </Button>
+            </div>
         </div>
         
         {isLoading ? (

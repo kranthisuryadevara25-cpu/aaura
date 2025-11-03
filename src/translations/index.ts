@@ -27,6 +27,7 @@ export const translations = {
       adminContent: "Content",
       adminReview: "Review Queue",
       adminOrders: "Orders",
+      templeSeva: "Temple Seva",
     },
     topnav: {
       searchPlaceholder: "Search temples, stories, rituals...",
@@ -303,6 +304,7 @@ export const translations = {
       adminContent: "కంటెంట్",
       adminReview: "సమీక్ష క్యూ",
       adminOrders: "ఆర్డర్లు",
+      templeSeva: "దేవాలయ సేవ",
     },
     topnav: {
       searchPlaceholder: "దేవాలయాలు, కథలు, పూజలు శోధించండి...",
@@ -579,6 +581,7 @@ export const translations = {
       adminContent: "कंटेंट",
       adminReview: "समीक्षा कतार",
       adminOrders: "आदेश",
+      templeSeva: "मंदिर सेवा",
     },
     topnav: {
       searchPlaceholder: "मंदिर, देवता, कहानियाँ, अनुष्ठान खोजें...",
@@ -855,6 +858,7 @@ export const translations = {
       adminContent: "सामग्री",
       adminReview: "पुनरावलोकन रांग",
       adminOrders: "ऑर्डर",
+      templeSeva: "मंदिर सेवा",
     },
     topnav: { 
       searchPlaceholder: "मंदिरे, कथा, विधी शोधा...",
@@ -1128,6 +1132,7 @@ export const translations = {
       adminContent: "உள்ளடக்கம்",
       adminReview: "மதிப்பாய்வு வரிசை",
       adminOrders: "ஆர்டர்கள்",
+      templeSeva: "கோவில் சேவை",
     },
     topnav: { 
       searchPlaceholder: "கோயில்கள், கதைகள், சடங்குகளைத் தேடுங்கள்...",
@@ -1401,6 +1406,7 @@ export const translations = {
       adminContent: "ವಿಷಯ",
       adminReview: "ವಿಮರ್ಶೆ ಸರದಿ",
       adminOrders: "ಆರ್ಡರ್‌ಗಳು",
+      templeSeva: "ದೇವಾಲಯ ಸೇವೆ",
     },
     topnav: { 
       searchPlaceholder: "ದೇವಾಲಯಗಳು, ಕಥೆಗಳು, ಆಚರಣೆಗಳನ್ನು ಹುಡುಕಿ...",
@@ -1674,6 +1680,7 @@ export const translations = {
       adminContent: "বিষয়বস্তু",
       adminReview: "পর্যালোচনা সারি",
       adminOrders: "অর্ডার",
+      templeSeva: "মন্দির সেবা",
     },
     topnav: { 
       searchPlaceholder: "মন্দির, গল্প, আচার-অনুষ্ঠান অনুসন্ধান করুন...",
@@ -1922,3 +1929,20 @@ export const translations = {
     }
   },
 };
+```
+- types/feed.ts:
+```ts
+
+export type FeedKind = "video" | "temple" | "story" | "deity" | "post";
+
+export type FeedItem = {
+  id: string;
+  kind: FeedKind;
+  title?: Record<string, string>;      // per-language title e.g. { en: 'x', te: 'y' }
+  description?: Record<string, string>;
+  thumbnail?: string;
+  mediaUrl?: string;                   // for video items
+  meta?: Record<string, any>;          // e.g., views, duration, templeLocation etc.
+};
+
+```

@@ -94,6 +94,11 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   const [isPending, startTransition] = useTransition();
   const { t } = useLanguage();
   const [optimisticComments, setOptimisticComments] = useState<DocumentData[]>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const form = useForm<CommentFormValues>({
     resolver: zodResolver(commentSchema),
@@ -171,44 +176,47 @@ export function Comments({ contentId, contentType }: CommentsProps) {
     <div className="max-w-4xl">
       <h2 className="text-lg font-bold mb-4">{t.forum.discussionTitle} ({optimisticComments?.length || 0})</h2>
 
-      {user ? (
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmitComment)} className="flex items-start gap-4 mb-8">
-            <Avatar className="h-10 w-10 mt-1">
-              <AvatarImage src={user.photoURL || undefined} />
-              <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
-            </Avatar>
-            <FormField
-              control={form.control}
-              name="text"
-              render={({ field }) => (
-                <FormItem className="w-full">
-                  <FormControl>
-                    <Textarea
-                      placeholder={t.forum.commentPlaceholder}
-                      className="resize-none"
-                      rows={1}
-                      onFocus={(e) => e.target.rows = 3}
-                      onBlur={(e) => e.target.rows = 1}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" disabled={isPending}>
-              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-              {t.buttons.comment}
-            </Button>
-          </form>
-        </Form>
-      ) : (
-        <div className="text-sm text-center text-muted-foreground bg-secondary/50 p-4 rounded-lg mb-8">
-            <Link href="/login" className="text-primary underline font-semibold">Log in</Link> to post a comment.
-        </div>
+      {isClient && (
+        <>
+          {user ? (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmitComment)} className="flex items-start gap-4 mb-8">
+                <Avatar className="h-10 w-10 mt-1">
+                  <AvatarImage src={user.photoURL || undefined} />
+                  <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                </Avatar>
+                <FormField
+                  control={form.control}
+                  name="text"
+                  render={({ field }) => (
+                    <FormItem className="w-full">
+                      <FormControl>
+                        <Textarea
+                          placeholder={t.forum.commentPlaceholder}
+                          className="resize-none"
+                          rows={1}
+                          onFocus={(e) => e.target.rows = 3}
+                          onBlur={(e) => e.target.rows = 1}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" disabled={isPending}>
+                  {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
+                  {t.buttons.comment}
+                </Button>
+              </form>
+            </Form>
+          ) : (
+            <div className="text-sm text-center text-muted-foreground bg-secondary/50 p-4 rounded-lg mb-8">
+                <Link href="/login" className="text-primary underline font-semibold">Log in</Link> to post a comment.
+            </div>
+          )}
+        </>
       )}
-
 
       {commentsLoading && optimisticComments.length === 0 ? (
         <div className="space-y-6">

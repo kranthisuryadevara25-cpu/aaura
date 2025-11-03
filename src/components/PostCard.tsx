@@ -50,6 +50,11 @@ export function PostCard({ post }: { post: DocumentData; }) {
   const [user] = useAuthState(auth);
   const [isLiking, startLikeTransition] = useTransition();
   const [showComments, setShowComments] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const authorId = post.authorId;
   const authorRef = useMemo(() => authorId && db ? doc(db, 'users', authorId) : undefined, [db, authorId]);
@@ -143,15 +148,17 @@ export function PostCard({ post }: { post: DocumentData; }) {
       <CardContent>
         <p className="whitespace-pre-wrap">{post.content}</p>
       </CardContent>
-      <CardFooter className="flex justify-between border-t pt-4">
-         <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
-            <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> 
-            {isLiking || likeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : post.likes || 0}
-        </Button>
-        <Button variant="ghost" size="sm" onClick={() => setShowComments(!showComments)} className="flex items-center gap-1.5">
-            <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} comments
-        </Button>
-      </CardFooter>
+      {isClient && (
+        <CardFooter className="flex justify-between border-t pt-4">
+          <Button variant="ghost" size="sm" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
+              <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> 
+              {isLiking || likeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : post.likes || 0}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setShowComments(!showComments)} className="flex items-center gap-1.5">
+              <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} comments
+          </Button>
+        </CardFooter>
+      )}
       {showComments && (
         <CardContent>
             <Separator className="mb-4" />

@@ -4,7 +4,7 @@
 import { initializeApp, getApps, getApp, type FirebaseApp } from "firebase/app";
 import {
   initializeFirestore,
-  memoryLocalCache,
+  persistentLocalCache,
   type Firestore,
 } from "firebase/firestore";
 import { getAuth, type Auth } from "firebase/auth";
@@ -22,7 +22,7 @@ const firebaseConfig = {
 const app: FirebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 
 const db: Firestore = initializeFirestore(app, {
-  localCache: memoryLocalCache(),
+  localCache: persistentLocalCache(),
 });
 
 const auth: Auth = getAuth(app);

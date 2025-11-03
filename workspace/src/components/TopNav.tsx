@@ -28,7 +28,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, Heart } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
-import { FollowListDialog } from "./FollowListDialog";
+import { FollowListDialog } from "@/components/FollowListDialog";
 import { useLanguage } from "@/hooks/use-language";
 import { MobileSidebar } from "./MobileSidebar";
 import { SupportDialog } from "./SupportDialog";

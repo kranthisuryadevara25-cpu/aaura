@@ -186,7 +186,6 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
         muted
         loop
         className="w-full h-full object-contain"
-        loading="lazy"
       />
 
       <div className="absolute inset-0 pointer-events-none">

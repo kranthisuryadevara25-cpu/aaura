@@ -9,7 +9,7 @@ import { SearchBar } from "@/components/SearchBar";
 import type { FeedItem } from "@/types/feed";
 
 export default function FeedPage() {
-  const { allItems, loading, loadMore, canLoadMore } = useFeed();
+  const { allItems, loading } = useFeed(); // Removed loadMore and canLoadMore for simplicity
   const [filteredItems, setFilteredItems] = useState<FeedItem[]>([]);
   const [isClient, setIsClient] = useState(false);
 

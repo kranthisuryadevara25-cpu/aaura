@@ -67,6 +67,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
     const auth = useAuth();
     const { toast } = useToast();
     const [isChanting, startChantTransition] = useTransition();
+    const [user] = useAuthState(auth);
 
     const expectedMantra = contest.mantra || "Jai Shri Ram";
     
@@ -87,7 +88,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
 
     const handleChant = (data: ChantFormValues) => {
          const currentUser = auth.currentUser;
-         if (!currentUser) {
+         if (!currentUser || !user) {
             toast({ variant: 'destructive', title: 'You must be logged in to chant.' });
             return;
         }
@@ -96,16 +97,11 @@ function ContestContent({ contest }: { contest: DocumentData }) {
             const contestRef = doc(db, 'contests', contest.id);
             const chantsCollectionRef = collection(db, `contests/${contest.id}/chants`);
             const contestProgressRef = doc(db, `users/${currentUser.uid}/contestProgress`, contest.id);
-
-            // Fetch username from user doc
-            const userDoc = await db.collection('users').doc(currentUser.uid).get();
-            const username = userDoc.data()?.username || 'anonymous';
-            const userPhotoURL = userDoc.data()?.photoURL || null;
-
+            
             const chantData = {
                 authorId: currentUser.uid,
-                username: username,
-                userPhotoURL: userPhotoURL,
+                username: user.displayName || 'anonymous',
+                userPhotoURL: user.photoURL || null,
                 text: data.mantra,
                 createdAt: serverTimestamp(),
             };
@@ -190,7 +186,7 @@ function ContestContent({ contest }: { contest: DocumentData }) {
                     <div className="font-semibold text-green-600">
                         Contest Completed! Thank you for your participation.
                     </div>
-                 ) : auth.currentUser ? (
+                 ) : user ? (
                     <Form {...form}>
                         <form onSubmit={form.handleSubmit(handleChant)} className="flex items-start gap-2 max-w-lg mx-auto">
                              <FormField

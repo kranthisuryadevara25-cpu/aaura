@@ -133,6 +133,7 @@ export default function UploadPage() {
                 const mediaData = {
                     id: mediaId,
                     creatorId: user.uid,
+                    userId: user.uid, // For consistency with other collections
                     title_en: data.title_en,
                     title_hi: data.title_hi || '',
                     title_te: data.title_te || '',

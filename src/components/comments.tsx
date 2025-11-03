@@ -106,7 +106,7 @@ export function Comments({ contentId, contentType }: CommentsProps) {
   }, [contentType]);
 
   const commentsQuery = useMemo(() => {
-      if (!db || !contentId) return undefined;
+      if (!db || !contentId || !commentsCollectionName) return undefined;
       const commentsCollectionRef = collection(db, `${commentsCollectionName}/${contentId}/comments`);
       return query(commentsCollectionRef, orderBy('createdAt', 'desc'));
   }, [db, commentsCollectionName, contentId]);

@@ -37,7 +37,7 @@ const AuthorAvatar = ({ userId }: { userId: string }) => {
      <Link href={`/profile/${userId}`} className="w-10 h-10 shrink-0">
         <Avatar>
             <AvatarImage src={author.photoURL} />
-            <AvatarFallback>{author.displayName?.[0] || 'A'}</AvatarFallback>
+            <AvatarFallback>{author.displayName?.[0] || 'U'}</AvatarFallback>
         </Avatar>
      </Link>
   )

@@ -65,12 +65,16 @@ export default function CreateChannelPage() {
         const channelRef = doc(db, 'channels', channelId);
 
         const channelData = {
+          id: channelId,
           userId: user.uid,
           name: data.name,
           description_en: data.description_en,
           description_hi: data.description_hi,
           description_te: data.description_te,
           creationDate: serverTimestamp(),
+          subscriberCount: 0,
+          totalViews: 0,
+          totalLikes: 0,
         };
 
         setDoc(channelRef, channelData)

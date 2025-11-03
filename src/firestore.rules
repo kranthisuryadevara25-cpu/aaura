@@ -33,8 +33,14 @@ service cloud.firestore {
       where collectionId in [
         'deities', 'stories', 'epicHeroes', 'temples', 'rituals', 
         'festivals', 'panchang', 'products', 'shops', 
-        'contests', 'challenges', 'channels', 'groups', 'manifestations', 'plans'
+        'contests', 'challenges', 'channels', 'groups', 'manifestations', 'plans',
+        'temple_renovation_requests', 'temple_maintenance_funds'
       ] {
+      allow get, list: if true;
+    }
+    
+    // Explicit rule for Media to allow reads
+    match /media/{mediaId} {
       allow get, list: if true;
     }
 
@@ -47,15 +53,10 @@ service cloud.firestore {
 
       // Default subcollections are readable/writable only by the owner
       match /{subcollection}/{docId} 
-        where subcollection in ['preferences', 'horoscopes', 'badges', 'bookmarks', 'cart', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists'] {
+        where subcollection in ['preferences', 'horoscopes', 'badges', 'bookmarks', 'cart', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists', 'groups'] {
         allow read, write: if isOwner(userId);
       }
       
-      // Allow users to manage their own group memberships
-      match /groups/{groupId} {
-          allow read, write: if isOwner(userId);
-      }
-
       // Followers can be seen by anyone, but only created/deleted with specific logic
       match /followers/{followerId} {
         allow get, list: if true;
@@ -99,59 +100,26 @@ service cloud.firestore {
     // 🔹 Community & User-Generated Content Write Rules
     // ---------------------------------------------------------------------------------------------
     
-    // Explicit rules for Media
-    match /media/{mediaId} {
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
-
-        match /comments/{commentId} {
-            allow get, list: if true;
-            allow create: if isSignedIn();
-            allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
-        }
-
-        match /likes/{userId} {
-            allow get, list: if true;
-            allow create, delete: if isOwner(userId);
-        }
-    }
-    
-    // Explicit rules for Posts
-     match /posts/{postId} {
-        allow get, list: if true;
-        allow create: if isSignedIn();
-        allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
-
-        match /comments/{commentId} {
-            allow get, list: if true;
-            allow create: if isSignedIn();
-            allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
-        }
-
-        match /likes/{userId} {
-            allow get, list: if true;
-            allow create, delete: if isOwner(userId);
-        }
-    }
-    
-    // Other User Generated Content
+    // Any signed-in user can create content in these collections. Only owners/admins can edit/delete.
     match /{collectionId}/{docId}
-      where collectionId in ['manifestations', 'playlists', 'groups'] {
+      where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups', 'temple_renovation_requests', 'temple_maintenance_funds'] {
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.userId) || isOwner(resource.data.creatorId) || isSuperAdmin();
     }
     
-    // Rules for Comments and Likes on other collections
+    // Rules for Comments and Likes subcollections
     match /{collectionId}/{docId} 
-       where collectionId in ['manifestations', 'temples'] {
+       where collectionId in ['media', 'posts', 'manifestations', 'temples'] {
       
+      // Comments can be created by any signed-in user.
+      // Only the author of the comment or an admin can edit/delete it.
       match /comments/{commentId} {
         allow get, list: if true;
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
 
+      // Likes can be created/deleted by any signed-in user for their own like.
       match /likes/{userId} {
         allow get, list: if true;
         allow create, delete: if isOwner(userId);
@@ -161,38 +129,47 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
     // 🔹 Special Cases
     // ---------------------------------------------------------------------------------------------
+    
+    // Rule for group membership
+    match /groups/{groupId}/members/{userId} {
+        allow read, write: if isOwner(userId);
+    }
+    
+    // Rules for Temple Maintenance Fund donations
+    match /temple_maintenance_funds/{fundId}/donations/{donationId} {
+        allow create: if isSignedIn();
+        allow read: if isOwner(request.auth.uid) || isSuperAdmin();
+    }
 
     // Rules for Contests
     match /contests/{contestId} {
         allow get, list: if true;
         allow create, delete: if isSuperAdmin();
+        // Any signed-in user can increment the total chant count
         allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants', 'updatedAt']);
 
+        // Any signed-in user can add a chant document to the subcollection
         match /chants/{chantId} {
             allow create: if isSignedIn();
             allow read: if true;
         }
     }
-    
-    // Rules for Transactions (Donations/Subscriptions)
-    match /transactions/{transactionId} {
-        allow get: if isOwner(resource.data.userId) || isSuperAdmin();
-        allow list: if isSuperAdmin(); // Only admins can list all transactions
-        allow create: if isSignedIn();
-        allow update, delete: if isSuperAdmin();
-    }
 
-
-    // Rules for Orders
-    match /orders/{orderId} {
-      allow get, list: if isOwner(resource.data.userId) || isSuperAdmin();
+    // Rules for Orders and Transactions
+     match /orders/{orderId} {
+      allow get: if isOwner(resource.data.userId) || isSuperAdmin();
+      allow list: if isSuperAdmin();
       allow create: if isSignedIn();
       allow update, delete: if isSuperAdmin();
     }
 
-    // Rule for group membership
-    match /groups/{groupId}/members/{userId} {
-        allow read, write: if isOwner(userId);
+     match /transactions/{transactionId} {
+        allow get: if isOwner(resource.data.userId) || isSuperAdmin();
+        allow list: if isSuperAdmin();
+        allow create: if isSignedIn();
+        allow update, delete: if isSuperAdmin();
     }
   }
 }
+
+  

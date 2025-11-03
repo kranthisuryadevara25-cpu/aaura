@@ -455,11 +455,7 @@
           }
         }
       },
-      "required": [
-        "id",
-        "name_en",
-        "status"
-      ]
+      "required": ["id", "name_en", "status"]
     },
     "Shop": {
       "title": "Shop",
@@ -902,7 +898,8 @@
         "tags": { "type": "array", "items": { "type": "string" } },
         "createdAt": { "type": "string", "format": "date-time" },
         "likes": { "type": "number" },
-        "commentsCount": { "type": "number" }
+        "commentsCount": { "type": "number" },
+        "status": { "type": "string", "enum": ["published", "pending", "archived"] }
       },
       "required": ["contextId", "contextType", "authorId", "content", "createdAt"]
     },
@@ -959,14 +956,64 @@
         "properties": {
             "id": { "type": "string" },
             "userId": { "type": "string" },
-            "planId": { "type": "string" },
-            "quantity": { "type": "number" },
+            "items": { "type": "array", "description": "An array of purchased plans/donations", "items": { "type": "object", "properties": { "planId": { "type": "string" }, "name": { "type": "string" }, "quantity": { "type": "number" }, "amount": { "type": "number" } } } },
             "totalAmount": { "type": "number" },
             "status": { "type": "string", "enum": ["pending", "completed", "failed"] },
             "createdAt": { "type": "string", "format": "date-time" },
             "paymentGatewayId": { "type": "string", "description": "ID from the payment gateway (e.g., Razorpay Order ID)." }
         },
-        "required": ["id", "userId", "planId", "totalAmount", "status"]
+        "required": ["id", "userId", "items", "totalAmount", "status"]
+    },
+    "TempleRenovationRequest": {
+        "title": "Temple Renovation Request",
+        "type": "object",
+        "description": "A user-submitted proposal for renovating a temple.",
+        "properties": {
+            "id": { "type": "string" },
+            "templeName": { "type": "string" },
+            "location": { "type": "string" },
+            "description": { "type": "string" },
+            "progressStatus": { "type": "string", "enum": ["planning", "in-progress", "completed"] },
+            "proposedStartDate": { "type": "string", "format": "date" },
+            "proposedCompletionDate": { "type": "string", "format": "date" },
+            "hasSocietyRegistration": { "type": "boolean" },
+            "hasApprovals": { "type": "boolean" },
+            "imageUrl": { "type": "string", "format": "uri" },
+            "videoUrl": { "type": "string", "format": "uri" },
+            "createdBy": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "status": { "type": "string", "enum": ["pending", "approved", "rejected"] }
+        },
+        "required": ["templeName", "location", "description", "createdBy"]
+    },
+    "TempleMaintenanceFund": {
+        "title": "Temple Maintenance Fund",
+        "type": "object",
+        "description": "A fund set up for the monthly maintenance of a temple.",
+        "properties": {
+            "id": { "type": "string" },
+            "templeId": { "type": "string", "description": "ID of the temple this fund is for." },
+            "monthlyTarget": { "type": "number" },
+            "bankAccountDetails": { "type": "string", "description": "Bank details for direct donations." },
+            "contactPerson": { "type": "string" },
+            "phone": { "type": "string" },
+            "description": { "type": "string" },
+            "createdBy": { "type": "string" },
+            "createdAt": { "type": "string", "format": "date-time" },
+            "totalCollected": { "type": "number" }
+        },
+        "required": ["templeId", "monthlyTarget", "createdBy"]
+    },
+    "MaintenanceDonation": {
+        "title": "Maintenance Donation",
+        "type": "object",
+        "description": "A record of a single donation to a maintenance fund.",
+        "properties": {
+            "userId": { "type": "string" },
+            "amount": { "type": "number" },
+            "date": { "type": "string", "format": "date-time" }
+        },
+        "required": ["userId", "amount", "date"]
     }
   },
   "auth": {
@@ -1315,8 +1362,34 @@
                 "schema": { "$ref": "#/entities/Transaction" },
                 "description": "Logs all payment transactions for donations and subscriptions."
             }
+       },
+       {
+            "path": "/temple_renovation_requests/{requestId}",
+            "definition": {
+                "entityName": "TempleRenovationRequest",
+                "schema": { "$ref": "#/entities/TempleRenovationRequest" },
+                "description": "Stores user-submitted requests for temple renovation funds."
+            }
+       },
+       {
+            "path": "/temple_maintenance_funds/{fundId}",
+            "definition": {
+                "entityName": "TempleMaintenanceFund",
+                "schema": { "$ref": "#/entities/TempleMaintenanceFund" },
+                "description": "Stores funds for monthly temple maintenance."
+            }
+       },
+       {
+            "path": "/temple_maintenance_funds/{fundId}/donations/{donationId}",
+            "definition": {
+                "entityName": "MaintenanceDonation",
+                "schema": { "$ref": "#/entities/MaintenanceDonation" },
+                "description": "Subcollection to track individual donations to a maintenance fund."
+            }
        }
     ],
     "reasoning": "The data model is designed for a content platform with e-commerce, a temple library, and a community forum. It now includes a robust social graph with followers and following subcollections under each user. This is more efficient for querying social connections than the previous subscription model. All public content (media, posts, etc.) remains in top-level collections, while user-specific data is nested for security and scalability. Likes are now modeled as subcollections on content items, which is a scalable pattern for tracking user interactions. Added a posts subcollection to temples for community discussion."
   }
 }
+
+  

@@ -7,7 +7,7 @@ import Image from "next/image";
 import { BookHeart, Palmtree, Sparkles, Users, ArrowRight } from "lucide-react";
 import { Icons } from "@/components/ui/icons";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 
 
 const features = [
@@ -50,6 +50,16 @@ const features = [
 ];
 
 export default function LandingPage() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+    
+    if (!isClient) {
+        return null; // Or a loading spinner
+    }
+
     return (
         <Carousel
           opts={{

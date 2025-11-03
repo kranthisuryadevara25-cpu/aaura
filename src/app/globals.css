@@ -4,27 +4,27 @@
 
 @layer base {
   :root {
-    /* 🌞 Light Mode (Saffron Aura) */
-    --background: 48 96% 96%;
+    /* 🌞 Light Mode (Saffron & Cream) */
+    --background: 39 80% 97%; /* Very light cream */
     --foreground: 24 10% 3.9%;
-    --card: 48 96% 96%;
+    --card: 39 80% 97%;
     --card-foreground: 24 10% 3.9%;
-    --popover: 48 96% 96%;
+    --popover: 39 80% 97%;
     --popover-foreground: 24 10% 3.9%;
 
-    /* 🪻 Serene Lavender Primary */
-    --primary: 240 50% 96.1%;
-    --primary-foreground: 240 5.9% 10%;
+    /* 🟠 Rich Saffron Primary */
+    --primary: 31 93% 58%; /* Rich saffron/orange */
+    --primary-foreground: 24 10% 3.9%;
 
-    /* 🤍 Ghost White Secondary */
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
+    /* 🤍 Off-White Secondary */
+    --secondary: 39 30% 94%;
+    --secondary-foreground: 24 10% 3.9%;
 
     /* 🌫️ Muted Neutral */
-    --muted: 240 4.8% 95.9%;
+    --muted: 39 20% 90%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    /* ✨ Muted Gold Accent */
+    /* ✨ Soft Gold Accent */
     --accent: 45 93% 82%;
     --accent-foreground: 45 9% 20%;
 
@@ -33,9 +33,9 @@
     --destructive-foreground: 0 0% 98%;
 
     /* Borders / Inputs */
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --border: 39 20% 85%;
+    --input: 39 20% 85%;
+    --ring: 31 93% 58%;
     --radius: 0.75rem;
 
     /* ✨ Fonts */
@@ -44,7 +44,7 @@
   }
 
   .dark {
-    /* 🌚 Dark Mode (Midnight Bloom) */
+    /* 🌚 Dark Mode (Midnight Saffron) */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -52,9 +52,9 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    /* 🪻 Serene Lavender Primary */
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    /* 🟠 Bright Saffron Primary */
+    --primary: 31 93% 65%; /* Brighter Saffron for dark mode */
+    --primary-foreground: 24 10% 3.9%;
 
     /* 🖤 Charcoal Secondary */
     --secondary: 240 3.7% 15.9%;
@@ -64,7 +64,7 @@
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    /* ✨ Muted Gold Accent */
+    /* ✨ Soft Gold Accent */
     --accent: 45 93% 82%;
     --accent-foreground: 45 9% 20%;
 
@@ -75,6 +75,6 @@
     /* Borders / Inputs */
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
+    --ring: 31 93% 65%;
   }
 }

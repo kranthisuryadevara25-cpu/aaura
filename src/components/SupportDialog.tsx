@@ -17,7 +17,7 @@ import { useAuth, useFirestore } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { Loader2, Heart, Plus, Minus } from 'lucide-react';
 import { monetizationPlans, type Plan } from '@/lib/plans';
-import { Card } from './ui/card';
+import { Card, CardContent } from './ui/card';
 import { cn } from '@/lib/utils';
 import { createPaymentOrder } from '@/ai/flows/create-payment-order';
 import { writeBatch, doc, collection, serverTimestamp } from 'firebase/firestore';

@@ -67,7 +67,11 @@ service cloud.firestore {
       match /challenges/{docId} { allow read, write: if isOwner(userId); }
       match /contestProgress/{docId} { allow read, write: if isOwner(userId); }
       match /virtualOfferings/{docId} { allow read, write: if isOwner(userId); }
-      match /groups/{docId} { allow read, write: if isOwner(userId); }
+      
+      // Explicit rule for joining/leaving groups
+      match /groups/{groupId} {
+          allow read, write: if isOwner(userId);
+      }
     }
     
     // ---------------------------------------------------------------------------------------------

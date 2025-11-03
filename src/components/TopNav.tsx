@@ -25,12 +25,13 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X, Users } from "lucide-react";
+import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X, Users, Heart } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "./FollowListDialog";
 import { useLanguage } from "@/hooks/use-language";
 import { MobileSidebar } from "./MobileSidebar";
+import { SupportDialog } from "./SupportDialog";
 
 const UserStats = () => {
     const auth = useAuth();
@@ -98,6 +99,7 @@ const UserStats = () => {
                     <p className="text-xs text-muted-foreground">Subscribers</p>
                 </div>
             )}
+             <SupportDialog />
         </div>
     )
 }

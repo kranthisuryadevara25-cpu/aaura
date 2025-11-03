@@ -16,7 +16,7 @@ service cloud.firestore {
     }
 
     function isSuperAdmin() {
-      // Replace with your actual Super Admin UID
+      // This is a placeholder UID. In a real app, manage this securely.
       return request.auth.uid == "9RwsoEEkWPR3Wpv6wKZmhos1xTG2";
     }
 
@@ -72,6 +72,11 @@ service cloud.firestore {
       // Playlist references are private
        match /playlists/{playlistId} {
         allow read, write: if isOwner(userId);
+      }
+      
+      // User's group memberships
+      match /groups/{groupId} {
+          allow read, write: if isOwner(userId);
       }
     }
     
@@ -150,5 +155,9 @@ service cloud.firestore {
       allow update, delete: if isSuperAdmin();
     }
 
+    // Rule for group membership
+    match /groups/{groupId}/members/{userId} {
+        allow read, write: if isOwner(userId);
+    }
   }
 }

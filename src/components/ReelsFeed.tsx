@@ -6,7 +6,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { Heart, MessageCircle, Play, Pause, Share2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Comments } from "./comments";
+import { Comments } from "@/components/comments";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -139,6 +139,27 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
       })
   };
   
+  const handleShare = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const shareData = {
+        title: getText(item.title),
+        text: getText(item.description),
+        url: window.location.origin + `/watch/${contentId}`,
+    };
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+        } else {
+            // Fallback for desktop browsers
+            await navigator.clipboard.writeText(shareData.url);
+            toast({ title: "Link Copied!", description: "The video link has been copied to your clipboard." });
+        }
+    } catch (error) {
+        console.error("Share failed:", error);
+        toast({ variant: 'destructive', title: 'Share Failed', description: 'Could not share the video.' });
+    }
+  };
+
   const commentContentType = useMemo(() => {
     const kind = items[0]?.kind;
     if (kind === 'video') return 'media';
@@ -213,7 +234,7 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
                     </div>
                 </SheetContent>
             </Sheet>
-             <button className="flex flex-col items-center gap-1">
+             <button onClick={handleShare} className="flex flex-col items-center gap-1">
                 <Share2 className="w-8 h-8 drop-shadow-lg" />
                 <span className="text-xs drop-shadow-md">Share</span>
             </button>

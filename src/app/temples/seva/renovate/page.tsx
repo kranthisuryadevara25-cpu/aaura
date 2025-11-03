@@ -35,7 +35,7 @@ const formSchema = z.object({
   proposedCompletionDate: z.date().optional(),
   hasSocietyRegistration: z.boolean().default(false),
   hasApprovals: z.boolean().default(false),
-  imageFile: z.any().refine(file => file?.length === 1, "An image of the temple is required."),
+  imageFile: z.any().optional(),
   videoFile: z.any().optional(),
 });
 
@@ -71,12 +71,16 @@ export default function RequestRenovationPage() {
       }
 
       try {
-        toast({ title: "Uploading media...", description: "Please wait while we upload your files." });
+        toast({ title: "Submitting request...", description: "Please wait while we process your submission." });
         
-        const imageFile = data.imageFile[0];
+        const imageFile = data.imageFile?.[0];
         const videoFile = data.videoFile?.[0];
 
-        const imageUrl = await uploadMedia(imageFile, "renovation_requests");
+        let imageUrl = null;
+        if (imageFile) {
+            imageUrl = await uploadMedia(imageFile, "renovation_requests");
+        }
+        
         const videoUrl = videoFile ? await uploadMedia(videoFile, "renovation_requests") : null;
         
         const requestData = {
@@ -208,7 +212,7 @@ export default function RequestRenovationPage() {
                  </div>
 
                 <FormField control={form.control} name="imageFile" render={({ field }) => (
-                    <FormItem><FormLabel>Temple Image</FormLabel><FormControl><Input type="file" accept="image/*" {...form.register("imageFile")} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Temple Image (Optional)</FormLabel><FormControl><Input type="file" accept="image/*" {...form.register("imageFile")} /></FormControl><FormMessage /></FormItem>
                 )} />
 
                  <FormField control={form.control} name="videoFile" render={({ field }) => (

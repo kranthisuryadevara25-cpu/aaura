@@ -97,6 +97,12 @@ service cloud.firestore {
         allow get, list: if true;
         allow create, update, delete: if isSuperAdmin();
     }
+    
+    match /playlists/{playlistId} {
+        allow get, list: if true;
+        allow create: if isSignedIn();
+        allow update, delete: if isOwner(resource.data.creatorId) || isSuperAdmin();
+    }
 
     // ---------------------------------------------------------------------------------------------
     // 🔹 User-Generated & Interactive Content
@@ -113,6 +119,7 @@ service cloud.firestore {
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
       match /likes/{userId} {
+        allow get, list: if true;
         allow create, delete: if isOwner(userId);
       }
     }
@@ -128,6 +135,7 @@ service cloud.firestore {
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
       match /likes/{userId} {
+        allow get, list: if true;
         allow create, delete: if isOwner(userId);
       }
     }
@@ -143,6 +151,7 @@ service cloud.firestore {
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
       match /likes/{userId} {
+        allow get, list: if true;
         allow create, delete: if isOwner(userId);
       }
     }
@@ -151,6 +160,7 @@ service cloud.firestore {
       allow get, list: if true;
       allow create, update, delete: if isOwner(channelId) || isSuperAdmin();
       match /subscribers/{userId} {
+        allow get, list: if true;
         allow create, delete: if isOwner(userId);
       }
     }

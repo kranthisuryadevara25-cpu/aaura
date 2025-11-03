@@ -29,16 +29,16 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
   const [isCommentSheetOpen, setCommentSheetOpen] = useState(false);
   
   const item = items[0];
-  const contentId = useMemo(() => item?.id.replace(`${item?.kind}-`, ''), [item]);
+  const contentId = useMemo(() => item?.id.replace(`${item.kind}-`, ''), [item]);
   const contentCollection = useMemo(() => {
     if (item?.kind === 'video') return 'media';
     return `${item?.kind}s`;
   }, [item?.kind]);
 
-  const contentRef = useMemo(() => doc(db, contentCollection, contentId), [db, contentCollection, contentId]);
+  const contentRef = useMemo(() => contentId && db ? doc(db, contentCollection, contentId) : undefined, [db, contentCollection, contentId]);
   const [contentData] = useDocumentData(contentRef);
   
-  const likeRef = useMemo(() => user ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined, [user, db, contentCollection, contentId]);
+  const likeRef = useMemo(() => user && contentRef ? doc(db, `${contentCollection}/${contentId}/likes/${user.uid}`) : undefined, [user, db, contentCollection, contentId, contentRef]);
   const [like, loadingLike] = useDocumentData(likeRef);
   
   const initialLikes = item.meta?.likes || contentData?.likes || 0;
@@ -186,6 +186,7 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
         muted
         loop
         className="w-full h-full object-contain"
+        loading="lazy"
       />
 
       <div className="absolute inset-0 pointer-events-none">

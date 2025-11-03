@@ -15,10 +15,10 @@ export function RightSidebar() {
   const { language, t } = useLanguage();
   const db = useFirestore();
 
-  const festivalsQuery = query(collection(db, 'festivals'), limit(1));
+  const festivalsQuery = query(collection(db, 'festivals'), orderBy('date', 'desc'), limit(1));
   const [upcomingFestivals, festivalsLoading] = useCollectionData(festivalsQuery, { idField: 'id' });
 
-  const deitiesQuery = query(collection(db, 'deities'), limit(1));
+  const deitiesQuery = query(collection(db, 'deities'), orderBy('name_en', 'asc'), limit(1));
   const [suggestedDeities, deitiesLoading] = useCollectionData(deitiesQuery, { idField: 'id' });
 
   const contestsQuery = query(collection(db, 'contests'), where('status', '==', 'active'), limit(1));
@@ -27,7 +27,7 @@ export function RightSidebar() {
   const storiesQuery = query(collection(db, 'stories'), orderBy('createdAt', 'desc'), limit(1));
   const [featuredSagas, sagasLoading] = useCollectionData(storiesQuery, { idField: 'id' });
 
-  const templesQuery = query(collection(db, 'temples'), limit(1));
+  const templesQuery = query(collection(db, 'temples'), orderBy('name_en', 'asc'), limit(1));
   const [popularTemples, templesLoading] = useCollectionData(templesQuery, { idField: 'id' });
 
   return (

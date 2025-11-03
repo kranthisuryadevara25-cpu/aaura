@@ -96,7 +96,7 @@ const NavLink = ({ href, label, icon: Icon, exact = false, onLinkClick }: NavLin
   const isActive = exact ? pathname === href : pathname.startsWith(href) && href !== '/';
 
   if (exact && href === '/') {
-      const isActiveHome = pathname === '/' || pathname.startsWith('/#');
+      const isActiveHome = pathname === '/' || pathname.startsWith('/#') || pathname.startsWith('/feed');
        return (
         <Link
           href={href}

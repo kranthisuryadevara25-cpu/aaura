@@ -91,7 +91,7 @@ export default function LandingPage() {
                     <path d="M172,128a4,4,0,0,0,4,4,44,44,0,0,1-88,0,4,4,0,0,0-8,0,52,52,0,0,0,104,0A4,4,0,0,0,172,128Z"></path>
                   </svg>
                 <h1 className="text-5xl md:text-7xl font-bold tracking-tighter font-headline text-primary mt-2 drop-shadow-lg">
-                    Aaura
+                    aaura
                 </h1>
                 <p className="max-w-[600px] text-white/90 md:text-lg mt-2 drop-shadow-md">
                     Your daily dose of spiritual wellness. Explore ancient wisdom, connect with communities, and deepen your practice.

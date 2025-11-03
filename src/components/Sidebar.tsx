@@ -42,7 +42,7 @@ import { useAuth } from '@/lib/firebase/provider';
 import { ScrollArea } from './ui/scroll-area';
 
 const mainNav = [
-  { href: '/', label: 'home', icon: Home, exact: true },
+  { href: '/feed', label: 'home', icon: Home, exact: true },
   { href: '/reels', label: 'reels', icon: Clapperboard },
   { href: '/virtual-pooja', label: 'virtualPooja', icon: HandHeart },
 ];
@@ -92,28 +92,11 @@ interface NavLinkProps {
 const NavLink = ({ href, label, icon: Icon, exact = false }: NavLinkProps) => {
   const { t } = useLanguage();
   const pathname = usePathname();
-  const isActive = exact ? pathname === href : pathname.startsWith(href) && href !== '/';
+  let isActive = exact ? pathname === href : pathname.startsWith(href) && href !== '/';
 
-  // Special case for home
-  if (exact && href === '/') {
-      const isActiveHome = pathname === '/' || pathname.startsWith('/#');
-       return (
-        <Link
-          href={href}
-          className={cn(
-            'flex items-center gap-3 py-2 px-3 rounded-md text-sm transition-colors',
-            isActiveHome
-              ? 'bg-primary/10 text-primary font-semibold'
-              : 'text-foreground/70 hover:bg-secondary hover:text-foreground'
-          )}
-        >
-          <Icon className="h-5 w-5" />
-          <span>
-            {t.sidebar[label as keyof typeof t.sidebar] ||
-              label.charAt(0).toUpperCase() + label.slice(1)}
-          </span>
-        </Link>
-      );
+  // Special case for home/feed
+  if (href === '/feed') {
+      isActive = pathname === '/' || pathname === '/feed';
   }
 
 

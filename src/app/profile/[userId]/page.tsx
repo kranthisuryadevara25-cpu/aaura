@@ -8,7 +8,7 @@ import { doc, writeBatch, increment, serverTimestamp, collection, query, where, 
 import { useFirestore, useAuth } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Image from 'next/image';
-import { Loader2, User, CheckCircle, PlusCircle, UserPlus, Mail, Cake, List, UserMinus, Phone, Palmtree } from 'lucide-react';
+import { Loader2, User, CheckCircle, PlusCircle, UserPlus, Mail, Cake, List, UserMinus, Phone, Palmtree, Edit2 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useLanguage } from '@/hooks/use-language';
@@ -32,8 +32,107 @@ import { PostCard } from '@/components/PostCard';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { temples as allTemples } from '@/lib/temples';
+import type { Temple } from '@/lib/temples';
+
 
 export const dynamic = 'force-dynamic';
+
+function AboutTab({ profile }: { profile: any }) {
+    return (
+        <Card>
+            <CardHeader>
+                <CardTitle>About {profile.fullName}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm text-muted-foreground">
+                <div className="flex items-center gap-3">
+                    <Mail className="h-4 w-4"/>
+                    <span>{profile.email}</span>
+                </div>
+                {profile.mobile && (
+                    <div className="flex items-center gap-3">
+                        <Phone className="h-4 w-4"/>
+                        <span>{profile.mobile}</span>
+                    </div>
+                )}
+                {profile.birthDate && (
+                    <div className="flex items-center gap-3">
+                        <Cake className="h-4 w-4"/>
+                        <span>Born on {format(new Date(profile.birthDate), 'MMMM d, yyyy')}</span>
+                    </div>
+                )}
+                {profile.zodiacSign && (
+                    <div className="flex items-center gap-3">
+                        <CheckCircle className="h-4 w-4"/>
+                        <span>{profile.zodiacSign}</span>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
+function ActivityTab({ userId }: { userId: string }) {
+    const db = useFirestore();
+    const postsQuery = useMemo(() => query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc')), [db, userId]);
+    const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
+
+    return (
+        <div>
+            {loadingPosts ? (
+                <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
+            ) : posts && posts.length > 0 ? (
+                <div className="space-y-6">
+                    {posts.map(post => <PostCard key={post.id} post={post} />)}
+                </div>
+            ) : (
+                <div className="text-center py-16 border-2 border-dashed rounded-lg">
+                    <List className="mx-auto h-12 w-12 text-muted-foreground/50" />
+                    <h2 className="mt-6 text-2xl font-semibold text-foreground">No Activity Yet</h2>
+                    <p className="mt-2 text-muted-foreground">This user hasn't posted anything yet.</p>
+                </div>
+            )}
+        </div>
+    );
+}
+
+function TempleJourneyTab({ profile }: { profile: any }) {
+
+    const templesVisited = useMemo(() => allTemples.filter(t => profile.templesVisited?.includes(t.slug)), [profile.templesVisited]);
+    const templesPlanning = useMemo(() => allTemples.filter(t => profile.templesPlanning?.includes(t.slug)), [profile.templesPlanning]);
+
+    const TempleGrid = ({ temples }: { temples: Temple[] }) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {temples.map(temple => (
+                 <Link href={`/temples/${temple.slug}`} key={temple.id}>
+                    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+                        <div className="relative aspect-video">
+                            <Image src={temple.media.images[0].url} alt={temple.name.en} fill className="object-cover" />
+                        </div>
+                        <CardHeader>
+                            <CardTitle className="text-base">{temple.name.en}</CardTitle>
+                            <CardDescription>{temple.location.city}, {temple.location.state}</CardDescription>
+                        </CardHeader>
+                    </Card>
+                </Link>
+            ))}
+        </div>
+    );
+    
+    return (
+        <div className="space-y-8">
+            <div>
+                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-primary"><Palmtree /> Temples Visited</h3>
+                {templesVisited.length > 0 ? <TempleGrid temples={templesVisited} /> : <p className="text-muted-foreground">No temples visited yet.</p>}
+            </div>
+            <div>
+                 <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-primary"><Palmtree /> Planning to Visit</h3>
+                {templesPlanning.length > 0 ? <TempleGrid temples={templesPlanning} /> : <p className="text-muted-foreground">No temples in the travel plan yet.</p>}
+            </div>
+        </div>
+    );
+}
 
 export default function UserProfilePage() {
   const params = useParams();
@@ -47,9 +146,6 @@ export default function UserProfilePage() {
 
   const profileRef = useMemo(() => doc(db, 'users', userId), [db, userId]);
   const [profile, loadingProfile] = useDocumentData(profileRef, { idField: 'id' });
-
-  const postsQuery = useMemo(() => query(collection(db, 'posts'), where('authorId', '==', userId), orderBy('createdAt', 'desc')), [db, userId]);
-  const [posts, loadingPosts] = useCollectionData(postsQuery, { idField: 'id' });
 
   const followingRef = useMemo(() => currentUser ? doc(db, `users/${currentUser.uid}/following`, userId) : undefined, [currentUser, db, userId]);
   const [following, loadingFollowing] = useDocumentData(followingRef);
@@ -117,7 +213,7 @@ export default function UserProfilePage() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden mb-8">
         <div className="relative h-48 w-full bg-secondary">
             <Image
                 src={`https://picsum.photos/seed/${userId}-banner/1200/400`}
@@ -173,7 +269,7 @@ export default function UserProfilePage() {
                         )}
                         {isOwner && (
                              <Button variant="outline" onClick={() => router.push('/settings')}>
-                                Edit Profile
+                                <Edit2 className="mr-2 h-4 w-4" /> Edit Profile
                             </Button>
                         )}
                     </div>
@@ -187,86 +283,27 @@ export default function UserProfilePage() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="md:col-span-1 space-y-6">
-             <Card>
-                <CardHeader>
-                    <CardTitle>About {profile.fullName}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3 text-sm text-muted-foreground">
-                    <div className="flex items-center gap-3">
-                        <Mail className="h-4 w-4"/>
-                        <span>{profile.email}</span>
-                    </div>
-                    {profile.mobile && (
-                         <div className="flex items-center gap-3">
-                            <Phone className="h-4 w-4"/>
-                            <span>{profile.mobile}</span>
-                        </div>
-                    )}
-                    {profile.birthDate && (
-                         <div className="flex items-center gap-3">
-                            <Cake className="h-4 w-4"/>
-                            <span>Born on {format(new Date(profile.birthDate), 'MMMM d, yyyy')}</span>
-                        </div>
-                    )}
-                    {profile.zodiacSign && (
-                         <div className="flex items-center gap-3">
-                            <CheckCircle className="h-4 w-4"/>
-                            <span>{profile.zodiacSign}</span>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-             {profile.templesVisited?.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Palmtree className="text-primary"/> Temples Visited</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
-                        {profile.templesVisited.map((slug: string) => (
-                            <Link href={`/temples/${slug}`} key={slug}>
-                                <Badge variant="secondary" className="hover:bg-primary/20">{slug.replace(/-/g, ' ')}</Badge>
-                            </Link>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
-
-            {profile.templesPlanning?.length > 0 && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2"><Palmtree className="text-primary"/> Planning to Visit</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex flex-wrap gap-2">
-                        {profile.templesPlanning.map((slug: string) => (
-                            <Link href={`/temples/${slug}`} key={slug}>
-                                <Badge variant="outline" className="hover:bg-primary/20">{slug.replace(/-/g, ' ')}</Badge>
-                            </Link>
-                        ))}
-                    </CardContent>
-                </Card>
-            )}
-        </div>
-        <div className="md:col-span-2">
-            <h3 className="text-2xl font-bold mb-4">Activity Feed</h3>
-             {loadingPosts ? (
-                <div className="flex justify-center items-center h-48"><Loader2 className="h-8 w-8 animate-spin" /></div>
-            ) : posts && posts.length > 0 ? (
-                <div className="space-y-6">
-                    {posts.map(post => <PostCard key={post.id} post={post} />)}
+        <Tabs defaultValue="activity" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 max-w-2xl mx-auto">
+                <TabsTrigger value="activity">Activity</TabsTrigger>
+                <TabsTrigger value="temples">Temple Journey</TabsTrigger>
+                <TabsTrigger value="about">About</TabsTrigger>
+            </TabsList>
+            <TabsContent value="activity" className="mt-6">
+                <div className="max-w-2xl mx-auto">
+                    <ActivityTab userId={userId} />
                 </div>
-            ) : (
-                <div className="text-center py-16 border-2 border-dashed rounded-lg">
-                    <List className="mx-auto h-12 w-12 text-muted-foreground/50" />
-                    <h2 className="mt-6 text-2xl font-semibold text-foreground">No Activity Yet</h2>
-                    <p className="mt-2 text-muted-foreground">This user hasn't posted anything yet.</p>
+            </TabsContent>
+            <TabsContent value="temples" className="mt-6">
+                 <TempleJourneyTab profile={profile} />
+            </TabsContent>
+            <TabsContent value="about" className="mt-6">
+                <div className="max-w-2xl mx-auto">
+                    <AboutTab profile={profile} />
                 </div>
-            )}
-        </div>
-      </div>
-
+            </TabsContent>
+        </Tabs>
     </main>
   );
 }
+

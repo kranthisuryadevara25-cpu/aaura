@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useTransition, useEffect, useMemo } from 'react';
+import { useState, useTransition, useMemo, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,6 +24,7 @@ import { writeBatch, doc, collection, serverTimestamp } from 'firebase/firestore
 import { Label } from '@/components/ui/label';
 import { Checkbox } from './ui/checkbox';
 import { Separator } from './ui/separator';
+import { Input } from './ui/input';
 
 
 declare global {
@@ -33,7 +34,10 @@ declare global {
 }
 
 interface SelectionState {
-    [key: string]: number; // planId: quantity (1 for subscription, 0+ for donations)
+    [key: string]: {
+        quantity: number;
+        customAmount?: number;
+    }
 }
 
 export function SupportDialog() {
@@ -46,38 +50,49 @@ export function SupportDialog() {
   const [isProcessing, startProcessing] = useTransition();
 
   const totalAmount = useMemo(() => {
-    return Object.entries(selection).reduce((total, [planId, quantity]) => {
+    return Object.entries(selection).reduce((total, [planId, data]) => {
       const plan = monetizationPlans.find(p => p.id === planId);
-      return total + (plan ? plan.amount * quantity : 0);
+      if (!plan) return total;
+      
+      if (plan.type === 'custom_donation') {
+          return total + (data.customAmount || 0);
+      }
+      return total + (plan.amount * data.quantity);
     }, 0);
   }, [selection]);
   
-  const handleSelectionChange = (planId: string, type: 'toggle' | 'increment' | 'decrement') => {
+  const handleSelectionChange = (plan: Plan, type: 'toggle' | 'increment' | 'decrement') => {
       setSelection(prev => {
           const newSelection = { ...prev };
-          const currentQuantity = newSelection[planId] || 0;
-          const plan = monetizationPlans.find(p => p.id === planId);
-          if (!plan) return prev;
-
+          const currentData = newSelection[plan.id] || { quantity: 0, customAmount: plan.amount };
+          
           if (type === 'toggle') {
-              if (plan.period === 'one-time') {
-                 // For one-time donations, toggle between 0 and 1
-                 newSelection[planId] = currentQuantity > 0 ? 0 : 1;
+              if (currentData.quantity > 0) {
+                  delete newSelection[plan.id];
               } else {
-                 // For subscriptions, toggle between 0 and 1
-                 newSelection[planId] = currentQuantity > 0 ? 0 : 1;
+                  newSelection[plan.id] = { quantity: 1, customAmount: plan.amount };
               }
           } else if (type === 'increment') {
-              newSelection[planId] = (currentQuantity || 0) + 1;
+              newSelection[plan.id] = { ...currentData, quantity: currentData.quantity + 1 };
           } else if (type === 'decrement') {
-              newSelection[planId] = Math.max(0, (currentQuantity || 0) - 1);
-          }
-          
-          // Remove from selection if quantity is 0
-          if(newSelection[planId] === 0) {
-              delete newSelection[planId];
+              const newQuantity = Math.max(0, currentData.quantity - 1);
+              if (newQuantity === 0) {
+                  delete newSelection[plan.id];
+              } else {
+                  newSelection[plan.id] = { ...currentData, quantity: newQuantity };
+              }
           }
 
+          return newSelection;
+      })
+  }
+
+  const handleCustomAmountChange = (planId: string, amount: number) => {
+      setSelection(prev => {
+          const newSelection = { ...prev };
+          if (newSelection[planId]) {
+              newSelection[planId] = { ...newSelection[planId], customAmount: amount };
+          }
           return newSelection;
       })
   }
@@ -93,9 +108,14 @@ export function SupportDialog() {
             toast({ title: 'Initiating secure payment...', description: 'Please wait.' });
             
             const batch = writeBatch(db);
-            const transactionItems = Object.entries(selection).map(([planId, quantity]) => {
+            const transactionItems = Object.entries(selection).map(([planId, data]) => {
                 const plan = monetizationPlans.find(p => p.id === planId);
-                return { ...plan, quantity };
+                return {
+                    planId: plan!.id,
+                    name: plan!.name,
+                    quantity: data.quantity,
+                    amount: plan!.type === 'custom_donation' ? data.customAmount : plan!.amount,
+                };
             });
 
             const transactionRef = doc(collection(db, 'transactions'));
@@ -137,7 +157,9 @@ export function SupportDialog() {
         </DialogHeader>
         <div className="space-y-4 py-4">
             {monetizationPlans.map((p) => {
-                const isSelected = (selection[p.id] || 0) > 0;
+                const currentSelection = selection[p.id];
+                const isSelected = !!currentSelection;
+
                 return (
                 <Card 
                     key={p.id}
@@ -147,7 +169,7 @@ export function SupportDialog() {
                         <Checkbox 
                             id={p.id}
                             checked={isSelected}
-                            onCheckedChange={() => handleSelectionChange(p.id, 'toggle')}
+                            onCheckedChange={() => handleSelectionChange(p, 'toggle')}
                             className="mr-4 mt-1"
                         />
                         <div className="flex-1">
@@ -161,13 +183,28 @@ export function SupportDialog() {
                             {p.period === 'year' && <p className="text-xs text-muted-foreground">per year</p>}
                         </div>
                     </div>
-                    {isSelected && p.period === 'one-time' && (
+                    {isSelected && (p.type === 'donation') && (
                         <CardContent className="pt-0 pl-12">
                              <div className="flex items-center gap-2">
                                 <Label htmlFor={`quantity-${p.id}`} className="text-sm">Quantity:</Label>
-                                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleSelectionChange(p.id, 'decrement')}><Minus className="h-4 w-4"/></Button>
-                                <span className="font-bold w-8 text-center">{selection[p.id] || 0}</span>
-                                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleSelectionChange(p.id, 'increment')}><Plus className="h-4 w-4"/></Button>
+                                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleSelectionChange(p, 'decrement')}><Minus className="h-4 w-4"/></Button>
+                                <span className="font-bold w-8 text-center">{currentSelection.quantity}</span>
+                                <Button variant="outline" size="icon" className="h-6 w-6" onClick={() => handleSelectionChange(p, 'increment')}><Plus className="h-4 w-4"/></Button>
+                            </div>
+                        </CardContent>
+                    )}
+                    {isSelected && p.type === 'custom_donation' && (
+                        <CardContent className="pt-0 pl-12">
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor={`amount-${p.id}`} className="text-sm">Amount (₹):</Label>
+                                <Input
+                                    id={`amount-${p.id}`}
+                                    type="number"
+                                    value={currentSelection.customAmount}
+                                    onChange={(e) => handleCustomAmountChange(p.id, Number(e.target.value))}
+                                    className="h-8 w-24"
+                                    min={1}
+                                />
                             </div>
                         </CardContent>
                     )}

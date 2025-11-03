@@ -1,10 +1,11 @@
 
 export type Plan = {
-    id: "sub_annual_49" | "donate_cow_feed" | "donate_sadhu_meal";
+    id: "sub_annual_49" | "donate_cow_feed" | "donate_sadhu_meal" | "donate_ayyappa_yatra";
     name: string;
     amount: number;
     currency: "INR";
     period: "year" | "one-time";
+    type: "subscription" | "donation" | "custom_donation";
     description: string;
 }
 
@@ -15,6 +16,7 @@ export const monetizationPlans: Plan[] = [
     amount: 49,
     currency: "INR",
     period: "year",
+    type: "subscription",
     description: "Access premium features for 1 year."
   },
   {
@@ -23,6 +25,7 @@ export const monetizationPlans: Plan[] = [
     amount: 9,
     currency: "INR",
     period: "one-time",
+    type: "donation",
     description: "Donate ₹9 to feed one cow for a day. You can choose multiple cows."
   },
   {
@@ -31,6 +34,16 @@ export const monetizationPlans: Plan[] = [
     amount: 36,
     currency: "INR",
     period: "one-time",
+    type: "donation",
     description: "Donate ₹36 to provide one meal to a Sadhu. You can choose multiple Sadhus."
+  },
+  {
+    id: "donate_ayyappa_yatra",
+    name: "Sabarimala Yatra Support",
+    amount: 99,
+    currency: "INR",
+    period: "one-time",
+    type: "custom_donation",
+    description: "Contribute to help 500 Ayyappa Swamys with their pilgrimage costs. Suggested donation is ₹99."
   }
 ];

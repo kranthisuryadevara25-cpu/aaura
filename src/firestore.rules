@@ -42,15 +42,6 @@ service cloud.firestore {
     match /media/{mediaId} {
       allow get, list: if true;
     }
-    
-    // Public read access for temple funding projects
-    match /temple_renovation_requests/{requestId} {
-      allow get, list: if true;
-    }
-    match /temple_maintenance_funds/{fundId} {
-      allow get, list: if true;
-    }
-
 
     // ---------------------------------------------------------------------------------------------
     // 🔹 User Profiles and User-Specific Subcollections
@@ -110,9 +101,27 @@ service cloud.firestore {
     
     // Any signed-in user can create content in these collections. Only owners/admins can edit/delete.
     match /{collectionId}/{docId}
-      where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups', 'temple_renovation_requests', 'temple_maintenance_funds'] {
+      where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups'] {
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.creatorId) || isSuperAdmin();
+    }
+
+    // Consolidated rules for temple funding
+    match /temple_renovation_requests/{requestId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isOwner(resource.data.creatorId) || isSuperAdmin();
+    }
+    match /temple_maintenance_funds/{fundId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isOwner(resource.data.creatorId) || isSuperAdmin();
+
+      // Donations to a fund
+      match /donations/{donationId} {
+        allow create: if isSignedIn();
+        allow read: if isOwner(request.auth.uid) || isSuperAdmin();
+      }
     }
     
     // Rules for Comments and Likes subcollections
@@ -141,12 +150,6 @@ service cloud.firestore {
     // Rule for group membership
     match /groups/{groupId}/members/{userId} {
         allow read, write: if isOwner(userId);
-    }
-    
-    // Rules for Temple Maintenance Fund donations
-    match /temple_maintenance_funds/{fundId}/donations/{donationId} {
-        allow create: if isSignedIn();
-        allow read: if isOwner(request.auth.uid) || isSuperAdmin();
     }
 
     // Rules for Contests

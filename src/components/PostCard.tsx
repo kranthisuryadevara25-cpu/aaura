@@ -18,7 +18,7 @@ import Link from 'next/link';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Comments } from '@/components/comments';
 import { ClientOnlyTime } from '@/components/ClientOnlyTime';
-import { Separator } from './ui/separator';
+import { Separator } from '@/components/ui/separator';
 
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {

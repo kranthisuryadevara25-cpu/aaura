@@ -6,7 +6,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { Heart, MessageCircle, Play, Pause, Share2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Comments } from "./comments";
+import { Comments } from "@/components/comments";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useToast } from "@/hooks/use-toast";

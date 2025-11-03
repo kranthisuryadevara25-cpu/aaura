@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import Link from "next/link";
-import { Button } from "./ui/button";
+import { Button } from "@/components/ui/button";
 import { useAuth, useFirestore } from "@/lib/firebase/provider";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { useDocumentData, useCollectionData } from 'react-firebase-hooks/firestore';
@@ -26,12 +26,12 @@ import {
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, Heart } from "lucide-react";
-import { Skeleton } from "./ui/skeleton";
-import { Badge } from "./ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { FollowListDialog } from "@/components/FollowListDialog";
 import { useLanguage } from "@/hooks/use-language";
 import { MobileSidebar } from "@/components/MobileSidebar";
-import { SupportDialog } from "./SupportDialog";
+import { SupportDialog } from "@/components/SupportDialog";
 
 const UserStats = () => {
     const auth = useAuth();

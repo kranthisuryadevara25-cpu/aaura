@@ -28,11 +28,12 @@ service cloud.firestore {
     // 🔹 Global Read-Only Rule for Public Content
     // ---------------------------------------------------------------------------------------------
     // All collections listed here are publicly readable by anyone.
+    // Write access is handled on a case-by-case basis below.
     match /{collectionId}/{docId} 
       where collectionId in [
         'deities', 'stories', 'epicHeroes', 'temples', 'rituals', 
         'festivals', 'panchang', 'products', 'shops', 
-        'contests', 'challenges', 'channels', 'groups', 'posts', 'manifestations', 'media'
+        'contests', 'challenges', 'channels', 'groups', 'media', 'posts', 'manifestations'
       ] {
       allow get, list: if true;
     }
@@ -44,9 +45,9 @@ service cloud.firestore {
       allow get: if true;
       allow create, update, delete: if isOwner(userId) || isSuperAdmin();
 
-      // Subcollections for user-specific, private data
+      // Default subcollections are readable/writable only by the owner or admin
       match /{subcollection}/{docId} 
-        where subcollection in ['preferences', 'horoscopes', 'badges', 'bookmarks', 'cart', 'challenges', 'contestProgress', 'virtualOfferings', 'subscriptions', 'playlists'] {
+        where subcollection in ['preferences', 'horoscopes', 'badges', 'bookmarks', 'cart', 'challenges', 'contestProgress', 'virtualOfferings'] {
         allow read, write: if isOwner(userId) || isSuperAdmin();
       }
 
@@ -62,8 +63,18 @@ service cloud.firestore {
         allow get, list: if true;
         allow create, delete: if isOwner(userId) && isNotSelf(followedId);
       }
+       
+      // Channel subscriptions are private to the user
+      match /subscriptions/{channelId} {
+        allow read, write: if isOwner(userId);
+      }
+
+      // Playlist references are private
+       match /playlists/{playlistId} {
+        allow read, write: if isOwner(userId);
+      }
       
-      // Allow users to manage their own group memberships
+      // User's group memberships
       match /groups/{groupId} {
           allow read, write: if isOwner(userId);
       }
@@ -74,7 +85,7 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
     // Admin can manage all core content types
     match /{collectionId}/{docId}
-       where collectionId in ['deities', 'stories', 'epicHeroes', 'temples', 'rituals', 'festivals', 'panchang', 'products', 'shops', 'challenges', 'contests'] {
+       where collectionId in ['deities', 'stories', 'epicHeroes', 'temples', 'rituals', 'festivals', 'panchang', 'products', 'shops', 'challenges'] {
         allow write: if isSuperAdmin();
     }
 
@@ -95,24 +106,38 @@ service cloud.firestore {
     
     // Any signed-in user can create content in these collections. Only owners/admins can edit/delete.
     match /{collectionId}/{docId}
-      where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups'] {
+      where collectionId in ['posts', 'manifestations', 'playlists', 'groups'] {
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.userId) || isOwner(resource.data.creatorId) || isSuperAdmin();
     }
     
-    // Rules for Comments and Likes subcollections
+    // Explicit rules for Media, as it has special interactions
+    match /media/{mediaId} {
+        allow create: if isSignedIn();
+        allow update, delete: if isOwner(resource.data.userId) || isSuperAdmin();
+
+        match /comments/{commentId} {
+            allow get, list: if true;
+            allow create: if isSignedIn();
+            allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
+        }
+
+        match /likes/{userId} {
+            allow get, list: if true;
+            allow create, delete: if isOwner(userId);
+        }
+    }
+
+    // Rules for Comments and Likes on other collections
     match /{collectionId}/{docId} 
-       where collectionId in ['media', 'posts', 'manifestations', 'temples'] {
+       where collectionId in ['posts', 'manifestations', 'temples'] {
       
-      // Comments can be created by any signed-in user.
-      // Only the author of the comment or an admin can edit/delete it.
       match /comments/{commentId} {
         allow get, list: if true;
         allow create: if isSignedIn();
         allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
 
-      // Likes can be created/deleted by any signed-in user for their own like.
       match /likes/{userId} {
         allow get, list: if true;
         allow create, delete: if isOwner(userId);
@@ -122,17 +147,15 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
     // 🔹 Special Cases
     // ---------------------------------------------------------------------------------------------
-    // Rule for group membership
-    match /groups/{groupId}/members/{userId} {
-        allow read, write: if isOwner(userId);
-    }
-    
+
     // Rules for Contests
     match /contests/{contestId} {
-        // totalChants can be updated by any signed-in user.
+        allow get, list: if true;
+        allow create, delete: if isSuperAdmin();
+        // Any signed-in user can increment the total chant count
         allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants', 'updatedAt']);
 
-        // Chants can be added by any signed in user
+        // Any signed-in user can add a chant document to the subcollection
         match /chants/{chantId} {
             allow create: if isSignedIn();
             allow read: if true;
@@ -144,6 +167,11 @@ service cloud.firestore {
       allow get, list: if isOwner(resource.data.userId) || isSuperAdmin();
       allow create: if isSignedIn();
       allow update, delete: if isSuperAdmin();
+    }
+
+    // Rule for group membership
+    match /groups/{groupId}/members/{userId} {
+        allow read, write: if isOwner(userId);
     }
   }
 }

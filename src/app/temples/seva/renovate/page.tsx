@@ -29,6 +29,7 @@ const formSchema = z.object({
   templeName: z.string().min(5, "Temple name is required."),
   location: z.string().min(5, "Location is required."),
   description: z.string().min(50, "Please provide a detailed description (min 50 characters)."),
+  totalGoal: z.coerce.number().min(1000, "Fund goal must be at least ₹1000."),
   progressStatus: z.enum(['planning', 'in-progress', 'completed']),
   proposedStartDate: z.date().optional(),
   proposedCompletionDate: z.date().optional(),
@@ -54,6 +55,7 @@ export default function RequestRenovationPage() {
       templeName: '',
       location: '',
       description: '',
+      totalGoal: 50000,
       progressStatus: 'planning',
       hasSocietyRegistration: false,
       hasApprovals: false,
@@ -134,6 +136,10 @@ export default function RequestRenovationPage() {
 
                 <FormField control={form.control} name="description" render={({ field }) => (
                   <FormItem><FormLabel>Description of Renovation</FormLabel><FormControl><Textarea {...field} rows={5} /></FormControl><FormDescription>Describe the current state and the work that needs to be done.</FormDescription><FormMessage /></FormItem>
+                )} />
+
+                <FormField control={form.control} name="totalGoal" render={({ field }) => (
+                  <FormItem><FormLabel>Total Funding Goal (INR)</FormLabel><FormControl><Input type="number" {...field} /></FormControl><FormDescription>The total amount required for the renovation project.</FormDescription><FormMessage /></FormItem>
                 )} />
                 
                  <FormField control={form.control} name="progressStatus" render={({ field }) => (

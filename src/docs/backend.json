@@ -973,6 +973,7 @@
             "templeName": { "type": "string" },
             "location": { "type": "string" },
             "description": { "type": "string" },
+            "totalGoal": { "type": "number", "description": "The total funding goal for the project." },
             "progressStatus": { "type": "string", "enum": ["planning", "in-progress", "completed"] },
             "proposedStartDate": { "type": "string", "format": "date" },
             "proposedCompletionDate": { "type": "string", "format": "date" },

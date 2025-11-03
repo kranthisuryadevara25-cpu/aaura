@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useCollection } from 'react-firebase-hooks/firestore';
@@ -43,6 +44,9 @@ function RenovationProjects() {
                             </CardHeader>
                             <CardContent>
                                 <p className="text-sm text-muted-foreground line-clamp-3">{project.description}</p>
+                                <div className="mt-4">
+                                  <p className="text-sm font-semibold">Funding Goal: <span className="text-primary">₹{project.totalGoal.toLocaleString()}</span></p>
+                                </div>
                                 <Badge className="mt-2">{project.progressStatus}</Badge>
                             </CardContent>
                             <CardFooter>

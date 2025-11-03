@@ -84,11 +84,15 @@ export default function RequestRenovationPage() {
         const videoUrl = videoFile ? await uploadMedia(videoFile, "renovation_requests") : null;
         
         const requestData = {
-          ...data,
+          templeName: data.templeName,
+          location: data.location,
+          description: data.description,
+          totalGoal: data.totalGoal,
+          progressStatus: data.progressStatus,
           proposedStartDate: data.proposedStartDate ? format(data.proposedStartDate, "yyyy-MM-dd") : null,
           proposedCompletionDate: data.proposedCompletionDate ? format(data.proposedCompletionDate, "yyyy-MM-dd") : null,
-          imageFile: undefined, // remove file objects
-          videoFile: undefined,
+          hasSocietyRegistration: data.hasSocietyRegistration,
+          hasApprovals: data.hasApprovals,
           imageUrl,
           videoUrl,
           createdBy: user.uid,

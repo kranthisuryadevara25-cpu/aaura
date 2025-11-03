@@ -11,6 +11,12 @@ service firebase.storage {
       allow read: if true;
       allow write: if request.auth != null && request.auth.uid == userId;
     }
+    
+    // Rule for temple renovation request uploads
+    match /renovation_requests/{allPaths=**} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
 
     // Secure rule for user profile images.
     match /users/{userId}/profileImage/{fileName} {

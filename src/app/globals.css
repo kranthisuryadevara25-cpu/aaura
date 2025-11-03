@@ -4,82 +4,89 @@
 
 @layer base {
   :root {
-    --background: 35 100% 97%;
-    --foreground: 20 14% 12%;
-    --card: 35 100% 98%;
-    --card-foreground: 20 14% 12%;
-    --popover: 35 100% 98%;
-    --popover-foreground: 20 14% 12%;
-    --primary: 35 91% 55%; /* Saffron/Marigold */
-    --primary-foreground: 20 14% 12%;
-    --secondary: 40 15% 95%;
-    --secondary-foreground: 20 10% 25%;
-    --muted: 40 15% 95%;
-    --muted-foreground: 20 5% 45%;
-    --accent: 0 59% 40%; /* Maroon */
-    --accent-foreground: 0 0% 100%;
+    /* 🌞 Light Mode (Saffron Aura) */
+    --background: 48 96% 96%;
+    --foreground: 24 10% 3.9%;
+    --card: 48 96% 96%;
+    --card-foreground: 24 10% 3.9%;
+    --popover: 48 96% 96%;
+    --popover-foreground: 24 10% 3.9%;
+
+    /* 🪻 Serene Lavender Primary */
+    --primary: 240 50% 96.1%;
+    --primary-foreground: 240 5.9% 10%;
+
+    /* 🤍 Ghost White Secondary */
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    /* 🌫️ Muted Neutral */
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    /* ✨ Muted Gold Accent */
+    --accent: 45 93% 82%;
+    --accent-foreground: 45 9% 20%;
+
+    /* ⚠️ Destructive: Soft Red */
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 35 20% 85%;
-    --input: 35 20% 85%;
-    --ring: 35 91% 55%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --sidebar-background: 35 100% 98%;
-    --sidebar-foreground: 20 14% 12%;
-    --sidebar-primary: 35 91% 55%;
-    --sidebar-primary-foreground: 20 14% 12%;
-    --sidebar-accent: 35 20% 90%;
-    --sidebar-accent-foreground: 20 14% 12%;
-    --sidebar-border: 35 20% 85%;
-    --sidebar-ring: 35 91% 55%;
+    --destructive-foreground: 0 0% 98%;
+
+    /* Borders / Inputs */
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.75rem;
+
+    /* ✨ Fonts */
+    --font-heading: 'Playfair Display', serif;
+    --font-body: 'PT Sans', sans-serif;
   }
 
   .dark {
+    /* 🌚 Dark Mode (Midnight Bloom) */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 262.1 83.3% 57.8%;
-    --primary-foreground: 0 0% 100%;
+
+    /* 🪻 Serene Lavender Primary */
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    /* 🖤 Charcoal Secondary */
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
+
+    /* 🌫️ Muted Neutral */
     --muted: 240 3.7% 15.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 35 91% 55%;
-    --accent-foreground: 24 10% 10%;
+    --muted-foreground: 240 5% 64.9%;
+
+    /* ✨ Muted Gold Accent */
+    --accent: 45 93% 82%;
+    --accent-foreground: 45 9% 20%;
+
+    /* ⚠️ Destructive: Soft Red */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
+
+    /* Borders / Inputs */
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 262.1 83.3% 57.8%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 10% 3.9%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 262.1 83.3% 57.8%;
-    --sidebar-primary-foreground: 210 40% 98%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 262.1 83.3% 57.8%;
+    --ring: 240 4.9% 83.9%;
   }
-}
 
-@layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+  }
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-heading);
   }
 }

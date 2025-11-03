@@ -5,7 +5,7 @@ import { LanguageProvider } from "@/hooks/use-language";
 import { FirebaseProvider } from "@/lib/firebase/provider";
 import { Sidebar } from "@/components/Sidebar";
 import { TopNav } from "@/components/TopNav";
-import { RightSidebar } from "@/app/components/right-sidebar";
+import { RightSidebar } from "@/components/right-sidebar";
 
 export default function RootLayout({
   children,

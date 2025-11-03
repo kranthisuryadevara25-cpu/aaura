@@ -7,6 +7,11 @@ import { Sidebar } from "@/components/Sidebar";
 import { TopNav } from "@/components/TopNav";
 import { RightSidebar } from "@/app/components/right-sidebar";
 
+export const metadata = {
+  title: "Aaura",
+  description: "Your daily dose of spiritual wellness.",
+};
+
 export default function RootLayout({
   children,
 }: {

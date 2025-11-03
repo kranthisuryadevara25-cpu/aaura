@@ -1,5 +1,5 @@
 
-import "./globals.css";
+import "@/app/globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/hooks/use-language";
 import { FirebaseProvider } from "@/lib/firebase/provider";

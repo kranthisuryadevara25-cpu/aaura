@@ -172,8 +172,11 @@ service cloud.firestore {
     match /groups/{groupId} {
         allow get, list: if true;
         allow create: if isSignedIn();
-        allow update: if isSuperAdmin();
-        allow delete: if isSuperAdmin();
+        allow update, delete: if isSuperAdmin(); // Only admin can edit/delete group details
+        
+        match /members/{userId} {
+          allow read, write: if isOwner(userId) || isSuperAdmin();
+        }
     }
 
     match /orders/{orderId} {

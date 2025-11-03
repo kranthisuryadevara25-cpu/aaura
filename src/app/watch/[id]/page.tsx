@@ -33,6 +33,8 @@ export default function WatchPage() {
         return;
     }
     
+    if (loading) return; // Don't navigate if the next items are still loading
+
     // Otherwise, play the next video in the feed
     if (upNextItems.length > 0) {
       const nextItem = upNextItems[0];

@@ -77,7 +77,7 @@ export default function ReelsClient() {
           data-index={index}
           className="reel-item h-screen w-full snap-start flex items-center justify-center"
         >
-          {Math.abs(index - visibleItemIndex) <= VIRTUALIZATION_BUFFER ? (
+          {Math.abs(index - visibleItemIndex) <= VIRTUALIZATION_BUFFER && item ? (
             <ReelsFeed items={[item]} isVisible={index === visibleItemIndex} />
           ) : (
             <div className="h-full w-full bg-black flex items-center justify-center">

@@ -8,16 +8,14 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageCircle, ThumbsUp } from 'lucide-react';
-import { Separator } from './ui/separator';
-import { Button } from '@/components/ui/button';
-import { useTransition, useState, useMemo } from 'react';
+import { Button } from './ui/button';
+import { useTransition, useState, useMemo, useEffect } from 'react';
 import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
 import type { DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import Link from 'next/link';
 import { Skeleton } from './ui/skeleton';
-import { useLanguage } from '@/hooks/use-language';
 import { Comments } from './comments';
 import { ClientOnlyTime } from './ClientOnlyTime';
 
@@ -39,14 +37,13 @@ const AuthorAvatar = ({ userId }: { userId: string }) => {
      <Link href={`/profile/${userId}`} className="w-10 h-10 shrink-0">
         <Avatar>
             <AvatarImage src={author.photoURL} />
-            <AvatarFallback>{author.displayName?.[0] || 'A'}</AvatarFallback>
+            <AvatarFallback>{author.displayName?.[0] || 'U'}</AvatarFallback>
         </Avatar>
      </Link>
   )
 }
 
 export function PostCard({ post }: { post: DocumentData; }) {
-  const { language } = useLanguage();
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
@@ -65,7 +62,13 @@ export function PostCard({ post }: { post: DocumentData; }) {
 
   const likeRef = useMemo(() => (user && post.id && db) ? doc(db, `posts/${post.id}/likes/${user.uid}`) : undefined, [db, post.id, user]);
   const [likeDoc, likeLoading] = useDocumentData(likeRef);
-  const isLiked = !!likeDoc;
+  
+  const [isLiked, setIsLiked] = useState(false);
+
+  useEffect(() => {
+    setIsLiked(!!likeDoc);
+  }, [likeDoc]);
+
 
   const handleLike = () => {
     if (!user || !postRef || !likeRef) {
@@ -145,10 +148,16 @@ export function PostCard({ post }: { post: DocumentData; }) {
             <ThumbsUp className={`mr-2 h-4 w-4 ${isLiked ? 'text-blue-500 fill-current' : ''}`} /> 
             {isLiking || likeLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : post.likes || 0}
         </Button>
-        <div className="flex items-center text-sm text-muted-foreground">
+        <Button variant="ghost" size="sm" onClick={() => setShowComments(!showComments)} className="flex items-center gap-1.5">
             <MessageCircle className="mr-2 h-4 w-4" /> {post.commentsCount || 0} comments
-        </div>
+        </Button>
       </CardFooter>
+      {showComments && (
+        <CardContent>
+            <Separator className="mb-4" />
+            <Comments contentId={post.id} contentType="post" />
+        </CardContent>
+      )}
     </Card>
   );
 }

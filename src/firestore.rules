@@ -14,45 +14,30 @@ service cloud.firestore {
     function isOwner(userId) {
       return isSignedIn() && request.auth.uid == userId;
     }
-    
-    function isCreator(docData) {
-        return isOwner(docData.creatorId) || isOwner(docData.authorId) || isOwner(docData.userId);
-    }
 
     function isSuperAdmin() {
-      // This is a placeholder UID. In a real app, manage this securely.
       return request.auth.uid == "9RwsoEEkWPR3Wpv6wKZmhos1xTG2";
     }
+
+    function isCreator(docData) {
+      return isOwner(docData.creatorId) || isOwner(docData.authorId) || isOwner(docData.userId);
+    }
+    
 
     // ---------------------------------------------------------------------------------------------
     // 🔹 Public Read-Only Content
     // ---------------------------------------------------------------------------------------------
-    // These collections can be read by anyone. Writes are handled by more specific rules below.
+    // These collections can be read by anyone, but only written to by admins.
     match /{collectionId}/{docId} 
       where collectionId in [
         'deities', 'stories', 'epicHeroes', 'temples', 'rituals', 
         'festivals', 'panchang', 'products', 'shops', 
-        'contests', 'challenges', 'channels', 'groups', 'manifestations', 'plans'
+        'contests', 'challenges', 'plans'
       ] {
       allow get, list: if true;
+      allow write: if isSuperAdmin();
     }
     
-    match /media/{mediaId} {
-      allow get, list: if true;
-    }
-
-    // ---------------------------------------------------------------------------------------------
-    // 🔹 Admin-Only Write Collections
-    // ---------------------------------------------------------------------------------------------
-    match /{collectionId}/{docId}
-       where collectionId in ['deities', 'stories', 'epicHeroes', 'temples', 'rituals', 'festivals', 'panchang', 'products', 'shops', 'challenges', 'plans'] {
-        allow write: if isSuperAdmin();
-    }
-    
-    match /channels/{channelId} {
-        allow write: if isOwner(channelId) || isSuperAdmin();
-    }
-
     // ---------------------------------------------------------------------------------------------
     // 🔹 User Profiles & Subcollections
     // ---------------------------------------------------------------------------------------------
@@ -84,7 +69,7 @@ service cloud.firestore {
       }
       
       match /{subcollection}/{docId} 
-        where subcollection in ['preferences', 'horoscopes', 'badges', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists'] {
+        where subcollection in ['preferences', 'horoscopes', 'badges', 'challenges', 'contestProgress', 'virtualOfferings', 'playlists', 'groups'] {
         allow read, write: if isOwner(userId);
       }
     }
@@ -92,7 +77,8 @@ service cloud.firestore {
     // ---------------------------------------------------------------------------------------------
     // 🔹 User-Generated Content Collections
     // ---------------------------------------------------------------------------------------------
-    // Rules for content any signed-in user can create.
+    // These collections can be created by any signed-in user.
+    // They can only be updated/deleted by the creator or a super admin.
     match /{collectionId}/{docId}
       where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups', 'temple_renovation_requests', 'temple_maintenance_funds'] {
         allow get, list: if true;
@@ -109,7 +95,7 @@ service cloud.firestore {
       match /comments/{commentId} {
         allow get, list: if true;
         allow create: if isSignedIn();
-        allow update, delete: if isCreator(resource.data) || isSuperAdmin();
+        allow update, delete: if isOwner(resource.data.authorId) || isSuperAdmin();
       }
 
       match /likes/{userId} {
@@ -122,9 +108,14 @@ service cloud.firestore {
     // 🔹 Special Collection Rules
     // ---------------------------------------------------------------------------------------------
     
-    match /channels/{channelId}/subscribers/{subscriberId} {
-         allow create, delete: if isOwner(subscriberId);
-         allow get, list: if true;
+    match /channels/{channelId} {
+        allow get, list: if true;
+        allow write: if isOwner(channelId) || isSuperAdmin();
+        
+        match /subscribers/{subscriberId} {
+             allow create, delete: if isOwner(subscriberId);
+             allow get, list: if true;
+        }
     }
     
     match /groups/{groupId}/members/{userId} {
@@ -132,6 +123,8 @@ service cloud.firestore {
     }
 
     match /contests/{contestId} {
+        allow get, list: if true;
+        allow create, delete: if isSuperAdmin();
         allow update: if isSignedIn() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['totalChants', 'updatedAt']);
 
         match /chants/{chantId} {

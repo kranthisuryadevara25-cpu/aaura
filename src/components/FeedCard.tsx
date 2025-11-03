@@ -51,6 +51,11 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const [user] = useAuthState(auth);
   const [isLiking, startLikeTransition] = useTransition();
   const [showComments, setShowComments] = React.useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const contentCollection = useMemo(() => {
     if (item.kind === 'video') return 'media';
@@ -149,7 +154,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
   const currentItemData = contentData || item;
   const title = getText(currentItemData.title);
   const description = getText(currentItemData.description);
-  const authorId = currentItemData.meta?.authorId || currentItemData.creatorId || currentItemData.userId;
+  const authorId = currentItemData.meta?.authorId || currentItemData.userId;
   const engagement = contentLoading ? item.meta : (currentItemData.meta || currentItemData);
   const thumbnail = currentItemData.thumbnail || currentItemData.thumbnailUrl || "https://picsum.photos/seed/placeholder/800/450";
   const hint = currentItemData.meta?.imageHint || "image";
@@ -185,7 +190,7 @@ export const FeedCard: React.FC<{ item: FeedItem }> = ({ item }) => {
                     &bull;
                     <ClientOnlyTime date={createdAtDate} fallback="a while ago" />
                 </div>
-                 {canInteract && (
+                 {canInteract && isClient && (
                     <div className="flex items-center gap-2 mt-2 text-muted-foreground">
                         <Button variant="ghost" size="sm" className="flex items-center gap-1.5 text-xs px-2" onClick={handleLike} disabled={!user || isLiking || likeLoading}>
                             {isLiking || likeLoading ? <Loader2 className="w-4 h-4 animate-spin"/> : <Heart className={`w-4 h-4 ${isLiked ? "text-red-500 fill-current" : ""}`} />} 

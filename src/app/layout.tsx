@@ -21,7 +21,7 @@ const fontBody = PT_Sans({
 });
 
 export const metadata = {
-  title: "Aura",
+  title: "Aaura",
   description: "Your daily dose of spiritual wellness.",
 };
 

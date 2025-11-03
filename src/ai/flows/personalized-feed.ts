@@ -149,6 +149,7 @@ const mapToFeedItem = (doc: DocumentData, kind: FeedItem['kind']): FeedItem | nu
             return {
                 id: `post-${doc.id}`,
                 kind: 'post',
+                title: undefined,
                 description: { en: data.content },
                 createdAt: createdAt.toISOString(),
                 meta: { authorId: data.authorId, likes: data.likes, commentsCount: data.commentsCount, contextId: data.contextId, contextType: data.contextType },

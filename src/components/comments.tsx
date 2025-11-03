@@ -21,6 +21,7 @@ import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ClientOnlyTime } from '@/components/ClientOnlyTime';
+import { Separator } from './ui/separator';
 
 
 const commentSchema = z.object({

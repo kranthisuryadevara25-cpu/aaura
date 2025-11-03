@@ -1,4 +1,3 @@
-
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { LanguageProvider } from "@/hooks/use-language";
@@ -34,7 +33,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          "antialiased bg-background text-foreground",
+          "min-h-screen bg-background font-sans text-foreground antialiased",
           fontHeadline.variable,
           fontBody.variable
         )}
@@ -45,8 +44,10 @@ export default function RootLayout({
               <TopNav />
               <div className="flex flex-1 overflow-hidden">
                 <Sidebar />
-                <main className="flex-1 overflow-y-auto p-4 md:p-6">
-                  {children}
+                <main className="flex-1 overflow-y-auto">
+                  <div className="container mx-auto p-4 sm:p-6 lg:p-8">
+                     {children}
+                  </div>
                 </main>
                 <aside className="hidden xl:block w-80 border-l p-4 shrink-0 overflow-y-auto">
                   <RightSidebar />

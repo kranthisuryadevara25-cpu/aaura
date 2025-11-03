@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* 🌞 Light Mode (Saffron & Cream) */
+    /* 🌞 Light Mode (Saffron & Cream) - Refined for better contrast and feel */
     --background: 39 80% 97%; /* Very light cream */
     --foreground: 24 10% 3.9%;
     --card: 39 80% 97%;
@@ -12,8 +12,8 @@
     --popover: 39 80% 97%;
     --popover-foreground: 24 10% 3.9%;
 
-    /* 🟠 Rich Saffron Primary */
-    --primary: 31 93% 58%; /* Rich saffron/orange */
+    /* 🟠 Softer, more golden Primary */
+    --primary: 35 91% 55%; /* Slightly softer saffron/orange */
     --primary-foreground: 24 10% 3.9%;
 
     /* 🤍 Off-White Secondary */
@@ -24,8 +24,8 @@
     --muted: 39 20% 90%;
     --muted-foreground: 240 3.8% 46.1%;
 
-    /* ✨ Soft Gold Accent */
-    --accent: 45 93% 82%;
+    /* ✨ Richer Gold Accent */
+    --accent: 45 85% 75%; /* Richer, softer gold */
     --accent-foreground: 45 9% 20%;
 
     /* ⚠️ Destructive: Soft Red */
@@ -35,8 +35,8 @@
     /* Borders / Inputs */
     --border: 39 20% 85%;
     --input: 39 20% 85%;
-    --ring: 31 93% 58%;
-    --radius: 0.75rem;
+    --ring: 35 91% 55%;
+    --radius: 0.5rem; /* Slightly reduced for a more refined look */
 
     /* ✨ Fonts */
     --font-heading: 'Playfair Display', serif;
@@ -44,7 +44,7 @@
   }
 
   .dark {
-    /* 🌚 Dark Mode (Midnight Saffron) */
+    /* 🌚 Dark Mode (Midnight Saffron) - Refined */
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
     --card: 240 10% 3.9%;
@@ -52,8 +52,8 @@
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
 
-    /* 🟠 Bright Saffron Primary */
-    --primary: 31 93% 65%; /* Brighter Saffron for dark mode */
+    /* 🟠 Brighter Saffron Primary */
+    --primary: 35 91% 60%; /* Brighter Saffron for dark mode */
     --primary-foreground: 24 10% 3.9%;
 
     /* 🖤 Charcoal Secondary */
@@ -64,8 +64,8 @@
     --muted: 240 3.7% 15.9%;
     --muted-foreground: 240 5% 64.9%;
 
-    /* ✨ Soft Gold Accent */
-    --accent: 45 93% 82%;
+    /* ✨ Richer Gold Accent */
+    --accent: 45 85% 75%;
     --accent-foreground: 45 9% 20%;
 
     /* ⚠️ Destructive: Soft Red */
@@ -75,6 +75,6 @@
     /* Borders / Inputs */
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 31 93% 65%;
+    --ring: 35 91% 60%;
   }
 }

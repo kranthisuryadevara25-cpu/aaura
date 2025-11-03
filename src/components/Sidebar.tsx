@@ -1,4 +1,3 @@
-
 'use client';
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '@/hooks/use-language';
@@ -104,10 +103,10 @@ const NavLink = ({ href, label, icon: Icon, exact = false }: NavLinkProps) => {
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 py-2 px-3 rounded-md text-sm transition-colors',
+        'flex items-center gap-3 py-2 px-3 rounded-md text-sm font-medium transition-colors',
         isActive
-          ? 'bg-primary/10 text-primary font-semibold'
-          : 'text-foreground/70 hover:bg-secondary hover:text-foreground'
+          ? 'bg-primary/10 text-primary'
+          : 'text-foreground/70 hover:bg-accent hover:text-accent-foreground'
       )}
     >
       <Icon className="h-5 w-5" />
@@ -157,7 +156,7 @@ export const Sidebar = () => {
   const isSuperAdmin = user?.uid === process.env.NEXT_PUBLIC_SUPER_ADMIN_UID;
 
   return (
-    <aside className="w-64 hidden md:block border-r">
+    <aside className="w-64 hidden md:block border-r bg-secondary/30">
       <ScrollArea className="h-screen p-4">
         <nav className="space-y-2">
           <div className="space-y-1">

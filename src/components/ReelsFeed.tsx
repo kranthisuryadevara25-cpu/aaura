@@ -114,7 +114,7 @@ export default function ReelsFeed({ items, isVisible }: { items: FeedItem[], isV
         const wasLiked = isLiked;
         // Optimistic UI update
         setIsLiked(!wasLiked);
-        setOptimisticLikes(prev => wasLiked ? prev - 1 : prev + 1);
+        setOptimisticLikes((prev: number) => wasLiked ? prev - 1 : prev + 1);
 
         const batch = writeBatch(db);
         const likeData = { createdAt: serverTimestamp() };

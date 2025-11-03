@@ -19,8 +19,8 @@ import { useLanguage } from '@/hooks/use-language';
 import Link from 'next/link';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
-import { Skeleton } from './ui/skeleton';
-import { ClientOnlyTime } from './ClientOnlyTime';
+import { Skeleton } from '@/components/ui/skeleton';
+import { ClientOnlyTime } from '@/components/ClientOnlyTime';
 
 
 const commentSchema = z.object({
@@ -233,8 +233,8 @@ export function Comments({ contentId, contentType }: CommentsProps) {
       ) : (
         <div className="space-y-6">
             {optimisticComments && optimisticComments.length > 0 ? (
-                optimisticComments.map((comment, index) => (
-                <CommentCard key={comment.id || index} comment={comment} />
+                optimisticComments.map((comment) => (
+                <CommentCard key={comment.id} comment={comment} />
                 ))
             ) : (
                 <p className="text-muted-foreground text-sm text-center py-4">{t.forum.noComments}</p>

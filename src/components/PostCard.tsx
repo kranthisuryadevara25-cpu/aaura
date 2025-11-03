@@ -8,16 +8,17 @@ import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Loader2, MessageCircle, ThumbsUp } from 'lucide-react';
-import { Button } from './ui/button';
+import { Button } from '@/components/ui/button';
 import { useTransition, useState, useMemo, useEffect } from 'react';
 import { doc, writeBatch, increment, serverTimestamp } from 'firebase/firestore';
 import type { DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import Link from 'next/link';
-import { Skeleton } from './ui/skeleton';
-import { Comments } from './comments';
-import { ClientOnlyTime } from './ClientOnlyTime';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Comments } from '@/components/comments';
+import { ClientOnlyTime } from '@/components/ClientOnlyTime';
+import { Separator } from './ui/separator';
 
 
 const AuthorAvatar = ({ userId }: { userId: string }) => {

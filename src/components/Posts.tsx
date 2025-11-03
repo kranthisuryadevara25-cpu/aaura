@@ -17,7 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { collection, addDoc, serverTimestamp, query, where, orderBy, doc, DocumentData } from 'firebase/firestore';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
-import { PostCard } from './PostCard';
+import { PostCard } from '@/components/PostCard';
 
 
 const postSchema = z.object({

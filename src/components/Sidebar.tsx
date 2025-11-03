@@ -39,7 +39,7 @@ import { cn } from '@/lib/utils';
 import { usePathname } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useAuth } from '@/lib/firebase/provider';
-import { ScrollArea } from './ui/scroll-area';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 const mainNav = [
   { href: '/feed', label: 'home', icon: Home, exact: true },
@@ -139,7 +139,7 @@ const CollapsibleNavSection = ({
       </CollapsibleTrigger>
       <CollapsibleContent className="space-y-1 pl-4 border-l border-border ml-3">
         {items.map((item) => (
-          <NavLink key={item.label} {...item} />
+          <NavLink key={item.href} {...item} />
         ))}
       </CollapsibleContent>
     </Collapsible>
@@ -162,7 +162,7 @@ export const Sidebar = () => {
         <nav className="space-y-2">
           <div className="space-y-1">
             {mainNav.map((item) => (
-              <NavLink key={item.label} {...item} />
+              <NavLink key={item.href} {...item} />
             ))}
           </div>
           <NavLink href="/temples/seva" label="templeSeva" icon={HandHeart} />

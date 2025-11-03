@@ -37,6 +37,13 @@
       ]
     },
     {
+      "collectionGroup": "posts",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
       "collectionGroup": "products",
       "queryScope": "COLLECTION",
       "fields": [
@@ -74,6 +81,14 @@
       "fields": [
         { "fieldPath": "contentId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+     {
+      "collectionGroup": "comments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "contentId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
     },
     {
@@ -174,10 +189,10 @@
       ]
     },
     {
-        "collectionGroup": "posts",
+        "collectionGroup": "rituals",
         "queryScope": "COLLECTION",
         "fields": [
-            { "fieldPath": "createdAt", "order": "DESCENDING" }
+            { "fieldPath": "slug", "order": "ASCENDING" }
         ]
     }
   ],

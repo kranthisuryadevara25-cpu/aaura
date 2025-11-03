@@ -175,4 +175,6 @@ export const MobileSidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => 
         <CollapsibleNavSection title="Marketplace" items={marketplaceNav} onLinkClick={onLinkClick}/>
         {isClient && isSuperAdmin && <CollapsibleNavSection title="Manage" items={adminNav} onLinkClick={onLinkClick}/>}
       </nav>
-    </ScrollArea
+    </ScrollArea>
+  );
+};

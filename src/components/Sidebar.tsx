@@ -174,3 +174,5 @@ export const Sidebar = () => {
         </nav>
       </ScrollArea>
     </aside>
+  );
+};

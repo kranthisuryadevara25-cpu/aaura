@@ -23,10 +23,9 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, X, Users, Heart } from "lucide-react";
+import { LogOut, User, Upload, MessageSquare, Settings, ShoppingCart, Menu, Heart } from "lucide-react";
 import { Skeleton } from "./ui/skeleton";
 import { Badge } from "./ui/badge";
 import { FollowListDialog } from "./FollowListDialog";
@@ -43,7 +42,7 @@ const UserStats = () => {
     const [userData, loading] = useDocumentData(userRef);
     
     const channelRef = user ? doc(db, 'channels', user.uid) : undefined;
-    const [channelData, loadingChannel] = useDocumentData(channelRef);
+    const [channelData] = useDocumentData(channelRef);
 
     const [isClient, setIsClient] = useState(false);
 
@@ -51,11 +50,7 @@ const UserStats = () => {
         setIsClient(true);
     }, []);
 
-    if (!isClient) {
-        return <div className="flex items-center gap-4"><Skeleton className="h-8 w-24" /><Skeleton className="h-8 w-24" /></div>; 
-    }
-
-    if (!user) {
+    if (!isClient || !user) {
         return null; 
     }
 

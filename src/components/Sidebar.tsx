@@ -60,7 +60,6 @@ const communityNav = [
   { href: '/forum', label: 'forum', icon: MessageCircle },
   { href: '/channels', label: 'channels', icon: PlusCircle },
   { href: '/media', label: 'media', icon: Film },
-  { href: '/temples/seva', label: 'templeSeva', icon: HandHeart },
 ];
 
 const personalNav = [
@@ -166,6 +165,7 @@ export const Sidebar = () => {
               <NavLink key={item.label} {...item} />
             ))}
           </div>
+          <NavLink href="/temples/seva" label="templeSeva" icon={HandHeart} />
           <CollapsibleNavSection title="Library" items={libraryNav} />
           <CollapsibleNavSection title="Community" items={communityNav} />
           <CollapsibleNavSection title="Personal" items={personalNav} />

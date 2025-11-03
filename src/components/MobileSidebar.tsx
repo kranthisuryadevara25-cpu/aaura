@@ -60,7 +60,6 @@ const communityNav = [
   { href: '/forum', label: 'forum', icon: MessageCircle },
   { href: '/channels', label: 'channels', icon: PlusCircle },
   { href: '/media', label: 'media', icon: Film },
-  { href: '/temples/seva', label: 'templeSeva', icon: HandHeart },
 ];
 
 const personalNav = [
@@ -169,6 +168,7 @@ export const MobileSidebar = ({ onLinkClick }: { onLinkClick?: () => void }) => 
             <NavLink key={item.label} {...item} onLinkClick={onLinkClick}/>
           ))}
         </div>
+        <NavLink href="/temples/seva" label="templeSeva" icon={HandHeart} onLinkClick={onLinkClick} />
         <CollapsibleNavSection title="Library" items={libraryNav} onLinkClick={onLinkClick}/>
         <CollapsibleNavSection title="Community" items={communityNav} onLinkClick={onLinkClick}/>
         <CollapsibleNavSection title="Personal" items={personalNav} onLinkClick={onLinkClick}/>

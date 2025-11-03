@@ -132,7 +132,7 @@ export default function UploadPage() {
                 const mediaDocRef = doc(db, 'media', mediaId);
                 const mediaData = {
                     id: mediaId,
-                    userId: user.uid,
+                    creatorId: user.uid,
                     title_en: data.title_en,
                     title_hi: data.title_hi,
                     title_te: data.title_te,

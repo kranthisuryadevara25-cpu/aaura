@@ -29,19 +29,21 @@ import { CalendarIcon, Loader2, Save } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parse } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useAuth, useFirestore } from '@/lib/firebase/provider';
+import { useAuth, useFirestore, useStorage } from '@/lib/firebase/provider';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { useDocumentData } from 'react-firebase-hooks/firestore';
 import { doc, setDoc, writeBatch } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { generatePersonalizedHoroscope } from '@/ai/flows/personalized-horoscope';
 import { zodiacSigns } from '@/lib/zodiac';
-import { useTransition, useEffect } from 'react';
+import { useTransition, useEffect, useState } from 'react';
 import { updateProfile } from 'firebase/auth';
 import { FirestorePermissionError } from '@/lib/firebase/errors';
 import { errorEmitter } from '@/lib/firebase/error-emitter';
 import { temples } from '@/lib/temples';
 import { MultiSelect } from '@/components/ui/MultiSelect';
+import { ImageUpload } from '@/components/ImageUpload';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 
 const formSchema = z.object({
@@ -53,6 +55,8 @@ const formSchema = z.object({
   zodiacSign: z.string({ required_error: 'Please select your zodiac sign.' }),
   templesVisited: z.array(z.string()).optional(),
   templesPlanning: z.array(z.string()).optional(),
+  photoURL: z.string().optional(),
+  profileImageFile: z.any().optional(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -80,6 +84,7 @@ export default function SettingsPage() {
   const { toast } = useToast();
   const auth = useAuth();
   const db = useFirestore();
+  const storage = useStorage();
   const [user, loading] = useAuthState(auth);
   const [isPending, startTransition] = useTransition();
 
@@ -108,10 +113,12 @@ export default function SettingsPage() {
         zodiacSign: userData.zodiacSign || '',
         templesVisited: userData.templesVisited || [],
         templesPlanning: userData.templesPlanning || [],
+        photoURL: userData.photoURL || user?.photoURL || '',
       });
     } else if (user) {
         form.reset({
              fullName: user.displayName || '',
+             photoURL: user.photoURL || '',
              mobile: '',
              timeOfBirth: '12:00',
              placeOfBirth: '',
@@ -143,79 +150,67 @@ export default function SettingsPage() {
     }
 
     startTransition(async () => {
-      
-        const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
-        
-        await updateProfile(auth.currentUser!, { displayName: data.fullName });
+      let finalPhotoUrl = data.photoURL;
+      const imageFile = data.profileImageFile;
 
-        const userProfileRef = doc(db, `users/${user.uid}`);
-        
-        // Create the data object for Firestore, ensuring birthDate is a string.
-        const userProfileData = {
-          ...userData,
-          ...data,
-          birthDate: formattedBirthDate, // <-- FIX: Convert Date object to string
-          profileComplete: true,
-        };
-        
-        let horoscopeData: any;
+      if (imageFile) {
+        toast({ title: 'Uploading profile picture...' });
+        const filePath = `users/${user.uid}/profileImage/${Date.now()}_${imageFile.name}`;
+        const storageRef = ref(storage, filePath);
         try {
-            const horoscopeResult = await generatePersonalizedHoroscope({
-                zodiacSign: data.zodiacSign,
-                birthDate: formattedBirthDate,
-            });
-
-            const horoscopeText = `Love: ${horoscopeResult.horoscope.love}\nCareer: ${horoscopeResult.horoscope.career}\nHealth: ${horoscopeResult.horoscope.health}`;
-
-            horoscopeData = {
-                userId: user.uid,
-                date: format(new Date(), 'yyyy-MM-dd'),
-                zodiacSign: data.zodiacSign,
-                text_en: horoscopeText,
-                text_hi: horoscopeText, 
-            };
-        } catch (aiError) {
-             toast({
-                variant: 'destructive',
-                title: 'Horoscope Failed',
-                description: 'Could not generate horoscope, but profile was saved.',
-             });
+          const snapshot = await uploadBytes(storageRef, imageFile);
+          finalPhotoUrl = await getDownloadURL(snapshot.ref);
+          toast({ title: 'Profile picture uploaded!' });
+        } catch (error) {
+          console.error("Image upload failed:", error);
+          toast({ variant: 'destructive', title: 'Image Upload Failed', description: 'Could not upload your profile picture. Please try again.' });
+          return;
         }
-        
-        const batch = writeBatch(db);
+      }
 
-        batch.set(userProfileRef, userProfileData, { merge: true });
-        
-        if (horoscopeData) {
-            const horoscopeRef = doc(db, `users/${user.uid}/horoscopes/daily`);
-            batch.set(horoscopeRef, horoscopeData, { merge: true });
-        }
+      const formattedBirthDate = format(data.birthDate, 'yyyy-MM-dd');
+      
+      await updateProfile(auth.currentUser, { 
+          displayName: data.fullName,
+          photoURL: finalPhotoUrl,
+      });
 
-        batch.commit()
-            .then(() => {
-                 toast({
-                    title: 'Settings Saved!',
-                    description: 'Your profile has been updated.',
-                });
-            })
-            .catch(async (serverError: any) => {
-                const isPermissionError = serverError.code === 'permission-denied';
+      const userProfileRef = doc(db, `users/${user.uid}`);
+      
+      const userProfileData = {
+        ...userData,
+        ...data,
+        photoURL: finalPhotoUrl,
+        birthDate: formattedBirthDate,
+        profileComplete: true,
+      };
+      
+      delete userProfileData.profileImageFile;
 
-                if (isPermissionError) {
-                    const permissionError = new FirestorePermissionError({
-                        path: userProfileRef.path,
-                        operation: 'update',
-                        requestResourceData: userProfileData,
-                    });
-                    errorEmitter.emit('permission-error', permissionError);
-                } else {
-                    toast({
-                        variant: "destructive",
-                        title: "Save Failed",
-                        description: "An unexpected error occurred while saving your profile.",
-                    });
-                }
-            });
+      try {
+          await setDoc(userProfileRef, userProfileData, { merge: true });
+           toast({
+              title: 'Settings Saved!',
+              description: 'Your profile has been updated.',
+          });
+      } catch (serverError: any) {
+          const isPermissionError = serverError.code === 'permission-denied';
+
+          if (isPermissionError) {
+              const permissionError = new FirestorePermissionError({
+                  path: userProfileRef.path,
+                  operation: 'update',
+                  requestResourceData: userProfileData,
+              });
+              errorEmitter.emit('permission-error', permissionError);
+          } else {
+              toast({
+                  variant: "destructive",
+                  title: "Save Failed",
+                  description: "An unexpected error occurred while saving your profile.",
+              });
+          }
+      }
     });
   };
 
@@ -238,6 +233,23 @@ export default function SettingsPage() {
             ) : (
             <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <FormField
+                  control={form.control}
+                  name="profileImageFile"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Profile Picture</FormLabel>
+                      <FormControl>
+                        <ImageUpload
+                          onFileSelect={(file) => form.setValue('profileImageFile', file)}
+                          initialUrl={form.getValues('photoURL')}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <FormField
                   control={form.control}
                   name="fullName"
@@ -418,4 +430,3 @@ export default function SettingsPage() {
     </main>
   );
 }
-

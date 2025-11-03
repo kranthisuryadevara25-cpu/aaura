@@ -120,14 +120,15 @@ export function RightSidebar() {
         <CardContent className="space-y-4">
           {festivalsLoading ? <Loader2 className="mx-auto animate-spin" /> : upcomingFestivals?.map((festival: DocumentData) => {
             const imageUrl = festival.image?.url;
+            const name = festival.name[language] || festival.name.en;
             return (
               <Link href={`/festivals/${festival.slug}`} key={festival.id} className="block group">
                 <div className="flex items-center gap-3">
                   <div className="relative w-12 h-12 rounded-md overflow-hidden shrink-0 bg-secondary">
-                    {imageUrl && <Image src={imageUrl} alt={festival.name[language] || festival.name.en} fill className="object-cover" />}
+                    {imageUrl && <Image src={imageUrl} alt={name} fill className="object-cover" />}
                   </div>
                   <div>
-                      <p className="font-semibold text-sm group-hover:text-primary">{festival.name[language] || festival.name.en}</p>
+                      <p className="font-semibold text-sm group-hover:text-primary">{name}</p>
                       <p className="text-xs text-muted-foreground">{new Date(festival.date).toLocaleDateString(language, { month: 'long', day: 'numeric' })}</p>
                   </div>
                 </div>
@@ -147,15 +148,17 @@ export function RightSidebar() {
         <CardContent className="space-y-4">
           {deitiesLoading ? <Loader2 className="mx-auto animate-spin" /> : suggestedDeities?.map((deity: DocumentData) => {
             const imageUrl = deity.images?.[0]?.url;
+            const name = deity.name[language] || deity.name.en;
+            const description = deity.description[language] || deity.description.en;
             return (
               <Link href={`/deities/${deity.slug}`} key={deity.id} className="block group">
                   <div className="flex items-center gap-3">
                       <div className="relative w-12 h-12 rounded-full overflow-hidden shrink-0 bg-secondary">
-                          {imageUrl && <Image src={imageUrl} alt={deity.name[language] || deity.name.en} fill className="object-cover" />}
+                          {imageUrl && <Image src={imageUrl} alt={name} fill className="object-cover" />}
                       </div>
                       <div>
-                          <p className="font-semibold text-sm group-hover:text-primary">{deity.name[language] || deity.name.en}</p>
-                          <p className="text-xs text-muted-foreground line-clamp-1">{deity.description[language] || deity.description.en}</p>
+                          <p className="font-semibold text-sm group-hover:text-primary">{name}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-1">{description}</p>
                       </div>
                   </div>
               </Link>

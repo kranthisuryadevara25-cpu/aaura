@@ -104,7 +104,7 @@ service cloud.firestore {
     match /{collectionId}/{docId}
       where collectionId in ['media', 'posts', 'manifestations', 'playlists', 'groups', 'temple_renovation_requests', 'temple_maintenance_funds'] {
         allow create: if isSignedIn();
-        allow update, delete: if isOwner(resource.data.userId) || isOwner(resource.data.creatorId) || isSuperAdmin();
+        allow update, delete: if isOwner(resource.data.userId) || isOwner(resource.data.creatorId) || isOwner(resource.data.createdBy) || isSuperAdmin();
     }
     
     // Rules for Comments and Likes subcollections
@@ -171,5 +171,3 @@ service cloud.firestore {
     }
   }
 }
-
-  

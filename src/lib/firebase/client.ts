@@ -26,8 +26,38 @@ type FirebaseClientResources = {
   storage: FirebaseStorage;
 };
 
+declare global {
+  interface Window {
+    __FIREBASE_CONFIG__?: FirebaseClientConfig;
+  }
+
+  // eslint-disable-next-line no-var
+  var __FIREBASE_CONFIG__?: FirebaseClientConfig;
+}
+
 let cachedConfig: FirebaseClientConfig | null = null;
 let cachedResources: FirebaseClientResources | null = null;
+
+function getConfigFromGlobalScope(): FirebaseClientConfig | null {
+  const candidate =
+    (typeof globalThis !== "undefined" &&
+      (globalThis as typeof globalThis & { __FIREBASE_CONFIG__?: FirebaseClientConfig })
+        .__FIREBASE_CONFIG__) ||
+    (typeof window !== "undefined" ? window.__FIREBASE_CONFIG__ : undefined);
+
+  if (candidate?.apiKey && candidate?.projectId) {
+    return {
+      apiKey: candidate.apiKey,
+      authDomain: candidate.authDomain ?? "",
+      projectId: candidate.projectId,
+      storageBucket: candidate.storageBucket,
+      messagingSenderId: candidate.messagingSenderId,
+      appId: candidate.appId,
+    };
+  }
+
+  return null;
+}
 
 function resolveFirebaseConfig(): FirebaseClientConfig {
   if (cachedConfig) {
@@ -66,6 +96,12 @@ function resolveFirebaseConfig(): FirebaseClientConfig {
       messagingSenderId,
       appId,
     };
+    return cachedConfig;
+  }
+
+  const globalConfig = getConfigFromGlobalScope();
+  if (globalConfig) {
+    cachedConfig = globalConfig;
     return cachedConfig;
   }
 

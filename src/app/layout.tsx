@@ -29,6 +29,30 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const firebaseClientConfig = {
+    apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY ?? process.env.FIREBASE_API_KEY,
+    authDomain:
+      process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ?? process.env.FIREBASE_AUTH_DOMAIN,
+    projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? process.env.FIREBASE_PROJECT_ID,
+    storageBucket:
+      process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ?? process.env.FIREBASE_STORAGE_BUCKET,
+    messagingSenderId:
+      process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID ??
+      process.env.FIREBASE_MESSAGING_SENDER_ID,
+    appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID ?? process.env.FIREBASE_APP_ID,
+  };
+
+  const hasFirebaseClientConfig = Boolean(
+    firebaseClientConfig.apiKey && firebaseClientConfig.projectId
+  );
+
+  const firebaseConfigScript = hasFirebaseClientConfig
+    ? `window.__FIREBASE_CONFIG__ = ${JSON.stringify(firebaseClientConfig).replace(
+        /</g,
+        "\\u003c"
+      )};`
+    : undefined;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -38,6 +62,12 @@ export default function RootLayout({
           fontBody.variable
         )}
       >
+        {firebaseConfigScript ? (
+          <script
+            id="firebase-config"
+            dangerouslySetInnerHTML={{ __html: firebaseConfigScript }}
+          />
+        ) : null}
         <LanguageProvider>
           <FirebaseProvider>
             <div className="min-h-screen flex flex-col">
@@ -46,7 +76,7 @@ export default function RootLayout({
                 <Sidebar />
                 <main className="flex-1 overflow-y-auto">
                   <div className="container mx-auto p-4 sm:p-6 lg:p-8">
-                     {children}
+                    {children}
                   </div>
                 </main>
                 <aside className="hidden xl:block w-80 border-l p-4 shrink-0 overflow-y-auto">
